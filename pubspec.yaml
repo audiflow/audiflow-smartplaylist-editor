@@ -1,0 +1,11 @@
+name: audiflow_smartplaylist_web_workspace
+publish_to: none
+
+workspace:
+  - packages/sp_shared
+  - packages/sp_server
+  - packages/sp_web
+  - mcp_server
+
+environment:
+  sdk: ^3.10.0
