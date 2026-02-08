@@ -16,3 +16,6 @@ dependencies:
   sp_shared:
     path: ../sp_shared
   web: ^1.1.1
+
+flutter:
+  uses-material-design: true

@@ -42,7 +42,16 @@ Router authRouter({
 }
 
 Response _handleGitHubAuth(Request request, GitHubOAuthService oauthService) {
-  final state = _generateState();
+  final redirectUri = request.url.queryParameters['redirect_uri'];
+  if (redirectUri == null || redirectUri.isEmpty) {
+    return Response(
+      400,
+      body: jsonEncode({'error': 'Missing redirect_uri parameter'}),
+      headers: _jsonHeaders,
+    );
+  }
+
+  final state = _encodeState(redirectUri);
   final url = oauthService.getAuthorizationUrl(state);
 
   return Response.found(url);
@@ -54,30 +63,34 @@ Future<Response> _handleGitHubCallback(
   JwtService jwtService,
   UserService userService,
 ) async {
-  final code = request.url.queryParameters['code'];
-  if (code == null || code.isEmpty) {
+  final stateParam = request.url.queryParameters['state'];
+  final redirectUri = _decodeRedirectUri(stateParam);
+  if (redirectUri == null) {
     return Response(
       400,
-      body: jsonEncode({'error': 'Missing code parameter'}),
+      body: jsonEncode({'error': 'Invalid or missing state'}),
       headers: _jsonHeaders,
+    );
+  }
+
+  final code = request.url.queryParameters['code'];
+  if (code == null || code.isEmpty) {
+    return Response.found(
+      Uri.parse('$redirectUri?error=missing_code'),
     );
   }
 
   final accessToken = await oauthService.exchangeCode(code);
   if (accessToken == null) {
-    return Response(
-      502,
-      body: jsonEncode({'error': 'Failed to exchange code for token'}),
-      headers: _jsonHeaders,
+    return Response.found(
+      Uri.parse('$redirectUri?error=token_exchange_failed'),
     );
   }
 
   final userInfo = await oauthService.fetchUserInfo(accessToken);
   if (userInfo == null) {
-    return Response(
-      502,
-      body: jsonEncode({'error': 'Failed to fetch user info from GitHub'}),
-      headers: _jsonHeaders,
+    return Response.found(
+      Uri.parse('$redirectUri?error=user_fetch_failed'),
     );
   }
 
@@ -93,9 +106,8 @@ Future<Response> _handleGitHubCallback(
 
   final token = jwtService.createToken(user.id);
 
-  return Response.ok(
-    jsonEncode({'token': token, 'user': user.toJson()}),
-    headers: _jsonHeaders,
+  return Response.found(
+    Uri.parse('$redirectUri?token=$token'),
   );
 }
 
@@ -124,10 +136,36 @@ Response _handleMe(Request request, UserService userService) {
   );
 }
 
-String _generateState() {
+/// Encodes [redirectUri] and a CSRF nonce into a
+/// base64url-encoded JSON string for the OAuth state
+/// parameter.
+String _encodeState(String redirectUri) {
   final random = Random.secure();
-  final values = List<int>.generate(32, (_) => random.nextInt(256));
-  return base64Url.encode(values).replaceAll('=', '');
+  final nonce = List<int>.generate(16, (_) => random.nextInt(256));
+  final payload = jsonEncode({
+    'nonce': base64Url.encode(nonce),
+    'redirect_uri': redirectUri,
+  });
+  return base64Url.encode(utf8.encode(payload)).replaceAll('=', '');
+}
+
+/// Decodes the OAuth state parameter and returns the
+/// embedded redirect URI, or `null` if the state is
+/// missing or malformed.
+String? _decodeRedirectUri(String? state) {
+  if (state == null || state.isEmpty) return null;
+  try {
+    // Re-pad the base64url string.
+    final padded = state.padRight(
+      state.length + (4 - state.length % 4) % 4,
+      '=',
+    );
+    final decoded = utf8.decode(base64Url.decode(padded));
+    final payload = jsonDecode(decoded) as Map<String, dynamic>;
+    return payload['redirect_uri'] as String?;
+  } on Object {
+    return null;
+  }
 }
 
 const _jsonHeaders = {'Content-Type': 'application/json'};

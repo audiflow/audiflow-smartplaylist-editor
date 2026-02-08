@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sp_web/app/providers.dart';
+import 'package:sp_web/main.dart' show initialOAuthToken;
 import 'package:web/web.dart' as web;
 
 /// Authentication state.
@@ -22,13 +23,32 @@ class Authenticated extends AuthState {
 /// Manages authentication state and JWT tokens.
 class AuthController extends Notifier<AuthState> {
   @override
-  AuthState build() => const Unauthenticated();
+  AuthState build() {
+    // Consume the token extracted from the OAuth redirect
+    // URL in main(). This runs before the widget tree
+    // builds, so the initial state is already Authenticated.
+    final token = initialOAuthToken;
+    if (token != null) {
+      initialOAuthToken = null;
+      ref.read(apiClientProvider).setToken(token);
+      return Authenticated(token: token);
+    }
+    return const Unauthenticated();
+  }
 
   /// Redirects the browser to the server's GitHub
   /// OAuth endpoint to begin the login flow.
+  ///
+  /// Passes the current origin as `redirect_uri` so
+  /// the server knows where to redirect after auth.
   void loginWithGitHub() {
     final apiClient = ref.read(apiClientProvider);
-    final url = '${apiClient.baseUrl}/api/auth/github';
+    final redirectUri = Uri.encodeComponent(
+      '${web.window.location.origin}/login',
+    );
+    final url =
+        '${apiClient.baseUrl}/api/auth/github'
+        '?redirect_uri=$redirectUri';
     web.window.location.href = url;
   }
 
