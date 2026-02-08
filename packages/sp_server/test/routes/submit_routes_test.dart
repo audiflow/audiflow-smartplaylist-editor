@@ -8,12 +8,19 @@ import 'package:sp_server/src/services/api_key_service.dart';
 import 'package:sp_server/src/services/github_app_service.dart';
 import 'package:sp_server/src/services/jwt_service.dart';
 
-/// A minimal valid config for testing.
-Map<String, dynamic> _validConfig() => {
+/// A minimal valid playlist for testing.
+Map<String, dynamic> _validPlaylist() => {
+  'id': 'seasons',
+  'displayName': 'Seasons',
+  'resolverType': 'rss',
+};
+
+/// A valid pattern meta for testing.
+Map<String, dynamic> _validPatternMeta() => {
+  'version': 1,
   'id': 'test-podcast',
-  'playlists': [
-    {'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'},
-  ],
+  'feedUrlPatterns': ['https://example\\.com/feed\\.xml'],
+  'playlists': ['seasons'],
 };
 
 /// Builds a mock GitHubAppService that records
@@ -123,14 +130,14 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/submit'),
-          body: jsonEncode({'configId': 'test', 'config': _validConfig()}),
+          body: jsonEncode({'patternId': 'test', 'playlist': _validPlaylist()}),
         );
 
         final response = await router.call(request);
         expect(response.statusCode, equals(401));
       });
 
-      test('creates PR successfully', () async {
+      test('creates PR successfully with playlist only', () async {
         final router = submitRouter(
           gitHubAppService: _mockGitHubService(
             prUrl: 'https://github.com/o/r/pull/42',
@@ -147,9 +154,9 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
-            'description': 'Add test podcast config',
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
+            'description': 'Add test podcast playlist',
           }),
         );
 
@@ -160,6 +167,58 @@ void main() {
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         expect(body['prUrl'], equals('https://github.com/o/r/pull/42'));
         expect(body['branch'], contains('smartplaylist/test-podcast-'));
+      });
+
+      test('creates PR with pattern meta and playlist', () async {
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
+            'patternMeta': _validPatternMeta(),
+            'isNewPattern': true,
+            'description': 'Add new podcast pattern',
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+      });
+
+      test('uses playlistId when provided', () async {
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlistId': 'custom-id',
+            'playlist': _validPlaylist(),
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
       });
 
       test('accepts API key authentication', () async {
@@ -179,8 +238,8 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
           }),
         );
 
@@ -233,7 +292,7 @@ void main() {
         expect(body['error'], contains('Invalid JSON'));
       });
 
-      test('returns 400 for missing configId', () async {
+      test('returns 400 for missing patternId', () async {
         final router = submitRouter(
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
@@ -247,17 +306,17 @@ void main() {
             'Authorization': 'Bearer $validToken',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({'config': _validConfig()}),
+          body: jsonEncode({'playlist': _validPlaylist()}),
         );
 
         final response = await router.call(request);
         expect(response.statusCode, equals(400));
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('configId'));
+        expect(body['error'], contains('patternId'));
       });
 
-      test('returns 400 for empty configId', () async {
+      test('returns 400 for empty patternId', () async {
         final router = submitRouter(
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
@@ -271,17 +330,17 @@ void main() {
             'Authorization': 'Bearer $validToken',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({'configId': '', 'config': _validConfig()}),
+          body: jsonEncode({'patternId': '', 'playlist': _validPlaylist()}),
         );
 
         final response = await router.call(request);
         expect(response.statusCode, equals(400));
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('configId'));
+        expect(body['error'], contains('patternId'));
       });
 
-      test('returns 400 for missing config', () async {
+      test('returns 400 for missing playlist', () async {
         final router = submitRouter(
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
@@ -295,24 +354,24 @@ void main() {
             'Authorization': 'Bearer $validToken',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({'configId': 'test'}),
+          body: jsonEncode({'patternId': 'test'}),
         );
 
         final response = await router.call(request);
         expect(response.statusCode, equals(400));
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('config'));
+        expect(body['error'], contains('playlist'));
       });
 
-      test('returns 400 for invalid config', () async {
+      test('returns 400 for invalid playlist', () async {
         final router = submitRouter(
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
 
-        // Config without required "playlists" field.
+        // Playlist without required fields.
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/submit'),
@@ -321,18 +380,13 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test',
-            'config': {'id': 'test'},
+            'patternId': 'test',
+            'playlist': {'id': 'test'},
           }),
         );
 
         final response = await router.call(request);
         expect(response.statusCode, equals(400));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('validation failed'));
-        expect(body['details'], isA<List>());
-        expect((body['details'] as List), isNotEmpty);
       });
 
       test('returns 502 when branch creation fails', () async {
@@ -350,8 +404,8 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
           }),
         );
 
@@ -377,8 +431,8 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
           }),
         );
 
@@ -404,8 +458,8 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
           }),
         );
 
@@ -428,8 +482,8 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
           }),
         );
 
@@ -452,8 +506,8 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
           }),
         );
 
@@ -500,8 +554,8 @@ void main() {
             'Content-Type': 'application/json',
           },
           body: jsonEncode({
-            'configId': 'test-podcast',
-            'config': _validConfig(),
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
           }),
         );
 

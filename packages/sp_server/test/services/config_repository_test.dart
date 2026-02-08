@@ -4,200 +4,352 @@ import 'package:test/test.dart';
 
 import 'package:sp_server/src/services/config_repository.dart';
 
-const _sampleIndex = '''
-{
-  "version": 1,
-  "patterns": [
+/// Sample root meta.json.
+String _rootMeta() => jsonEncode({
+  'version': 1,
+  'patterns': [
     {
-      "id": "config-a",
-      "podcastGuid": "guid-a",
-      "playlists": [
-        {
-          "id": "seasons",
-          "displayName": "Seasons",
-          "resolverType": "rss"
-        }
-      ]
+      'id': 'podcast-a',
+      'version': 1,
+      'displayName': 'Podcast A',
+      'feedUrlHint': 'https://example.com/a/feed.xml',
+      'playlistCount': 2,
     },
     {
-      "id": "config-b",
-      "feedUrlPatterns": ["https://example\\\\.com/.*"],
-      "playlists": [
-        {
-          "id": "by-year",
-          "displayName": "By Year",
-          "resolverType": "year"
-        },
-        {
-          "id": "cats",
-          "displayName": "Categories",
-          "resolverType": "category"
-        }
-      ]
-    }
-  ]
+      'id': 'podcast-b',
+      'version': 1,
+      'displayName': 'Podcast B',
+      'feedUrlHint': 'https://example.com/b/feed.xml',
+      'playlistCount': 1,
+    },
+  ],
+});
+
+/// Sample pattern meta.json for podcast-a.
+String _patternMetaA() => jsonEncode({
+  'version': 1,
+  'id': 'podcast-a',
+  'podcastGuid': 'guid-a',
+  'feedUrlPatterns': ['https://example\\.com/a/.*'],
+  'playlists': ['seasons', 'by-year'],
+});
+
+/// Sample playlist JSON for seasons.
+String _playlistSeasons() => jsonEncode({
+  'id': 'seasons',
+  'displayName': 'Seasons',
+  'resolverType': 'rss',
+});
+
+/// Sample playlist JSON for by-year.
+String _playlistByYear() => jsonEncode({
+  'id': 'by-year',
+  'displayName': 'By Year',
+  'resolverType': 'year',
+});
+
+const _baseUrl = 'https://raw.githubusercontent.com/test/repo/main';
+
+/// Creates a repository with a URL-to-response map.
+ConfigRepository _createRepo({
+  required Map<String, String> responses,
+  void Function()? onFetch,
+  Duration rootTtl = const Duration(minutes: 5),
+  Duration fileTtl = const Duration(minutes: 30),
+}) {
+  return ConfigRepository(
+    httpGet: (Uri url) async {
+      onFetch?.call();
+      final response = responses[url.toString()];
+      if (response == null) {
+        throw Exception('No mock response for: $url');
+      }
+      return response;
+    },
+    baseUrl: _baseUrl,
+    rootTtl: rootTtl,
+    fileTtl: fileTtl,
+  );
 }
-''';
 
 void main() {
   group('ConfigRepository', () {
-    late ConfigRepository repository;
-    var fetchCount = 0;
+    group('listPatterns', () {
+      test('returns pattern summaries from root meta', () async {
+        final repo = _createRepo(
+          responses: {'$_baseUrl/meta.json': _rootMeta()},
+        );
 
-    setUp(() {
-      fetchCount = 0;
-      repository = ConfigRepository(
-        httpGet: (_) async {
-          fetchCount++;
-          return _sampleIndex;
-        },
-        configRepoUrl: 'https://example.com/index.json',
-      );
-    });
+        final patterns = await repo.listPatterns();
 
-    group('listConfigs', () {
-      test('returns config summaries', () async {
-        final configs = await repository.listConfigs();
-
-        expect(configs.length, equals(2));
-        expect(configs[0].id, equals('config-a'));
-        expect(configs[0].podcastGuid, equals('guid-a'));
-        expect(configs[0].playlistCount, equals(1));
-        expect(configs[1].id, equals('config-b'));
-        expect(configs[1].playlistCount, equals(2));
+        expect(patterns.length, equals(2));
+        expect(patterns[0].id, equals('podcast-a'));
+        expect(patterns[0].displayName, equals('Podcast A'));
+        expect(patterns[0].playlistCount, equals(2));
+        expect(patterns[1].id, equals('podcast-b'));
+        expect(patterns[1].playlistCount, equals(1));
       });
 
-      test('returns feedUrlPatterns', () async {
-        final configs = await repository.listConfigs();
-        final second = configs[1];
+      test('caches root meta', () async {
+        var fetchCount = 0;
+        final repo = _createRepo(
+          responses: {'$_baseUrl/meta.json': _rootMeta()},
+          onFetch: () => fetchCount++,
+        );
 
-        expect(second.feedUrlPatterns, isNotNull);
-        expect(second.feedUrlPatterns!.length, equals(1));
-      });
-
-      test('caches results', () async {
-        await repository.listConfigs();
-        await repository.listConfigs();
+        await repo.listPatterns();
+        await repo.listPatterns();
 
         expect(fetchCount, equals(1));
       });
 
-      test('respects cache TTL', () async {
-        final shortTtl = ConfigRepository(
-          httpGet: (_) async {
-            fetchCount++;
-            return _sampleIndex;
-          },
-          configRepoUrl: 'https://example.com/index.json',
-          cacheTtl: Duration.zero,
+      test('respects root TTL', () async {
+        var fetchCount = 0;
+        final repo = _createRepo(
+          responses: {'$_baseUrl/meta.json': _rootMeta()},
+          onFetch: () => fetchCount++,
+          rootTtl: Duration.zero,
         );
 
-        fetchCount = 0;
-        await shortTtl.listConfigs();
-        await shortTtl.listConfigs();
+        await repo.listPatterns();
+        await repo.listPatterns();
 
         expect(fetchCount, equals(2));
       });
+
+      test('throws on unsupported version', () async {
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/meta.json': jsonEncode({'version': 99, 'patterns': []}),
+          },
+        );
+
+        expect(() => repo.listPatterns(), throwsA(isA<FormatException>()));
+      });
+
+      test('throws on network error', () async {
+        final repo = ConfigRepository(
+          httpGet: (_) async => throw Exception('Network error'),
+          baseUrl: _baseUrl,
+        );
+
+        expect(() => repo.listPatterns(), throwsException);
+      });
+
+      test('throws on invalid JSON', () async {
+        final repo = _createRepo(
+          responses: {'$_baseUrl/meta.json': 'not json'},
+        );
+
+        expect(() => repo.listPatterns(), throwsA(isA<FormatException>()));
+      });
     });
 
-    group('getConfig', () {
-      test('returns config by ID', () async {
-        final config = await repository.getConfig('config-a');
+    group('getPatternMeta', () {
+      test('returns pattern metadata', () async {
+        final repo = _createRepo(
+          responses: {'$_baseUrl/podcast-a/meta.json': _patternMetaA()},
+        );
 
-        expect(config, isNotNull);
-        expect(config!['id'], equals('config-a'));
-        expect(config['podcastGuid'], equals('guid-a'));
+        final meta = await repo.getPatternMeta('podcast-a');
+
+        expect(meta.id, equals('podcast-a'));
+        expect(meta.podcastGuid, equals('guid-a'));
+        expect(meta.feedUrlPatterns, hasLength(1));
+        expect(meta.playlists, equals(['seasons', 'by-year']));
       });
 
-      test('returns null for unknown ID', () async {
-        final config = await repository.getConfig('nonexistent');
+      test('caches pattern meta with file TTL', () async {
+        var fetchCount = 0;
+        final repo = _createRepo(
+          responses: {'$_baseUrl/podcast-a/meta.json': _patternMetaA()},
+          onFetch: () => fetchCount++,
+        );
 
-        expect(config, isNull);
+        await repo.getPatternMeta('podcast-a');
+        await repo.getPatternMeta('podcast-a');
+
+        expect(fetchCount, equals(1));
       });
 
-      test('includes playlists in config', () async {
-        final config = await repository.getConfig('config-b');
+      test('throws on network error', () async {
+        final repo = ConfigRepository(
+          httpGet: (_) async => throw Exception('Network error'),
+          baseUrl: _baseUrl,
+        );
 
-        expect(config, isNotNull);
-        final playlists = config!['playlists'] as List<dynamic>;
-        expect(playlists.length, equals(2));
+        expect(() => repo.getPatternMeta('podcast-a'), throwsException);
+      });
+    });
+
+    group('getPlaylist', () {
+      test('returns playlist definition', () async {
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
+          },
+        );
+
+        final playlist = await repo.getPlaylist('podcast-a', 'seasons');
+
+        expect(playlist.id, equals('seasons'));
+        expect(playlist.displayName, equals('Seasons'));
+        expect(playlist.resolverType, equals('rss'));
+      });
+
+      test('caches playlist with file TTL', () async {
+        var fetchCount = 0;
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
+          },
+          onFetch: () => fetchCount++,
+        );
+
+        await repo.getPlaylist('podcast-a', 'seasons');
+        await repo.getPlaylist('podcast-a', 'seasons');
+
+        expect(fetchCount, equals(1));
+      });
+
+      test('throws on network error', () async {
+        final repo = ConfigRepository(
+          httpGet: (_) async => throw Exception('Not found'),
+          baseUrl: _baseUrl,
+        );
+
+        expect(() => repo.getPlaylist('podcast-a', 'missing'), throwsException);
+      });
+    });
+
+    group('assembleConfig', () {
+      test('assembles full config from meta and playlists', () async {
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/podcast-a/meta.json': _patternMetaA(),
+            '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
+            '$_baseUrl/podcast-a/playlists/by-year.json': _playlistByYear(),
+          },
+        );
+
+        final config = await repo.assembleConfig('podcast-a');
+
+        expect(config.id, equals('podcast-a'));
+        expect(config.podcastGuid, equals('guid-a'));
+        expect(config.playlists.length, equals(2));
+        expect(config.playlists[0].id, equals('seasons'));
+        expect(config.playlists[1].id, equals('by-year'));
+      });
+
+      test('preserves playlist order from meta', () async {
+        // Meta lists by-year before seasons
+        final reversedMeta = jsonEncode({
+          'version': 1,
+          'id': 'podcast-a',
+          'feedUrlPatterns': ['.*'],
+          'playlists': ['by-year', 'seasons'],
+        });
+
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/podcast-a/meta.json': reversedMeta,
+            '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
+            '$_baseUrl/podcast-a/playlists/by-year.json': _playlistByYear(),
+          },
+        );
+
+        final config = await repo.assembleConfig('podcast-a');
+
+        expect(config.playlists[0].id, equals('by-year'));
+        expect(config.playlists[1].id, equals('seasons'));
+      });
+
+      test('caches fetched data across calls', () async {
+        var fetchCount = 0;
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/podcast-a/meta.json': _patternMetaA(),
+            '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
+            '$_baseUrl/podcast-a/playlists/by-year.json': _playlistByYear(),
+          },
+          onFetch: () => fetchCount++,
+        );
+
+        await repo.assembleConfig('podcast-a');
+        // 1 meta + 2 playlists = 3 fetches
+        expect(fetchCount, equals(3));
+
+        await repo.assembleConfig('podcast-a');
+        // All cached, still 3
+        expect(fetchCount, equals(3));
+      });
+
+      test('throws when playlist fetch fails', () async {
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/podcast-a/meta.json': _patternMetaA(),
+            '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
+            // Missing by-year.json
+          },
+        );
+
+        expect(() => repo.assembleConfig('podcast-a'), throwsException);
       });
     });
 
     group('clearCache', () {
       test('forces re-fetch after clear', () async {
-        await repository.listConfigs();
+        var fetchCount = 0;
+        final repo = _createRepo(
+          responses: {'$_baseUrl/meta.json': _rootMeta()},
+          onFetch: () => fetchCount++,
+        );
+
+        await repo.listPatterns();
         expect(fetchCount, equals(1));
 
-        repository.clearCache();
-        await repository.listConfigs();
+        repo.clearCache();
+        await repo.listPatterns();
         expect(fetchCount, equals(2));
       });
     });
 
     group('cacheSize', () {
       test('tracks cached entries', () async {
-        expect(repository.cacheSize, equals(0));
-        await repository.listConfigs();
-        expect(repository.cacheSize, equals(1));
-      });
-    });
-
-    group('error handling', () {
-      test('throws on HTTP failure', () async {
-        final failingRepo = ConfigRepository(
-          httpGet: (_) async {
-            throw Exception('Network error');
+        final repo = _createRepo(
+          responses: {
+            '$_baseUrl/meta.json': _rootMeta(),
+            '$_baseUrl/podcast-a/meta.json': _patternMetaA(),
           },
-          configRepoUrl: 'https://example.com/fail',
         );
 
-        expect(() => failingRepo.listConfigs(), throwsException);
-      });
-
-      test('throws on invalid JSON', () async {
-        final badRepo = ConfigRepository(
-          httpGet: (_) async => 'not json',
-          configRepoUrl: 'https://example.com/bad',
-        );
-
-        expect(() => badRepo.listConfigs(), throwsA(isA<FormatException>()));
-      });
-
-      test('throws when root is not an object', () async {
-        final badRepo = ConfigRepository(
-          httpGet: (_) async => jsonEncode([1, 2, 3]),
-          configRepoUrl: 'https://example.com/bad',
-        );
-
-        expect(() => badRepo.listConfigs(), throwsA(isA<FormatException>()));
+        expect(repo.cacheSize, equals(0));
+        await repo.listPatterns();
+        expect(repo.cacheSize, equals(1));
+        await repo.getPatternMeta('podcast-a');
+        expect(repo.cacheSize, equals(2));
       });
     });
 
-    group('ConfigSummary.toJson', () {
-      test('serializes all fields', () {
-        const summary = ConfigSummary(
-          id: 'test-id',
-          podcastGuid: 'guid',
-          feedUrlPatterns: ['pattern'],
-          playlistCount: 3,
+    group('CachedConfig', () {
+      test('is not stale within TTL', () {
+        final cached = CachedConfig(
+          data: 'test',
+          fetchedAt: DateTime.now(),
+          ttl: const Duration(minutes: 5),
         );
 
-        final json = summary.toJson();
-
-        expect(json['id'], equals('test-id'));
-        expect(json['podcastGuid'], equals('guid'));
-        expect(json['feedUrlPatterns'], equals(['pattern']));
-        expect(json['playlistCount'], equals(3));
+        expect(cached.isStale, isFalse);
       });
 
-      test('omits null fields', () {
-        const summary = ConfigSummary(id: 'test', playlistCount: 0);
+      test('is stale after TTL expires', () {
+        final cached = CachedConfig(
+          data: 'test',
+          fetchedAt: DateTime.now().subtract(const Duration(minutes: 10)),
+          ttl: const Duration(minutes: 5),
+        );
 
-        final json = summary.toJson();
-
-        expect(json.containsKey('podcastGuid'), isFalse);
-        expect(json.containsKey('feedUrlPatterns'), isFalse);
+        expect(cached.isStale, isTrue);
       });
     });
   });

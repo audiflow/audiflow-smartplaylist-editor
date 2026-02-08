@@ -8,51 +8,93 @@ import 'package:sp_server/src/services/api_key_service.dart';
 import 'package:sp_server/src/services/config_repository.dart';
 import 'package:sp_server/src/services/jwt_service.dart';
 
-const _sampleConfigJson = '''
-{
-  "version": 1,
-  "patterns": [
+const _baseUrl = 'https://raw.githubusercontent.com/test/repo/main';
+
+/// Sample root meta.json.
+String _rootMeta() => jsonEncode({
+  'version': 1,
+  'patterns': [
     {
-      "id": "podcast-a",
-      "podcastGuid": "guid-a",
-      "feedUrlPatterns": ["https://example\\\\.com/feed\\\\.xml"],
-      "playlists": [
-        {
-          "id": "seasons",
-          "displayName": "Seasons",
-          "resolverType": "rss"
-        }
-      ]
+      'id': 'podcast-a',
+      'version': 1,
+      'displayName': 'Podcast A',
+      'feedUrlHint': 'https://example.com/a/feed.xml',
+      'playlistCount': 1,
     },
     {
-      "id": "podcast-b",
-      "playlists": [
-        {
-          "id": "by-year",
-          "displayName": "By Year",
-          "resolverType": "year"
-        },
-        {
-          "id": "categories",
-          "displayName": "Categories",
-          "resolverType": "category",
-          "groups": [
-            {
-              "id": "main",
-              "displayName": "Main",
-              "pattern": "^Main"
-            },
-            {
-              "id": "bonus",
-              "displayName": "Bonus"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+      'id': 'podcast-b',
+      'version': 1,
+      'displayName': 'Podcast B',
+      'feedUrlHint': 'https://example.com/b/feed.xml',
+      'playlistCount': 2,
+    },
+  ],
+});
+
+/// Sample pattern meta for podcast-a.
+String _patternMetaA() => jsonEncode({
+  'version': 1,
+  'id': 'podcast-a',
+  'podcastGuid': 'guid-a',
+  'feedUrlPatterns': ['https://example\\.com/a/feed\\.xml'],
+  'playlists': ['seasons'],
+});
+
+/// Sample pattern meta for podcast-b.
+String _patternMetaB() => jsonEncode({
+  'version': 1,
+  'id': 'podcast-b',
+  'feedUrlPatterns': ['https://example\\.com/b/.*'],
+  'playlists': ['by-year', 'categories'],
+});
+
+/// Sample playlists.
+String _playlistSeasons() => jsonEncode({
+  'id': 'seasons',
+  'displayName': 'Seasons',
+  'resolverType': 'rss',
+});
+
+String _playlistByYear() => jsonEncode({
+  'id': 'by-year',
+  'displayName': 'By Year',
+  'resolverType': 'year',
+});
+
+String _playlistCategories() => jsonEncode({
+  'id': 'categories',
+  'displayName': 'Categories',
+  'resolverType': 'category',
+  'groups': [
+    {'id': 'main', 'displayName': 'Main', 'pattern': '^Main'},
+    {'id': 'bonus', 'displayName': 'Bonus'},
+  ],
+});
+
+/// All mock responses for a complete test repo.
+Map<String, String> _allResponses() => {
+  '$_baseUrl/meta.json': _rootMeta(),
+  '$_baseUrl/podcast-a/meta.json': _patternMetaA(),
+  '$_baseUrl/podcast-b/meta.json': _patternMetaB(),
+  '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
+  '$_baseUrl/podcast-b/playlists/by-year.json': _playlistByYear(),
+  '$_baseUrl/podcast-b/playlists/categories.json': _playlistCategories(),
+};
+
+ConfigRepository _createRepo({
+  Map<String, String>? responses,
+  bool failAll = false,
+}) {
+  return ConfigRepository(
+    httpGet: (Uri url) async {
+      if (failAll) throw Exception('Network error');
+      final resp = (responses ?? _allResponses())[url.toString()];
+      if (resp == null) throw Exception('No mock: $url');
+      return resp;
+    },
+    baseUrl: _baseUrl,
+  );
 }
-''';
 
 void main() {
   group('configRouter', () {
@@ -66,11 +108,7 @@ void main() {
       jwtService = JwtService(secret: 'test-secret');
       apiKeyService = ApiKeyService();
       validToken = jwtService.createToken('user-1');
-
-      configRepository = ConfigRepository(
-        httpGet: (_) async => _sampleConfigJson,
-        configRepoUrl: 'https://example.com/configs.json',
-      );
+      configRepository = _createRepo();
 
       final router = configRouter(
         configRepository: configRepository,
@@ -92,7 +130,7 @@ void main() {
         expect(response.statusCode, equals(401));
       });
 
-      test('returns list of config summaries', () async {
+      test('returns list of pattern summaries', () async {
         final request = Request(
           'GET',
           Uri.parse('http://localhost/api/configs'),
@@ -109,7 +147,7 @@ void main() {
 
         final first = configs[0] as Map<String, dynamic>;
         expect(first['id'], equals('podcast-a'));
-        expect(first['podcastGuid'], equals('guid-a'));
+        expect(first['displayName'], equals('Podcast A'));
         expect(first['playlistCount'], equals(1));
 
         final second = configs[1] as Map<String, dynamic>;
@@ -132,12 +170,7 @@ void main() {
       });
 
       test('returns 502 on fetch failure', () async {
-        final failingRepo = ConfigRepository(
-          httpGet: (_) async {
-            throw Exception('Network error');
-          },
-          configRepoUrl: 'https://example.com/fail',
-        );
+        final failingRepo = _createRepo(failAll: true);
 
         final failRouter = configRouter(
           configRepository: failingRepo,
@@ -169,11 +202,158 @@ void main() {
       });
     });
 
-    group('GET /api/configs/<id>', () {
-      test('returns config by ID', () async {
+    group('GET /api/configs/patterns', () {
+      test('returns pattern summaries as array', () async {
         final request = Request(
           'GET',
-          Uri.parse('http://localhost/api/configs/podcast-a'),
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body = jsonDecode(await response.readAsString()) as List;
+        expect(body.length, equals(2));
+        expect((body[0] as Map)['id'], equals('podcast-a'));
+      });
+
+      test('returns 401 without auth', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/api/configs/patterns'),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(401));
+      });
+
+      test('returns 502 on failure', () async {
+        final failingRepo = _createRepo(failAll: true);
+        final failRouter = configRouter(
+          configRepository: failingRepo,
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await failRouter.call(request);
+        expect(response.statusCode, equals(502));
+      });
+    });
+
+    group('GET /api/configs/patterns/<id>', () {
+      test('returns pattern metadata', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['id'], equals('podcast-a'));
+        expect(body['podcastGuid'], equals('guid-a'));
+        expect(body['playlists'], equals(['seasons']));
+      });
+
+      test('returns 401 without auth', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(401));
+      });
+
+      test('returns 502 on fetch failure', () async {
+        final failingRepo = _createRepo(failAll: true);
+        final failRouter = configRouter(
+          configRepository: failingRepo,
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await failRouter.call(request);
+        expect(response.statusCode, equals(502));
+      });
+    });
+
+    group('GET /api/configs/patterns/<id>/playlists/<pid>', () {
+      test('returns playlist definition', () async {
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['id'], equals('seasons'));
+        expect(body['displayName'], equals('Seasons'));
+        expect(body['resolverType'], equals('rss'));
+      });
+
+      test('returns 401 without auth', () async {
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(401));
+      });
+
+      test('returns 502 on fetch failure', () async {
+        final failingRepo = _createRepo(failAll: true);
+        final failRouter = configRouter(
+          configRepository: failingRepo,
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await failRouter.call(request);
+        expect(response.statusCode, equals(502));
+      });
+    });
+
+    group('GET /api/configs/patterns/<id>/assembled', () {
+      test('returns assembled config', () async {
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/assembled',
+          ),
           headers: {'Authorization': 'Bearer $validToken'},
         );
 
@@ -186,9 +366,61 @@ void main() {
         expect(body['podcastGuid'], equals('guid-a'));
         final playlists = body['playlists'] as List;
         expect(playlists.length, equals(1));
+        expect((playlists[0] as Map)['id'], equals('seasons'));
       });
 
-      test('returns 404 for unknown ID', () async {
+      test('returns 401 without auth', () async {
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/assembled',
+          ),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(401));
+      });
+
+      test('returns 502 on failure', () async {
+        final failingRepo = _createRepo(failAll: true);
+        final failRouter = configRouter(
+          configRepository: failingRepo,
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/assembled',
+          ),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await failRouter.call(request);
+        expect(response.statusCode, equals(502));
+      });
+    });
+
+    group('GET /api/configs/<id>', () {
+      test('returns assembled config by ID (legacy)', () async {
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/api/configs/podcast-b'),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['id'], equals('podcast-b'));
+        final playlists = body['playlists'] as List;
+        expect(playlists.length, equals(2));
+      });
+
+      test('returns 502 for unknown ID', () async {
         final request = Request(
           'GET',
           Uri.parse('http://localhost/api/configs/nonexistent'),
@@ -197,10 +429,10 @@ void main() {
 
         final response = await handler(request);
 
-        expect(response.statusCode, equals(404));
+        expect(response.statusCode, equals(502));
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('not found'));
+        expect(body['error'], contains('Failed to fetch config'));
       });
 
       test('returns 401 without authentication', () async {
@@ -217,6 +449,22 @@ void main() {
 
     group('POST /api/configs/validate', () {
       test('accepts valid config', () async {
+        final validConfig = jsonEncode({
+          'version': 1,
+          'patterns': [
+            {
+              'id': 'test',
+              'playlists': [
+                {
+                  'id': 'seasons',
+                  'displayName': 'Seasons',
+                  'resolverType': 'rss',
+                },
+              ],
+            },
+          ],
+        });
+
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/validate'),
@@ -224,7 +472,7 @@ void main() {
             'Authorization': 'Bearer $validToken',
             'Content-Type': 'application/json',
           },
-          body: _sampleConfigJson,
+          body: validConfig,
         );
 
         final response = await handler(request);

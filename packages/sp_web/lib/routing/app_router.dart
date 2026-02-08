@@ -2,12 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sp_web/features/auth/controllers/auth_controller.dart';
 import 'package:sp_web/features/auth/screens/login_screen.dart';
+import 'package:sp_web/features/browse/screens/browse_screen.dart';
 import 'package:sp_web/features/editor/screens/editor_screen.dart';
 import 'package:sp_web/features/settings/screens/settings_screen.dart';
 
 /// Route paths used throughout the app.
 abstract final class RoutePaths {
   static const login = '/login';
+  static const browse = '/browse';
   static const editor = '/editor';
   static const settings = '/settings';
 }
@@ -17,7 +19,7 @@ abstract final class RoutePaths {
 ///
 /// Unauthenticated users are redirected to [RoutePaths.login].
 /// Authenticated users on the login page are redirected
-/// to [RoutePaths.editor].
+/// to [RoutePaths.browse].
 ///
 /// When the login route receives a `token` query parameter
 /// (from the OAuth callback), it is extracted and stored
@@ -35,20 +37,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       final token = state.uri.queryParameters['token'];
       if (token != null && token.isNotEmpty) {
         ref.read(authControllerProvider.notifier).setToken(token);
-        return RoutePaths.editor;
+        return RoutePaths.browse;
       }
 
       if (!isLoggedIn && !isLoginRoute) {
         return RoutePaths.login;
       }
       if (isLoggedIn && isLoginRoute) {
-        return RoutePaths.editor;
+        return RoutePaths.browse;
       }
 
       return null;
     },
     routes: [
       GoRoute(path: RoutePaths.login, builder: (_, __) => const LoginScreen()),
+      GoRoute(
+        path: RoutePaths.browse,
+        builder: (_, __) => const BrowseScreen(),
+      ),
       GoRoute(
         path: RoutePaths.editor,
         builder: (_, __) => const EditorScreen(),
