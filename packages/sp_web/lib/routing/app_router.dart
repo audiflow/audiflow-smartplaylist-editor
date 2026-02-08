@@ -21,9 +21,9 @@ abstract final class RoutePaths {
 /// Authenticated users on the login page are redirected
 /// to [RoutePaths.browse].
 ///
-/// When the login route receives a `token` query parameter
-/// (from the OAuth callback), it is extracted and stored
-/// in the [AuthController].
+/// OAuth callback tokens are handled in [main] before
+/// the widget tree builds, so the auth state is already
+/// set when the router is first created.
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authControllerProvider);
 
@@ -32,13 +32,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = authState is Authenticated;
       final isLoginRoute = state.matchedLocation == RoutePaths.login;
-
-      // Handle OAuth callback token
-      final token = state.uri.queryParameters['token'];
-      if (token != null && token.isNotEmpty) {
-        ref.read(authControllerProvider.notifier).setToken(token);
-        return RoutePaths.browse;
-      }
 
       if (!isLoggedIn && !isLoginRoute) {
         return RoutePaths.login;
