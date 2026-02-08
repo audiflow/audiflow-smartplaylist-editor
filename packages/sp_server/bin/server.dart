@@ -29,10 +29,10 @@ Future<void> main() async {
   final port = int.parse(portString);
   final jwtSecret = env['JWT_SECRET'] ?? 'dev-secret';
 
-  final configRepoUrl =
+  final configBaseUrl =
       env['CONFIG_REPO_URL'] ??
       'https://raw.githubusercontent.com/'
-          'example/configs/main/smart_playlists.json';
+          'reedom/audiflow-smart-playlists/main';
 
   final jwtService = JwtService(secret: jwtSecret);
   final userService = UserService();
@@ -51,7 +51,7 @@ Future<void> main() async {
       final response = await http.get(url);
       return response.body;
     },
-    configRepoUrl: configRepoUrl,
+    baseUrl: configBaseUrl,
   );
 
   // Top-level router that mounts sub-routers.
@@ -86,6 +86,10 @@ Future<void> main() async {
     apiKeyService: apiKeyService,
   );
   router.get('/api/configs', configs.call);
+  router.get('/api/configs/patterns', configs.call);
+  router.get('/api/configs/patterns/<id>', configs.call);
+  router.get('/api/configs/patterns/<id>/assembled', configs.call);
+  router.get('/api/configs/patterns/<id>/playlists/<pid>', configs.call);
   router.get('/api/configs/<id>', configs.call);
   router.post('/api/configs/validate', configs.call);
   router.post('/api/configs/preview', configs.call);

@@ -55,24 +55,33 @@ Future<Response> _handleSubmit(
   }
 
   // Validate required fields.
-  final configId = parsed['configId'];
-  if (configId is! String || configId.isEmpty) {
-    return _error(400, 'Missing or invalid "configId" field');
+  final patternId = parsed['patternId'];
+  if (patternId is! String || patternId.isEmpty) {
+    return _error(400, 'Missing or invalid "patternId" field');
   }
 
-  final configJson = parsed['config'];
-  if (configJson is! Map<String, dynamic>) {
-    return _error(400, 'Missing or invalid "config" field');
-  }
-
+  final playlistId = parsed['playlistId'] as String?;
+  final playlistJson = parsed['playlist'];
+  final patternMetaJson = parsed['patternMeta'];
+  final isNewPattern = parsed['isNewPattern'] as bool? ?? false;
   final description =
-      parsed['description'] as String? ?? 'Add config $configId';
+      parsed['description'] as String? ?? 'Update config $patternId';
 
-  // Validate config against schema by wrapping it
-  // in the root format expected by SmartPlaylistSchema.
+  // At minimum we need a playlist to submit.
+  if (playlistJson is! Map<String, dynamic>) {
+    return _error(400, 'Missing or invalid "playlist" field');
+  }
+
+  // Validate playlist against schema by wrapping in
+  // the root format expected by SmartPlaylistSchema.
   final wrappedConfig = jsonEncode({
     'version': SmartPlaylistSchema.currentVersion,
-    'patterns': [configJson],
+    'patterns': [
+      {
+        'id': patternId,
+        'playlists': [playlistJson],
+      },
+    ],
   });
   final errors = SmartPlaylistSchema.validate(wrappedConfig);
   if (errors.isNotEmpty) {
@@ -86,31 +95,58 @@ Future<Response> _handleSubmit(
     );
   }
 
+  final SmartPlaylistDefinition playlistDef;
+  try {
+    playlistDef = SmartPlaylistDefinition.fromJson(playlistJson);
+  } on Object catch (e) {
+    return _error(400, 'Invalid playlist definition: $e');
+  }
+
   // Submit PR via GitHub API.
   try {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final branch = 'smartplaylist/$configId-$timestamp';
+    final branch = 'smartplaylist/$patternId-$timestamp';
 
     final baseSha = await gitHubAppService.getDefaultBranchSha();
-
     await gitHubAppService.createBranch(branch, baseSha);
 
-    final configContent = const JsonEncoder.withIndent(
-      '  ',
-    ).convert(configJson);
+    final encoder = const JsonEncoder.withIndent('  ');
 
+    // Commit playlist file.
+    final effectivePlaylistId = playlistId ?? playlistDef.id;
+    final playlistContent = encoder.convert(playlistJson);
     await gitHubAppService.commitFile(
       branchName: branch,
-      filePath: 'configs/$configId.json',
-      content: '$configContent\n',
-      message: 'Add config: $configId',
+      filePath: '$patternId/playlists/$effectivePlaylistId.json',
+      content: '$playlistContent\n',
+      message: 'Add playlist: $effectivePlaylistId',
     );
 
+    // Commit pattern meta if provided.
+    if (patternMetaJson is Map<String, dynamic>) {
+      final metaContent = encoder.convert(patternMetaJson);
+      await gitHubAppService.commitFile(
+        branchName: branch,
+        filePath: '$patternId/meta.json',
+        content: '$metaContent\n',
+        message: isNewPattern
+            ? 'Add pattern meta: $patternId'
+            : 'Update pattern meta: $patternId',
+      );
+    }
+
     final userId = request.context['userId'] as String?;
-    final prBody = _buildPrBody(description, configId, userId);
+    final prBody = _buildPrBody(
+      description,
+      patternId,
+      effectivePlaylistId,
+      userId,
+    );
 
     final prUrl = await gitHubAppService.createPullRequest(
-      title: 'Add smart playlist config: $configId',
+      title: isNewPattern
+          ? 'Add smart playlist pattern: $patternId'
+          : 'Update pattern: $patternId',
       body: prBody,
       head: branch,
     );
@@ -129,7 +165,12 @@ Future<Response> _handleSubmit(
   }
 }
 
-String _buildPrBody(String description, String configId, String? userId) {
+String _buildPrBody(
+  String description,
+  String patternId,
+  String playlistId,
+  String? userId,
+) {
   final buffer = StringBuffer()
     ..writeln('## Description')
     ..writeln()
@@ -137,7 +178,8 @@ String _buildPrBody(String description, String configId, String? userId) {
     ..writeln()
     ..writeln('## Config')
     ..writeln()
-    ..writeln('- ID: `$configId`');
+    ..writeln('- Pattern: `$patternId`')
+    ..writeln('- Playlist: `$playlistId`');
 
   if (userId != null) {
     buffer

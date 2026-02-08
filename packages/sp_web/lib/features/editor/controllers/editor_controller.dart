@@ -141,7 +141,9 @@ class EditorController extends Notifier<EditorState> {
     state = state.copyWith(isLoadingConfig: true, clearError: true);
 
     try {
-      final response = await client.get('/api/configs/$configId');
+      final response = await client.get(
+        '/api/configs/patterns/$configId/assembled',
+      );
       if (response.statusCode == 200) {
         final map = jsonDecode(response.body) as Map<String, dynamic>;
         final config = SmartPlaylistPatternConfig.fromJson(map);

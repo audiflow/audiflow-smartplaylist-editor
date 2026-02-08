@@ -25,13 +25,41 @@ Router configRouter({
     apiKeyService: apiKeyService,
   );
 
+  // Legacy endpoints (adapted for split backend)
+
   // GET /api/configs
   final listHandler = const Pipeline()
       .addMiddleware(auth)
       .addHandler((Request r) => _handleList(r, configRepository));
   router.get('/api/configs', listHandler);
 
-  // GET /api/configs/<id>
+  // GET /api/configs/patterns/<id>/assembled
+  // Must be registered before /api/configs/<id> to avoid
+  // path conflicts.
+  final assembledHandler = const Pipeline()
+      .addMiddleware(auth)
+      .addHandler((Request r) => _handleAssembled(r, configRepository));
+  router.get('/api/configs/patterns/<id>/assembled', assembledHandler);
+
+  // GET /api/configs/patterns/<id>/playlists/<pid>
+  final playlistHandler = const Pipeline()
+      .addMiddleware(auth)
+      .addHandler((Request r) => _handlePlaylist(r, configRepository));
+  router.get('/api/configs/patterns/<id>/playlists/<pid>', playlistHandler);
+
+  // GET /api/configs/patterns/<id>
+  final patternMetaHandler = const Pipeline()
+      .addMiddleware(auth)
+      .addHandler((Request r) => _handlePatternMeta(r, configRepository));
+  router.get('/api/configs/patterns/<id>', patternMetaHandler);
+
+  // GET /api/configs/patterns
+  final patternsHandler = const Pipeline()
+      .addMiddleware(auth)
+      .addHandler((Request r) => _handlePatterns(r, configRepository));
+  router.get('/api/configs/patterns', patternsHandler);
+
+  // GET /api/configs/<id> (legacy: returns assembled config)
   final getHandler = const Pipeline()
       .addMiddleware(auth)
       .addHandler((Request r) => _handleGet(r, configRepository));
@@ -52,14 +80,17 @@ Router configRouter({
   return router;
 }
 
+/// GET /api/configs -- legacy list endpoint.
+///
+/// Returns pattern summaries wrapped in {configs: [...]}.
 Future<Response> _handleList(
   Request request,
   ConfigRepository configRepository,
 ) async {
   try {
-    final configs = await configRepository.listConfigs();
+    final patterns = await configRepository.listPatterns();
     return Response.ok(
-      jsonEncode({'configs': configs.map((c) => c.toJson()).toList()}),
+      jsonEncode({'configs': patterns.map((p) => p.toJson()).toList()}),
       headers: _jsonHeaders,
     );
   } on Exception catch (e) {
@@ -71,6 +102,97 @@ Future<Response> _handleList(
   }
 }
 
+/// GET /api/configs/patterns -- returns pattern summaries.
+Future<Response> _handlePatterns(
+  Request request,
+  ConfigRepository configRepository,
+) async {
+  try {
+    final patterns = await configRepository.listPatterns();
+    return Response.ok(
+      jsonEncode(patterns.map((p) => p.toJson()).toList()),
+      headers: _jsonHeaders,
+    );
+  } on Exception catch (e) {
+    return Response(
+      502,
+      body: jsonEncode({'error': 'Failed to fetch patterns: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// GET /api/configs/patterns/<id> -- returns pattern metadata.
+Future<Response> _handlePatternMeta(
+  Request request,
+  ConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  if (id == null || id.isEmpty) {
+    return _error(400, 'Missing pattern ID');
+  }
+
+  try {
+    final meta = await configRepository.getPatternMeta(id);
+    return Response.ok(jsonEncode(meta.toJson()), headers: _jsonHeaders);
+  } on Exception catch (e) {
+    return Response(
+      502,
+      body: jsonEncode({'error': 'Failed to fetch pattern meta: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// GET /api/configs/patterns/<id>/playlists/<pid>
+Future<Response> _handlePlaylist(
+  Request request,
+  ConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  final pid = request.params['pid'];
+  if (id == null || id.isEmpty) {
+    return _error(400, 'Missing pattern ID');
+  }
+  if (pid == null || pid.isEmpty) {
+    return _error(400, 'Missing playlist ID');
+  }
+
+  try {
+    final playlist = await configRepository.getPlaylist(id, pid);
+    return Response.ok(jsonEncode(playlist.toJson()), headers: _jsonHeaders);
+  } on Exception catch (e) {
+    return Response(
+      502,
+      body: jsonEncode({'error': 'Failed to fetch playlist: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// GET /api/configs/patterns/<id>/assembled
+Future<Response> _handleAssembled(
+  Request request,
+  ConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  if (id == null || id.isEmpty) {
+    return _error(400, 'Missing pattern ID');
+  }
+
+  try {
+    final config = await configRepository.assembleConfig(id);
+    return Response.ok(jsonEncode(config.toJson()), headers: _jsonHeaders);
+  } on Exception catch (e) {
+    return Response(
+      502,
+      body: jsonEncode({'error': 'Failed to assemble config: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// GET /api/configs/<id> -- legacy: returns assembled config.
 Future<Response> _handleGet(
   Request request,
   ConfigRepository configRepository,
@@ -85,15 +207,8 @@ Future<Response> _handleGet(
   }
 
   try {
-    final config = await configRepository.getConfig(id);
-    if (config == null) {
-      return Response(
-        404,
-        body: jsonEncode({'error': 'Config not found: $id'}),
-        headers: _jsonHeaders,
-      );
-    }
-    return Response.ok(jsonEncode(config), headers: _jsonHeaders);
+    final config = await configRepository.assembleConfig(id);
+    return Response.ok(jsonEncode(config.toJson()), headers: _jsonHeaders);
   } on Exception catch (e) {
     return Response(
       502,
@@ -261,6 +376,14 @@ Map<String, dynamic> _serializeGroup(SmartPlaylistGroup group) {
     'episodeIds': group.episodeIds,
     'episodeCount': group.episodeCount,
   };
+}
+
+Response _error(int status, String message) {
+  return Response(
+    status,
+    body: jsonEncode({'error': message}),
+    headers: _jsonHeaders,
+  );
 }
 
 const _jsonHeaders = {'Content-Type': 'application/json'};
