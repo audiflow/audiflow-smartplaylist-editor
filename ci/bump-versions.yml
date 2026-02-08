@@ -1,0 +1,53 @@
+# Deploy to: reedom/audiflow-smart-playlists/.github/workflows/bump-versions.yml
+name: Bump Versions
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  bump:
+    # Skip CI bot commits to prevent infinite loops
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed patterns
+        id: detect
+        run: |
+          CHANGED=$(git diff HEAD~1 --name-only | grep -oP '^[^/]+(?=/)' | sort -u | grep -v '^\.' || true)
+          echo "patterns=$CHANGED" >> $GITHUB_OUTPUT
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump versions
+        if: steps.detect.outputs.skip == 'false'
+        run: |
+          for PATTERN in ${{ steps.detect.outputs.patterns }}; do
+            if [ -f "$PATTERN/meta.json" ]; then
+              # Bump pattern version
+              jq '.version += 1' "$PATTERN/meta.json" > tmp.json && mv tmp.json "$PATTERN/meta.json"
+
+              # Bump in root meta.json
+              NEW_VERSION=$(jq '.version' "$PATTERN/meta.json")
+              PLAYLIST_COUNT=$(jq '.playlists | length' "$PATTERN/meta.json")
+              jq --arg id "$PATTERN" --argjson ver "$NEW_VERSION" --argjson count "$PLAYLIST_COUNT" \
+                '(.patterns[] | select(.id == $id)) |= (.version = $ver | .playlistCount = $count)' \
+                meta.json > tmp.json && mv tmp.json meta.json
+            fi
+          done
+
+      - name: Commit and push
+        if: steps.detect.outputs.skip == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "chore: bump versions [skip ci]"
+          git push

@@ -5,5 +5,14 @@ pubspec.lock
 *.g.dart
 *.freezed.dart
 .melos_workspace/
+
 .env
 .envrc
+
+.claude/*
+!.claude/settings.json
+!.claude/agents/
+!.claude/commands/
+!.claude/hooks/
+!.claude/rules/
+!.claude/skills/
