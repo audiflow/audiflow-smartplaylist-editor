@@ -1,0 +1,14 @@
+.git
+.jj
+.idea
+.claude
+.env
+.envrc
+docs/
+scripts/
+ci/
+deploy/
+**/.dart_tool/
+**/build/
+*.md
+LICENSE
