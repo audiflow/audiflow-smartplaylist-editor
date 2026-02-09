@@ -57,6 +57,7 @@ class AuthController extends Notifier<AuthState> {
   void setToken(String token) {
     final apiClient = ref.read(apiClientProvider);
     apiClient.setToken(token);
+    web.window.localStorage.setItem('auth_token', token);
     state = Authenticated(token: token);
   }
 
@@ -65,6 +66,7 @@ class AuthController extends Notifier<AuthState> {
   void logout() {
     final apiClient = ref.read(apiClientProvider);
     apiClient.clearToken();
+    web.window.localStorage.removeItem('auth_token');
     state = const Unauthenticated();
   }
 }

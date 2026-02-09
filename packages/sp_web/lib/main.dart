@@ -16,13 +16,21 @@ void main() {
   // Extract token from the OAuth callback redirect
   // (e.g. /login?token=xyz) before building the widget
   // tree so providers can read it synchronously.
+  // Prefer a fresh token from the OAuth callback URL,
+  // fall back to a previously stored token.
   final uri = Uri.parse(web.window.location.href);
-  final token = uri.queryParameters['token'];
-  if (token != null && token.isNotEmpty) {
-    initialOAuthToken = token;
+  final urlToken = uri.queryParameters['token'];
+  if (urlToken != null && urlToken.isNotEmpty) {
+    initialOAuthToken = urlToken;
+    web.window.localStorage.setItem('auth_token', urlToken);
     // Clean the URL so the token isn't re-processed on
     // refresh or back navigation.
     web.window.history.replaceState(''.toJSBox, '', '/browse');
+  } else {
+    final stored = web.window.localStorage.getItem('auth_token');
+    if (stored != null && stored.isNotEmpty) {
+      initialOAuthToken = stored;
+    }
   }
 
   WidgetsFlutterBinding.ensureInitialized();
