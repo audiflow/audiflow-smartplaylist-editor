@@ -66,5 +66,67 @@ void main() {
         expect(jwtService.validateToken(token), equals(id));
       }
     });
+
+    group('token types', () {
+      test('access token has typ: access', () {
+        final token = jwtService.createToken('user-1');
+        final userId = jwtService.validateToken(
+          token,
+          requiredType: JwtService.accessTokenType,
+        );
+
+        expect(userId, equals('user-1'));
+      });
+
+      test('refresh token has typ: refresh', () {
+        final token = jwtService.createRefreshToken('user-1');
+        final userId = jwtService.validateToken(
+          token,
+          requiredType: JwtService.refreshTokenType,
+        );
+
+        expect(userId, equals('user-1'));
+      });
+
+      test('validateToken with requiredType rejects wrong type', () {
+        final accessToken = jwtService.createToken('user-1');
+        final refreshToken = jwtService.createRefreshToken('user-1');
+
+        // Access token rejected when refresh required.
+        expect(
+          jwtService.validateToken(
+            accessToken,
+            requiredType: JwtService.refreshTokenType,
+          ),
+          isNull,
+        );
+
+        // Refresh token rejected when access required.
+        expect(
+          jwtService.validateToken(
+            refreshToken,
+            requiredType: JwtService.accessTokenType,
+          ),
+          isNull,
+        );
+      });
+
+      test('validateToken without requiredType accepts any type', () {
+        final accessToken = jwtService.createToken('user-a');
+        final refreshToken = jwtService.createRefreshToken('user-b');
+
+        expect(jwtService.validateToken(accessToken), equals('user-a'));
+        expect(jwtService.validateToken(refreshToken), equals('user-b'));
+      });
+
+      test('createRefreshToken respects custom expiry', () {
+        final token = jwtService.createRefreshToken(
+          'user-1',
+          expiry: const Duration(seconds: -1),
+        );
+
+        expect(jwtService.validateToken(token), isNull);
+      });
+    });
   });
 }

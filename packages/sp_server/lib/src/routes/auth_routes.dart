@@ -32,6 +32,11 @@ Router authRouter({
     ),
   );
 
+  router.post(
+    '/api/auth/refresh',
+    (Request request) => _handleRefresh(request, jwtService),
+  );
+
   // The /me route is protected by auth middleware.
   final meHandler = const Pipeline()
       .addMiddleware(authMiddleware(jwtService))
@@ -75,9 +80,7 @@ Future<Response> _handleGitHubCallback(
 
   final code = request.url.queryParameters['code'];
   if (code == null || code.isEmpty) {
-    return Response.found(
-      Uri.parse('$redirectUri?error=missing_code'),
-    );
+    return Response.found(Uri.parse('$redirectUri?error=missing_code'));
   }
 
   final accessToken = await oauthService.exchangeCode(code);
@@ -89,9 +92,7 @@ Future<Response> _handleGitHubCallback(
 
   final userInfo = await oauthService.fetchUserInfo(accessToken);
   if (userInfo == null) {
-    return Response.found(
-      Uri.parse('$redirectUri?error=user_fetch_failed'),
-    );
+    return Response.found(Uri.parse('$redirectUri?error=user_fetch_failed'));
   }
 
   final githubId = userInfo['id'] as int;
@@ -105,9 +106,10 @@ Future<Response> _handleGitHubCallback(
   );
 
   final token = jwtService.createToken(user.id);
+  final refreshToken = jwtService.createRefreshToken(user.id);
 
   return Response.found(
-    Uri.parse('$redirectUri?token=$token'),
+    Uri.parse('$redirectUri?token=$token&refresh_token=$refreshToken'),
   );
 }
 
@@ -132,6 +134,61 @@ Response _handleMe(Request request, UserService userService) {
 
   return Response.ok(
     jsonEncode({'user': user.toJson()}),
+    headers: _jsonHeaders,
+  );
+}
+
+Future<Response> _handleRefresh(Request request, JwtService jwtService) async {
+  final body = await request.readAsString();
+  if (body.isEmpty) {
+    return Response(
+      400,
+      body: jsonEncode({'error': 'Missing request body'}),
+      headers: _jsonHeaders,
+    );
+  }
+
+  final Map<String, dynamic> payload;
+  try {
+    payload = jsonDecode(body) as Map<String, dynamic>;
+  } on Object {
+    return Response(
+      400,
+      body: jsonEncode({'error': 'Invalid JSON'}),
+      headers: _jsonHeaders,
+    );
+  }
+
+  final refreshToken = payload['refreshToken'] as String?;
+  if (refreshToken == null || refreshToken.isEmpty) {
+    return Response(
+      400,
+      body: jsonEncode({'error': 'Missing refreshToken'}),
+      headers: _jsonHeaders,
+    );
+  }
+
+  final userId = jwtService.validateToken(
+    refreshToken,
+    requiredType: JwtService.refreshTokenType,
+  );
+  if (userId == null) {
+    return Response(
+      401,
+      body: jsonEncode({'error': 'Invalid or expired refresh token'}),
+      headers: _jsonHeaders,
+    );
+  }
+
+  // Token rotation: issue new pair on each refresh.
+  final newAccessToken = jwtService.createToken(userId);
+  final newRefreshToken = jwtService.createRefreshToken(userId);
+
+  return Response.ok(
+    jsonEncode({
+      'accessToken': newAccessToken,
+      'refreshToken': newRefreshToken,
+    }),
     headers: _jsonHeaders,
   );
 }

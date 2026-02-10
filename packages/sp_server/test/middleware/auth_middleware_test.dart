@@ -98,5 +98,18 @@ void main() {
           jsonDecode(await response.readAsString()) as Map<String, dynamic>;
       expect(body['userId'], equals('user-42'));
     });
+
+    test('rejects refresh token', () async {
+      final refreshToken = jwtService.createRefreshToken('user-42');
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost/protected'),
+        headers: {'Authorization': 'Bearer $refreshToken'},
+      );
+
+      final response = await protectedHandler(request);
+
+      expect(response.statusCode, equals(401));
+    });
   });
 }

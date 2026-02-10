@@ -23,6 +23,11 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   client.onUnauthorized = () {
     ref.read(authControllerProvider.notifier).logout();
   };
+  client.onTokensRefreshed = (accessToken, refreshToken) {
+    ref
+        .read(authControllerProvider.notifier)
+        .setTokens(accessToken, refreshToken);
+  };
   return client;
 });
 

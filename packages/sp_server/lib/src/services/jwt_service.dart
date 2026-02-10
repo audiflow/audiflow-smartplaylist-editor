@@ -12,17 +12,43 @@ class JwtService {
 
   final List<int> _secretBytes;
 
-  /// Default token lifetime: 24 hours.
+  /// Token type claim for short-lived access tokens.
+  static const accessTokenType = 'access';
+
+  /// Token type claim for long-lived refresh tokens.
+  static const refreshTokenType = 'refresh';
+
+  /// Default access token lifetime: 24 hours.
   static const defaultExpiry = Duration(hours: 24);
 
-  /// Creates a signed JWT containing [userId].
+  /// Default refresh token lifetime: 30 days.
+  static const defaultRefreshExpiry = Duration(days: 30);
+
+  /// Creates a signed access JWT containing [userId].
   String createToken(String userId, {Duration expiry = defaultExpiry}) {
+    return _createTokenWithType(userId, type: accessTokenType, expiry: expiry);
+  }
+
+  /// Creates a signed refresh JWT containing [userId].
+  String createRefreshToken(
+    String userId, {
+    Duration expiry = defaultRefreshExpiry,
+  }) {
+    return _createTokenWithType(userId, type: refreshTokenType, expiry: expiry);
+  }
+
+  String _createTokenWithType(
+    String userId, {
+    required String type,
+    required Duration expiry,
+  }) {
     final now = DateTime.now().toUtc();
     final exp = now.add(expiry);
 
     final header = _encode({'alg': 'HS256', 'typ': 'JWT'});
     final payload = _encode({
       'sub': userId,
+      'typ': type,
       'iat': _toEpochSeconds(now),
       'exp': _toEpochSeconds(exp),
     });
@@ -33,7 +59,10 @@ class JwtService {
 
   /// Validates [token] and returns the `sub` (userId)
   /// claim on success, or `null` if invalid/expired.
-  String? validateToken(String token) {
+  ///
+  /// When [requiredType] is set, rejects tokens whose
+  /// `typ` claim does not match.
+  String? validateToken(String token, {String? requiredType}) {
     final parts = token.split('.');
     if (parts.length != 3) return null;
 
@@ -50,6 +79,10 @@ class JwtService {
         isUtc: true,
       );
       if (DateTime.now().toUtc().isAfter(expiry)) return null;
+
+      if (requiredType != null && payload['typ'] != requiredType) {
+        return null;
+      }
 
       return payload['sub'] as String?;
     } on Object {
