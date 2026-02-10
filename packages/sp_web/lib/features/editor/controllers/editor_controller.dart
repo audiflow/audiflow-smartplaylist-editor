@@ -1,21 +1,25 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sp_shared/sp_shared.dart';
 import 'package:sp_web/app/providers.dart';
+import 'package:sp_web/services/json_merge.dart';
+import 'package:sp_web/services/local_draft_service.dart';
 
 /// State for the editor screen.
 class EditorState {
   const EditorState({
     this.config,
     this.configJson = '',
+    this.configVersion = 0,
     this.isJsonMode = false,
     this.feedUrl,
     this.isLoadingFeed = false,
     this.isLoadingConfig = false,
-    this.isSaving = false,
-    this.isSavingDraft = false,
     this.isSubmitting = false,
+    this.lastAutoSavedAt,
+    this.pendingDraft,
     this.error,
   });
 
@@ -24,6 +28,10 @@ class EditorState {
 
   /// Raw JSON text representation.
   final String configJson;
+
+  /// Incremented when the config is externally replaced (e.g. draft restore)
+  /// so form widgets can use it as a Key to re-initialize their controllers.
+  final int configVersion;
 
   /// Whether the editor is in raw JSON mode.
   final bool isJsonMode;
@@ -37,14 +45,14 @@ class EditorState {
   /// Whether a config is being loaded from the server.
   final bool isLoadingConfig;
 
-  /// Whether the config is being saved.
-  final bool isSaving;
-
-  /// Whether a draft is currently being saved.
-  final bool isSavingDraft;
-
   /// Whether a PR submission is in progress.
   final bool isSubmitting;
+
+  /// ISO-8601 timestamp of the last auto-save, if any.
+  final String? lastAutoSavedAt;
+
+  /// Pending draft awaiting user decision (restore or discard).
+  final DraftEntry? pendingDraft;
 
   /// Current error message, if any.
   final String? error;
@@ -52,43 +60,68 @@ class EditorState {
   EditorState copyWith({
     SmartPlaylistPatternConfig? config,
     String? configJson,
+    int? configVersion,
     bool? isJsonMode,
     String? feedUrl,
     bool? isLoadingFeed,
     bool? isLoadingConfig,
-    bool? isSaving,
-    bool? isSavingDraft,
     bool? isSubmitting,
+    String? lastAutoSavedAt,
+    DraftEntry? pendingDraft,
     String? error,
     bool clearError = false,
     bool clearConfig = false,
+    bool clearPendingDraft = false,
+    bool clearLastAutoSavedAt = false,
   }) {
     return EditorState(
       config: clearConfig ? null : (config ?? this.config),
       configJson: configJson ?? this.configJson,
+      configVersion: configVersion ?? this.configVersion,
       isJsonMode: isJsonMode ?? this.isJsonMode,
       feedUrl: feedUrl ?? this.feedUrl,
       isLoadingFeed: isLoadingFeed ?? this.isLoadingFeed,
       isLoadingConfig: isLoadingConfig ?? this.isLoadingConfig,
-      isSaving: isSaving ?? this.isSaving,
-      isSavingDraft: isSavingDraft ?? this.isSavingDraft,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      lastAutoSavedAt: clearLastAutoSavedAt
+          ? null
+          : (lastAutoSavedAt ?? this.lastAutoSavedAt),
+      pendingDraft: clearPendingDraft
+          ? null
+          : (pendingDraft ?? this.pendingDraft),
       error: clearError ? null : (error ?? this.error),
     );
   }
 }
 
 /// Manages editor state including config, JSON mode toggle,
-/// and server interactions.
+/// auto-save to localStorage, and server interactions.
 class EditorController extends Notifier<EditorState> {
+  /// The config as loaded from the server, used as the merge base.
+  Map<String, dynamic>? _baseConfigJson;
+
+  /// The config ID being edited (null for new configs).
+  String? _configId;
+
+  Timer? _debounceTimer;
+
+  static const _debounceDuration = Duration(seconds: 2);
+
   @override
-  EditorState build() => const EditorState();
+  EditorState build() {
+    ref.onDispose(() => _debounceTimer?.cancel());
+    return const EditorState();
+  }
 
   /// Creates a new empty config with default values.
   void createNew() {
     final config = SmartPlaylistPatternConfig(id: '', playlists: const []);
     final json = _formatJson(config.toJson());
+    _baseConfigJson = config.toJson();
+    _configId = null;
     state = EditorState(config: config, configJson: json);
+
+    _checkForDraft();
   }
 
   /// Updates the config from form changes.
@@ -98,21 +131,18 @@ class EditorController extends Notifier<EditorState> {
       configJson: _formatJson(config.toJson()),
       clearError: true,
     );
+    _scheduleAutoSave();
   }
 
   /// Updates the raw JSON text.
   void updateJson(String json) {
     state = state.copyWith(configJson: json, clearError: true);
+    _scheduleAutoSave();
   }
 
   /// Toggles between form and JSON editing modes.
-  ///
-  /// When switching from JSON to form, parses the JSON and
-  /// updates the config. When switching from form to JSON,
-  /// serializes the config.
   void toggleJsonMode() {
     if (state.isJsonMode) {
-      // Switching from JSON to form: parse JSON
       try {
         final map = jsonDecode(state.configJson) as Map<String, dynamic>;
         final config = SmartPlaylistPatternConfig.fromJson(map);
@@ -127,7 +157,6 @@ class EditorController extends Notifier<EditorState> {
         state = state.copyWith(error: 'Parse error: $e');
       }
     } else {
-      // Switching from form to JSON: serialize config
       final json = state.config != null
           ? _formatJson(state.config!.toJson())
           : state.configJson;
@@ -137,6 +166,7 @@ class EditorController extends Notifier<EditorState> {
 
   /// Loads an existing config from the server by [configId].
   Future<void> loadConfig(String configId) async {
+    _configId = configId;
     final client = ref.read(apiClientProvider);
     state = state.copyWith(isLoadingConfig: true, clearError: true);
 
@@ -146,12 +176,14 @@ class EditorController extends Notifier<EditorState> {
       );
       if (response.statusCode == 200) {
         final map = jsonDecode(response.body) as Map<String, dynamic>;
+        _baseConfigJson = map;
         final config = SmartPlaylistPatternConfig.fromJson(map);
         state = state.copyWith(
           config: config,
           configJson: _formatJson(config.toJson()),
           isLoadingConfig: false,
         );
+        _checkForDraft();
       } else {
         state = state.copyWith(
           isLoadingConfig: false,
@@ -180,8 +212,6 @@ class EditorController extends Notifier<EditorState> {
       final response = await client.get('/api/feeds?url=$encodedUrl');
       if (response.statusCode == 200) {
         final map = jsonDecode(response.body) as Map<String, dynamic>;
-        // The feed response may contain config data or feed metadata.
-        // For now, just store the JSON for reference.
         state = state.copyWith(
           isLoadingFeed: false,
           configJson: _formatJson(map),
@@ -197,33 +227,6 @@ class EditorController extends Notifier<EditorState> {
         isLoadingFeed: false,
         error: 'Failed to load feed: $e',
       );
-    }
-  }
-
-  /// Saves the current config to the server.
-  Future<void> saveConfig() async {
-    final config = state.config;
-    if (config == null) return;
-
-    final client = ref.read(apiClientProvider);
-    state = state.copyWith(isSaving: true, clearError: true);
-
-    try {
-      final body = config.toJson();
-      final response = config.id.isNotEmpty
-          ? await client.put('/api/configs/${config.id}', body: body)
-          : await client.post('/api/configs', body: body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        state = state.copyWith(isSaving: false);
-      } else {
-        state = state.copyWith(
-          isSaving: false,
-          error: 'Failed to save: ${response.statusCode}',
-        );
-      }
-    } on Object catch (e) {
-      state = state.copyWith(isSaving: false, error: 'Failed to save: $e');
     }
   }
 
@@ -286,35 +289,48 @@ class EditorController extends Notifier<EditorState> {
     updateConfig(updated);
   }
 
-  /// Saves the current config as a draft.
-  Future<void> saveDraft() async {
-    final config = state.config;
-    if (config == null) return;
+  /// Restores the pending draft by merging with the latest server config.
+  Future<void> restoreDraft() async {
+    final draft = state.pendingDraft;
+    if (draft == null) return;
 
-    final client = ref.read(apiClientProvider);
-    state = state.copyWith(isSavingDraft: true, clearError: true);
+    final latestJson = _baseConfigJson;
+    if (latestJson == null) return;
+
+    final merged = JsonMerge.merge(
+      base: draft.base,
+      latest: latestJson,
+      modified: draft.modified,
+    );
 
     try {
-      final body = <String, dynamic>{
-        'feedUrl': state.feedUrl ?? '',
-        'config': config.toJson(),
-      };
-      final response = await client.post('/api/drafts', body: body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        state = state.copyWith(isSavingDraft: false);
-      } else {
-        state = state.copyWith(
-          isSavingDraft: false,
-          error: 'Failed to save draft: ${response.statusCode}',
-        );
-      }
+      final config = SmartPlaylistPatternConfig.fromJson(merged);
+      state = state.copyWith(
+        config: config,
+        configJson: _formatJson(config.toJson()),
+        configVersion: state.configVersion + 1,
+        clearPendingDraft: true,
+        clearError: true,
+      );
     } on Object catch (e) {
       state = state.copyWith(
-        isSavingDraft: false,
-        error: 'Failed to save draft: $e',
+        error: 'Failed to restore draft: $e',
+        clearPendingDraft: true,
       );
     }
+  }
+
+  /// Discards the pending draft without applying it.
+  void discardDraft() {
+    final draftService = ref.read(localDraftServiceProvider);
+    draftService.clearDraft(_configId);
+    state = state.copyWith(clearPendingDraft: true);
+  }
+
+  /// Clears the draft after a successful PR submission.
+  void clearDraftOnSubmit() {
+    final draftService = ref.read(localDraftServiceProvider);
+    draftService.clearDraft(_configId);
   }
 
   /// Submits the current config as a PR.
@@ -352,6 +368,41 @@ class EditorController extends Notifier<EditorState> {
         error: 'Failed to submit PR: $e',
       );
       return null;
+    }
+  }
+
+  // -- Private helpers --
+
+  void _scheduleAutoSave() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(_debounceDuration, _performAutoSave);
+  }
+
+  void _performAutoSave() {
+    final config = state.config;
+    final baseJson = _baseConfigJson;
+    if (config == null || baseJson == null) return;
+
+    // Validate JSON is parseable before saving.
+    final modifiedJson = config.toJson();
+
+    final draftService = ref.read(localDraftServiceProvider);
+    draftService.saveDraft(
+      configId: _configId,
+      base: baseJson,
+      modified: modifiedJson,
+    );
+
+    state = state.copyWith(
+      lastAutoSavedAt: DateTime.now().toUtc().toIso8601String(),
+    );
+  }
+
+  void _checkForDraft() {
+    final draftService = ref.read(localDraftServiceProvider);
+    final draft = draftService.loadDraft(_configId);
+    if (draft != null) {
+      state = state.copyWith(pendingDraft: draft);
     }
   }
 

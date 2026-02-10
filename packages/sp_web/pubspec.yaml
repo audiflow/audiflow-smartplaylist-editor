@@ -17,5 +17,8 @@ dependencies:
     path: ../sp_shared
   web: ^1.1.1
 
+dev_dependencies:
+  test: ^1.25.0
+
 flutter:
   uses-material-design: true
