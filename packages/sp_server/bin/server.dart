@@ -72,6 +72,7 @@ Future<void> main() async {
     userService: userService,
   );
   router.get('/api/auth/<path|.*>', auth.call);
+  router.post('/api/auth/refresh', auth.call);
 
   // Mount API key management routes.
   final keys = keyRouter(jwtService: jwtService, apiKeyService: apiKeyService);

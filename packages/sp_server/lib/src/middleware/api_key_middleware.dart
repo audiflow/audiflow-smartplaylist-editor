@@ -57,7 +57,10 @@ Middleware unifiedAuthMiddleware({
       final authHeader = request.headers['authorization'];
       if (authHeader != null && authHeader.startsWith('Bearer ')) {
         final token = authHeader.substring('Bearer '.length);
-        final userId = jwtService.validateToken(token);
+        final userId = jwtService.validateToken(
+          token,
+          requiredType: JwtService.accessTokenType,
+        );
         if (userId != null) {
           final updated = request.change(context: {userIdContextKey: userId});
           return handler(updated);

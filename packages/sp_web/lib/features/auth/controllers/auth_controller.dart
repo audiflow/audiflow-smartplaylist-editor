@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sp_web/app/providers.dart';
-import 'package:sp_web/main.dart' show initialOAuthToken;
+import 'package:sp_web/main.dart'
+    show initialOAuthRefreshToken, initialOAuthToken;
 import 'package:web/web.dart' as web;
 
 /// Authentication state.
@@ -13,25 +14,31 @@ class Unauthenticated extends AuthState {
   const Unauthenticated();
 }
 
-/// User is authenticated with a JWT token.
+/// User is authenticated with a JWT token pair.
 class Authenticated extends AuthState {
-  const Authenticated({required this.token});
+  const Authenticated({required this.token, required this.refreshToken});
 
   final String token;
+  final String refreshToken;
 }
 
 /// Manages authentication state and JWT tokens.
 class AuthController extends Notifier<AuthState> {
   @override
   AuthState build() {
-    // Consume the token extracted from the OAuth redirect
-    // URL in main(). This runs before the widget tree
-    // builds, so the initial state is already Authenticated.
+    // Consume the tokens extracted from the OAuth
+    // redirect URL in main(). This runs before the
+    // widget tree builds, so the initial state is
+    // already Authenticated.
     final token = initialOAuthToken;
-    if (token != null) {
+    final refreshToken = initialOAuthRefreshToken;
+    if (token != null && refreshToken != null) {
       initialOAuthToken = null;
-      ref.read(apiClientProvider).setToken(token);
-      return Authenticated(token: token);
+      initialOAuthRefreshToken = null;
+      final client = ref.read(apiClientProvider);
+      client.setToken(token);
+      client.setRefreshToken(refreshToken);
+      return Authenticated(token: token, refreshToken: refreshToken);
     }
     return const Unauthenticated();
   }
@@ -52,21 +59,25 @@ class AuthController extends Notifier<AuthState> {
     web.window.location.href = url;
   }
 
-  /// Stores the JWT [token] received from the OAuth
-  /// callback and updates the API client.
-  void setToken(String token) {
+  /// Stores the JWT token pair and updates the API
+  /// client.
+  void setTokens(String token, String refreshToken) {
     final apiClient = ref.read(apiClientProvider);
     apiClient.setToken(token);
+    apiClient.setRefreshToken(refreshToken);
     web.window.localStorage.setItem('auth_token', token);
-    state = Authenticated(token: token);
+    web.window.localStorage.setItem('refresh_token', refreshToken);
+    state = Authenticated(token: token, refreshToken: refreshToken);
   }
 
-  /// Clears the stored token and returns to
+  /// Clears the stored tokens and returns to
   /// unauthenticated state.
   void logout() {
     final apiClient = ref.read(apiClientProvider);
     apiClient.clearToken();
+    apiClient.clearRefreshToken();
     web.window.localStorage.removeItem('auth_token');
+    web.window.localStorage.removeItem('refresh_token');
     state = const Unauthenticated();
   }
 }
