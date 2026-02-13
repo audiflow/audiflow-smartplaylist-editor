@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sp_web/features/editor/controllers/editor_controller.dart';
+import 'package:sp_web/services/local_draft_service.dart';
 import 'package:sp_web/features/editor/widgets/config_form.dart';
 import 'package:sp_web/features/editor/widgets/feed_url_input.dart';
 import 'package:sp_web/features/editor/widgets/json_editor.dart';
@@ -54,18 +55,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
     }
   }
 
-  Future<void> _handleSaveDraft() async {
-    await ref.read(editorControllerProvider.notifier).saveDraft();
-    if (!mounted) return;
-
-    final editorState = ref.read(editorControllerProvider);
-    if (editorState.error == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Draft saved successfully')));
-    }
-  }
-
   Future<void> _handleSubmitPr() async {
     final prUrl = await showDialog<String?>(
       context: context,
@@ -74,6 +63,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
     if (!mounted) return;
 
     if (prUrl != null) {
+      ref.read(editorControllerProvider.notifier).clearDraftOnSubmit();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('PR created: $prUrl'),
@@ -83,10 +73,64 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
     }
   }
 
+  Future<void> _showRestoreDialog(DraftEntry draft) async {
+    final savedAt = DateTime.tryParse(draft.savedAt);
+    final timeText = savedAt != null
+        ? '${savedAt.toLocal().hour.toString().padLeft(2, '0')}'
+              ':${savedAt.toLocal().minute.toString().padLeft(2, '0')}'
+        : draft.savedAt;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Unsaved Changes Found'),
+        content: Text(
+          'You have unsaved changes from $timeText. '
+          'Would you like to restore them?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Discard'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    final controller = ref.read(editorControllerProvider.notifier);
+    if (result == true) {
+      await controller.restoreDraft();
+    } else {
+      controller.discardDraft();
+    }
+  }
+
+  String _formatAutoSaveTime(String iso) {
+    final dt = DateTime.tryParse(iso)?.toLocal();
+    if (dt == null) return '';
+    return 'Auto-saved '
+        '${dt.hour.toString().padLeft(2, '0')}'
+        ':${dt.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final editorState = ref.watch(editorControllerProvider);
     final theme = Theme.of(context);
+
+    // Listen for pending draft changes to show restore dialog.
+    ref.listen<EditorState>(editorControllerProvider, (previous, next) {
+      if (previous?.pendingDraft == null && next.pendingDraft != null) {
+        _showRestoreDialog(next.pendingDraft!);
+      }
+    });
 
     final title = widget.configId != null
         ? 'Edit: ${widget.configId}'
@@ -96,6 +140,19 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
       appBar: AppBar(
         title: Text(title),
         actions: [
+          // Auto-save indicator
+          if (editorState.lastAutoSavedAt != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: Text(
+                  _formatAutoSaveTime(editorState.lastAutoSavedAt!),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
           // Form / JSON toggle
           SegmentedButton<bool>(
             segments: const [
@@ -109,34 +166,6 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
           ),
           const SizedBox(width: 8),
           FilledButton.icon(
-            onPressed: editorState.isSaving
-                ? null
-                : () {
-                    ref.read(editorControllerProvider.notifier).saveConfig();
-                  },
-            icon: editorState.isSaving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save),
-            label: const Text('Save'),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: editorState.isSavingDraft ? null : _handleSaveDraft,
-            icon: editorState.isSavingDraft
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.drafts),
-            label: const Text('Save Draft'),
-          ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
             onPressed: editorState.isSubmitting ? null : _handleSubmitPr,
             icon: editorState.isSubmitting
                 ? const SizedBox(
@@ -235,12 +264,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
 
   /// The form or JSON editor content area.
   Widget _buildEditorContent(EditorState editorState) {
+    // Use configVersion as Key so form widgets re-create their
+    // TextEditingControllers when a draft is restored.
+    final formKey = ValueKey(editorState.configVersion);
     if (editorState.isJsonMode) {
-      return const Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: JsonEditor(),
+      return Padding(
+        key: formKey,
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: const JsonEditor(),
       );
     }
-    return const ConfigForm();
+    return ConfigForm(key: formKey);
   }
 }
