@@ -27,7 +27,10 @@ Middleware authMiddleware(JwtService jwtService) {
       }
 
       final token = authHeader.substring('Bearer '.length);
-      final userId = jwtService.validateToken(token);
+      final userId = jwtService.validateToken(
+        token,
+        requiredType: JwtService.accessTokenType,
+      );
       if (userId == null) {
         return Response(
           401,

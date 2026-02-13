@@ -77,10 +77,7 @@ void main() {
         final redirectUri = Uri.parse(location);
         expect(redirectUri.host, equals('github.com'));
         expect(redirectUri.path, equals('/login/oauth/authorize'));
-        expect(
-          redirectUri.queryParameters['client_id'],
-          equals('test-client'),
-        );
+        expect(redirectUri.queryParameters['client_id'], equals('test-client'));
 
         // The state should contain the redirect_uri.
         final state = redirectUri.queryParameters['state']!;
@@ -120,8 +117,7 @@ void main() {
         expect(response.statusCode, equals(400));
       });
 
-      test('redirects to frontend with error when code is missing',
-          () async {
+      test('redirects to frontend with error when code is missing', () async {
         final state = _fakeState(frontendLogin);
         final request = Request(
           'GET',
@@ -138,7 +134,7 @@ void main() {
         expect(location.queryParameters['error'], equals('missing_code'));
       });
 
-      test('redirects to frontend with token on valid code', () async {
+      test('redirects to frontend with both tokens on valid code', () async {
         final state = _fakeState(frontendLogin);
         final request = Request(
           'GET',
@@ -157,6 +153,7 @@ void main() {
         expect(location.port, equals(3000));
         expect(location.path, equals('/login'));
         expect(location.queryParameters['token'], isNotEmpty);
+        expect(location.queryParameters['refresh_token'], isNotEmpty);
       });
 
       test('redirects with error when token exchange fails', () async {
@@ -165,10 +162,7 @@ void main() {
           clientSecret: 's',
           redirectUri: 'http://localhost/cb',
           httpPost: (url, {headers, body}) async {
-            return HttpPostResponse(
-              statusCode: 401,
-              body: '{"error":"bad"}',
-            );
+            return HttpPostResponse(statusCode: 401, body: '{"error":"bad"}');
           },
         );
         final failHandler = authRouter(
@@ -195,6 +189,90 @@ void main() {
           location.queryParameters['error'],
           equals('token_exchange_failed'),
         );
+      });
+    });
+
+    group('POST /api/auth/refresh', () {
+      test('returns new token pair for valid refresh token', () async {
+        final refreshToken = jwtService.createRefreshToken('user-1');
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': refreshToken}),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['accessToken'], isNotEmpty);
+        expect(body['refreshToken'], isNotEmpty);
+
+        // Verify the new access token is valid.
+        final userId = jwtService.validateToken(
+          body['accessToken'] as String,
+          requiredType: JwtService.accessTokenType,
+        );
+        expect(userId, equals('user-1'));
+      });
+
+      test('rejects expired refresh token', () async {
+        final expiredToken = jwtService.createRefreshToken(
+          'user-1',
+          expiry: const Duration(seconds: -1),
+        );
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': expiredToken}),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(401));
+      });
+
+      test('rejects invalid refresh token', () async {
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': 'garbage.token.value'}),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(401));
+      });
+
+      test('rejects access token used as refresh token', () async {
+        final accessToken = jwtService.createToken('user-1');
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': accessToken}),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(401));
+      });
+
+      test('returns 400 when refreshToken is missing', () async {
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/auth/refresh'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'token': 'wrong-field'}),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
       });
     });
 
@@ -225,8 +303,7 @@ void main() {
 
         expect(meResp.statusCode, equals(200));
         final meBody =
-            jsonDecode(await meResp.readAsString())
-                as Map<String, dynamic>;
+            jsonDecode(await meResp.readAsString()) as Map<String, dynamic>;
         final user = meBody['user'] as Map<String, dynamic>;
         expect(user['githubUsername'], equals('testuser'));
       });

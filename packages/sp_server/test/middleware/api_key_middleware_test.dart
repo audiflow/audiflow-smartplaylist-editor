@@ -201,6 +201,43 @@ void main() {
 
       expect(response.statusCode, equals(401));
     });
+
+    test('rejects refresh token in JWT slot', () async {
+      final refreshToken = jwtService.createRefreshToken('user-jwt');
+
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost/protected'),
+        headers: {'Authorization': 'Bearer $refreshToken'},
+      );
+
+      final response = await protectedHandler(request);
+
+      // Refresh token fails JWT validation, no API key
+      // fallback provided, so 401.
+      expect(response.statusCode, equals(401));
+    });
+
+    test('falls back to API key when refresh token used as JWT', () async {
+      final refreshToken = jwtService.createRefreshToken('user-jwt');
+      final result = apiKeyService.generateKey('user-api', 'Fallback');
+
+      final request = Request(
+        'GET',
+        Uri.parse('http://localhost/protected'),
+        headers: {
+          'Authorization': 'Bearer $refreshToken',
+          'X-API-Key': result.plaintext,
+        },
+      );
+
+      final response = await protectedHandler(request);
+
+      expect(response.statusCode, equals(200));
+      final body =
+          jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+      expect(body['userId'], equals('user-api'));
+    });
   });
 }
 
