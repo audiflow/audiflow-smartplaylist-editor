@@ -28,6 +28,9 @@ class PreviewState {
   List<dynamic> get ungrouped =>
       (result?['ungrouped'] as List<dynamic>?) ?? const [];
 
+  /// Resolver type used for the preview run.
+  String? get resolverType => result?['resolverType'] as String?;
+
   /// Debug statistics from the resolver run.
   Map<String, dynamic> get debug =>
       (result?['debug'] as Map<String, dynamic>?) ?? const {};

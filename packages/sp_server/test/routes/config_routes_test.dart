@@ -669,11 +669,12 @@ void main() {
 
         final season1 = playlists[0] as Map<String, dynamic>;
         expect(season1['displayName'], equals('Season 1'));
-        expect((season1['episodeIds'] as List).length, equals(2));
+        expect(season1['episodeCount'], equals(2));
+        expect(season1['resolverType'], equals('rss'));
 
         final season2 = playlists[1] as Map<String, dynamic>;
         expect(season2['displayName'], equals('Season 2'));
-        expect((season2['episodeIds'] as List).length, equals(1));
+        expect(season2['episodeCount'], equals(1));
 
         expect(body['resolverType'], equals('rss'));
       });
@@ -837,8 +838,11 @@ void main() {
         expect(response.statusCode, equals(200));
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        final ungrouped = body['ungroupedEpisodeIds'] as List;
-        expect(ungrouped, contains(2));
+        final ungrouped = body['ungrouped'] as List;
+        final ungroupedIds = ungrouped
+            .map((e) => (e as Map<String, dynamic>)['id'])
+            .toList();
+        expect(ungroupedIds, contains(2));
       });
 
       test('has JSON content type', () async {

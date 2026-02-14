@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sp_shared/sp_shared.dart';
 import 'package:sp_web/app/providers.dart';
+import 'package:sp_web/features/preview/controllers/preview_controller.dart';
 import 'package:sp_web/services/json_merge.dart';
 import 'package:sp_web/services/local_draft_service.dart';
 
@@ -216,11 +217,16 @@ class EditorController extends Notifier<EditorState> {
       final encodedUrl = Uri.encodeQueryComponent(feedUrl);
       final response = await client.get('/api/feeds?url=$encodedUrl');
       if (response.statusCode == 200) {
-        final map = jsonDecode(response.body) as Map<String, dynamic>;
-        state = state.copyWith(
-          isLoadingFeed: false,
-          configJson: _formatJson(map),
-        );
+        state = state.copyWith(isLoadingFeed: false);
+        // Auto-run preview when config is available.
+        final config = state.config;
+        if (config != null) {
+          unawaited(
+            ref
+                .read(previewControllerProvider.notifier)
+                .runPreview(config, feedUrl),
+          );
+        }
       } else {
         state = state.copyWith(
           isLoadingFeed: false,

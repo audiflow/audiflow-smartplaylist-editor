@@ -344,38 +344,65 @@ Map<String, dynamic> _runPreview(
   if (result == null) {
     return {
       'playlists': <Map<String, dynamic>>[],
-      'ungroupedEpisodeIds': <int>[],
+      'ungrouped': <Map<String, dynamic>>[],
       'resolverType': null,
     };
   }
 
+  // Build lookup so groups can include episode details.
+  final episodeById = <int, SimpleEpisodeData>{
+    for (final e in episodes) e.id: e,
+  };
+
   return {
-    'playlists': result.playlists.map(_serializePlaylist).toList(),
-    'ungroupedEpisodeIds': result.ungroupedEpisodeIds,
+    'playlists': result.playlists
+        .map((p) => _serializePlaylist(p, result.resolverType, episodeById))
+        .toList(),
+    'ungrouped': result.ungroupedEpisodeIds
+        .map((id) => _serializeEpisode(episodeById[id]))
+        .whereType<Map<String, dynamic>>()
+        .toList(),
     'resolverType': result.resolverType,
   };
 }
 
-Map<String, dynamic> _serializePlaylist(SmartPlaylist playlist) {
+Map<String, dynamic> _serializePlaylist(
+  SmartPlaylist playlist,
+  String? resolverType,
+  Map<int, SimpleEpisodeData> episodeById,
+) {
   return {
     'id': playlist.id,
     'displayName': playlist.displayName,
     'sortKey': playlist.sortKey,
-    'episodeIds': playlist.episodeIds,
+    'resolverType': resolverType,
     'episodeCount': playlist.episodeCount,
     if (playlist.groups != null)
-      'groups': playlist.groups!.map(_serializeGroup).toList(),
+      'groups': playlist.groups!
+          .map((g) => _serializeGroup(g, episodeById))
+          .toList(),
   };
 }
 
-Map<String, dynamic> _serializeGroup(SmartPlaylistGroup group) {
+Map<String, dynamic> _serializeGroup(
+  SmartPlaylistGroup group,
+  Map<int, SimpleEpisodeData> episodeById,
+) {
   return {
     'id': group.id,
     'displayName': group.displayName,
     'sortKey': group.sortKey,
-    'episodeIds': group.episodeIds,
     'episodeCount': group.episodeCount,
+    'episodes': group.episodeIds
+        .map((id) => _serializeEpisode(episodeById[id]))
+        .whereType<Map<String, dynamic>>()
+        .toList(),
   };
+}
+
+Map<String, dynamic>? _serializeEpisode(SimpleEpisodeData? episode) {
+  if (episode == null) return null;
+  return {'id': episode.id, 'title': episode.title};
 }
 
 Response _error(int status, String message) {
