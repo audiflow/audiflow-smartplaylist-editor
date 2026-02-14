@@ -870,6 +870,86 @@ void main() {
 
         expect(response.headers['content-type'], equals('application/json'));
       });
+
+      test('enriches episodes with smartPlaylistEpisodeExtractor', () async {
+        // Episodes have null seasonNumber (as in real RSS feed)
+        // but titles encode season-episode: 【62-2】 and 【15-8】
+        final previewBody = jsonEncode({
+          'config': {
+            'id': 'test',
+            'playlists': [
+              {
+                'id': 'regular',
+                'displayName': 'Regular',
+                'resolverType': 'rss',
+                'nullSeasonGroupKey': 0,
+                'titleExtractor': {
+                  'source': 'title',
+                  'pattern': r'Series (\w+)',
+                  'group': 1,
+                  'fallbackValue': 'Extras',
+                },
+                'smartPlaylistEpisodeExtractor': {
+                  'source': 'title',
+                  'pattern': r'\[(\d+)-(\d+)\]',
+                  'seasonGroup': 1,
+                  'episodeGroup': 2,
+                },
+              },
+            ],
+          },
+          'episodes': [
+            {
+              'id': 1,
+              'title': '[1-1] Pilot [Series Alpha1]',
+              'seasonNumber': 1,
+            },
+            {
+              'id': 2,
+              'title': '[1-2] Episode Two [Series Alpha2]',
+              // null seasonNumber in RSS, but title encodes season 1
+            },
+            {
+              'id': 3,
+              'title': '[2-1] New Arc [Series Beta1]',
+              'seasonNumber': 2,
+            },
+          ],
+        });
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/preview'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: previewBody,
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        final playlists = body['playlists'] as List;
+
+        // Episode 2 should be enriched to season 1 (from title),
+        // NOT end up in the nullSeasonGroupKey=0 / "Extras" group.
+        expect(playlists.length, equals(2));
+
+        final season1 = playlists[0] as Map<String, dynamic>;
+        expect(season1['sortKey'], equals(1));
+        expect(season1['episodeCount'], equals(2));
+
+        final season2 = playlists[1] as Map<String, dynamic>;
+        expect(season2['sortKey'], equals(2));
+        expect(season2['episodeCount'], equals(1));
+
+        // No ungrouped episodes
+        final ungrouped = body['ungrouped'] as List;
+        expect(ungrouped, isEmpty);
+      });
     });
   });
 }

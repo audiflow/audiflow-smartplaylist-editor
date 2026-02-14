@@ -319,10 +319,44 @@ DateTime? _parseDateTime(Object? value) {
   return null;
 }
 
+/// Applies the first available [SmartPlaylistEpisodeExtractor] from the
+/// config to enrich episodes with title-derived season/episode numbers.
+///
+/// This matches the mobile app behavior where episodes are enriched
+/// during feed sync before the resolver runs.
+List<SimpleEpisodeData> _enrichEpisodes(
+  SmartPlaylistPatternConfig config,
+  List<SimpleEpisodeData> episodes,
+) {
+  final extractor = config.playlists
+      .map((d) => d.smartPlaylistEpisodeExtractor)
+      .nonNulls
+      .firstOrNull;
+  if (extractor == null) return episodes;
+
+  return episodes.map((episode) {
+    final result = extractor.extract(episode);
+    if (!result.hasValues) return episode;
+    return SimpleEpisodeData(
+      id: episode.id,
+      title: episode.title,
+      description: episode.description,
+      seasonNumber: result.seasonNumber ?? episode.seasonNumber,
+      episodeNumber: result.episodeNumber ?? episode.episodeNumber,
+      publishedAt: episode.publishedAt,
+      imageUrl: episode.imageUrl,
+    );
+  }).toList();
+}
+
 Map<String, dynamic> _runPreview(
   SmartPlaylistPatternConfig config,
   List<SimpleEpisodeData> episodes,
 ) {
+  // Enrich episodes with smartPlaylistEpisodeExtractor before resolving,
+  // matching mobile app behavior (feed_sync_service.dart).
+  final enriched = _enrichEpisodes(config, episodes);
+
   final resolvers = <SmartPlaylistResolver>[
     RssMetadataResolver(),
     CategoryResolver(),
@@ -338,7 +372,7 @@ Map<String, dynamic> _runPreview(
   final result = service.resolveSmartPlaylists(
     podcastGuid: config.podcastGuid,
     feedUrl: config.feedUrls?.firstOrNull ?? '',
-    episodes: episodes,
+    episodes: enriched,
   );
 
   if (result == null) {
@@ -351,7 +385,7 @@ Map<String, dynamic> _runPreview(
 
   // Build lookup so groups can include episode details.
   final episodeById = <int, SimpleEpisodeData>{
-    for (final e in episodes) e.id: e,
+    for (final e in enriched) e.id: e,
   };
 
   return {
