@@ -93,7 +93,7 @@ Future<Response> _handleList(
       jsonEncode({'configs': patterns.map((p) => p.toJson()).toList()}),
       headers: _jsonHeaders,
     );
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to fetch configs: $e'}),
@@ -113,7 +113,7 @@ Future<Response> _handlePatterns(
       jsonEncode(patterns.map((p) => p.toJson()).toList()),
       headers: _jsonHeaders,
     );
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to fetch patterns: $e'}),
@@ -135,7 +135,7 @@ Future<Response> _handlePatternMeta(
   try {
     final meta = await configRepository.getPatternMeta(id);
     return Response.ok(jsonEncode(meta.toJson()), headers: _jsonHeaders);
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to fetch pattern meta: $e'}),
@@ -161,7 +161,7 @@ Future<Response> _handlePlaylist(
   try {
     final playlist = await configRepository.getPlaylist(id, pid);
     return Response.ok(jsonEncode(playlist.toJson()), headers: _jsonHeaders);
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to fetch playlist: $e'}),
@@ -183,7 +183,7 @@ Future<Response> _handleAssembled(
   try {
     final config = await configRepository.assembleConfig(id);
     return Response.ok(jsonEncode(config.toJson()), headers: _jsonHeaders);
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to assemble config: $e'}),
@@ -209,7 +209,7 @@ Future<Response> _handleGet(
   try {
     final config = await configRepository.assembleConfig(id);
     return Response.ok(jsonEncode(config.toJson()), headers: _jsonHeaders);
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to fetch config: $e'}),
@@ -288,7 +288,7 @@ Future<Response> _handlePreview(Request request) async {
     final episodes = _parseEpisodes(episodesJson);
     final result = _runPreview(config, episodes);
     return Response.ok(jsonEncode(result), headers: _jsonHeaders);
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       400,
       body: jsonEncode({'error': 'Preview failed: $e'}),
