@@ -69,22 +69,24 @@ class PreviewPanel extends ConsumerWidget {
       return _buildEmptyState(theme);
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          PlaylistTree(playlists: previewState.playlists),
-          const SizedBox(height: 12),
-          if (previewState.ungrouped.isNotEmpty) ...[
-            _buildUngroupedSection(previewState.ungrouped, theme),
+    return SelectionArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            PlaylistTree(playlists: previewState.playlists),
             const SizedBox(height: 12),
+            if (previewState.ungrouped.isNotEmpty) ...[
+              _buildUngroupedSection(previewState.ungrouped, theme),
+              const SizedBox(height: 12),
+            ],
+            DebugInfoPanel(
+              debug: previewState.debug,
+              playlists: previewState.playlists,
+            ),
           ],
-          DebugInfoPanel(
-            debug: previewState.debug,
-            playlists: previewState.playlists,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -98,7 +100,7 @@ class PreviewPanel extends ConsumerWidget {
           children: [
             Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 12),
-            Text(
+            SelectableText(
               error,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.colorScheme.error),
