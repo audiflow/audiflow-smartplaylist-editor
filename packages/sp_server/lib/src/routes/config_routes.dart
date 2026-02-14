@@ -388,6 +388,11 @@ Map<String, dynamic> _runPreview(
     for (final e in enriched) e.id: e,
   };
 
+  final groupedCount = result.playlists.fold<int>(
+    0,
+    (sum, p) => sum + p.episodeIds.length,
+  );
+
   return {
     'playlists': result.playlists
         .map((p) => _serializePlaylist(p, result.resolverType, episodeById))
@@ -397,6 +402,11 @@ Map<String, dynamic> _runPreview(
         .whereType<Map<String, dynamic>>()
         .toList(),
     'resolverType': result.resolverType,
+    'debug': {
+      'totalEpisodes': enriched.length,
+      'groupedEpisodes': groupedCount,
+      'ungroupedEpisodes': result.ungroupedEpisodeIds.length,
+    },
   };
 }
 
