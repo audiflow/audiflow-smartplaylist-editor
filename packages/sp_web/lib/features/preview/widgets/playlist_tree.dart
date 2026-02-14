@@ -98,7 +98,7 @@ class _GroupTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final key = group['key'] as String? ?? 'Ungrouped';
+    final displayName = group['displayName'] as String? ?? 'Ungrouped';
     final episodes = (group['episodes'] as List<dynamic>?) ?? const <dynamic>[];
     final theme = Theme.of(context);
 
@@ -108,7 +108,7 @@ class _GroupTile extends StatelessWidget {
         children: [
           Flexible(
             child: Text(
-              key,
+              displayName,
               style: theme.textTheme.titleSmall,
               overflow: TextOverflow.ellipsis,
             ),
