@@ -677,6 +677,11 @@ void main() {
         expect(season2['episodeCount'], equals(1));
 
         expect(body['resolverType'], equals('rss'));
+
+        final debug = body['debug'] as Map<String, dynamic>;
+        expect(debug['totalEpisodes'], equals(3));
+        expect(debug['groupedEpisodes'], equals(3));
+        expect(debug['ungroupedEpisodes'], equals(0));
       });
 
       test('returns empty result with no episodes', () async {
