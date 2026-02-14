@@ -5,6 +5,7 @@ import '../models/smart_playlist_group_def.dart';
 import '../models/smart_playlist_pattern_config.dart';
 import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/smart_playlist_resolver.dart';
+import 'episode_sorter.dart';
 
 /// Service that orchestrates the smart playlist resolver chain.
 ///
@@ -32,15 +33,19 @@ class SmartPlaylistResolverService {
   }) {
     if (episodes.isEmpty) return null;
 
+    final episodeById = {for (final e in episodes) e.id: e};
+
     final config = _findMatchingConfig(podcastGuid, feedUrl);
     if (config != null) {
-      return _resolveWithConfig(config, episodes);
+      final result = _resolveWithConfig(config, episodes);
+      if (result != null) return _sortGroupingEpisodes(result, episodeById);
+      return null;
     }
 
     // Fallback: try resolvers in order with no definition
     for (final resolver in _resolvers) {
       final result = resolver.resolve(episodes, null);
-      if (result != null) return result;
+      if (result != null) return _sortGroupingEpisodes(result, episodeById);
     }
 
     return null;
@@ -154,6 +159,41 @@ class SmartPlaylistResolverService {
       playlists: allPlaylists,
       ungroupedEpisodeIds: allUngroupedIds.toList(),
       resolverType: resolverType ?? 'config',
+    );
+  }
+
+  /// Sorts episode IDs in every playlist, group, and ungrouped list
+  /// by [EpisodeData.publishedAt] ascending (oldest first).
+  SmartPlaylistGrouping _sortGroupingEpisodes(
+    SmartPlaylistGrouping grouping,
+    Map<int, EpisodeData> episodeById,
+  ) {
+    final sortedPlaylists = grouping.playlists.map((playlist) {
+      final sortedGroups = playlist.groups?.map((group) {
+        return group.copyWith(
+          episodeIds: sortEpisodeIdsByPublishedAt(
+            group.episodeIds,
+            episodeById,
+          ),
+        );
+      }).toList();
+
+      return playlist.copyWith(
+        episodeIds: sortEpisodeIdsByPublishedAt(
+          playlist.episodeIds,
+          episodeById,
+        ),
+        groups: sortedGroups,
+      );
+    }).toList();
+
+    return SmartPlaylistGrouping(
+      playlists: sortedPlaylists,
+      ungroupedEpisodeIds: sortEpisodeIdsByPublishedAt(
+        grouping.ungroupedEpisodeIds,
+        episodeById,
+      ),
+      resolverType: grouping.resolverType,
     );
   }
 
