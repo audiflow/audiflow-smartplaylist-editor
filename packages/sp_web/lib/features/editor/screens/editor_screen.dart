@@ -9,6 +9,7 @@ import 'package:sp_web/features/editor/widgets/json_editor.dart';
 import 'package:sp_web/features/editor/widgets/submit_dialog.dart';
 import 'package:sp_web/features/preview/widgets/preview_panel.dart';
 import 'package:sp_web/routing/app_router.dart';
+import 'package:web/web.dart' as web;
 
 /// Minimum width (in logical pixels) for the side-by-side layout.
 const _kSideBySideBreakpoint = 600.0;
@@ -177,6 +178,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen>
             label: const Text('Submit PR'),
           ),
           const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.description_outlined),
+            onPressed: () => web.window.open('docs/schema.html', '_blank'),
+            tooltip: 'Schema Docs',
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push(RoutePaths.settings),
