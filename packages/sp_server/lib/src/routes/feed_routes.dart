@@ -63,7 +63,7 @@ Future<Response> _handleGetFeed(
       jsonEncode({'episodes': episodes}),
       headers: _jsonHeaders,
     );
-  } on Exception catch (e) {
+  } on Object catch (e) {
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to fetch feed: $e'}),

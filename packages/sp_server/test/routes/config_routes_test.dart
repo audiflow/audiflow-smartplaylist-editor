@@ -96,6 +96,19 @@ ConfigRepository _createRepo({
   );
 }
 
+/// Creates a repo that returns malformed JSON to trigger
+/// TypeError (Error, not Exception) during parsing.
+ConfigRepository _createMalformedRepo() {
+  return ConfigRepository(
+    httpGet: (Uri url) async {
+      // Return valid JSON that is missing required fields,
+      // causing a TypeError when fromJson casts null as int.
+      return '{"unexpected": true}';
+    },
+    baseUrl: _baseUrl,
+  );
+}
+
 void main() {
   group('configRouter', () {
     late JwtService jwtService;
@@ -187,6 +200,28 @@ void main() {
         final response = await failRouter.call(request);
 
         expect(response.statusCode, equals(502));
+      });
+
+      test('returns 502 on malformed upstream data', () async {
+        final malformedRepo = _createMalformedRepo();
+        final malformedRouter = configRouter(
+          configRepository: malformedRepo,
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'GET',
+          Uri.parse('http://localhost/api/configs'),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await malformedRouter.call(request);
+
+        expect(response.statusCode, equals(502));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], isNotNull);
       });
 
       test('has JSON content type', () async {
@@ -399,6 +434,30 @@ void main() {
 
         final response = await failRouter.call(request);
         expect(response.statusCode, equals(502));
+      });
+
+      test('returns 502 on malformed upstream data', () async {
+        final malformedRepo = _createMalformedRepo();
+        final malformedRouter = configRouter(
+          configRepository: malformedRepo,
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'GET',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/assembled',
+          ),
+          headers: {'Authorization': 'Bearer $validToken'},
+        );
+
+        final response = await malformedRouter.call(request);
+
+        expect(response.statusCode, equals(502));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('Failed to assemble config'));
       });
     });
 
