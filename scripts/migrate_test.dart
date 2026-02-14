@@ -36,7 +36,7 @@ void main() {
         'patterns': [
           {
             'id': 'test_pattern',
-            'feedUrlPatterns': [r'https://example\.com/feed'],
+            'feedUrls': ['https://example.com/feed'],
             'yearGroupedEpisodes': true,
             'playlists': [
               {
@@ -149,7 +149,7 @@ void main() {
         'patterns': [
           {
             'id': 'coten_radio',
-            'feedUrlPatterns': [r'https://example\.com/feed'],
+            'feedUrls': ['https://example.com/feed'],
             'playlists': [
               {'id': 'p1', 'displayName': 'P1', 'resolverType': 'rss'},
             ],
@@ -172,7 +172,7 @@ void main() {
     }
   }
 
-  // Test 3: strips regex escapes for feedUrlHint
+  // Test 3: uses first feedUrl as feedUrlHint
   {
     final tempDir = Directory.systemTemp.createTempSync('migrate_test_');
     try {
@@ -181,7 +181,7 @@ void main() {
         'patterns': [
           {
             'id': 'test',
-            'feedUrlPatterns': [r'https://anchor\.fm/s/8c2088c/podcast/rss'],
+            'feedUrls': ['https://anchor.fm/s/8c2088c/podcast/rss'],
             'playlists': [
               {'id': 'p1', 'displayName': 'P1', 'resolverType': 'rss'},
             ],
@@ -198,18 +198,14 @@ void main() {
       expectEquals(
         hint,
         'https://anchor.fm/s/8c2088c/podcast/rss',
-        'feedUrlHint with escapes stripped',
-      );
-      expectTrue(
-        !hint.contains(r'\'),
-        'feedUrlHint should not contain backslashes',
+        'feedUrlHint from first feedUrl',
       );
     } finally {
       tempDir.deleteSync(recursive: true);
     }
   }
 
-  // Test 4: handles pattern with no feedUrlPatterns
+  // Test 4: handles pattern with no feedUrls
   {
     final tempDir = Directory.systemTemp.createTempSync('migrate_test_');
     try {
@@ -234,7 +230,7 @@ void main() {
       expectEquals(
         rootMeta['patterns'][0]['feedUrlHint'],
         '',
-        'empty feedUrlHint when no patterns',
+        'empty feedUrlHint when no feedUrls',
       );
 
       final patternMeta =
@@ -248,9 +244,9 @@ void main() {
         'podcastGuid preserved in meta',
       );
       expectEquals(
-        (patternMeta['feedUrlPatterns'] as List).length,
+        (patternMeta['feedUrls'] as List).length,
         0,
-        'empty feedUrlPatterns',
+        'empty feedUrls',
       );
     } finally {
       tempDir.deleteSync(recursive: true);
@@ -266,14 +262,14 @@ void main() {
         'patterns': [
           {
             'id': 'pattern_a',
-            'feedUrlPatterns': [r'https://a\.com/feed'],
+            'feedUrls': ['https://a.com/feed'],
             'playlists': [
               {'id': 'p1', 'displayName': 'P1', 'resolverType': 'rss'},
             ],
           },
           {
             'id': 'pattern_b',
-            'feedUrlPatterns': [r'https://b\.com/feed'],
+            'feedUrls': ['https://b.com/feed'],
             'playlists': [
               {'id': 'p2', 'displayName': 'P2', 'resolverType': 'rss'},
               {'id': 'p3', 'displayName': 'P3', 'resolverType': 'category'},
@@ -344,7 +340,7 @@ void main() {
         'patterns': [
           {
             'id': 'no_year',
-            'feedUrlPatterns': [r'https://example\.com/feed'],
+            'feedUrls': ['https://example.com/feed'],
             'playlists': [
               {'id': 'p1', 'displayName': 'P1', 'resolverType': 'rss'},
             ],
@@ -384,20 +380,6 @@ void main() {
       deriveDisplayName('single'),
       'Single',
       'deriveDisplayName: single word',
-    );
-  }
-
-  // Test 8: unit test for stripRegexEscapes
-  {
-    expectEquals(
-      stripRegexEscapes(r'https://anchor\.fm/feed'),
-      'https://anchor.fm/feed',
-      'stripRegexEscapes: dot escape',
-    );
-    expectEquals(
-      stripRegexEscapes('https://example.com/feed'),
-      'https://example.com/feed',
-      'stripRegexEscapes: no escapes',
     );
   }
 

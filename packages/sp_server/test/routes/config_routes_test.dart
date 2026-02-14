@@ -36,7 +36,7 @@ String _patternMetaA() => jsonEncode({
   'version': 1,
   'id': 'podcast-a',
   'podcastGuid': 'guid-a',
-  'feedUrlPatterns': ['https://example\\.com/a/feed\\.xml'],
+  'feedUrls': ['https://example.com/a/feed.xml'],
   'playlists': ['seasons'],
 });
 
@@ -44,7 +44,7 @@ String _patternMetaA() => jsonEncode({
 String _patternMetaB() => jsonEncode({
   'version': 1,
   'id': 'podcast-b',
-  'feedUrlPatterns': ['https://example\\.com/b/.*'],
+  'feedUrls': ['https://example.com/b/feed.xml'],
   'playlists': ['by-year', 'categories'],
 });
 

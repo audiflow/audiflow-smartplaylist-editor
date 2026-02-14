@@ -184,6 +184,11 @@ class EditorController extends Notifier<EditorState> {
           isLoadingConfig: false,
         );
         _checkForDraft();
+
+        final urls = config.feedUrls;
+        if (urls != null && urls.isNotEmpty) {
+          unawaited(loadFeed(urls.first));
+        }
       } else {
         state = state.copyWith(
           isLoadingConfig: false,
@@ -244,7 +249,7 @@ class EditorController extends Notifier<EditorState> {
     final updated = SmartPlaylistPatternConfig(
       id: config.id,
       podcastGuid: config.podcastGuid,
-      feedUrlPatterns: config.feedUrlPatterns,
+      feedUrls: config.feedUrls,
       yearGroupedEpisodes: config.yearGroupedEpisodes,
       playlists: [...config.playlists, newPlaylist],
     );
@@ -262,7 +267,7 @@ class EditorController extends Notifier<EditorState> {
     final updated = SmartPlaylistPatternConfig(
       id: config.id,
       podcastGuid: config.podcastGuid,
-      feedUrlPatterns: config.feedUrlPatterns,
+      feedUrls: config.feedUrls,
       yearGroupedEpisodes: config.yearGroupedEpisodes,
       playlists: playlists,
     );
@@ -281,7 +286,7 @@ class EditorController extends Notifier<EditorState> {
     final updated = SmartPlaylistPatternConfig(
       id: config.id,
       podcastGuid: config.podcastGuid,
-      feedUrlPatterns: config.feedUrlPatterns,
+      feedUrls: config.feedUrls,
       yearGroupedEpisodes: config.yearGroupedEpisodes,
       playlists: playlists,
     );

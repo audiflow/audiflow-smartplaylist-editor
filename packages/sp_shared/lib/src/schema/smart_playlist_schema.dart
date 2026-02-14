@@ -134,7 +134,7 @@ final class SmartPlaylistSchema {
     return {
       'type': 'object',
       'description':
-          'Matches a podcast by GUID or feed URL patterns and '
+          'Matches a podcast by GUID or feed URLs and '
           'provides playlist definitions.',
       'required': ['id', 'playlists'],
       'additionalProperties': false,
@@ -147,13 +147,11 @@ final class SmartPlaylistSchema {
           'type': 'string',
           'description':
               'Podcast GUID for exact matching. '
-              'Checked before feedUrlPatterns.',
+              'Checked before feedUrls.',
         },
-        'feedUrlPatterns': {
+        'feedUrls': {
           'type': 'array',
-          'description':
-              'Regex patterns to match against feed URLs. '
-              'Patterns are anchored with ^ and \$.',
+          'description': 'Exact feed URLs for matching.',
           'items': {'type': 'string'},
         },
         'yearGroupedEpisodes': {
@@ -578,7 +576,7 @@ final class SmartPlaylistSchema {
     }
 
     _optionalBool(config, 'yearGroupedEpisodes', path, errors);
-    _optionalStringList(config, 'feedUrlPatterns', path, errors);
+    _optionalStringList(config, 'feedUrls', path, errors);
     _optionalString(config, 'podcastGuid', path, errors);
   }
 

@@ -7,7 +7,7 @@ void main() {
       final meta = PatternMeta(
         version: 1,
         id: 'coten_radio',
-        feedUrlPatterns: [r'https://anchor\.fm/s/8c2088c/podcast/rss'],
+        feedUrls: ['https://anchor.fm/s/8c2088c/podcast/rss'],
         yearGroupedEpisodes: true,
         playlists: ['regular', 'short'],
       );
@@ -27,7 +27,7 @@ void main() {
       final config = ConfigAssembler.assemble(meta, playlists);
 
       expect(config.id, 'coten_radio');
-      expect(config.feedUrlPatterns, hasLength(1));
+      expect(config.feedUrls, hasLength(1));
       expect(config.yearGroupedEpisodes, isTrue);
       expect(config.playlists, hasLength(2));
       expect(config.playlists[0].id, 'regular');
@@ -39,7 +39,7 @@ void main() {
         version: 1,
         id: 'test',
         podcastGuid: 'guid-abc',
-        feedUrlPatterns: [],
+        feedUrls: [],
         playlists: ['main'],
       );
       final playlists = [
@@ -58,7 +58,7 @@ void main() {
       final meta = PatternMeta(
         version: 1,
         id: 'test',
-        feedUrlPatterns: [],
+        feedUrls: [],
         playlists: ['b', 'a'],
       );
       final playlists = [

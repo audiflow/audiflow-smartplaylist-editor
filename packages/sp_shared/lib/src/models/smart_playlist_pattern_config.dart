@@ -6,7 +6,7 @@ final class SmartPlaylistPatternConfig {
   const SmartPlaylistPatternConfig({
     required this.id,
     this.podcastGuid,
-    this.feedUrlPatterns,
+    this.feedUrls,
     this.yearGroupedEpisodes = false,
     required this.playlists,
   });
@@ -16,8 +16,7 @@ final class SmartPlaylistPatternConfig {
     return SmartPlaylistPatternConfig(
       id: json['id'] as String,
       podcastGuid: json['podcastGuid'] as String?,
-      feedUrlPatterns: (json['feedUrlPatterns'] as List<dynamic>?)
-          ?.cast<String>(),
+      feedUrls: (json['feedUrls'] as List<dynamic>?)?.cast<String>(),
       yearGroupedEpisodes: (json['yearGroupedEpisodes'] as bool?) ?? false,
       playlists: (json['playlists'] as List<dynamic>)
           .map(
@@ -33,8 +32,8 @@ final class SmartPlaylistPatternConfig {
   /// Podcast GUID for exact matching.
   final String? podcastGuid;
 
-  /// Regex patterns to match against feed URLs.
-  final List<String>? feedUrlPatterns;
+  /// Exact feed URLs for matching.
+  final List<String>? feedUrls;
 
   /// Whether episodes should be grouped by year.
   final bool yearGroupedEpisodes;
@@ -45,12 +44,7 @@ final class SmartPlaylistPatternConfig {
   /// Returns true if this config matches the given podcast.
   bool matchesPodcast(String? guid, String feedUrl) {
     if (podcastGuid != null && guid == podcastGuid) return true;
-    if (feedUrlPatterns != null) {
-      for (final pattern in feedUrlPatterns!) {
-        final regex = RegExp('^$pattern\$');
-        if (regex.hasMatch(feedUrl)) return true;
-      }
-    }
+    if (feedUrls != null && feedUrls!.contains(feedUrl)) return true;
     return false;
   }
 
@@ -59,7 +53,7 @@ final class SmartPlaylistPatternConfig {
     return {
       'id': id,
       if (podcastGuid != null) 'podcastGuid': podcastGuid,
-      if (feedUrlPatterns != null) 'feedUrlPatterns': feedUrlPatterns,
+      if (feedUrls != null) 'feedUrls': feedUrls,
       if (yearGroupedEpisodes) 'yearGroupedEpisodes': yearGroupedEpisodes,
       'playlists': playlists.map((p) => p.toJson()).toList(),
     };

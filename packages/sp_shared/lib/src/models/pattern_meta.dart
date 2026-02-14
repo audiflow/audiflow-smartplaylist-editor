@@ -8,7 +8,7 @@ final class PatternMeta {
     required this.version,
     required this.id,
     this.podcastGuid,
-    required this.feedUrlPatterns,
+    required this.feedUrls,
     this.yearGroupedEpisodes = false,
     required this.playlists,
   });
@@ -18,8 +18,7 @@ final class PatternMeta {
       version: json['version'] as int,
       id: json['id'] as String,
       podcastGuid: json['podcastGuid'] as String?,
-      feedUrlPatterns: (json['feedUrlPatterns'] as List<dynamic>)
-          .cast<String>(),
+      feedUrls: (json['feedUrls'] as List<dynamic>).cast<String>(),
       yearGroupedEpisodes: (json['yearGroupedEpisodes'] as bool?) ?? false,
       playlists: (json['playlists'] as List<dynamic>).cast<String>(),
     );
@@ -34,7 +33,7 @@ final class PatternMeta {
   final int version;
   final String id;
   final String? podcastGuid;
-  final List<String> feedUrlPatterns;
+  final List<String> feedUrls;
   final bool yearGroupedEpisodes;
 
   /// Ordered list of playlist IDs. Each corresponds to
@@ -46,7 +45,7 @@ final class PatternMeta {
       'version': version,
       'id': id,
       if (podcastGuid != null) 'podcastGuid': podcastGuid,
-      'feedUrlPatterns': feedUrlPatterns,
+      'feedUrls': feedUrls,
       if (yearGroupedEpisodes) 'yearGroupedEpisodes': yearGroupedEpisodes,
       'playlists': playlists,
     };

@@ -33,7 +33,7 @@ final class ConfigAssembler {
     return SmartPlaylistPatternConfig(
       id: meta.id,
       podcastGuid: meta.podcastGuid,
-      feedUrlPatterns: meta.feedUrlPatterns,
+      feedUrls: meta.feedUrls,
       yearGroupedEpisodes: meta.yearGroupedEpisodes,
       playlists: ordered,
     );

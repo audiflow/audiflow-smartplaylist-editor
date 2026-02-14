@@ -30,7 +30,7 @@ String _patternMetaA() => jsonEncode({
   'version': 1,
   'id': 'podcast-a',
   'podcastGuid': 'guid-a',
-  'feedUrlPatterns': ['https://example\\.com/a/.*'],
+  'feedUrls': ['https://example.com/a/feed.xml'],
   'playlists': ['seasons', 'by-year'],
 });
 
@@ -155,7 +155,7 @@ void main() {
 
         expect(meta.id, equals('podcast-a'));
         expect(meta.podcastGuid, equals('guid-a'));
-        expect(meta.feedUrlPatterns, hasLength(1));
+        expect(meta.feedUrls, hasLength(1));
         expect(meta.playlists, equals(['seasons', 'by-year']));
       });
 
@@ -246,7 +246,7 @@ void main() {
         final reversedMeta = jsonEncode({
           'version': 1,
           'id': 'podcast-a',
-          'feedUrlPatterns': ['.*'],
+          'feedUrls': ['https://example.com/a/feed.xml'],
           'playlists': ['by-year', 'seasons'],
         });
 

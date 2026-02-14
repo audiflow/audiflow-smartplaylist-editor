@@ -5,10 +5,10 @@ import 'package:test/test.dart';
 
 void main() {
   group('SmartPlaylistPatternConfig', () {
-    test('round-trip with feedUrlPatterns and playlists', () {
+    test('round-trip with feedUrls and playlists', () {
       final config = SmartPlaylistPatternConfig(
         id: 'test-podcast',
-        feedUrlPatterns: [r'https://example\.com/feed.*'],
+        feedUrls: ['https://example.com/feed'],
         playlists: const [
           SmartPlaylistDefinition(
             id: 'main',
@@ -24,7 +24,7 @@ void main() {
       );
 
       expect(decoded.id, 'test-podcast');
-      expect(decoded.feedUrlPatterns, hasLength(1));
+      expect(decoded.feedUrls, hasLength(1));
       expect(decoded.playlists, hasLength(1));
       expect(decoded.playlists.first.id, 'main');
       expect(decoded.yearGroupedEpisodes, isFalse);
@@ -33,7 +33,7 @@ void main() {
     test('matchesPodcast by feed URL - match', () {
       final config = SmartPlaylistPatternConfig(
         id: 'test',
-        feedUrlPatterns: [r'https://example\.com/feed.*'],
+        feedUrls: ['https://example.com/feed/rss'],
         playlists: const [
           SmartPlaylistDefinition(
             id: 'p1',
@@ -52,7 +52,7 @@ void main() {
     test('matchesPodcast by feed URL - no match', () {
       final config = SmartPlaylistPatternConfig(
         id: 'test',
-        feedUrlPatterns: [r'https://example\.com/feed.*'],
+        feedUrls: ['https://example.com/feed'],
         playlists: const [
           SmartPlaylistDefinition(
             id: 'p1',

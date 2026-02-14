@@ -9,14 +9,14 @@ void main() {
       final json = {
         'version': 1,
         'id': 'coten_radio',
-        'feedUrlPatterns': [r'https://anchor\.fm/s/8c2088c/podcast/rss'],
+        'feedUrls': ['https://anchor.fm/s/8c2088c/podcast/rss'],
         'yearGroupedEpisodes': true,
         'playlists': ['regular', 'short', 'extras'],
       };
       final meta = PatternMeta.fromJson(json);
       expect(meta.version, 1);
       expect(meta.id, 'coten_radio');
-      expect(meta.feedUrlPatterns, hasLength(1));
+      expect(meta.feedUrls, hasLength(1));
       expect(meta.yearGroupedEpisodes, isTrue);
       expect(meta.playlists, ['regular', 'short', 'extras']);
     });
@@ -25,7 +25,7 @@ void main() {
       final json = {
         'version': 1,
         'id': 'test',
-        'feedUrlPatterns': <String>[],
+        'feedUrls': <String>[],
         'playlists': ['main'],
       };
       final meta = PatternMeta.fromJson(json);
@@ -37,7 +37,7 @@ void main() {
         'version': 1,
         'id': 'test',
         'podcastGuid': 'abc-123',
-        'feedUrlPatterns': <String>[],
+        'feedUrls': <String>[],
         'playlists': ['main'],
       };
       final meta = PatternMeta.fromJson(json);
@@ -48,7 +48,7 @@ void main() {
       final meta = PatternMeta(
         version: 1,
         id: 'test',
-        feedUrlPatterns: ['pattern1'],
+        feedUrls: ['https://example.com/feed1'],
         yearGroupedEpisodes: true,
         playlists: ['p1', 'p2'],
       );
@@ -63,7 +63,7 @@ void main() {
       final jsonString = jsonEncode({
         'version': 1,
         'id': 'test',
-        'feedUrlPatterns': ['pattern'],
+        'feedUrls': ['https://example.com/feed'],
         'playlists': ['main'],
       });
       final meta = PatternMeta.parseJson(jsonString);
@@ -75,7 +75,7 @@ void main() {
         version: 2,
         id: 'test',
         podcastGuid: 'guid-1',
-        feedUrlPatterns: ['p1', 'p2'],
+        feedUrls: ['https://example.com/feed1', 'https://example.com/feed2'],
         yearGroupedEpisodes: true,
         playlists: ['a', 'b'],
       );
@@ -83,7 +83,7 @@ void main() {
       expect(restored.version, original.version);
       expect(restored.id, original.id);
       expect(restored.podcastGuid, original.podcastGuid);
-      expect(restored.feedUrlPatterns, original.feedUrlPatterns);
+      expect(restored.feedUrls, original.feedUrls);
       expect(restored.yearGroupedEpisodes, original.yearGroupedEpisodes);
       expect(restored.playlists, original.playlists);
     });
