@@ -73,6 +73,35 @@ final class SmartPlaylistGroup {
 
   /// Number of episodes in this group.
   int get episodeCount => episodeIds.length;
+
+  /// Creates a copy with optional field overrides.
+  SmartPlaylistGroup copyWith({
+    String? id,
+    String? displayName,
+    List<int>? episodeIds,
+    int? sortKey,
+    String? thumbnailUrl,
+    YearHeaderMode? yearOverride,
+    bool? episodeYearHeaders,
+    bool? showDateRange,
+    DateTime? earliestDate,
+    DateTime? latestDate,
+    int? totalDurationMs,
+  }) {
+    return SmartPlaylistGroup(
+      id: id ?? this.id,
+      displayName: displayName ?? this.displayName,
+      episodeIds: episodeIds ?? this.episodeIds,
+      sortKey: sortKey ?? this.sortKey,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      yearOverride: yearOverride ?? this.yearOverride,
+      episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
+      showDateRange: showDateRange ?? this.showDateRange,
+      earliestDate: earliestDate ?? this.earliestDate,
+      latestDate: latestDate ?? this.latestDate,
+      totalDurationMs: totalDurationMs ?? this.totalDurationMs,
+    );
+  }
 }
 
 /// Represents a smart playlist grouping of episodes within a podcast.

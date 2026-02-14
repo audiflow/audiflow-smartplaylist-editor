@@ -323,5 +323,214 @@ void main() {
       // Main playlist gets episodes not matching excludeFilter
       expect(secondIds, unorderedEquals([1, 3]));
     });
+
+    group('episode sorting by publishedAt', () {
+      test('sorts episodes in direct playlists (episodes mode)', () {
+        final serviceWithConfig = SmartPlaylistResolverService(
+          resolvers: [RssMetadataResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'all',
+                  displayName: 'All',
+                  resolverType: 'rss',
+                  contentType: 'episodes',
+                ),
+              ],
+            ),
+          ],
+        );
+
+        // Episodes given in reverse chronological order
+        final episodes = [
+          _makeEpisode(
+            1,
+            seasonNumber: 1,
+            title: 'S1E1',
+            publishedAt: DateTime(2024, 3, 1),
+          ),
+          _makeEpisode(
+            2,
+            seasonNumber: 1,
+            title: 'S1E2',
+            publishedAt: DateTime(2024, 1, 1),
+          ),
+          _makeEpisode(
+            3,
+            seasonNumber: 1,
+            title: 'S1E3',
+            publishedAt: DateTime(2024, 2, 1),
+          ),
+        ];
+
+        final result = serviceWithConfig.resolveSmartPlaylists(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        // Sorted ascending: Jan(2), Feb(3), Mar(1)
+        expect(result!.playlists.first.episodeIds, [2, 3, 1]);
+      });
+
+      test('sorts episodes within groups (groups mode)', () {
+        final serviceWithGroups = SmartPlaylistResolverService(
+          resolvers: [RssMetadataResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'series',
+                  displayName: 'Series',
+                  resolverType: 'rss',
+                  contentType: 'groups',
+                ),
+              ],
+            ),
+          ],
+        );
+
+        // Season 1 episodes in reverse order, season 2 in reverse order
+        final episodes = [
+          _makeEpisode(
+            1,
+            seasonNumber: 1,
+            title: 'S1E1',
+            publishedAt: DateTime(2024, 3, 1),
+          ),
+          _makeEpisode(
+            2,
+            seasonNumber: 1,
+            title: 'S1E2',
+            publishedAt: DateTime(2024, 1, 1),
+          ),
+          _makeEpisode(
+            3,
+            seasonNumber: 2,
+            title: 'S2E1',
+            publishedAt: DateTime(2024, 6, 1),
+          ),
+          _makeEpisode(
+            4,
+            seasonNumber: 2,
+            title: 'S2E2',
+            publishedAt: DateTime(2024, 4, 1),
+          ),
+        ];
+
+        final result = serviceWithGroups.resolveSmartPlaylists(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        final playlist = result!.playlists.first;
+        expect(playlist.groups, isNotNull);
+
+        final season1 = playlist.groups!.firstWhere((g) => g.id == 'season_1');
+        final season2 = playlist.groups!.firstWhere((g) => g.id == 'season_2');
+
+        // Season 1: Jan(2), Mar(1)
+        expect(season1.episodeIds, [2, 1]);
+        // Season 2: Apr(4), Jun(3)
+        expect(season2.episodeIds, [4, 3]);
+      });
+
+      test('sorts ungrouped episode IDs', () {
+        // RssMetadataResolver puts episodes without seasonNumber
+        // into ungrouped. Mix seasoned and non-seasoned episodes
+        // so the resolver produces both grouped and ungrouped.
+        final serviceWithConfig = SmartPlaylistResolverService(
+          resolvers: [RssMetadataResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'series',
+                  displayName: 'Series',
+                  resolverType: 'rss',
+                  contentType: 'episodes',
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final episodes = [
+          _makeEpisode(
+            1,
+            seasonNumber: 1,
+            title: 'S1E1',
+            publishedAt: DateTime(2024, 6, 1),
+          ),
+          // No season number -- becomes ungrouped
+          SimpleEpisodeData(
+            id: 2,
+            title: 'Bonus A',
+            publishedAt: DateTime(2024, 4, 1),
+          ),
+          SimpleEpisodeData(
+            id: 3,
+            title: 'Bonus B',
+            publishedAt: DateTime(2024, 1, 1),
+          ),
+          SimpleEpisodeData(
+            id: 4,
+            title: 'Bonus C',
+            publishedAt: DateTime(2024, 2, 1),
+          ),
+        ];
+
+        final result = serviceWithConfig.resolveSmartPlaylists(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        // Ungrouped sorted by publishedAt ascending: Jan(3), Feb(4), Apr(2)
+        expect(result!.ungroupedEpisodeIds, [3, 4, 2]);
+      });
+
+      test('sorts episodes in fallback resolver path', () {
+        // No patterns -- fallback to YearResolver
+        final episodes = [
+          _makeEpisode(1, publishedAt: DateTime(2024, 12, 1)),
+          _makeEpisode(2, publishedAt: DateTime(2023, 3, 1)),
+          _makeEpisode(3, publishedAt: DateTime(2024, 1, 1)),
+          _makeEpisode(4, publishedAt: DateTime(2023, 9, 1)),
+        ];
+
+        final result = service.resolveSmartPlaylists(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        expect(result!.resolverType, 'year');
+
+        // Each year playlist should have sorted episode IDs
+        for (final playlist in result.playlists) {
+          final ids = playlist.episodeIds;
+          if (ids.contains(2)) {
+            // 2023 playlist: Mar(2), Sep(4)
+            expect(ids, [2, 4]);
+          } else {
+            // 2024 playlist: Jan(3), Dec(1)
+            expect(ids, [3, 1]);
+          }
+        }
+      });
+    });
   });
 }
