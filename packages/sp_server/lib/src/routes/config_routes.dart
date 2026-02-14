@@ -337,7 +337,7 @@ Map<String, dynamic> _runPreview(
 
   final result = service.resolveSmartPlaylists(
     podcastGuid: config.podcastGuid,
-    feedUrl: config.feedUrlPatterns?.firstOrNull ?? '',
+    feedUrl: config.feedUrls?.firstOrNull ?? '',
     episodes: episodes,
   );
 

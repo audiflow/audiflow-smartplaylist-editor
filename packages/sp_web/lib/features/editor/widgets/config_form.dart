@@ -6,7 +6,7 @@ import 'package:sp_web/features/editor/widgets/playlist_definition_form.dart';
 
 /// Top-level form for editing a [SmartPlaylistPatternConfig].
 ///
-/// Displays config-level fields (id, podcastGuid, feedUrlPatterns,
+/// Displays config-level fields (id, podcastGuid, feedUrls,
 /// yearGroupedEpisodes) followed by a list of playlist definition
 /// forms and an "Add Playlist" button.
 class ConfigForm extends ConsumerStatefulWidget {
@@ -19,7 +19,7 @@ class ConfigForm extends ConsumerStatefulWidget {
 class _ConfigFormState extends ConsumerState<ConfigForm> {
   late final TextEditingController _idController;
   late final TextEditingController _podcastGuidController;
-  late final TextEditingController _feedUrlPatternsController;
+  late final TextEditingController _feedUrlsController;
 
   @override
   void initState() {
@@ -29,8 +29,8 @@ class _ConfigFormState extends ConsumerState<ConfigForm> {
     _podcastGuidController = TextEditingController(
       text: config?.podcastGuid ?? '',
     );
-    _feedUrlPatternsController = TextEditingController(
-      text: config?.feedUrlPatterns?.join(', ') ?? '',
+    _feedUrlsController = TextEditingController(
+      text: config?.feedUrls?.join(', ') ?? '',
     );
   }
 
@@ -38,7 +38,7 @@ class _ConfigFormState extends ConsumerState<ConfigForm> {
   void dispose() {
     _idController.dispose();
     _podcastGuidController.dispose();
-    _feedUrlPatternsController.dispose();
+    _feedUrlsController.dispose();
     super.dispose();
   }
 
@@ -47,12 +47,12 @@ class _ConfigFormState extends ConsumerState<ConfigForm> {
     List<SmartPlaylistDefinition>? playlists,
   }) {
     final currentConfig = ref.read(editorControllerProvider).config;
-    final patterns = _parseFeedUrlPatterns(_feedUrlPatternsController.text);
+    final urls = _parseFeedUrls(_feedUrlsController.text);
 
     return SmartPlaylistPatternConfig(
       id: _idController.text.trim(),
       podcastGuid: _nullIfEmpty(_podcastGuidController.text),
-      feedUrlPatterns: patterns.isEmpty ? null : patterns,
+      feedUrls: urls.isEmpty ? null : urls,
       yearGroupedEpisodes:
           yearGroupedEpisodes ?? currentConfig?.yearGroupedEpisodes ?? false,
       playlists: playlists ?? currentConfig?.playlists ?? const [],
@@ -63,7 +63,7 @@ class _ConfigFormState extends ConsumerState<ConfigForm> {
     ref.read(editorControllerProvider.notifier).updateConfig(_buildConfig());
   }
 
-  List<String> _parseFeedUrlPatterns(String text) {
+  List<String> _parseFeedUrls(String text) {
     return text
         .split(',')
         .map((s) => s.trim())
@@ -160,10 +160,11 @@ class _ConfigFormState extends ConsumerState<ConfigForm> {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: _feedUrlPatternsController,
+              controller: _feedUrlsController,
               decoration: const InputDecoration(
-                labelText: 'Feed URL Patterns (comma-separated)',
-                hintText: 'pattern1, pattern2',
+                labelText: 'Feed URLs (comma-separated)',
+                hintText:
+                    'https://example.com/feed1, https://example.com/feed2',
                 border: OutlineInputBorder(),
                 isDense: true,
               ),

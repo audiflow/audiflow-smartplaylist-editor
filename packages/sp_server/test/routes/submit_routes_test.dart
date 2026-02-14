@@ -19,7 +19,7 @@ Map<String, dynamic> _validPlaylist() => {
 Map<String, dynamic> _validPatternMeta() => {
   'version': 1,
   'id': 'test-podcast',
-  'feedUrlPatterns': ['https://example\\.com/feed\\.xml'],
+  'feedUrls': ['https://example.com/feed.xml'],
   'playlists': ['seasons'],
 };
 

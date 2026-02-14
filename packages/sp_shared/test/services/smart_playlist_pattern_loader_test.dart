@@ -11,7 +11,7 @@ void main() {
         'patterns': [
           {
             'id': 'test',
-            'feedUrlPatterns': [r'https://example\.com/feed'],
+            'feedUrls': ['https://example.com/feed'],
             'playlists': [
               {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
             ],

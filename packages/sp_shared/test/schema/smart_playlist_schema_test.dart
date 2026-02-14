@@ -76,7 +76,7 @@ void main() {
           'patterns': [
             {
               'id': 'test',
-              'feedUrlPatterns': [r'test\.com'],
+              'feedUrls': ['test.com'],
               'playlists': [
                 {
                   'id': 'main',
@@ -181,9 +181,9 @@ void main() {
             {
               'id': 'complex-podcast',
               'podcastGuid': 'abc-123-def',
-              'feedUrlPatterns': [
-                r'https://example\.com/feed.*',
-                r'https://mirror\.example\.com/.*',
+              'feedUrls': [
+                'https://example.com/feed',
+                'https://mirror.example.com/rss',
               ],
               'yearGroupedEpisodes': true,
               'playlists': [

@@ -13,7 +13,7 @@ const _encoder = JsonEncoder.withIndent('  ');
 ///   "patterns": [
 ///     {
 ///       "id": "pattern_id",
-///       "feedUrlPatterns": [...],
+///       "feedUrls": [...],
 ///       "yearGroupedEpisodes": true,
 ///       "podcastGuid": "...",
 ///       "playlists": [{ "id": "...", ... }]
@@ -42,8 +42,8 @@ void migrate(String jsonInput, String outputDir) {
     final pattern = raw as Map<String, dynamic>;
     final patternId = pattern['id'] as String;
     final playlists = pattern['playlists'] as List<dynamic>;
-    final feedUrlPatterns =
-        (pattern['feedUrlPatterns'] as List<dynamic>?)?.cast<String>() ?? [];
+    final feedUrls =
+        (pattern['feedUrls'] as List<dynamic>?)?.cast<String>() ?? [];
     final yearGrouped = (pattern['yearGroupedEpisodes'] as bool?) ?? false;
     final podcastGuid = pattern['podcastGuid'] as String?;
 
@@ -64,7 +64,7 @@ void migrate(String jsonInput, String outputDir) {
       'version': 1,
       'id': patternId,
       if (podcastGuid != null) 'podcastGuid': podcastGuid,
-      'feedUrlPatterns': feedUrlPatterns,
+      'feedUrls': feedUrls,
       if (yearGrouped) 'yearGroupedEpisodes': yearGrouped,
       'playlists': playlistIds,
     };
@@ -73,9 +73,7 @@ void migrate(String jsonInput, String outputDir) {
     ).writeAsStringSync(_encoder.convert(patternMeta));
 
     final displayName = deriveDisplayName(patternId);
-    final feedUrlHint = feedUrlPatterns.isNotEmpty
-        ? stripRegexEscapes(feedUrlPatterns[0])
-        : '';
+    final feedUrlHint = feedUrls.isNotEmpty ? feedUrls[0] : '';
 
     patternSummaries.add({
       'id': patternId,
@@ -105,11 +103,6 @@ String deriveDisplayName(String id) {
       .split('_')
       .map((word) => '${word[0].toUpperCase()}${word.substring(1)}')
       .join(' ');
-}
-
-/// Strips common regex escape sequences to produce a readable URL.
-String stripRegexEscapes(String pattern) {
-  return pattern.replaceAll(r'\', '');
 }
 
 void main(List<String> args) {
