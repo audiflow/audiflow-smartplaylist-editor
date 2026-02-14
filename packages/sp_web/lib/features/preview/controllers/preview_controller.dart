@@ -71,7 +71,23 @@ class PreviewController extends Notifier<PreviewState> {
     state = state.copyWith(isLoading: true, clearError: true);
 
     try {
-      final body = {'config': config.toJson(), 'feedUrl': feedUrl};
+      // Fetch episodes from the feed.
+      final encodedUrl = Uri.encodeQueryComponent(feedUrl);
+      final feedResponse = await client.get('/api/feeds?url=$encodedUrl');
+
+      if (feedResponse.statusCode != 200) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to fetch feed: ${feedResponse.statusCode}',
+        );
+        return;
+      }
+
+      final feedData = jsonDecode(feedResponse.body) as Map<String, dynamic>;
+      final episodes = feedData['episodes'] as List<dynamic>;
+
+      // Run preview with the fetched episodes.
+      final body = {'config': config.toJson(), 'episodes': episodes};
       final response = await client.post('/api/configs/preview', body: body);
 
       if (response.statusCode == 200) {
