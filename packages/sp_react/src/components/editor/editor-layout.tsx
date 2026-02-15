@@ -127,6 +127,10 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [isJsonMode, jsonText, form, toggleJsonMode]);
 
   const handleRunPreview = useCallback(() => {
+    if (!feedUrl) {
+      toast.error('Enter a feed URL before running preview');
+      return;
+    }
     let config: unknown;
     if (isJsonMode) {
       try {
@@ -138,9 +142,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } else {
       config = form.getValues();
     }
-    const episodes = feedQuery.data ?? [];
-    previewMutation.mutate({ config, episodes });
-  }, [isJsonMode, jsonText, form, feedQuery.data, previewMutation]);
+    previewMutation.mutate({ config, feedUrl });
+  }, [isJsonMode, jsonText, form, feedUrl, previewMutation]);
 
   // Safe JSON parse for render-time props (avoids throwing during render)
   const parsedJsonConfig = useMemo(() => {

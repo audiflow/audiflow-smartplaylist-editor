@@ -47,7 +47,7 @@ export function useFeed(url: string | null) {
 export function usePreviewMutation() {
   const client = useApiClient();
   return useMutation({
-    mutationFn: (params: { config: unknown; episodes: unknown[] }) =>
+    mutationFn: (params: { config: unknown; feedUrl: string }) =>
       client.post<PreviewResult>('/api/configs/preview', params),
   });
 }
