@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { useAuthStore } from '@/stores/auth-store.ts';
+import { EditorLayout } from '@/components/editor/editor-layout.tsx';
 
 export const Route = createFileRoute('/editor')({
   beforeLoad: () => {
@@ -7,9 +8,5 @@ export const Route = createFileRoute('/editor')({
       throw redirect({ to: '/login' });
     }
   },
-  component: EditorNewScreen,
+  component: () => <EditorLayout configId={null} />,
 });
-
-function EditorNewScreen() {
-  return <div>Editor: new config (placeholder)</div>;
-}
