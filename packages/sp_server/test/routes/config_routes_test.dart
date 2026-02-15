@@ -6,6 +6,7 @@ import 'package:test/test.dart';
 import 'package:sp_server/src/routes/config_routes.dart';
 import 'package:sp_server/src/services/api_key_service.dart';
 import 'package:sp_server/src/services/config_repository.dart';
+import 'package:sp_server/src/services/feed_cache_service.dart';
 import 'package:sp_server/src/services/jwt_service.dart';
 
 const _baseUrl = 'https://raw.githubusercontent.com/test/repo/main';
@@ -109,11 +110,88 @@ ConfigRepository _createMalformedRepo() {
   );
 }
 
+/// RSS feed with 3 episodes across 2 seasons.
+String _sampleRss() => '''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <item>
+      <title>S1E1 Pilot</title>
+      <itunes:season>1</itunes:season>
+      <itunes:episode>1</itunes:episode>
+    </item>
+    <item>
+      <title>S1E2 Next</title>
+      <itunes:season>1</itunes:season>
+      <itunes:episode>2</itunes:episode>
+    </item>
+    <item>
+      <title>S2E1 Return</title>
+      <itunes:season>2</itunes:season>
+      <itunes:episode>1</itunes:episode>
+    </item>
+  </channel>
+</rss>''';
+
+/// RSS feed with no items.
+String _emptyRss() => '''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel></channel></rss>''';
+
+/// RSS feed where one episode has a season and one does not.
+String _mixedRss() => '''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <item>
+      <title>Episode with season</title>
+      <itunes:season>1</itunes:season>
+      <itunes:episode>1</itunes:episode>
+    </item>
+    <item>
+      <title>Episode without season</title>
+    </item>
+  </channel>
+</rss>''';
+
+/// RSS feed with title-encoded season/episode numbers.
+String _extractorRss() => '''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <item>
+      <title>[1-1] Pilot [Series Alpha1]</title>
+      <itunes:season>1</itunes:season>
+    </item>
+    <item>
+      <title>[1-2] Episode Two [Series Alpha2]</title>
+    </item>
+    <item>
+      <title>[2-1] New Arc [Series Beta1]</title>
+      <itunes:season>2</itunes:season>
+    </item>
+  </channel>
+</rss>''';
+
+/// Creates a FeedCacheService that routes URLs to fake RSS responses.
+FeedCacheService _createFeedCacheService() {
+  return FeedCacheService(
+    httpGet: (Uri url) async {
+      final responses = {
+        'https://example.com/feed.xml': _sampleRss(),
+        'https://example.com/empty.xml': _emptyRss(),
+        'https://example.com/mixed.xml': _mixedRss(),
+        'https://example.com/extractor.xml': _extractorRss(),
+      };
+      final body = responses[url.toString()];
+      if (body != null) return body;
+      throw Exception('Unknown feed: $url');
+    },
+  );
+}
+
 void main() {
   group('configRouter', () {
     late JwtService jwtService;
     late ApiKeyService apiKeyService;
     late ConfigRepository configRepository;
+    late FeedCacheService feedCacheService;
     late Handler handler;
     late String validToken;
 
@@ -122,9 +200,11 @@ void main() {
       apiKeyService = ApiKeyService();
       validToken = jwtService.createToken('user-1');
       configRepository = _createRepo();
+      feedCacheService = _createFeedCacheService();
 
       final router = configRouter(
         configRepository: configRepository,
+        feedCacheService: feedCacheService,
         jwtService: jwtService,
         apiKeyService: apiKeyService,
       );
@@ -187,6 +267,7 @@ void main() {
 
         final failRouter = configRouter(
           configRepository: failingRepo,
+          feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
@@ -206,6 +287,7 @@ void main() {
         final malformedRepo = _createMalformedRepo();
         final malformedRouter = configRouter(
           configRepository: malformedRepo,
+          feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
@@ -267,6 +349,7 @@ void main() {
         final failingRepo = _createRepo(failAll: true);
         final failRouter = configRouter(
           configRepository: failingRepo,
+          feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
@@ -314,6 +397,7 @@ void main() {
         final failingRepo = _createRepo(failAll: true);
         final failRouter = configRouter(
           configRepository: failingRepo,
+          feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
@@ -365,6 +449,7 @@ void main() {
         final failingRepo = _createRepo(failAll: true);
         final failRouter = configRouter(
           configRepository: failingRepo,
+          feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
@@ -420,6 +505,7 @@ void main() {
         final failingRepo = _createRepo(failAll: true);
         final failRouter = configRouter(
           configRepository: failingRepo,
+          feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
@@ -440,6 +526,7 @@ void main() {
         final malformedRepo = _createMalformedRepo();
         final malformedRouter = configRouter(
           configRepository: malformedRepo,
+          feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
         );
@@ -627,26 +714,7 @@ void main() {
               },
             ],
           },
-          'episodes': [
-            {
-              'id': 1,
-              'title': 'S1E1 Pilot',
-              'seasonNumber': 1,
-              'episodeNumber': 1,
-            },
-            {
-              'id': 2,
-              'title': 'S1E2 Next',
-              'seasonNumber': 1,
-              'episodeNumber': 2,
-            },
-            {
-              'id': 3,
-              'title': 'S2E1 Return',
-              'seasonNumber': 2,
-              'episodeNumber': 1,
-            },
-          ],
+          'feedUrl': 'https://example.com/feed.xml',
         });
 
         final request = Request(
@@ -696,7 +764,7 @@ void main() {
               },
             ],
           },
-          'episodes': <Map<String, dynamic>>[],
+          'feedUrl': 'https://example.com/empty.xml',
         });
 
         final request = Request(
@@ -740,7 +808,7 @@ void main() {
             'Authorization': 'Bearer $validToken',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({'episodes': []}),
+          body: jsonEncode({'feedUrl': 'https://example.com/feed.xml'}),
         );
 
         final response = await handler(request);
@@ -751,7 +819,7 @@ void main() {
         expect(body['error'], contains('config'));
       });
 
-      test('returns 400 for missing episodes', () async {
+      test('returns 400 for missing feedUrl', () async {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
@@ -774,7 +842,7 @@ void main() {
         expect(response.statusCode, equals(400));
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('episodes'));
+        expect(body['error'], contains('feedUrl'));
       });
 
       test('returns 400 for invalid JSON', () async {
@@ -791,6 +859,33 @@ void main() {
         final response = await handler(request);
 
         expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for feed fetch failure', () async {
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/preview'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'config': {
+              'id': 'test',
+              'playlists': [
+                {'id': 's', 'displayName': 'S', 'resolverType': 'rss'},
+              ],
+            },
+            'feedUrl': 'https://example.com/unknown-feed.xml',
+          }),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('Preview failed'));
       });
 
       test('returns 401 without auth', () async {
@@ -817,15 +912,7 @@ void main() {
               },
             ],
           },
-          'episodes': [
-            {
-              'id': 1,
-              'title': 'Episode with season',
-              'seasonNumber': 1,
-              'episodeNumber': 1,
-            },
-            {'id': 2, 'title': 'Episode without season'},
-          ],
+          'feedUrl': 'https://example.com/mixed.xml',
         });
 
         final request = Request(
@@ -847,7 +934,9 @@ void main() {
         final ungroupedIds = ungrouped
             .map((e) => (e as Map<String, dynamic>)['id'])
             .toList();
-        expect(ungroupedIds, contains(2));
+        // FeedCacheService assigns 0-based IDs; episode without
+        // season is at index 1.
+        expect(ungroupedIds, contains(1));
       });
 
       test('has JSON content type', () async {
@@ -858,7 +947,7 @@ void main() {
               {'id': 's', 'displayName': 'S', 'resolverType': 'rss'},
             ],
           },
-          'episodes': [],
+          'feedUrl': 'https://example.com/empty.xml',
         });
 
         final request = Request(
@@ -877,8 +966,10 @@ void main() {
       });
 
       test('enriches episodes with smartPlaylistEpisodeExtractor', () async {
-        // Episodes have null seasonNumber (as in real RSS feed)
-        // but titles encode season-episode: 【62-2】 and 【15-8】
+        // The extractor RSS feed has episodes with title-encoded
+        // season/episode numbers: [1-1], [1-2], [2-1].
+        // Episode at index 1 has no itunes:season in RSS, but the
+        // extractor should derive season 1 from the title pattern.
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
@@ -903,23 +994,7 @@ void main() {
               },
             ],
           },
-          'episodes': [
-            {
-              'id': 1,
-              'title': '[1-1] Pilot [Series Alpha1]',
-              'seasonNumber': 1,
-            },
-            {
-              'id': 2,
-              'title': '[1-2] Episode Two [Series Alpha2]',
-              // null seasonNumber in RSS, but title encodes season 1
-            },
-            {
-              'id': 3,
-              'title': '[2-1] New Arc [Series Beta1]',
-              'seasonNumber': 2,
-            },
-          ],
+          'feedUrl': 'https://example.com/extractor.xml',
         });
 
         final request = Request(

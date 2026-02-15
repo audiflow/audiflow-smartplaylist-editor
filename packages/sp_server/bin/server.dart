@@ -83,6 +83,7 @@ Future<void> main() async {
   // Mount config routes.
   final configs = configRouter(
     configRepository: configRepository,
+    feedCacheService: feedCacheService,
     jwtService: jwtService,
     apiKeyService: apiKeyService,
   );

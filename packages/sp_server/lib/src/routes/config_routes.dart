@@ -7,6 +7,7 @@ import 'package:sp_shared/sp_shared.dart';
 import '../middleware/api_key_middleware.dart';
 import '../services/api_key_service.dart';
 import '../services/config_repository.dart';
+import '../services/feed_cache_service.dart';
 import '../services/jwt_service.dart';
 
 /// Registers config routes under `/api/configs`.
@@ -15,6 +16,7 @@ import '../services/jwt_service.dart';
 /// (JWT or API key).
 Router configRouter({
   required ConfigRepository configRepository,
+  required FeedCacheService feedCacheService,
   required JwtService jwtService,
   required ApiKeyService apiKeyService,
 }) {
@@ -74,7 +76,7 @@ Router configRouter({
   // POST /api/configs/preview
   final previewHandler = const Pipeline()
       .addMiddleware(auth)
-      .addHandler((Request r) => _handlePreview(r));
+      .addHandler((Request r) => _handlePreview(r, feedCacheService));
   router.post('/api/configs/preview', previewHandler);
 
   return router;
@@ -235,7 +237,10 @@ Future<Response> _handleValidate(Request request) async {
   );
 }
 
-Future<Response> _handlePreview(Request request) async {
+Future<Response> _handlePreview(
+  Request request,
+  FeedCacheService feedCacheService,
+) async {
   final body = await request.readAsString();
   if (body.isEmpty) {
     return Response(
@@ -265,27 +270,21 @@ Future<Response> _handlePreview(Request request) async {
   }
 
   final configJson = parsed['config'];
-  final episodesJson = parsed['episodes'];
+  final feedUrl = parsed['feedUrl'];
 
   if (configJson is! Map<String, dynamic>) {
-    return Response(
-      400,
-      body: jsonEncode({'error': 'Missing or invalid "config" field'}),
-      headers: _jsonHeaders,
-    );
+    return _error(400, 'Missing or invalid "config" field');
   }
-
-  if (episodesJson is! List) {
-    return Response(
-      400,
-      body: jsonEncode({'error': 'Missing or invalid "episodes" field'}),
-      headers: _jsonHeaders,
-    );
+  if (feedUrl is! String || feedUrl.isEmpty) {
+    return _error(400, 'Missing or invalid "feedUrl" field');
   }
 
   try {
     final config = SmartPlaylistPatternConfig.fromJson(configJson);
-    final episodes = _parseEpisodes(episodesJson);
+    final episodeMaps = await feedCacheService.fetchFeed(feedUrl);
+    final episodes = episodeMaps
+        .map((e) => _parseEpisode(e.cast<String, dynamic>()))
+        .toList();
     final result = _runPreview(config, episodes);
     return Response.ok(jsonEncode(result), headers: _jsonHeaders);
   } on Object catch (e) {
@@ -295,10 +294,6 @@ Future<Response> _handlePreview(Request request) async {
       headers: _jsonHeaders,
     );
   }
-}
-
-List<SimpleEpisodeData> _parseEpisodes(List<dynamic> json) {
-  return json.whereType<Map<String, dynamic>>().map(_parseEpisode).toList();
 }
 
 SimpleEpisodeData _parseEpisode(Map<String, dynamic> json) {
