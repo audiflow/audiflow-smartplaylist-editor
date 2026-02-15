@@ -1,5 +1,8 @@
+import { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
+import { useEditorStore } from '@/stores/editor-store.ts';
+import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
 import {
@@ -31,6 +34,8 @@ interface PlaylistFormProps {
   onRemove: () => void;
 }
 
+const EMPTY_TITLES: readonly string[] = [];
+
 export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const { watch } = useFormContext<PatternConfig>();
   const prefix = `playlists.${index}` as const;
@@ -39,6 +44,13 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const titleFilter = watch(`${prefix}.titleFilter`) ?? '';
   const excludeFilter = watch(`${prefix}.excludeFilter`) ?? '';
   const requireFilter = watch(`${prefix}.requireFilter`) ?? '';
+
+  const feedUrl = useEditorStore((s) => s.feedUrl);
+  const feedQuery = useFeed(feedUrl || null);
+  const episodeTitles = useMemo(
+    () => feedQuery.data?.map((ep) => ep.title) ?? EMPTY_TITLES,
+    [feedQuery.data],
+  );
 
   return (
     <AccordionItem value={`playlist-${index}`}>
@@ -53,6 +65,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
           titleFilter={titleFilter}
           excludeFilter={excludeFilter}
           requireFilter={requireFilter}
+          episodeTitles={episodeTitles}
         />
 
         <BooleanSettings index={index} prefix={prefix} />
@@ -132,11 +145,13 @@ function FilterSettings({
   titleFilter,
   excludeFilter,
   requireFilter,
+  episodeTitles,
 }: {
   prefix: `playlists.${number}`;
   titleFilter: string;
   excludeFilter: string;
   requireFilter: string;
+  episodeTitles: readonly string[];
 }) {
   const { register } = useFormContext<PatternConfig>();
 
@@ -146,17 +161,17 @@ function FilterSettings({
       <div className="space-y-1.5">
         <Label>Title Filter</Label>
         <Input {...register(`${prefix}.titleFilter`)} placeholder="Regex pattern" />
-        {titleFilter && <RegexTester pattern={titleFilter} variant="include" />}
+        {titleFilter && <RegexTester pattern={titleFilter} variant="include" titles={episodeTitles} />}
       </div>
       <div className="space-y-1.5">
         <Label>Exclude Filter</Label>
         <Input {...register(`${prefix}.excludeFilter`)} placeholder="Regex pattern" />
-        {excludeFilter && <RegexTester pattern={excludeFilter} variant="exclude" />}
+        {excludeFilter && <RegexTester pattern={excludeFilter} variant="exclude" titles={episodeTitles} />}
       </div>
       <div className="space-y-1.5">
         <Label>Require Filter</Label>
         <Input {...register(`${prefix}.requireFilter`)} placeholder="Regex pattern" />
-        {requireFilter && <RegexTester pattern={requireFilter} variant="include" />}
+        {requireFilter && <RegexTester pattern={requireFilter} variant="include" titles={episodeTitles} />}
       </div>
     </div>
   );
