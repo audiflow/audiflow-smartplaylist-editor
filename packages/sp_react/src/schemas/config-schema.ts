@@ -20,7 +20,7 @@ export const yearHeaderModeSchema = z.enum([
 ]);
 
 export const resolverTypeSchema = z.enum([
-  'rssMetadata',
+  'rss',
   'category',
   'year',
   'titleAppearanceOrder',
