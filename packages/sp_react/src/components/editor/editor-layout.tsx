@@ -9,7 +9,12 @@ import {
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { usePreviewMutation, useFeed } from '@/api/queries.ts';
 import { useAutoSave } from '@/hooks/use-auto-save.ts';
+import { DraftService } from '@/lib/draft-service.ts';
+import type { DraftEntry } from '@/lib/draft-service.ts';
+import { merge } from '@/lib/json-merge.ts';
+import type { JsonValue } from '@/lib/json-merge.ts';
 import { ConfigForm } from '@/components/editor/config-form.tsx';
+import { DraftRestoreDialog } from '@/components/editor/draft-restore-dialog.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { FeedUrlInput } from '@/components/editor/feed-url-input.tsx';
 import { SubmitDialog } from '@/components/editor/submit-dialog.tsx';
@@ -41,6 +46,9 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   } = useEditorStore();
   const [jsonText, setJsonText] = useState('');
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState<DraftEntry | null>(() =>
+    new DraftService().loadDraft(configId),
+  );
 
   const form = useForm<PatternConfig>({
     // Cast needed: zodResolver infers the Zod input type (with optional defaults),
@@ -66,6 +74,37 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       setFeedUrl(urls[0]);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRestoreDraft = useCallback(() => {
+    if (!pendingDraft) return;
+    try {
+      if (initialConfig) {
+        // DraftEntry fields are `unknown` but originate from JSON.parse
+        const merged = merge({
+          base: pendingDraft.base as JsonValue,
+          latest: initialConfig as JsonValue,
+          modified: pendingDraft.modified as JsonValue,
+        });
+        const parsed = patternConfigSchema.parse(merged);
+        form.reset(parsed);
+      } else {
+        const parsed = patternConfigSchema.parse(pendingDraft.modified);
+        form.reset(parsed);
+      }
+      new DraftService().clearDraft(configId);
+      setPendingDraft(null);
+    } catch (e) {
+      toast.error(
+        'Failed to restore draft: ' +
+          (e instanceof Error ? e.message : 'Unknown error'),
+      );
+    }
+  }, [pendingDraft, initialConfig, configId, form]);
+
+  const handleDiscardDraft = useCallback(() => {
+    new DraftService().clearDraft(configId);
+    setPendingDraft(null);
+  }, [configId]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -174,6 +213,15 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         patternId={form.getValues().id || configId || ''}
         playlist={parsedJsonConfig ?? form.getValues()}
       />
+
+      {/* Draft Restore Dialog */}
+      {pendingDraft && (
+        <DraftRestoreDialog
+          savedAt={pendingDraft.savedAt}
+          onRestore={handleRestoreDraft}
+          onDiscard={handleDiscardDraft}
+        />
+      )}
     </div>
   );
 }
