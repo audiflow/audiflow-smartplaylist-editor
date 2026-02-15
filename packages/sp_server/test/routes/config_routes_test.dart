@@ -706,6 +706,7 @@ void main() {
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
+            'feedUrls': ['https://example.com/feed.xml'],
             'playlists': [
               {
                 'id': 'seasons',
@@ -733,14 +734,24 @@ void main() {
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         final playlists = body['playlists'] as List;
-        expect(playlists.length, equals(2));
+        // resolveForPreview returns 1 entry per definition,
+        // with seasons as groups inside
+        expect(playlists.length, equals(1));
 
-        final season1 = playlists[0] as Map<String, dynamic>;
+        final playlist = playlists[0] as Map<String, dynamic>;
+        expect(playlist['id'], equals('seasons'));
+        expect(playlist['displayName'], equals('Seasons'));
+        expect(playlist['episodeCount'], equals(3));
+        expect(playlist['resolverType'], equals('rss'));
+
+        final groups = playlist['groups'] as List;
+        expect(groups.length, equals(2));
+
+        final season1 = groups[0] as Map<String, dynamic>;
         expect(season1['displayName'], equals('Season 1'));
         expect(season1['episodeCount'], equals(2));
-        expect(season1['resolverType'], equals('rss'));
 
-        final season2 = playlists[1] as Map<String, dynamic>;
+        final season2 = groups[1] as Map<String, dynamic>;
         expect(season2['displayName'], equals('Season 2'));
         expect(season2['episodeCount'], equals(1));
 
@@ -750,12 +761,19 @@ void main() {
         expect(debug['totalEpisodes'], equals(3));
         expect(debug['groupedEpisodes'], equals(3));
         expect(debug['ungroupedEpisodes'], equals(0));
+
+        // Per-playlist debug fields
+        final playlistDebug = playlist['debug'] as Map<String, dynamic>;
+        expect(playlistDebug['filterMatched'], equals(3));
+        expect(playlistDebug['episodeCount'], equals(3));
+        expect(playlistDebug['claimedByOthersCount'], equals(0));
       });
 
       test('returns empty result with no episodes', () async {
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
+            'feedUrls': ['https://example.com/empty.xml'],
             'playlists': [
               {
                 'id': 'seasons',
@@ -904,6 +922,7 @@ void main() {
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
+            'feedUrls': ['https://example.com/mixed.xml'],
             'playlists': [
               {
                 'id': 'seasons',
@@ -973,6 +992,7 @@ void main() {
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
+            'feedUrls': ['https://example.com/extractor.xml'],
             'playlists': [
               {
                 'id': 'regular',
@@ -1014,21 +1034,74 @@ void main() {
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         final playlists = body['playlists'] as List;
 
+        // resolveForPreview returns 1 entry per definition,
+        // with seasons as groups inside.
+        expect(playlists.length, equals(1));
+
+        final playlist = playlists[0] as Map<String, dynamic>;
+        expect(playlist['id'], equals('regular'));
+        expect(playlist['episodeCount'], equals(3));
+
+        final groups = playlist['groups'] as List;
+        expect(groups.length, equals(2));
+
         // Episode 2 should be enriched to season 1 (from title),
         // NOT end up in the nullSeasonGroupKey=0 / "Extras" group.
-        expect(playlists.length, equals(2));
-
-        final season1 = playlists[0] as Map<String, dynamic>;
+        final season1 = groups[0] as Map<String, dynamic>;
         expect(season1['sortKey'], equals(1));
         expect(season1['episodeCount'], equals(2));
 
-        final season2 = playlists[1] as Map<String, dynamic>;
+        final season2 = groups[1] as Map<String, dynamic>;
         expect(season2['sortKey'], equals(2));
         expect(season2['episodeCount'], equals(1));
 
         // No ungrouped episodes
         final ungrouped = body['ungrouped'] as List;
         expect(ungrouped, isEmpty);
+      });
+
+      test('includes per-playlist debug fields', () async {
+        final previewBody = jsonEncode({
+          'config': {
+            'id': 'test',
+            'feedUrls': ['https://example.com/feed.xml'],
+            'playlists': [
+              {
+                'id': 'seasons',
+                'displayName': 'Seasons',
+                'resolverType': 'rss',
+              },
+            ],
+          },
+          'feedUrl': 'https://example.com/feed.xml',
+        });
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/preview'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: previewBody,
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        final playlists = body['playlists'] as List;
+        expect(playlists.length, equals(1));
+
+        final playlist = playlists[0] as Map<String, dynamic>;
+        final debug = playlist['debug'] as Map<String, dynamic>;
+        expect(debug, containsPair('filterMatched', 3));
+        expect(debug, containsPair('episodeCount', 3));
+        expect(debug, containsPair('claimedByOthersCount', 0));
+
+        // No claimedByOthers field when empty
+        expect(playlist.containsKey('claimedByOthers'), isFalse);
       });
     });
   });

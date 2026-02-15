@@ -348,8 +348,6 @@ Map<String, dynamic> _runPreview(
   SmartPlaylistPatternConfig config,
   List<SimpleEpisodeData> episodes,
 ) {
-  // Enrich episodes with smartPlaylistEpisodeExtractor before resolving,
-  // matching mobile app behavior (feed_sync_service.dart).
   final enriched = _enrichEpisodes(config, episodes);
 
   final resolvers = <SmartPlaylistResolver>[
@@ -364,7 +362,7 @@ Map<String, dynamic> _runPreview(
     patterns: [config],
   );
 
-  final result = service.resolveSmartPlaylists(
+  final result = service.resolveForPreview(
     podcastGuid: config.podcastGuid,
     feedUrl: config.feedUrls?.firstOrNull ?? '',
     episodes: enriched,
@@ -378,19 +376,20 @@ Map<String, dynamic> _runPreview(
     };
   }
 
-  // Build lookup so groups can include episode details.
   final episodeById = <int, SimpleEpisodeData>{
     for (final e in enriched) e.id: e,
   };
 
-  final groupedCount = result.playlists.fold<int>(
+  final groupedCount = result.playlistResults.fold<int>(
     0,
-    (sum, p) => sum + p.episodeIds.length,
+    (sum, pr) => sum + pr.playlist.episodeIds.length,
   );
 
   return {
-    'playlists': result.playlists
-        .map((p) => _serializePlaylist(p, result.resolverType, episodeById))
+    'playlists': result.playlistResults
+        .map(
+          (pr) => _serializePreviewResult(pr, result.resolverType, episodeById),
+        )
         .toList(),
     'ungrouped': result.ungroupedEpisodeIds
         .map((id) => _serializeEpisode(episodeById[id]))
@@ -421,6 +420,39 @@ Map<String, dynamic> _serializePlaylist(
           .map((g) => _serializeGroup(g, episodeById))
           .toList(),
   };
+}
+
+Map<String, dynamic> _serializePreviewResult(
+  PlaylistPreviewResult pr,
+  String? resolverType,
+  Map<int, SimpleEpisodeData> episodeById,
+) {
+  final base = _serializePlaylist(pr.playlist, resolverType, episodeById);
+
+  if (pr.claimedByOthers.isNotEmpty) {
+    base['claimedByOthers'] = pr.claimedByOthers.entries.map((entry) {
+      final episode = episodeById[entry.key];
+      return {
+        if (episode != null) ...{
+          'id': episode.id,
+          'title': episode.title,
+          'seasonNumber': episode.seasonNumber,
+          'episodeNumber': episode.episodeNumber,
+        },
+        'claimedBy': entry.value,
+      };
+    }).toList();
+  }
+
+  final filterMatchedCount =
+      pr.playlist.episodeIds.length + pr.claimedByOthers.length;
+  base['debug'] = {
+    'filterMatched': filterMatchedCount,
+    'episodeCount': pr.playlist.episodeIds.length,
+    'claimedByOthersCount': pr.claimedByOthers.length,
+  };
+
+  return base;
 }
 
 Map<String, dynamic> _serializeGroup(

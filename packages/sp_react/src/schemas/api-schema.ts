@@ -49,6 +49,20 @@ export const previewGroupSchema = z.object({
   episodes: z.array(previewEpisodeSchema),
 });
 
+export const claimedEpisodeSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  seasonNumber: z.number().nullish(),
+  episodeNumber: z.number().nullish(),
+  claimedBy: z.string(),
+});
+
+export const playlistDebugSchema = z.object({
+  filterMatched: z.number(),
+  episodeCount: z.number(),
+  claimedByOthersCount: z.number(),
+});
+
 export const previewPlaylistSchema = z.object({
   id: z.string(),
   displayName: z.string(),
@@ -56,6 +70,8 @@ export const previewPlaylistSchema = z.object({
   resolverType: z.string().nullish(),
   episodeCount: z.number(),
   groups: z.array(previewGroupSchema).optional(),
+  claimedByOthers: z.array(claimedEpisodeSchema).optional().default([]),
+  debug: playlistDebugSchema.optional(),
 });
 
 export const previewDebugSchema = z.object({
@@ -107,6 +123,8 @@ export type FeedEpisode = z.infer<typeof feedEpisodeSchema>;
 export type PreviewEpisode = z.infer<typeof previewEpisodeSchema>;
 export type PreviewGroup = z.infer<typeof previewGroupSchema>;
 export type PreviewPlaylist = z.infer<typeof previewPlaylistSchema>;
+export type ClaimedEpisode = z.infer<typeof claimedEpisodeSchema>;
+export type PlaylistDebug = z.infer<typeof playlistDebugSchema>;
 export type PreviewDebug = z.infer<typeof previewDebugSchema>;
 export type PreviewResult = z.infer<typeof previewResultSchema>;
 export type TokenResponse = z.infer<typeof tokenResponseSchema>;

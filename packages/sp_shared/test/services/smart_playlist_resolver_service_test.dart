@@ -532,5 +532,215 @@ void main() {
         }
       });
     });
+
+    group('resolveForPreview', () {
+      test('returns PreviewGrouping with single playlist result', () {
+        final serviceWithPattern = SmartPlaylistResolverService(
+          resolvers: [RssMetadataResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'seasons',
+                  displayName: 'Seasons',
+                  resolverType: 'rss',
+                  contentType: 'groups',
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final episodes = [
+          _makeEpisode(1, seasonNumber: 1, publishedAt: DateTime(2024, 1, 1)),
+          _makeEpisode(2, seasonNumber: 1, publishedAt: DateTime(2024, 2, 1)),
+          _makeEpisode(3, seasonNumber: 2, publishedAt: DateTime(2024, 3, 1)),
+        ];
+
+        final result = serviceWithPattern.resolveForPreview(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        expect(result!.playlistResults, hasLength(1));
+        expect(result.playlistResults.first.definitionId, 'seasons');
+        expect(result.playlistResults.first.claimedByOthers, isEmpty);
+        expect(result.resolverType, 'rss');
+      });
+
+      test('returns null for empty episodes', () {
+        final result = service.resolveForPreview(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: [],
+        );
+        expect(result, isNull);
+      });
+
+      test('tracks claimedByOthers between two filtered definitions', () {
+        final serviceWithClaiming = SmartPlaylistResolverService(
+          resolvers: [YearResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'priority-a',
+                  displayName: 'Priority A',
+                  resolverType: 'year',
+                  priority: 10,
+                  titleFilter: r'.', // matches everything
+                ),
+                SmartPlaylistDefinition(
+                  id: 'priority-b',
+                  displayName: 'Priority B',
+                  resolverType: 'year',
+                  priority: 5,
+                  titleFilter: r'.', // matches everything
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final episodes = [
+          _makeEpisode(1, title: 'Ep 1', publishedAt: DateTime(2024, 1, 1)),
+          _makeEpisode(2, title: 'Ep 2', publishedAt: DateTime(2024, 2, 1)),
+        ];
+
+        final result = serviceWithClaiming.resolveForPreview(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        expect(result!.playlistResults, hasLength(2));
+
+        // Priority A (higher) gets both episodes, no claims lost
+        final aResult = result.playlistResults.firstWhere(
+          (r) => r.definitionId == 'priority-a',
+        );
+        expect(aResult.playlist.episodeIds, unorderedEquals([1, 2]));
+        expect(aResult.claimedByOthers, isEmpty);
+
+        // Priority B: all candidates were claimed by A
+        final bResult = result.playlistResults.firstWhere(
+          (r) => r.definitionId == 'priority-b',
+        );
+        expect(bResult.playlist.episodeIds, isEmpty);
+        expect(bResult.claimedByOthers, {1: 'priority-a', 2: 'priority-a'});
+      });
+
+      test('sorts episode IDs by publishedAt ascending', () {
+        final serviceWithPattern = SmartPlaylistResolverService(
+          resolvers: [RssMetadataResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'seasons',
+                  displayName: 'Seasons',
+                  resolverType: 'rss',
+                  contentType: 'groups',
+                ),
+              ],
+            ),
+          ],
+        );
+
+        // Episodes in reverse chronological order
+        final episodes = [
+          _makeEpisode(1, seasonNumber: 1, publishedAt: DateTime(2024, 3, 1)),
+          _makeEpisode(2, seasonNumber: 1, publishedAt: DateTime(2024, 1, 1)),
+          _makeEpisode(3, seasonNumber: 1, publishedAt: DateTime(2024, 2, 1)),
+        ];
+
+        final result = serviceWithPattern.resolveForPreview(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        // Sorted ascending: Jan(2), Feb(3), Mar(1)
+        expect(result!.playlistResults.first.playlist.episodeIds, [2, 3, 1]);
+      });
+
+      test('fallback definition without filters has empty claimedByOthers', () {
+        final serviceWithFallback = SmartPlaylistResolverService(
+          resolvers: [YearResolver()],
+          patterns: [
+            SmartPlaylistPatternConfig(
+              id: 'test',
+              feedUrls: ['https://example.com/feed'],
+              playlists: [
+                SmartPlaylistDefinition(
+                  id: 'bonus',
+                  displayName: 'Bonus',
+                  resolverType: 'year',
+                  priority: 10,
+                  requireFilter: r'Bonus',
+                ),
+                SmartPlaylistDefinition(
+                  id: 'all',
+                  displayName: 'All',
+                  resolverType: 'year',
+                  // no filters = fallback
+                ),
+              ],
+            ),
+          ],
+        );
+
+        final episodes = [
+          _makeEpisode(
+            1,
+            title: 'Main Ep 1',
+            publishedAt: DateTime(2024, 1, 1),
+          ),
+          _makeEpisode(
+            2,
+            title: 'Bonus: Extra',
+            publishedAt: DateTime(2024, 2, 1),
+          ),
+          _makeEpisode(
+            3,
+            title: 'Main Ep 2',
+            publishedAt: DateTime(2024, 3, 1),
+          ),
+        ];
+
+        final result = serviceWithFallback.resolveForPreview(
+          podcastGuid: null,
+          feedUrl: 'https://example.com/feed',
+          episodes: episodes,
+        );
+
+        expect(result, isNotNull);
+        expect(result!.playlistResults, hasLength(2));
+
+        // Bonus (with filters) claims episode 2
+        final bonusResult = result.playlistResults.firstWhere(
+          (r) => r.definitionId == 'bonus',
+        );
+        expect(bonusResult.playlist.episodeIds, [2]);
+        expect(bonusResult.claimedByOthers, isEmpty);
+
+        // All (fallback, no filters) gets all unclaimed
+        // claimedByOthers is empty because fallback has no filters
+        final allResult = result.playlistResults.firstWhere(
+          (r) => r.definitionId == 'all',
+        );
+        expect(allResult.claimedByOthers, isEmpty);
+      });
+    });
   });
 }
