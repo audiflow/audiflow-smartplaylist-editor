@@ -1,5 +1,10 @@
 import 'smart_playlist_definition.dart';
 
+String? _nullIfEmpty(Object? value) {
+  if (value is! String) return null;
+  return value.isEmpty ? null : value;
+}
+
 /// Top-level pattern configuration that matches a podcast and
 /// provides its playlist definitions.
 final class SmartPlaylistPatternConfig {
@@ -15,7 +20,7 @@ final class SmartPlaylistPatternConfig {
   factory SmartPlaylistPatternConfig.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistPatternConfig(
       id: json['id'] as String,
-      podcastGuid: json['podcastGuid'] as String?,
+      podcastGuid: _nullIfEmpty(json['podcastGuid']),
       feedUrls: (json['feedUrls'] as List<dynamic>?)?.cast<String>(),
       yearGroupedEpisodes: (json['yearGroupedEpisodes'] as bool?) ?? false,
       playlists: (json['playlists'] as List<dynamic>)

@@ -79,6 +79,48 @@ void main() {
       expect(decoded.groups![1].pattern, isNull);
     });
 
+    test('fromJson converts empty string filters to null', () {
+      final json = {
+        'id': 'test',
+        'displayName': 'Test',
+        'resolverType': 'year',
+        'titleFilter': '',
+        'excludeFilter': '',
+        'requireFilter': '',
+        'contentType': '',
+        'yearHeaderMode': '',
+      };
+
+      final def = SmartPlaylistDefinition.fromJson(json);
+
+      expect(def.titleFilter, isNull);
+      expect(def.excludeFilter, isNull);
+      expect(def.requireFilter, isNull);
+      expect(def.contentType, isNull);
+      expect(def.yearHeaderMode, isNull);
+    });
+
+    test('fromJson preserves non-empty filter strings', () {
+      final json = {
+        'id': 'test',
+        'displayName': 'Test',
+        'resolverType': 'year',
+        'titleFilter': r'^\d+',
+        'excludeFilter': r'bonus',
+        'requireFilter': r'main',
+        'contentType': 'groups',
+        'yearHeaderMode': 'firstEpisode',
+      };
+
+      final def = SmartPlaylistDefinition.fromJson(json);
+
+      expect(def.titleFilter, r'^\d+');
+      expect(def.excludeFilter, r'bonus');
+      expect(def.requireFilter, r'main');
+      expect(def.contentType, 'groups');
+      expect(def.yearHeaderMode, 'firstEpisode');
+    });
+
     test('minimal definition with required fields only', () {
       const def = SmartPlaylistDefinition(
         id: 'simple',

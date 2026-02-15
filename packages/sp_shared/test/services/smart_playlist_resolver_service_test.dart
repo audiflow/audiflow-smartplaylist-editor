@@ -324,6 +324,82 @@ void main() {
       expect(secondIds, unorderedEquals([1, 3]));
     });
 
+    test('empty string filters are treated as no filters', () {
+      final serviceWithEmptyFilters = SmartPlaylistResolverService(
+        resolvers: [YearResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              SmartPlaylistDefinition.fromJson({
+                'id': 'main',
+                'displayName': 'Main',
+                'resolverType': 'year',
+                'titleFilter': '',
+                'excludeFilter': '',
+                'requireFilter': '',
+              }),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, title: 'Ep 1', publishedAt: DateTime(2024, 1, 1)),
+        _makeEpisode(2, title: 'Ep 2', publishedAt: DateTime(2024, 2, 1)),
+      ];
+
+      final result = serviceWithEmptyFilters.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      final allIds = result!.playlists.expand((p) => p.episodeIds).toList();
+      expect(allIds, unorderedEquals([1, 2]));
+    });
+
+    test('empty string filters are treated as no filters', () {
+      final serviceWithEmptyFilters = SmartPlaylistResolverService(
+        resolvers: [YearResolver()],
+        patterns: [
+          SmartPlaylistPatternConfig(
+            id: 'test',
+            feedUrls: ['https://example.com/feed'],
+            playlists: [
+              SmartPlaylistDefinition.fromJson({
+                'id': 'main',
+                'displayName': 'Main',
+                'resolverType': 'year',
+                'titleFilter': '',
+                'excludeFilter': '',
+                'requireFilter': '',
+              }),
+            ],
+          ),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, title: 'Ep 1', publishedAt: DateTime(2024, 1, 1)),
+        _makeEpisode(2, title: 'Ep 2', publishedAt: DateTime(2024, 2, 1)),
+        _makeEpisode(3, title: 'Ep 3', publishedAt: DateTime(2024, 3, 1)),
+      ];
+
+      final result = serviceWithEmptyFilters.resolveSmartPlaylists(
+        podcastGuid: null,
+        feedUrl: 'https://example.com/feed',
+        episodes: episodes,
+      );
+
+      expect(result, isNotNull);
+      // All episodes should be included (empty filters = no filters)
+      final allIds = result!.playlists.expand((p) => p.episodeIds).toList();
+      expect(allIds, unorderedEquals([1, 2, 3]));
+    });
+
     group('episode sorting by publishedAt', () {
       test('sorts episodes in direct playlists (episodes mode)', () {
         final serviceWithConfig = SmartPlaylistResolverService(
