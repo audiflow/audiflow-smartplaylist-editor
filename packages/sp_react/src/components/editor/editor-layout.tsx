@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useForm, useFieldArray, FormProvider, type Resolver } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, FormProvider, type Resolver, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   patternConfigSchema,
@@ -257,22 +257,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           >
             <div className="flex items-center gap-2">
               <TabsList>
-                {fields.map((field, index) => {
-                  const name =
-                    form.watch(`playlists.${index}.displayName`) ||
-                    `Playlist ${index + 1}`;
-                  const pp = findPreviewPlaylist(index);
-                  return (
-                    <TabsTrigger key={field.id} value={`tab-${index}`}>
-                      {name}
-                      {pp && (
-                        <Badge variant="secondary" className="ml-1.5">
-                          {pp.episodeCount}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  );
-                })}
+                {fields.map((field, index) => (
+                  <PlaylistTabTrigger
+                    key={field.id}
+                    index={index}
+                    control={form.control}
+                    previewPlaylist={findPreviewPlaylist(index)}
+                  />
+                ))}
               </TabsList>
               <Button
                 type="button"
@@ -395,5 +387,36 @@ function EditorHeader({
         <Button onClick={onSubmit}>Submit PR</Button>
       </div>
     </div>
+  );
+}
+
+// -- Tab trigger sub-component --
+
+interface PlaylistTabTriggerProps {
+  index: number;
+  control: Control<PatternConfig>;
+  previewPlaylist: PreviewPlaylist | null;
+}
+
+function PlaylistTabTrigger({
+  index,
+  control,
+  previewPlaylist,
+}: PlaylistTabTriggerProps) {
+  const displayName = useWatch({
+    control,
+    name: `playlists.${index}.displayName`,
+  });
+  const name = displayName || `Playlist ${index + 1}`;
+
+  return (
+    <TabsTrigger value={`tab-${index}`}>
+      {name}
+      {previewPlaylist && (
+        <Badge variant="secondary" className="ml-1.5">
+          {previewPlaylist.episodeCount}
+        </Badge>
+      )}
+    </TabsTrigger>
   );
 }
