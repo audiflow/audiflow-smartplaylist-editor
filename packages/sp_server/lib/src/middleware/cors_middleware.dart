@@ -37,10 +37,7 @@ Middleware corsMiddleware({String allowedOrigin = '*'}) {
       } on Object catch (e) {
         return Response.internalServerError(
           body: jsonEncode({'error': 'Internal server error: $e'}),
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
+          headers: {'Content-Type': 'application/json', ...corsHeaders},
         );
       }
     };

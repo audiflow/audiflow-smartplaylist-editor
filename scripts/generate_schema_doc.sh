@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DOCS_DIR="$REPO_ROOT/packages/sp_web/web/docs"
+DOCS_DIR="$REPO_ROOT/packages/sp_react/public/docs"
 
 mkdir -p "$DOCS_DIR"
 

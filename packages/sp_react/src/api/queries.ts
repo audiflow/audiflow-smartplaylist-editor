@@ -33,10 +33,12 @@ export function useFeed(url: string | null) {
   const client = useApiClient();
   return useQuery({
     queryKey: ['feed', url],
-    queryFn: () =>
-      client.get<FeedEpisode[]>(
+    queryFn: async () => {
+      const res = await client.get<{ episodes: FeedEpisode[] }>(
         `/api/feeds?url=${encodeURIComponent(url!)}`,
-      ),
+      );
+      return res.episodes;
+    },
     enabled: !!url,
     staleTime: 15 * 60 * 1000,
   });

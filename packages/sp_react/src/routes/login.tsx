@@ -15,12 +15,15 @@ export const Route = createFileRoute('/login')({
 });
 
 function LoginScreen() {
+  const redirectUri = `${window.location.origin}/login`;
+  const authUrl = `${API_BASE_URL}/api/auth/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-6">
         <h1 className="text-2xl font-bold">Audiflow Smart Playlist Editor</h1>
         <Button asChild size="lg">
-          <a href={`${API_BASE_URL}/api/auth/github`}>Sign in with GitHub</a>
+          <a href={authUrl}>Sign in with GitHub</a>
         </Button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 # Architecture
 
-Dart monorepo with four workspace packages sharing models and logic.
+Dart monorepo with three Dart workspace packages plus a React SPA.
 
 ## Package Overview
 
@@ -9,7 +9,7 @@ audiflow-smartplaylist-web/
 ├── packages/
 │   ├── sp_shared/     # Domain models, resolvers, services (pure Dart)
 │   ├── sp_server/     # REST API server (shelf)
-│   └── sp_web/        # Flutter web editor (Riverpod + GoRouter)
+│   └── sp_react/      # React SPA web editor (TanStack + Zustand + shadcn/ui)
 └── mcp_server/        # MCP server for Claude integration
 ```
 
@@ -17,7 +17,7 @@ audiflow-smartplaylist-web/
 |---------|------|-------------|
 | `sp_shared` | Shared domain layer: models, resolvers, schema, services | None (pure Dart) |
 | `sp_server` | Backend API: auth, config fetching, preview, PR submission | sp_shared, shelf |
-| `sp_web` | Web editor UI: pattern browsing, config editing, preview | sp_shared, Flutter |
+| `sp_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod, CodeMirror 6 |
 | `mcp_server` | Exposes smart playlist operations as MCP tools | sp_shared |
 
 ## Ecosystem Context
@@ -27,7 +27,7 @@ This repo is one part of a three-component ecosystem:
 ```
 [audiflow-smartplaylist-web]     [audiflow-smartplaylist]        [GCS]              [audiflow app]
  (this repo)              PR      (config data repo)      CI sync  (static hosting)    fetch
- sp_web  ────────────────────>  JSON files on GitHub  ──────────>  GCS bucket  <────────  audiflow_domain
+ sp_react ───────────────────>  JSON files on GitHub  ──────────>  GCS bucket  <────────  audiflow_domain
  sp_server                      (source of truth)                                        (cached locally)
 ```
 
@@ -147,11 +147,21 @@ Shelf-based REST API with Cascade routing.
 - **JWT Bearer**: Primary auth for authenticated users
 - **API Key**: Secondary auth for programmatic access
 - `unifiedAuthMiddleware` accepts either
-- Silent token refresh on 401 via `ApiClient` in sp_web
+- Silent token refresh on 401 via `ApiClient` in sp_react
 
-## sp_web
+## sp_react
 
-Flutter web app using Riverpod 4.x for state and GoRouter for routing.
+React 19 SPA built with Vite + TypeScript.
+
+### Tech Stack
+
+- **Routing**: TanStack Router (file-based)
+- **Server state**: TanStack Query (caching, refetching)
+- **Local state**: Zustand (auth-store, editor-store)
+- **Forms**: React Hook Form + Zod (zodResolver)
+- **Styling**: Tailwind CSS v4 + shadcn/ui (new-york style)
+- **JSON editing**: CodeMirror 6
+- **Testing**: Vitest + @testing-library/react
 
 ### Routes
 
@@ -160,14 +170,15 @@ Flutter web app using Riverpod 4.x for state and GoRouter for routing.
 | `/login` | OAuth login |
 | `/browse` | Pattern listing |
 | `/editor` | Create new config |
-| `/editor/:id` | Edit existing pattern |
+| `/editor/$id` | Edit existing pattern |
 | `/settings` | API key management |
 
 ### Key Components
 
-- `ApiClient`: HTTP wrapper with automatic JWT/API key headers and silent refresh
-- `LocalDraftService`: Browser localStorage persistence for drafts
-- Controllers (Riverpod): `AuthController`, `BrowseController`, `EditorController`, `PreviewController`
+- `ApiClient`: HTTP wrapper with JWT/API key headers and silent 401 refresh with Promise deduplication
+- `DraftService`: Browser localStorage persistence for drafts with three-way JSON merge on restore
+- Stores (Zustand): `auth-store` (tokens + persistence), `editor-store` (UI state)
+- Query hooks: `usePatterns`, `useAssembledConfig`, `useFeed`, `usePreviewMutation`, `useSubmitPr`, etc.
 
 ## Split Config Structure
 

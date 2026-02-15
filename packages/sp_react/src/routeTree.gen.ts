@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EditorIndexRouteImport } from './routes/editor.index'
 import { Route as EditorIdRouteImport } from './routes/editor.$id'
 
 const SettingsRoute = SettingsRouteImport.update({
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EditorIndexRoute = EditorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EditorRoute,
+} as any)
 const EditorIdRoute = EditorIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -54,14 +60,15 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
+  '/editor/': typeof EditorIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
-  '/editor': typeof EditorRouteWithChildren
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
+  '/editor': typeof EditorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +78,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
+  '/editor/': typeof EditorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +89,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/editor/$id'
+    | '/editor/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse' | '/editor' | '/login' | '/settings' | '/editor/$id'
+  to: '/' | '/browse' | '/login' | '/settings' | '/editor/$id' | '/editor'
   id:
     | '__root__'
     | '/'
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/editor/$id'
+    | '/editor/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -138,6 +148,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/editor/': {
+      id: '/editor/'
+      path: '/'
+      fullPath: '/editor/'
+      preLoaderRoute: typeof EditorIndexRouteImport
+      parentRoute: typeof EditorRoute
+    }
     '/editor/$id': {
       id: '/editor/$id'
       path: '/$id'
@@ -150,10 +167,12 @@ declare module '@tanstack/react-router' {
 
 interface EditorRouteChildren {
   EditorIdRoute: typeof EditorIdRoute
+  EditorIndexRoute: typeof EditorIndexRoute
 }
 
 const EditorRouteChildren: EditorRouteChildren = {
   EditorIdRoute: EditorIdRoute,
+  EditorIndexRoute: EditorIndexRoute,
 }
 
 const EditorRouteWithChildren =
