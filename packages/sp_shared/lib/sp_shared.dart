@@ -7,6 +7,7 @@ export 'src/models/pattern_meta.dart';
 export 'src/models/pattern_summary.dart';
 export 'src/models/root_meta.dart';
 export 'src/models/smart_playlist.dart';
+export 'src/models/preview_grouping.dart';
 export 'src/models/smart_playlist_definition.dart';
 export 'src/models/smart_playlist_episode_extractor.dart';
 export 'src/models/smart_playlist_group_def.dart';

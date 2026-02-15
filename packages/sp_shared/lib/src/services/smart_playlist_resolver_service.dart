@@ -1,4 +1,5 @@
 import '../models/episode_data.dart';
+import '../models/preview_grouping.dart';
 import '../models/smart_playlist.dart';
 import '../models/smart_playlist_definition.dart';
 import '../models/smart_playlist_group_def.dart';
@@ -49,6 +50,191 @@ class SmartPlaylistResolverService {
     }
 
     return null;
+  }
+
+  /// Resolves smart playlists for preview, tracking which episodes
+  /// each definition lost to higher-priority definitions.
+  ///
+  /// Returns null if no config matches or episodes are empty.
+  PreviewGrouping? resolveForPreview({
+    required String? podcastGuid,
+    required String feedUrl,
+    required List<EpisodeData> episodes,
+  }) {
+    if (episodes.isEmpty) return null;
+
+    final config = _findMatchingConfig(podcastGuid, feedUrl);
+    if (config == null) return null;
+
+    final episodeById = {for (final e in episodes) e.id: e};
+    final result = _resolveWithConfigForPreview(config, episodes);
+    if (result == null) return null;
+
+    return _sortPreviewGrouping(result, episodeById);
+  }
+
+  /// Preview variant of [_resolveWithConfig] that tracks claimed episodes.
+  PreviewGrouping? _resolveWithConfigForPreview(
+    SmartPlaylistPatternConfig config,
+    List<EpisodeData> episodes,
+  ) {
+    final playlistResults = <PlaylistPreviewResult>[];
+    final allUngroupedIds = <int>{};
+    final claimedIds = <int>{};
+    final claimedByMap = <int, String>{};
+    String? resolverType;
+
+    // Sort definitions by priority (higher first)
+    final sorted = List.of(config.playlists)
+      ..sort((a, b) => b.priority.compareTo(a.priority));
+
+    for (final definition in sorted) {
+      final hasFilters =
+          definition.titleFilter != null ||
+          definition.excludeFilter != null ||
+          definition.requireFilter != null;
+
+      // Compute claimedByOthers for definitions with filters
+      final claimedByOthers = <int, String>{};
+      if (hasFilters) {
+        final allCandidates = _filterEpisodes(episodes, definition, {});
+        for (final ep in allCandidates) {
+          if (claimedIds.contains(ep.id)) {
+            claimedByOthers[ep.id] = claimedByMap[ep.id]!;
+          }
+        }
+      }
+
+      final filtered = _filterEpisodes(episodes, definition, claimedIds);
+
+      if (filtered.isEmpty) {
+        // Still emit a result entry so the UI knows about claimed episodes
+        playlistResults.add(
+          PlaylistPreviewResult(
+            definitionId: definition.id,
+            playlist: SmartPlaylist(
+              id: definition.id,
+              displayName: definition.displayName,
+              sortKey: playlistResults.length,
+              episodeIds: const [],
+            ),
+            claimedByOthers: claimedByOthers,
+          ),
+        );
+        continue;
+      }
+
+      final resolver = _findResolverByType(definition.resolverType);
+      if (resolver == null) continue;
+
+      final result = resolver.resolve(filtered, definition);
+      if (result == null) continue;
+
+      resolverType ??= result.resolverType;
+
+      final contentType = RssMetadataResolver.parseContentType(
+        definition.contentType,
+      );
+      final yearHeaderMode = RssMetadataResolver.parseYearHeaderMode(
+        definition.yearHeaderMode,
+      );
+
+      // Build one SmartPlaylist per definition for the preview result.
+      // Groups mode: resolver playlists become groups inside one playlist.
+      // Episodes mode: resolver playlists become groups to maintain
+      // the 1:1 mapping of definition -> PlaylistPreviewResult.
+      final groups = result.playlists.map((p) {
+        return SmartPlaylistGroup(
+          id: p.id,
+          displayName: p.displayName,
+          sortKey: p.sortKey,
+          episodeIds: p.episodeIds,
+          thumbnailUrl: p.thumbnailUrl,
+        );
+      }).toList();
+      final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
+
+      final playlist = SmartPlaylist(
+        id: definition.id,
+        displayName: definition.displayName,
+        sortKey: playlistResults.length,
+        episodeIds: allEpisodeIds,
+        contentType: contentType,
+        yearHeaderMode: yearHeaderMode,
+        episodeYearHeaders: definition.episodeYearHeaders,
+        showDateRange: definition.showDateRange,
+        groups: groups,
+      );
+
+      playlistResults.add(
+        PlaylistPreviewResult(
+          definitionId: definition.id,
+          playlist: playlist,
+          claimedByOthers: claimedByOthers,
+        ),
+      );
+
+      allUngroupedIds.addAll(result.ungroupedEpisodeIds);
+
+      if (hasFilters) {
+        for (final p in result.playlists) {
+          for (final id in p.episodeIds) {
+            claimedIds.add(id);
+            claimedByMap[id] = definition.id;
+          }
+        }
+      }
+    }
+
+    if (playlistResults.isEmpty) return null;
+
+    allUngroupedIds.removeAll(claimedIds);
+
+    return PreviewGrouping(
+      playlistResults: playlistResults,
+      ungroupedEpisodeIds: allUngroupedIds.toList(),
+      resolverType: resolverType ?? 'config',
+    );
+  }
+
+  /// Sorts episode IDs in every playlist and group within a
+  /// [PreviewGrouping] by [EpisodeData.publishedAt] ascending.
+  PreviewGrouping _sortPreviewGrouping(
+    PreviewGrouping grouping,
+    Map<int, EpisodeData> episodeById,
+  ) {
+    final sortedResults = grouping.playlistResults.map((previewResult) {
+      final playlist = previewResult.playlist;
+      final sortedGroups = playlist.groups?.map((group) {
+        return group.copyWith(
+          episodeIds: sortEpisodeIdsByPublishedAt(
+            group.episodeIds,
+            episodeById,
+          ),
+        );
+      }).toList();
+
+      return PlaylistPreviewResult(
+        definitionId: previewResult.definitionId,
+        playlist: playlist.copyWith(
+          episodeIds: sortEpisodeIdsByPublishedAt(
+            playlist.episodeIds,
+            episodeById,
+          ),
+          groups: sortedGroups,
+        ),
+        claimedByOthers: previewResult.claimedByOthers,
+      );
+    }).toList();
+
+    return PreviewGrouping(
+      playlistResults: sortedResults,
+      ungroupedEpisodeIds: sortEpisodeIdsByPublishedAt(
+        grouping.ungroupedEpisodeIds,
+        episodeById,
+      ),
+      resolverType: grouping.resolverType,
+    );
   }
 
   /// Resolves playlists using a matched pattern config.

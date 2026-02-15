@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as FeedsRouteImport } from './routes/feeds'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
@@ -25,6 +26,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedsRoute = FeedsRouteImport.update({
+  id: '/feeds',
+  path: '/feeds',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditorRoute = EditorRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/editor': typeof EditorRouteWithChildren
+  '/feeds': typeof FeedsRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/feeds': typeof FeedsRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/editor': typeof EditorRouteWithChildren
+  '/feeds': typeof FeedsRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
@@ -86,17 +95,26 @@ export interface FileRouteTypes {
     | '/'
     | '/browse'
     | '/editor'
+    | '/feeds'
     | '/login'
     | '/settings'
     | '/editor/$id'
     | '/editor/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse' | '/login' | '/settings' | '/editor/$id' | '/editor'
+  to:
+    | '/'
+    | '/browse'
+    | '/feeds'
+    | '/login'
+    | '/settings'
+    | '/editor/$id'
+    | '/editor'
   id:
     | '__root__'
     | '/'
     | '/browse'
     | '/editor'
+    | '/feeds'
     | '/login'
     | '/settings'
     | '/editor/$id'
@@ -107,6 +125,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
   EditorRoute: typeof EditorRouteWithChildren
+  FeedsRoute: typeof FeedsRoute
   LoginRoute: typeof LoginRoute
   SettingsRoute: typeof SettingsRoute
 }
@@ -125,6 +144,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feeds': {
+      id: '/feeds'
+      path: '/feeds'
+      fullPath: '/feeds'
+      preLoaderRoute: typeof FeedsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/editor': {
@@ -182,6 +208,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
   EditorRoute: EditorRouteWithChildren,
+  FeedsRoute: FeedsRoute,
   LoginRoute: LoginRoute,
   SettingsRoute: SettingsRoute,
 }

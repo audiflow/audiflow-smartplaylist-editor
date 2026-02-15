@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useForm, FormProvider, type Resolver } from 'react-hook-form';
+import { useForm, useFieldArray, useWatch, FormProvider, type Resolver, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   patternConfigSchema,
   type PatternConfig,
 } from '@/schemas/config-schema.ts';
+import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { usePreviewMutation, useFeed } from '@/api/queries.ts';
 import { useAutoSave } from '@/hooks/use-auto-save.ts';
@@ -13,14 +14,31 @@ import { DraftService } from '@/lib/draft-service.ts';
 import type { DraftEntry } from '@/lib/draft-service.ts';
 import { merge } from '@/lib/json-merge.ts';
 import type { JsonValue } from '@/lib/json-merge.ts';
-import { ConfigForm } from '@/components/editor/config-form.tsx';
+import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
+import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
+import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
 import { DraftRestoreDialog } from '@/components/editor/draft-restore-dialog.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { FeedUrlInput } from '@/components/editor/feed-url-input.tsx';
 import { SubmitDialog } from '@/components/editor/submit-dialog.tsx';
-import { PreviewPanel } from '@/components/preview/preview-panel.tsx';
+import { DebugInfoPanel } from '@/components/preview/debug-info-panel.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { ArrowLeft, Code, FormInput } from 'lucide-react';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs.tsx';
+import { Badge } from '@/components/ui/badge.tsx';
+import {
+  ArrowLeft,
+  Code,
+  ExternalLink,
+  FormInput,
+  Loader2,
+  Play,
+  Plus,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 const DEFAULT_CONFIG: PatternConfig = {
@@ -46,6 +64,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   } = useEditorStore();
   const [jsonText, setJsonText] = useState('');
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('tab-0');
   const [pendingDraft, setPendingDraft] = useState<DraftEntry | null>(() =>
     new DraftService().loadDraft(configId),
   );
@@ -55,6 +74,11 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     // but the form operates on the output type where defaults are applied.
     resolver: zodResolver(patternConfigSchema) as Resolver<PatternConfig>,
     defaultValues: initialConfig ?? DEFAULT_CONFIG,
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'playlists',
   });
 
   const previewMutation = usePreviewMutation();
@@ -145,6 +169,18 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     previewMutation.mutate({ config, feedUrl });
   }, [isJsonMode, jsonText, form, feedUrl, previewMutation]);
 
+  const findPreviewPlaylist = useCallback(
+    (index: number): PreviewPlaylist | null => {
+      if (!previewMutation.data) return null;
+      const definitionId = form.getValues(`playlists.${index}.id`);
+      return (
+        previewMutation.data.playlists.find((p) => p.id === definitionId) ??
+        null
+      );
+    },
+    [previewMutation.data, form],
+  );
+
   // Safe JSON parse for render-time props (avoids throwing during render)
   const parsedJsonConfig = useMemo(() => {
     if (!isJsonMode) return null;
@@ -160,6 +196,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       {/* Header */}
       <EditorHeader
         configId={configId}
+        feedUrl={feedUrl || null}
         lastAutoSavedAt={lastAutoSavedAt}
         isJsonMode={isJsonMode}
         onBack={() => {
@@ -183,31 +220,90 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         />
       </div>
 
-      {/* Main Content: Editor + Preview */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div>
-          <FormProvider {...form}>
-            {isJsonMode ? (
-              <JsonEditor
-                value={jsonText}
-                onChange={setJsonText}
-                className="min-h-[600px]"
-              />
-            ) : (
-              <ConfigForm />
-            )}
-          </FormProvider>
-        </div>
-
-        <div>
-          <PreviewPanel
-            onRunPreview={handleRunPreview}
-            isLoading={previewMutation.isPending}
-            result={previewMutation.data ?? null}
-            error={previewMutation.error}
-          />
-        </div>
+      {/* Preview Controls */}
+      <div className="flex items-center justify-between my-4">
+        {previewMutation.data?.debug && (
+          <DebugInfoPanel debug={previewMutation.data.debug} />
+        )}
+        {!previewMutation.data?.debug && <div />}
+        <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
+          {previewMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="mr-2 h-4 w-4" />
+          )}
+          Run Preview
+        </Button>
       </div>
+
+      {/* Main Content */}
+      {isJsonMode ? (
+        <FormProvider {...form}>
+          <JsonEditor
+            value={jsonText}
+            onChange={setJsonText}
+            className="min-h-[600px]"
+          />
+        </FormProvider>
+      ) : (
+        <FormProvider {...form}>
+          <PatternSettingsCard />
+
+          {/* Playlist Tabs */}
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="mt-6"
+          >
+            <div className="flex items-center gap-2">
+              <TabsList>
+                {fields.map((field, index) => (
+                  <PlaylistTabTrigger
+                    key={field.id}
+                    index={index}
+                    control={form.control}
+                    previewPlaylist={findPreviewPlaylist(index)}
+                  />
+                ))}
+              </TabsList>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  append({ ...DEFAULT_PLAYLIST });
+                  setActiveTab(`tab-${fields.length}`);
+                }}
+              >
+                <Plus className="mr-1 h-3 w-3" />
+                Add
+              </Button>
+            </div>
+
+            {fields.map((field, index) => (
+              <TabsContent key={field.id} value={`tab-${index}`}>
+                <PlaylistTabContent
+                  index={index}
+                  previewPlaylist={findPreviewPlaylist(index)}
+                  onRemove={() => {
+                    remove(index);
+                    const lastIndex = fields.length - 2;
+                    if (0 <= lastIndex) {
+                      setActiveTab(`tab-${Math.min(index, lastIndex)}`);
+                    }
+                  }}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
+
+          {fields.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-12">
+              No playlists. Click &quot;Add&quot; to create one.
+            </p>
+          )}
+        </FormProvider>
+      )}
 
       {/* Submit Dialog */}
       <SubmitDialog
@@ -233,6 +329,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
 interface EditorHeaderProps {
   configId: string | null;
+  feedUrl: string | null;
   lastAutoSavedAt: Date | null;
   isJsonMode: boolean;
   onBack: () => void;
@@ -242,12 +339,19 @@ interface EditorHeaderProps {
 
 function EditorHeader({
   configId,
+  feedUrl,
   lastAutoSavedAt,
   isJsonMode,
   onBack,
   onModeToggle,
   onSubmit,
 }: EditorHeaderProps) {
+  const handleViewFeed = useCallback(() => {
+    if (!feedUrl) return;
+    const params = new URLSearchParams({ url: feedUrl });
+    window.open(`/feeds?${params.toString()}`, '_blank');
+  }, [feedUrl]);
+
   return (
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-4">
@@ -274,8 +378,45 @@ function EditorHeader({
           )}
           {isJsonMode ? 'Form Mode' : 'JSON Mode'}
         </Button>
+        {feedUrl && (
+          <Button variant="outline" onClick={handleViewFeed}>
+            <ExternalLink className="mr-2 h-4 w-4" />
+            View Feed
+          </Button>
+        )}
         <Button onClick={onSubmit}>Submit PR</Button>
       </div>
     </div>
+  );
+}
+
+// -- Tab trigger sub-component --
+
+interface PlaylistTabTriggerProps {
+  index: number;
+  control: Control<PatternConfig>;
+  previewPlaylist: PreviewPlaylist | null;
+}
+
+function PlaylistTabTrigger({
+  index,
+  control,
+  previewPlaylist,
+}: PlaylistTabTriggerProps) {
+  const displayName = useWatch({
+    control,
+    name: `playlists.${index}.displayName`,
+  });
+  const name = displayName || `Playlist ${index + 1}`;
+
+  return (
+    <TabsTrigger value={`tab-${index}`}>
+      {name}
+      {previewPlaylist && (
+        <Badge variant="secondary" className="ml-1.5">
+          {previewPlaylist.episodeCount}
+        </Badge>
+      )}
+    </TabsTrigger>
   );
 }
