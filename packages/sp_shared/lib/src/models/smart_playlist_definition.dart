@@ -26,6 +26,11 @@ final class SmartPlaylistDefinition {
     this.smartPlaylistEpisodeExtractor,
   });
 
+  static String? _nullIfEmpty(Object? value) {
+    if (value is! String) return null;
+    return value.isEmpty ? null : value;
+  }
+
   /// Creates a definition from JSON configuration.
   factory SmartPlaylistDefinition.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistDefinition(
@@ -33,13 +38,13 @@ final class SmartPlaylistDefinition {
       displayName: json['displayName'] as String,
       resolverType: json['resolverType'] as String,
       priority: (json['priority'] as int?) ?? 0,
-      contentType: json['contentType'] as String?,
-      yearHeaderMode: json['yearHeaderMode'] as String?,
+      contentType: _nullIfEmpty(json['contentType']),
+      yearHeaderMode: _nullIfEmpty(json['yearHeaderMode']),
       episodeYearHeaders: (json['episodeYearHeaders'] as bool?) ?? false,
       showDateRange: (json['showDateRange'] as bool?) ?? false,
-      titleFilter: json['titleFilter'] as String?,
-      excludeFilter: json['excludeFilter'] as String?,
-      requireFilter: json['requireFilter'] as String?,
+      titleFilter: _nullIfEmpty(json['titleFilter']),
+      excludeFilter: _nullIfEmpty(json['excludeFilter']),
+      requireFilter: _nullIfEmpty(json['requireFilter']),
       nullSeasonGroupKey: json['nullSeasonGroupKey'] as int?,
       groups: (json['groups'] as List<dynamic>?)
           ?.map(

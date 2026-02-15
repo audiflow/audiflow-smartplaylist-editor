@@ -14,6 +14,7 @@ import { DraftService } from '@/lib/draft-service.ts';
 import type { DraftEntry } from '@/lib/draft-service.ts';
 import { merge } from '@/lib/json-merge.ts';
 import type { JsonValue } from '@/lib/json-merge.ts';
+import { sanitizeConfig } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
@@ -166,7 +167,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } else {
       config = form.getValues();
     }
-    previewMutation.mutate({ config, feedUrl });
+    previewMutation.mutate({ config: sanitizeConfig(config), feedUrl });
   }, [isJsonMode, jsonText, form, feedUrl, previewMutation]);
 
   const findPreviewPlaylist = useCallback(
@@ -310,7 +311,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         open={submitOpen}
         onOpenChange={setSubmitOpen}
         patternId={form.getValues().id || configId || ''}
-        playlist={parsedJsonConfig ?? form.getValues()}
+        playlist={sanitizeConfig(parsedJsonConfig ?? form.getValues())}
       />
 
       {/* Draft Restore Dialog */}
