@@ -109,7 +109,10 @@ export const playlistDefinitionSchema = z.object({
   id: z.string(),
   displayName: z.string(),
   resolverType: z.string(),
-  priority: z.number().default(0),
+  priority: z
+    .number()
+    .nullish()
+    .transform((v) => v ?? 0),
   contentType: z.string().nullish(),
   yearHeaderMode: z.string().nullish(),
   episodeYearHeaders: z.boolean().default(false),

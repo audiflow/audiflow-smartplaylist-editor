@@ -100,6 +100,17 @@ describe('playlistDefinitionSchema', () => {
     });
   });
 
+  it('treats null priority as 0 (JSON round-trip from NaN)', () => {
+    const input = {
+      id: 'main',
+      displayName: 'Main Episodes',
+      resolverType: 'rssMetadata',
+      priority: null,
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.priority).toBe(0);
+  });
+
   it('rejects missing required fields', () => {
     expect(() => playlistDefinitionSchema.parse({})).toThrow();
     expect(() =>
