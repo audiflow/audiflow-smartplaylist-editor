@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useForm, FormProvider, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,12 +60,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   );
 
   // Initialize feed URL from config on mount
-  useState(() => {
+  useEffect(() => {
     const urls = initialConfig?.feedUrls;
     if (urls && 0 < urls.length) {
       setFeedUrl(urls[0]);
     }
-  });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -88,10 +88,30 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [isJsonMode, jsonText, form, toggleJsonMode]);
 
   const handleRunPreview = useCallback(() => {
-    const config = isJsonMode ? JSON.parse(jsonText) : form.getValues();
+    let config: unknown;
+    if (isJsonMode) {
+      try {
+        config = JSON.parse(jsonText);
+      } catch {
+        toast.error('Invalid JSON: cannot run preview');
+        return;
+      }
+    } else {
+      config = form.getValues();
+    }
     const episodes = feedQuery.data ?? [];
     previewMutation.mutate({ config, episodes });
   }, [isJsonMode, jsonText, form, feedQuery.data, previewMutation]);
+
+  // Safe JSON parse for render-time props (avoids throwing during render)
+  const parsedJsonConfig = useMemo(() => {
+    if (!isJsonMode) return null;
+    try {
+      return JSON.parse(jsonText) as PatternConfig;
+    } catch {
+      return null;
+    }
+  }, [isJsonMode, jsonText]);
 
   return (
     <div className="container mx-auto max-w-7xl p-6">
@@ -152,7 +172,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         open={submitOpen}
         onOpenChange={setSubmitOpen}
         patternId={form.getValues().id || configId || ''}
-        playlist={isJsonMode ? JSON.parse(jsonText) : form.getValues()}
+        playlist={parsedJsonConfig ?? form.getValues()}
       />
     </div>
   );
