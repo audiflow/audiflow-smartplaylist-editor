@@ -23,7 +23,7 @@ import { RegexTester } from '@/components/editor/regex-tester.tsx';
 import { Trash2 } from 'lucide-react';
 
 const RESOLVER_TYPES = [
-  'rssMetadata',
+  'rss',
   'category',
   'year',
   'titleAppearanceOrder',

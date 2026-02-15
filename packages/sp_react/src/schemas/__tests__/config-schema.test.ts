@@ -14,12 +14,12 @@ describe('playlistDefinitionSchema', () => {
     const input = {
       id: 'main',
       displayName: 'Main Episodes',
-      resolverType: 'rssMetadata',
+      resolverType: 'rss',
     };
     const result = playlistDefinitionSchema.parse(input);
     expect(result.id).toBe('main');
     expect(result.displayName).toBe('Main Episodes');
-    expect(result.resolverType).toBe('rssMetadata');
+    expect(result.resolverType).toBe('rss');
     expect(result.priority).toBe(0);
     expect(result.episodeYearHeaders).toBe(false);
     expect(result.showDateRange).toBe(false);
@@ -104,7 +104,7 @@ describe('playlistDefinitionSchema', () => {
     const input = {
       id: 'main',
       displayName: 'Main Episodes',
-      resolverType: 'rssMetadata',
+      resolverType: 'rss',
       priority: null,
     };
     const result = playlistDefinitionSchema.parse(input);
@@ -144,7 +144,7 @@ describe('patternConfigSchema', () => {
         {
           id: 'main',
           displayName: 'Main',
-          resolverType: 'rssMetadata',
+          resolverType: 'rss',
         },
       ],
     };
