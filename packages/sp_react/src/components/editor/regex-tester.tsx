@@ -2,20 +2,10 @@ import { Fragment, useDeferredValue, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
 
-const SAMPLE_TITLES = [
-  'Episode 1: The Beginning',
-  'Episode 2: Rising Action',
-  'S01E03 - The Plot Thickens',
-  'Special: Behind the Scenes',
-  'Bonus Episode: Interview',
-  'Episode 10: Season Finale',
-  'Trailer: Coming Soon',
-  'S02E01 - New Season',
-];
-
 interface RegexTesterProps {
   pattern: string;
   variant: 'include' | 'exclude';
+  titles: readonly string[];
 }
 
 interface CompiledRegex {
@@ -37,7 +27,7 @@ function countMatches(regex: RegExp | null, titles: readonly string[]): number {
   return titles.filter((title) => regex.test(title)).length;
 }
 
-export function RegexTester({ pattern, variant }: RegexTesterProps) {
+export function RegexTester({ pattern, variant, titles }: RegexTesterProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const deferredPattern = useDeferredValue(pattern);
 
@@ -47,8 +37,8 @@ export function RegexTester({ pattern, variant }: RegexTesterProps) {
   );
 
   const matchCount = useMemo(
-    () => countMatches(compiled.regex, SAMPLE_TITLES),
-    [compiled.regex],
+    () => countMatches(compiled.regex, titles),
+    [compiled.regex, titles],
   );
 
   if (!pattern) return null;
@@ -78,8 +68,12 @@ export function RegexTester({ pattern, variant }: RegexTesterProps) {
             <p className="text-xs text-destructive">
               Invalid regex: {compiled.error}
             </p>
+          ) : titles.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Load a feed to test regex against episode titles.
+            </p>
           ) : (
-            <SampleTitleList regex={compiled.regex} variant={variant} />
+            <TitleList titles={titles} regex={compiled.regex} variant={variant} />
           )}
         </div>
       )}
@@ -87,17 +81,19 @@ export function RegexTester({ pattern, variant }: RegexTesterProps) {
   );
 }
 
-function SampleTitleList({
+function TitleList({
+  titles,
   regex,
   variant,
 }: {
+  titles: readonly string[];
   regex: RegExp | null;
   variant: 'include' | 'exclude';
 }) {
   return (
     <ul className="space-y-0.5">
-      {SAMPLE_TITLES.map((title) => (
-        <li key={title} className="text-xs font-mono">
+      {titles.map((title, i) => (
+        <li key={`${i}-${title}`} className="text-xs font-mono">
           {regex ? (
             <HighlightedTitle title={title} regex={regex} variant={variant} />
           ) : (
