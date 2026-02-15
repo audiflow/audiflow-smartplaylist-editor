@@ -1,0 +1,147 @@
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { useAuthStore } from '@/stores/auth-store.ts';
+import { usePatterns } from '@/api/queries.ts';
+import { Button } from '@/components/ui/button.tsx';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card.tsx';
+import { Badge } from '@/components/ui/badge.tsx';
+import { Settings, Plus, Loader2 } from 'lucide-react';
+
+export const Route = createFileRoute('/browse')({
+  beforeLoad: () => {
+    if (!useAuthStore.getState().isAuthenticated) {
+      throw redirect({ to: '/login' });
+    }
+  },
+  component: BrowseScreen,
+});
+
+function BrowseScreen() {
+  const navigate = useNavigate();
+  const { data: patterns, isLoading, error } = usePatterns();
+
+  return (
+    <div className="container mx-auto max-w-4xl p-6">
+      <BrowseHeader navigate={navigate} />
+
+      {isLoading && <LoadingState />}
+      {error && <ErrorState message={error.message} />}
+      {patterns && patterns.length === 0 && <EmptyState />}
+      {patterns && 0 < patterns.length && (
+        <PatternList patterns={patterns} navigate={navigate} />
+      )}
+    </div>
+  );
+}
+
+function BrowseHeader({
+  navigate,
+}: {
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  return (
+    <div className="flex items-center justify-between mb-6">
+      <h1 className="text-2xl font-bold">SmartPlaylist Editor</h1>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => void navigate({ to: '/settings' })}
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
+        <Button onClick={() => void navigate({ to: '/editor' })}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create New
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="flex justify-center py-12">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="text-center py-12 text-destructive">
+      Failed to load patterns: {message}
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="text-center py-12 text-muted-foreground">
+      No patterns found. Create your first one!
+    </div>
+  );
+}
+
+function PatternList({
+  patterns,
+  navigate,
+}: {
+  patterns: Array<{
+    id: string;
+    displayName: string;
+    feedUrlHint: string;
+    playlistCount: number;
+  }>;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  return (
+    <div className="grid gap-4">
+      {patterns.map((pattern) => (
+        <PatternCard
+          key={pattern.id}
+          pattern={pattern}
+          navigate={navigate}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PatternCard({
+  pattern,
+  navigate,
+}: {
+  pattern: {
+    id: string;
+    displayName: string;
+    feedUrlHint: string;
+    playlistCount: number;
+  };
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  return (
+    <Card
+      className="cursor-pointer hover:bg-accent/50 transition-colors"
+      onClick={() =>
+        void navigate({ to: '/editor/$id', params: { id: pattern.id } })
+      }
+    >
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">{pattern.displayName}</CardTitle>
+          <Badge variant="secondary">
+            {pattern.playlistCount} playlists
+          </Badge>
+        </div>
+        {pattern.feedUrlHint && (
+          <CardDescription>{pattern.feedUrlHint}</CardDescription>
+        )}
+      </CardHeader>
+    </Card>
+  );
+}

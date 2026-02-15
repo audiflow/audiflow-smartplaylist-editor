@@ -15,9 +15,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/sp_shared/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/packages/sp_shared/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/packages/sp_shared/build" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/sp_web/.dart_tool" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/sp_web/.pub" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/sp_web/build" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/sp_react/node_modules" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/sp_react/dist" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

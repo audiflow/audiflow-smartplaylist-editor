@@ -1,27 +1,15 @@
-# Stage 1: Build Flutter web app
-FROM ghcr.io/cirruslabs/flutter:3.38.5 AS web-build
+# Stage 1: Build React web app
+FROM node:22-slim AS web-build
+
+RUN corepack enable pnpm
 
 WORKDIR /build
 
-# Copy workspace root pubspec
-COPY pubspec.yaml .
+COPY packages/sp_react/package.json packages/sp_react/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
-# Copy package pubspec files for dependency resolution
-COPY packages/sp_shared/pubspec.yaml packages/sp_shared/pubspec.yaml
-COPY packages/sp_web/pubspec.yaml packages/sp_web/pubspec.yaml
-COPY packages/sp_server/pubspec.yaml packages/sp_server/pubspec.yaml
-
-# Stub mcp_server so workspace resolves
-RUN mkdir -p mcp_server
-COPY mcp_server/pubspec.yaml mcp_server/pubspec.yaml
-
-# Copy source code needed for web build
-COPY packages/sp_shared/lib/ packages/sp_shared/lib/
-COPY packages/sp_web/ packages/sp_web/
-
-# Resolve dependencies and build
-RUN flutter pub get
-RUN cd packages/sp_web && flutter build web --release --dart-define=API_URL=
+COPY packages/sp_react/ .
+RUN pnpm build
 
 
 # Stage 2: Compile Dart server to AOT binary
@@ -37,13 +25,6 @@ COPY packages/sp_shared/pubspec.yaml packages/sp_shared/pubspec.yaml
 COPY packages/sp_server/pubspec.yaml packages/sp_server/pubspec.yaml
 
 # Stub unused packages so workspace resolves
-RUN mkdir -p packages/sp_web && \
-    echo 'name: sp_web' > packages/sp_web/pubspec.yaml && \
-    echo 'publish_to: none' >> packages/sp_web/pubspec.yaml && \
-    echo 'resolution: workspace' >> packages/sp_web/pubspec.yaml && \
-    echo 'environment:' >> packages/sp_web/pubspec.yaml && \
-    echo '  sdk: ^3.10.0' >> packages/sp_web/pubspec.yaml
-
 RUN mkdir -p mcp_server && \
     echo 'name: sp_mcp_server' > mcp_server/pubspec.yaml && \
     echo 'publish_to: none' >> mcp_server/pubspec.yaml && \
@@ -71,8 +52,8 @@ WORKDIR /app
 # Copy AOT binary
 COPY --from=server-build /app/server /app/server
 
-# Copy Flutter web build output
-COPY --from=web-build /build/packages/sp_web/build/web/ /app/public/
+# Copy React build output
+COPY --from=web-build /build/dist/ /app/public/
 
 ENV PORT=8080
 ENV WEB_ROOT=/app/public

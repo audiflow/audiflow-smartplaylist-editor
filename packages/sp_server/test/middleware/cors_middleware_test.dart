@@ -16,14 +16,8 @@ void main() {
       final response = await handler(request);
 
       expect(response.statusCode, equals(200));
-      expect(
-        response.headers['access-control-allow-origin'],
-        equals('*'),
-      );
-      expect(
-        response.headers['access-control-allow-methods'],
-        contains('GET'),
-      );
+      expect(response.headers['access-control-allow-origin'], equals('*'));
+      expect(response.headers['access-control-allow-methods'], contains('GET'));
     });
 
     test('handles OPTIONS preflight requests', () async {
@@ -35,10 +29,7 @@ void main() {
       final response = await handler(request);
 
       expect(response.statusCode, equals(200));
-      expect(
-        response.headers['access-control-allow-origin'],
-        equals('*'),
-      );
+      expect(response.headers['access-control-allow-origin'], equals('*'));
       expect(
         response.headers['access-control-allow-headers'],
         contains('Authorization'),
@@ -54,10 +45,7 @@ void main() {
       final response = await handler(request);
 
       expect(response.statusCode, equals(502));
-      expect(
-        response.headers['access-control-allow-origin'],
-        equals('*'),
-      );
+      expect(response.headers['access-control-allow-origin'], equals('*'));
     });
 
     test('adds CORS headers when handler throws Exception', () async {
@@ -69,10 +57,7 @@ void main() {
       final response = await handler(request);
 
       expect(response.statusCode, equals(500));
-      expect(
-        response.headers['access-control-allow-origin'],
-        equals('*'),
-      );
+      expect(response.headers['access-control-allow-origin'], equals('*'));
       final body =
           jsonDecode(await response.readAsString()) as Map<String, dynamic>;
       expect(body['error'], contains('boom'));
@@ -87,17 +72,12 @@ void main() {
       final response = await handler(request);
 
       expect(response.statusCode, equals(500));
-      expect(
-        response.headers['access-control-allow-origin'],
-        equals('*'),
-      );
+      expect(response.headers['access-control-allow-origin'], equals('*'));
     });
 
     test('uses custom allowedOrigin', () async {
       final handler = const Pipeline()
-          .addMiddleware(
-            corsMiddleware(allowedOrigin: 'https://example.com'),
-          )
+          .addMiddleware(corsMiddleware(allowedOrigin: 'https://example.com'))
           .addHandler((_) => Response.ok('ok'));
 
       final request = Request('GET', Uri.parse('http://localhost/test'));

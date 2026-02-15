@@ -1,16 +1,16 @@
-.PHONY: deps build-runner server web dev test test-shared test-server test-web test-mcp analyze format clean help \
+.PHONY: deps build-runner server dev test test-shared test-server test-react test-mcp \
+	analyze lint format clean help \
 	docker-build-dev docker-push-dev docker-build-prod docker-push-prod deploy-dev deploy-prod \
 	tf-init tf-plan-dev tf-apply-dev tf-plan-prod tf-apply-prod
 
 # Ports
 SERVER_PORT ?= 8080
-WEB_PORT    ?= 60792
 
 # Paths
 ROOT        := $(shell pwd)
 SP_SHARED   := $(ROOT)/packages/sp_shared
 SP_SERVER   := $(ROOT)/packages/sp_server
-SP_WEB      := $(ROOT)/packages/sp_web
+SP_REACT    := $(ROOT)/packages/sp_react
 MCP_SERVER  := $(ROOT)/mcp_server
 ENV_FILE    := $(ROOT)/.env
 
@@ -28,6 +28,7 @@ help: ## Show this help
 
 deps: ## Install dependencies for all packages
 	dart pub get
+	cd $(SP_REACT) && pnpm install
 
 build-runner: ## Run code generation (json_serializable) for sp_shared
 	cd $(SP_SHARED) && dart run build_runner build --delete-conflicting-outputs
@@ -47,18 +48,11 @@ LOCAL_ENV = \
 server: ## Start the backend API server (PORT=$(SERVER_PORT))
 	cd $(SP_SERVER) && $(LOCAL_ENV) dart run bin/server.dart
 
-web: ## Start the Flutter web app (port $(WEB_PORT))
-	cd $(SP_WEB) && flutter run -d web-server \
-		--web-port=$(WEB_PORT) \
-		--dart-define=API_URL=http://localhost:$(SERVER_PORT)
-
-dev: ## Start server and web app together (background server)
-	@echo "Starting sp_server on port $(SERVER_PORT) ..."
-	@cd $(SP_SERVER) && $(LOCAL_ENV) dart run bin/server.dart &
-	@echo "Starting sp_web on port $(WEB_PORT) ..."
-	@cd $(SP_WEB) && flutter run -d web-server \
-		--web-port=$(WEB_PORT) \
-		--dart-define=API_URL=http://localhost:$(SERVER_PORT)
+dev: ## Start server and React web app together (Ctrl+C stops both)
+	@trap 'kill 0 2>/dev/null' EXIT; \
+	(cd $(SP_SERVER) && $(LOCAL_ENV) dart run bin/server.dart) & \
+	echo "sp_server started on port $(SERVER_PORT)"; \
+	cd $(SP_REACT) && pnpm dev
 
 # -- Testing -----------------------------------------------------------------
 
@@ -66,6 +60,7 @@ test: ## Run all tests
 	dart test $(SP_SHARED)
 	dart test $(SP_SERVER)
 	dart test $(MCP_SERVER)
+	cd $(SP_REACT) && pnpm test -- --run
 
 test-shared: ## Run sp_shared tests
 	dart test $(SP_SHARED)
@@ -73,8 +68,8 @@ test-shared: ## Run sp_shared tests
 test-server: ## Run sp_server tests
 	dart test $(SP_SERVER)
 
-test-web: ## Run sp_web tests
-	cd $(SP_WEB) && flutter test
+test-react: ## Run sp_react tests
+	cd $(SP_REACT) && pnpm test -- --run
 
 test-mcp: ## Run mcp_server tests
 	dart test $(MCP_SERVER)
@@ -83,6 +78,11 @@ test-mcp: ## Run mcp_server tests
 
 analyze: ## Run static analysis on all packages
 	dart analyze
+	cd $(SP_REACT) && npx tsc -b --noEmit
+
+lint: ## Run linters (ESLint for React, dart analyze for Dart)
+	dart analyze
+	cd $(SP_REACT) && npx eslint .
 
 format: ## Format all Dart files
 	dart format .
@@ -146,5 +146,5 @@ deploy-prod: docker-build-prod docker-push-prod tf-apply-prod ## Build, push, an
 # -- Cleanup -----------------------------------------------------------------
 
 clean: ## Remove build artifacts and caches
-	cd $(SP_WEB) && flutter clean
+	rm -rf $(SP_REACT)/dist $(SP_REACT)/node_modules
 	dart pub get
