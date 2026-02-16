@@ -7,9 +7,10 @@ import {
   CardTitle,
 } from '@/components/ui/card.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { Label } from '@/components/ui/label.tsx';
 import { Textarea } from '@/components/ui/textarea.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
+import { HintLabel } from '@/components/editor/hint-label.tsx';
+import { FIELD_HINTS } from '@/components/editor/field-hints.ts';
 
 export function PatternSettingsCard() {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
@@ -22,7 +23,7 @@ export function PatternSettingsCard() {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="config-id">Config ID</Label>
+            <HintLabel htmlFor="config-id" hint={FIELD_HINTS.patternId}>Config ID</HintLabel>
             <Input
               id="config-id"
               {...register('id')}
@@ -30,7 +31,7 @@ export function PatternSettingsCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="config-podcastGuid">Podcast GUID</Label>
+            <HintLabel htmlFor="config-podcastGuid" hint={FIELD_HINTS.podcastGuid}>Podcast GUID</HintLabel>
             <Input
               id="config-podcastGuid"
               {...register('podcastGuid')}
@@ -47,9 +48,9 @@ export function PatternSettingsCard() {
               setValue('yearGroupedEpisodes', !!checked)
             }
           />
-          <Label htmlFor="config-yearGroupedEpisodes">
+          <HintLabel htmlFor="config-yearGroupedEpisodes" hint={FIELD_HINTS.yearGroupedEpisodes}>
             Year Grouped Episodes
-          </Label>
+          </HintLabel>
         </div>
       </CardContent>
     </Card>
@@ -62,7 +63,7 @@ function FeedUrlsField() {
 
   return (
     <div className="space-y-1.5">
-      <Label htmlFor="config-feedUrls">Feed URLs (comma-separated)</Label>
+      <HintLabel htmlFor="config-feedUrls" hint={FIELD_HINTS.feedUrls}>Feed URLs (comma-separated)</HintLabel>
       <Textarea
         id="config-feedUrls"
         value={feedUrls.join(', ')}

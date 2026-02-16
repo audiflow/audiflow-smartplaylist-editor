@@ -33,6 +33,7 @@ import {
 import { Badge } from '@/components/ui/badge.tsx';
 import {
   ArrowLeft,
+  BookOpen,
   Code,
   ExternalLink,
   FormInput,
@@ -371,6 +372,13 @@ function EditorHeader({
         </div>
       </div>
       <div className="flex gap-2">
+        <Button
+          variant="outline"
+          onClick={() => window.open('/docs/schema.html', '_blank')}
+        >
+          <BookOpen className="mr-2 h-4 w-4" />
+          Schema Docs
+        </Button>
         <Button variant="outline" onClick={onModeToggle}>
           {isJsonMode ? (
             <FormInput className="mr-2 h-4 w-4" />

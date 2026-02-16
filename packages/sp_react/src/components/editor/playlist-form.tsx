@@ -4,7 +4,8 @@ import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
-import { Label } from '@/components/ui/label.tsx';
+import { HintLabel } from '@/components/editor/hint-label.tsx';
+import { FIELD_HINTS } from '@/components/editor/field-hints.ts';
 import {
   Select,
   SelectContent,
@@ -94,7 +95,7 @@ function BasicSettings({
       <h4 className="text-sm font-medium">Basic Settings</h4>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor={`playlist-${index}-id`}>ID</Label>
+          <HintLabel htmlFor={`playlist-${index}-id`} hint={FIELD_HINTS.playlistId}>ID</HintLabel>
           <Input
             id={`playlist-${index}-id`}
             {...register(`${prefix}.id`)}
@@ -102,7 +103,7 @@ function BasicSettings({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`playlist-${index}-displayName`}>Display Name</Label>
+          <HintLabel htmlFor={`playlist-${index}-displayName`} hint={FIELD_HINTS.displayName}>Display Name</HintLabel>
           <Input
             id={`playlist-${index}-displayName`}
             {...register(`${prefix}.displayName`)}
@@ -110,7 +111,7 @@ function BasicSettings({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`playlist-${index}-resolverType`}>Resolver Type</Label>
+          <HintLabel htmlFor={`playlist-${index}-resolverType`} hint={FIELD_HINTS.resolverType}>Resolver Type</HintLabel>
           <Select
             value={watch(`${prefix}.resolverType`) ?? ''}
             onValueChange={(val) => setValue(`${prefix}.resolverType`, val)}
@@ -128,7 +129,7 @@ function BasicSettings({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor={`playlist-${index}-priority`}>Priority</Label>
+          <HintLabel htmlFor={`playlist-${index}-priority`} hint={FIELD_HINTS.priority}>Priority</HintLabel>
           <Input
             id={`playlist-${index}-priority`}
             type="number"
@@ -159,17 +160,17 @@ function FilterSettings({
     <div className="space-y-3">
       <h4 className="text-sm font-medium">Filters</h4>
       <div className="space-y-1.5">
-        <Label>Title Filter</Label>
+        <HintLabel hint={FIELD_HINTS.titleFilter}>Title Filter</HintLabel>
         <Input {...register(`${prefix}.titleFilter`)} placeholder="Regex pattern" />
         {titleFilter && <RegexTester pattern={titleFilter} variant="include" titles={episodeTitles} />}
       </div>
       <div className="space-y-1.5">
-        <Label>Exclude Filter</Label>
+        <HintLabel hint={FIELD_HINTS.excludeFilter}>Exclude Filter</HintLabel>
         <Input {...register(`${prefix}.excludeFilter`)} placeholder="Regex pattern" />
         {excludeFilter && <RegexTester pattern={excludeFilter} variant="exclude" titles={episodeTitles} />}
       </div>
       <div className="space-y-1.5">
-        <Label>Require Filter</Label>
+        <HintLabel hint={FIELD_HINTS.requireFilter}>Require Filter</HintLabel>
         <Input {...register(`${prefix}.requireFilter`)} placeholder="Regex pattern" />
         {requireFilter && <RegexTester pattern={requireFilter} variant="include" titles={episodeTitles} />}
       </div>
@@ -196,9 +197,9 @@ function BooleanSettings({
             setValue(`${prefix}.episodeYearHeaders`, !!checked)
           }
         />
-        <Label htmlFor={`playlist-${index}-episodeYearHeaders`}>
+        <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint={FIELD_HINTS.episodeYearHeaders}>
           Episode Year Headers
-        </Label>
+        </HintLabel>
       </div>
       <div className="flex items-center gap-2">
         <Checkbox
@@ -208,7 +209,7 @@ function BooleanSettings({
             setValue(`${prefix}.showDateRange`, !!checked)
           }
         />
-        <Label htmlFor={`playlist-${index}-showDateRange`}>Show Date Range</Label>
+        <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint={FIELD_HINTS.showDateRange}>Show Date Range</HintLabel>
       </div>
     </div>
   );
