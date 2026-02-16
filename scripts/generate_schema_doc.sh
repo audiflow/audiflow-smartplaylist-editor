@@ -8,7 +8,9 @@ mkdir -p "$DOCS_DIR"
 
 # 1. Export JSON Schema from Dart
 echo "Exporting JSON Schema..."
-(cd "$REPO_ROOT/packages/sp_shared" && dart run bin/export_schema.dart "$DOCS_DIR/schema.json")
+cd "$REPO_ROOT/packages/sp_shared"
+dart run bin/export_schema.dart "$DOCS_DIR/schema.json"
+cd "$REPO_ROOT"
 
 # 2. Generate human-readable HTML from JSON Schema
 echo "Generating HTML documentation..."
