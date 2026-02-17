@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { PreviewResult, PreviewEpisode } from '@/schemas/api-schema.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { Loader2, Play } from 'lucide-react';
@@ -17,23 +18,25 @@ export function PreviewPanel({
   result,
   error,
 }: PreviewPanelProps) {
+  const { t } = useTranslation('preview');
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Preview</h2>
+        <h2 className="text-lg font-semibold">{t('title')}</h2>
         <Button onClick={onRunPreview} disabled={isLoading}>
           {isLoading ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Play className="mr-2 h-4 w-4" />
           )}
-          Run Preview
+          {t('runPreview')}
         </Button>
       </div>
 
       {!result && !isLoading && !error && (
         <p className="text-sm text-muted-foreground py-8 text-center">
-          Run a preview to see how your configuration groups episodes.
+          {t('idleMessage')}
         </p>
       )}
 
@@ -45,7 +48,7 @@ export function PreviewPanel({
 
       {error && (
         <div className="text-center py-4 text-destructive">
-          Preview failed: {error.message}
+          {t('failed', { error: error.message })}
         </div>
       )}
 
@@ -56,7 +59,7 @@ export function PreviewPanel({
           {0 < result.ungrouped.length && (
             <div>
               <h3 className="text-sm font-medium mb-2">
-                Ungrouped Episodes
+                {t('ungroupedEpisodes')}
               </h3>
               <ul className="space-y-1">
                 {result.ungrouped.map((ep: PreviewEpisode) => (

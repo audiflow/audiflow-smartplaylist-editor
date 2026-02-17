@@ -41,6 +41,7 @@ import {
   Play,
   Plus,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
 const DEFAULT_CONFIG: PatternConfig = {
@@ -55,6 +56,7 @@ interface EditorLayoutProps {
 }
 
 export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
+  const { t } = useTranslation('editor');
   const navigate = useNavigate();
   const {
     isJsonMode,
@@ -121,8 +123,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       setPendingDraft(null);
     } catch (e) {
       toast.error(
-        'Failed to restore draft: ' +
-          (e instanceof Error ? e.message : 'Unknown error'),
+        t('toastDraftRestoreFailed', { error: e instanceof Error ? e.message : 'Unknown error' }),
       );
     }
   }, [pendingDraft, initialConfig, configId, form]);
@@ -143,8 +144,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         form.reset(parsed);
       } catch (e) {
         toast.error(
-          'Invalid JSON: ' +
-            (e instanceof Error ? e.message : 'Parse error'),
+          t('toastInvalidJson', { error: e instanceof Error ? e.message : 'Parse error' }),
         );
         return;
       }
@@ -154,7 +154,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   const handleRunPreview = useCallback(() => {
     if (!feedUrl) {
-      toast.error('Enter a feed URL before running preview');
+      toast.error(t('toastEnterFeedUrl'));
       return;
     }
     let config: unknown;
@@ -162,7 +162,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       try {
         config = JSON.parse(jsonText);
       } catch {
-        toast.error('Invalid JSON: cannot run preview');
+        toast.error(t('toastInvalidJsonPreview'));
         return;
       }
     } else {
@@ -234,7 +234,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           ) : (
             <Play className="mr-2 h-4 w-4" />
           )}
-          Run Preview
+          {t('runPreview')}
         </Button>
       </div>
 
@@ -278,7 +278,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
                 }}
               >
                 <Plus className="mr-1 h-3 w-3" />
-                Add
+                {t('add')}
               </Button>
             </div>
 
@@ -301,7 +301,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
           {fields.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-12">
-              No playlists. Click &quot;Add&quot; to create one.
+              {t('noPlaylists')}
             </p>
           )}
         </FormProvider>
@@ -348,6 +348,8 @@ function EditorHeader({
   onModeToggle,
   onSubmit,
 }: EditorHeaderProps) {
+  const { t } = useTranslation('editor');
+
   const handleViewFeed = useCallback(() => {
     if (!feedUrl) return;
     const params = new URLSearchParams({ url: feedUrl });
@@ -362,11 +364,11 @@ function EditorHeader({
         </Button>
         <div>
           <h1 className="text-2xl font-bold">
-            {configId ? `Edit: ${configId}` : 'New Config'}
+            {configId ? t('editConfig', { configId }) : t('newConfig')}
           </h1>
           {lastAutoSavedAt && (
             <p className="text-xs text-muted-foreground">
-              Auto-saved at {lastAutoSavedAt.toLocaleTimeString()}
+              {t('autoSavedAt', { time: lastAutoSavedAt.toLocaleTimeString() })}
             </p>
           )}
         </div>
@@ -377,7 +379,7 @@ function EditorHeader({
           onClick={() => window.open('/docs/schema.html', '_blank')}
         >
           <BookOpen className="mr-2 h-4 w-4" />
-          Schema Docs
+          {t('schemaDocs')}
         </Button>
         <Button variant="outline" onClick={onModeToggle}>
           {isJsonMode ? (
@@ -385,15 +387,15 @@ function EditorHeader({
           ) : (
             <Code className="mr-2 h-4 w-4" />
           )}
-          {isJsonMode ? 'Form Mode' : 'JSON Mode'}
+          {isJsonMode ? t('formMode') : t('jsonMode')}
         </Button>
         {feedUrl && (
           <Button variant="outline" onClick={handleViewFeed}>
             <ExternalLink className="mr-2 h-4 w-4" />
-            View Feed
+            {t('viewFeed')}
           </Button>
         )}
-        <Button onClick={onSubmit}>Submit PR</Button>
+        <Button onClick={onSubmit}>{t('submitPr')}</Button>
       </div>
     </div>
   );
@@ -412,11 +414,12 @@ function PlaylistTabTrigger({
   control,
   previewPlaylist,
 }: PlaylistTabTriggerProps) {
+  const { t } = useTranslation('editor');
   const displayName = useWatch({
     control,
     name: `playlists.${index}.displayName`,
   });
-  const name = displayName || `Playlist ${index + 1}`;
+  const name = displayName || t('playlistFallbackName', { number: index + 1 });
 
   return (
     <TabsTrigger value={`tab-${index}`}>

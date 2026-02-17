@@ -1,6 +1,6 @@
 resource "google_service_account" "cloud_run" {
   account_id   = "audiflow-sp-sa"
-  display_name = "Audiflow SmartPlaylist Cloud Run SA"
+  display_name = "audiflow SmartPlaylist Cloud Run SA"
 }
 
 resource "google_secret_manager_secret_iam_member" "jwt_secret_accessor" {

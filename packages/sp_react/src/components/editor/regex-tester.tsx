@@ -1,4 +1,5 @@
 import { Fragment, useDeferredValue, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button.tsx';
 
@@ -28,6 +29,7 @@ function countMatches(regex: RegExp | null, titles: readonly string[]): number {
 }
 
 export function RegexTester({ pattern, variant, titles }: RegexTesterProps) {
+  const { t } = useTranslation('editor');
   const [isExpanded, setIsExpanded] = useState(false);
   const deferredPattern = useDeferredValue(pattern);
 
@@ -58,19 +60,18 @@ export function RegexTester({ pattern, variant, titles }: RegexTesterProps) {
         ) : (
           <ChevronRight className="mr-1 h-3 w-3" />
         )}
-        Test regex
-        {compiled.regex && ` (${matchCount} matches)`}
+        {compiled.regex ? t('regexTestMatches', { count: matchCount }) : t('regexTest')}
       </Button>
 
       {isExpanded && (
         <div className="mt-1 rounded-md border p-2">
           {compiled.error ? (
             <p className="text-xs text-destructive">
-              Invalid regex: {compiled.error}
+              {t('regexInvalid', { error: compiled.error })}
             </p>
           ) : titles.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              Load a feed to test regex against episode titles.
+              {t('regexLoadFeed')}
             </p>
           ) : (
             <TitleList titles={titles} regex={compiled.regex} variant={variant} />

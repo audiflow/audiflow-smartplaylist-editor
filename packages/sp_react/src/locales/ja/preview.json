@@ -1,0 +1,18 @@
+{
+  "title": "プレビュー",
+  "runPreview": "プレビュー実行",
+  "idleMessage": "プレビューを実行して、設定がエピソードをどのようにグループ化するか確認してください。",
+  "failed": "プレビューに失敗しました: {{error}}",
+  "ungroupedEpisodes": "未グループ化エピソード",
+  "episodes_one": "{{count}} エピソード",
+  "episodes_other": "{{count}} エピソード",
+  "noGroups": "グループなし",
+  "totalLabel": "合計: ",
+  "groupedLabel": "グループ化: ",
+  "ungroupedLabel": "未グループ化: ",
+  "matchedLabel": "一致: ",
+  "claimedLabel": "取得済み: ",
+  "lostLabel": "他に取得: ",
+  "claimedByOthers": "他のプレイリストが取得 ({{count}})",
+  "claimedBy": "{{name}} が取得"
+}

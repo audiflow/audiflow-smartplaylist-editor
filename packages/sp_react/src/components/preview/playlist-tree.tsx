@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type {
   PreviewPlaylist,
   PreviewGroup,
@@ -16,6 +17,8 @@ interface PlaylistTreeProps {
 }
 
 export function PlaylistTree({ playlists }: PlaylistTreeProps) {
+  const { t } = useTranslation('preview');
+
   return (
     <Accordion type="multiple" className="w-full">
       {playlists.map((playlist) => (
@@ -27,7 +30,7 @@ export function PlaylistTree({ playlists }: PlaylistTreeProps) {
                 <Badge variant="outline">{playlist.resolverType}</Badge>
               )}
               <Badge variant="secondary">
-                {playlist.episodeCount} episodes
+                {t('episodes', { count: playlist.episodeCount })}
               </Badge>
             </div>
           </AccordionTrigger>
@@ -35,7 +38,7 @@ export function PlaylistTree({ playlists }: PlaylistTreeProps) {
             {playlist.groups && 0 < playlist.groups.length ? (
               <GroupList groups={playlist.groups} />
             ) : (
-              <p className="text-sm text-muted-foreground py-2">No groups</p>
+              <p className="text-sm text-muted-foreground py-2">{t('noGroups')}</p>
             )}
           </AccordionContent>
         </AccordionItem>
@@ -45,6 +48,8 @@ export function PlaylistTree({ playlists }: PlaylistTreeProps) {
 }
 
 function GroupList({ groups }: { groups: PreviewGroup[] }) {
+  const { t } = useTranslation('preview');
+
   return (
     <Accordion type="multiple" className="ml-4">
       {groups.map((group) => (
@@ -53,7 +58,7 @@ function GroupList({ groups }: { groups: PreviewGroup[] }) {
             <div className="flex items-center gap-2">
               <span>{group.displayName}</span>
               <Badge variant="secondary">
-                {group.episodeCount} episodes
+                {t('episodes', { count: group.episodeCount })}
               </Badge>
             </div>
           </AccordionTrigger>

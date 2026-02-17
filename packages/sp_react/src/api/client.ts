@@ -1,3 +1,5 @@
+import i18n from '@/lib/i18n.ts';
+
 export class ApiClient {
   private readonly baseUrl: string;
   private token: string | null = null;
@@ -75,7 +77,7 @@ export class ApiClient {
     if (response.status !== 401) {
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`HTTP ${response.status}: ${text}`);
+        throw new Error(i18n.t('httpError', { status: response.status, text }));
       }
       return response.json() as Promise<T>;
     }
@@ -83,7 +85,7 @@ export class ApiClient {
     if (!this.refreshToken_) {
       this.token = null;
       this.onUnauthorized?.();
-      throw new Error('Unauthorized');
+      throw new Error(i18n.t('unauthorized'));
     }
 
     const refreshed = await this.tryRefresh();
@@ -92,13 +94,13 @@ export class ApiClient {
       this.token = null;
       this.refreshToken_ = null;
       this.onUnauthorized?.();
-      throw new Error('Unauthorized');
+      throw new Error(i18n.t('unauthorized'));
     }
 
     const retryResponse = await request();
     if (!retryResponse.ok) {
       const text = await retryResponse.text();
-      throw new Error(`HTTP ${retryResponse.status}: ${text}`);
+      throw new Error(i18n.t('httpError', { status: retryResponse.status, text }));
     }
     return retryResponse.json() as Promise<T>;
   }

@@ -1,0 +1,18 @@
+{
+  "title": "Preview",
+  "runPreview": "Run Preview",
+  "idleMessage": "Run a preview to see how your configuration groups episodes.",
+  "failed": "Preview failed: {{error}}",
+  "ungroupedEpisodes": "Ungrouped Episodes",
+  "episodes_one": "{{count}} episode",
+  "episodes_other": "{{count}} episodes",
+  "noGroups": "No groups",
+  "totalLabel": "Total: ",
+  "groupedLabel": "Grouped: ",
+  "ungroupedLabel": "Ungrouped: ",
+  "matchedLabel": "Matched: ",
+  "claimedLabel": "Claimed: ",
+  "lostLabel": "Lost to others: ",
+  "claimedByOthers": "Claimed by other playlists ({{count}})",
+  "claimedBy": "claimed by {{name}}"
+}

@@ -1,0 +1,16 @@
+{
+  "cancel": "Cancel",
+  "retry": "Retry",
+  "dismiss": "Dismiss",
+  "generate": "Generate",
+  "revoke": "Revoke",
+  "help": "Help",
+  "appTitle": "audiflow Smart Playlist Editor",
+  "signInGithub": "Sign in with GitHub",
+  "settings": "Settings",
+  "createNew": "Create New",
+  "unauthorized": "Unauthorized",
+  "httpError": "HTTP {{status}}: {{text}}",
+  "loadPatternsFailed": "Failed to load patterns: {{error}}",
+  "noPatternsFound": "No patterns found. Create your first one!"
+}

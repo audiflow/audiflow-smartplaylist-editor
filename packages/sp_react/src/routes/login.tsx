@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/auth-store.ts';
 import { Button } from '@/components/ui/button.tsx';
 
@@ -15,15 +16,16 @@ export const Route = createFileRoute('/login')({
 });
 
 function LoginScreen() {
+  const { t } = useTranslation('common');
   const redirectUri = `${window.location.origin}/login`;
   const authUrl = `${API_BASE_URL}/api/auth/github?redirect_uri=${encodeURIComponent(redirectUri)}`;
 
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-6">
-        <h1 className="text-2xl font-bold">Audiflow Smart Playlist Editor</h1>
+        <h1 className="text-2xl font-bold">{t('appTitle')}</h1>
         <Button asChild size="lg">
-          <a href={authUrl}>Sign in with GitHub</a>
+          <a href={authUrl}>{t('signInGithub')}</a>
         </Button>
       </div>
     </div>

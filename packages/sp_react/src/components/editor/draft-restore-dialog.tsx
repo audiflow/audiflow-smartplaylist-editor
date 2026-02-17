@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,9 +16,9 @@ interface DraftRestoreDialogProps {
   onDiscard: () => void;
 }
 
-function formatSavedAt(isoTimestamp: string): string {
+function formatSavedAt(isoTimestamp: string, fallback: string): string {
   const date = new Date(isoTimestamp);
-  if (isNaN(date.getTime())) return 'unknown time';
+  if (isNaN(date.getTime())) return fallback;
   return date.toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -31,21 +32,22 @@ export function DraftRestoreDialog({
   onRestore,
   onDiscard,
 }: DraftRestoreDialogProps) {
+  const { t } = useTranslation('editor');
+
   return (
     <AlertDialog open>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Draft Found</AlertDialogTitle>
+          <AlertDialogTitle>{t('draftFound')}</AlertDialogTitle>
           <AlertDialogDescription>
-            A saved draft was found from {formatSavedAt(savedAt)}. Would you
-            like to restore it or discard it?
+            {t('draftDescription', { savedAt: formatSavedAt(savedAt, t('draftUnknownTime')) })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel variant="destructive" onClick={onDiscard}>
-            Discard
+            {t('draftDiscard')}
           </AlertDialogCancel>
-          <AlertDialogAction onClick={onRestore}>Restore</AlertDialogAction>
+          <AlertDialogAction onClick={onRestore}>{t('draftRestore')}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

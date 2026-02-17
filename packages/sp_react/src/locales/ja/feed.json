@@ -1,0 +1,16 @@
+{
+  "title": "フィードビューア",
+  "feedUrl": "フィード URL",
+  "load": "読み込む",
+  "loadFailed": "フィードの読み込みに失敗しました: {{error}}",
+  "filterPlaceholder": "タイトルでエピソードを絞り込む...",
+  "episodeCount": "{{total}} 件中 {{filtered}} 件のエピソード",
+  "columnTitle": "タイトル",
+  "columnSeason": "シーズン",
+  "columnEpisode": "エピソード",
+  "columnPublished": "公開日",
+  "noEpisodes": "エピソードが見つかりません",
+  "loadConfigFailed": "設定の読み込みに失敗しました: {{error}}",
+  "playlists_one": "{{count}} プレイリスト",
+  "playlists_other": "{{count}} プレイリスト"
+}

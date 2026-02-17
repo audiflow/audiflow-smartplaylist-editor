@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
 import { Accordion } from '@/components/ui/accordion.tsx';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
@@ -16,6 +17,8 @@ export function PlaylistTabContent({
   previewPlaylist,
   onRemove,
 }: PlaylistTabContentProps) {
+  const { t } = useTranslation('editor');
+
   return (
     <div className="space-y-4 pt-4">
       <div className="grid gap-6 lg:grid-cols-2">
@@ -40,7 +43,7 @@ export function PlaylistTabContent({
             </>
           ) : (
             <p className="text-sm text-muted-foreground py-8 text-center">
-              Run preview to see results for this playlist.
+              {t('tabPreviewEmpty')}
             </p>
           )}
         </div>

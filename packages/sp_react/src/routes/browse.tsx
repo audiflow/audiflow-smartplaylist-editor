@@ -1,4 +1,5 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/stores/auth-store.ts';
 import { usePatterns } from '@/api/queries.ts';
 import { Button } from '@/components/ui/button.tsx';
@@ -43,9 +44,11 @@ function BrowseHeader({
 }: {
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  const { t } = useTranslation('common');
+
   return (
     <div className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-bold">SmartPlaylist Editor</h1>
+      <h1 className="text-2xl font-bold">{t('appTitle')}</h1>
       <div className="flex gap-2">
         <Button
           variant="outline"
@@ -56,7 +59,7 @@ function BrowseHeader({
         </Button>
         <Button onClick={() => void navigate({ to: '/editor' })}>
           <Plus className="mr-2 h-4 w-4" />
-          Create New
+          {t('createNew')}
         </Button>
       </div>
     </div>
@@ -72,17 +75,21 @@ function LoadingState() {
 }
 
 function ErrorState({ message }: { message: string }) {
+  const { t } = useTranslation('common');
+
   return (
     <div className="text-center py-12 text-destructive">
-      Failed to load patterns: {message}
+      {t('loadPatternsFailed', { error: message })}
     </div>
   );
 }
 
 function EmptyState() {
+  const { t } = useTranslation('common');
+
   return (
     <div className="text-center py-12 text-muted-foreground">
-      No patterns found. Create your first one!
+      {t('noPatternsFound')}
     </div>
   );
 }
@@ -124,6 +131,8 @@ function PatternCard({
   };
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  const { t } = useTranslation('feed');
+
   return (
     <Card
       className="cursor-pointer hover:bg-accent/50 transition-colors"
@@ -135,7 +144,7 @@ function PatternCard({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{pattern.displayName}</CardTitle>
           <Badge variant="secondary">
-            {pattern.playlistCount} playlists
+            {t('playlists', { count: pattern.playlistCount })}
           </Badge>
         </div>
         {pattern.feedUrlHint && (

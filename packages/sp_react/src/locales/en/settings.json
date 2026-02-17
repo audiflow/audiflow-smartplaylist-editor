@@ -1,0 +1,17 @@
+{
+  "apiKeys": "API Keys",
+  "apiKeysDescription": "Manage API keys for programmatic access. Keys are shown only once after generation.",
+  "keyNamePlaceholder": "Key name (e.g., CI pipeline)",
+  "saveKeyWarning": "Save this key now. It will not be shown again.",
+  "existingKeys": "Existing keys",
+  "noKeysYet": "No API keys yet. Generate one above.",
+  "createdAt": "Created {{date}}",
+  "revokeTitle": "Revoke API key?",
+  "revokeDescription": "Are you sure? This action cannot be undone. Any integrations using this key will stop working immediately.",
+  "toastKeyGenerated": "API key generated",
+  "toastKeyGenerateFailed": "Failed to generate API key",
+  "toastKeyRevoked": "API key revoked",
+  "toastKeyRevokeFailed": "Failed to revoke API key",
+  "toastCopied": "Copied to clipboard",
+  "toastCopyFailed": "Failed to copy to clipboard"
+}

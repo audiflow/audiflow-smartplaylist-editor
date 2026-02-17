@@ -1,0 +1,19 @@
+{
+  "patternId": "A unique slug identifying this pattern config (e.g., 'my-podcast'). Used as the folder name in the config repository.",
+  "podcastGuid": "The podcast's globally unique identifier from its RSS feed. When set, this takes priority over feed URL matching for more reliable identification.",
+  "feedUrls": "One or more RSS feed URLs that identify this podcast. The app matches incoming feeds against these URLs to determine which pattern config to apply.",
+  "yearGroupedEpisodes": "When enabled, the main episode list in the app groups episodes by their publication year with year headers.",
+  "playlistId": "A unique slug for this playlist within the pattern (e.g., 'season-1'). Used as the filename in the config repository.",
+  "displayName": "The name shown to users in the app. Choose something descriptive like 'Seasons' or 'Story Arcs'.",
+  "resolverType": "Determines how episodes are grouped into this playlist. Each resolver uses a different strategy to organize episodes.",
+  "resolverType_rss": "RSS Metadata: Groups episodes by their season number from RSS feed metadata. Best for podcasts that properly tag seasons in their feed (e.g., itunes:season).",
+  "resolverType_category": "Category: Groups episodes by matching their titles against regex patterns you define in the 'groups' section. Use when episodes follow naming conventions like 'Arc 1: ...' or 'Mystery Series: ...'.",
+  "resolverType_year": "Year: Groups episodes by their publication year. Good for long-running podcasts where yearly grouping is a natural fit.",
+  "resolverType_titleAppearanceOrder": "Title Appearance Order: Groups episodes by a recurring pattern in their titles, ordered by when each pattern first appears in the feed. Useful for podcasts with titled story arcs or series.",
+  "priority": "Controls the order in which this playlist appears relative to siblings. Lower numbers appear first. Episodes claimed by a higher-priority playlist are excluded from lower-priority ones.",
+  "titleFilter": "A regex pattern to include episodes. Only episodes whose title matches this pattern are considered for this playlist. Leave empty to include all episodes.",
+  "excludeFilter": "A regex pattern to exclude episodes. Episodes whose title matches this pattern are removed, even if they matched the title filter. Useful for filtering out trailers or bonus content.",
+  "requireFilter": "A stricter regex that episodes must match to be included. Unlike title filter, this is applied after grouping and removes non-matching episodes from each group.",
+  "episodeYearHeaders": "When enabled, episode lists within this playlist show year separator headers, helping users orient themselves in long episode lists.",
+  "showDateRange": "When enabled, each group card displays the date range of its episodes (earliest to latest), giving users a quick sense of the group's timespan."
+}

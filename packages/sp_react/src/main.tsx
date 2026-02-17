@@ -6,6 +6,7 @@ import { routeTree } from './routeTree.gen';
 import { ApiClient } from './api/client.ts';
 import { ApiClientProvider } from './api/client-provider.tsx';
 import { useAuthStore } from './stores/auth-store.ts';
+import './lib/i18n.ts';
 import './index.css';
 
 const API_BASE_URL =

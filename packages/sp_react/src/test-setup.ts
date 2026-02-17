@@ -1,4 +1,31 @@
 import '@testing-library/jest-dom/vitest';
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+import commonEn from '@/locales/en/common.json';
+import editorEn from '@/locales/en/editor.json';
+import hintsEn from '@/locales/en/hints.json';
+import previewEn from '@/locales/en/preview.json';
+import settingsEn from '@/locales/en/settings.json';
+import feedEn from '@/locales/en/feed.json';
+
+void i18n
+  .use(initReactI18next)
+  .init({
+    resources: {
+      en: {
+        common: commonEn,
+        editor: editorEn,
+        hints: hintsEn,
+        preview: previewEn,
+        settings: settingsEn,
+        feed: feedEn,
+      },
+    },
+    lng: 'en',
+    defaultNS: 'common',
+    interpolation: { escapeValue: false },
+  });
 
 // Node.js 22+ ships a native localStorage that lacks the standard Web Storage
 // API methods (setItem, getItem, removeItem, clear). This polyfill replaces it

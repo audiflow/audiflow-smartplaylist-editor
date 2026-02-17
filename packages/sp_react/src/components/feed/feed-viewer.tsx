@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFeed } from '@/api/queries.ts';
 import type { FeedEpisode } from '@/schemas/api-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
@@ -14,6 +15,7 @@ interface FeedViewerProps {
 }
 
 export function FeedViewer({ initialUrl }: FeedViewerProps) {
+  const { t } = useTranslation('feed');
   const [urlInput, setUrlInput] = useState(initialUrl ?? '');
   const [activeUrl, setActiveUrl] = useState(initialUrl ?? '');
   const [search, setSearch] = useState('');
@@ -55,12 +57,12 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
 
   return (
     <div className="container mx-auto max-w-6xl p-6">
-      <h1 className="text-2xl font-bold mb-6">Feed Viewer</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('title')}</h1>
 
       {/* URL input */}
       <div className="flex gap-2 items-end mb-6">
         <div className="flex-1 space-y-1.5">
-          <Label htmlFor="feed-url">Feed URL</Label>
+          <Label htmlFor="feed-url">{t('feedUrl')}</Label>
           <Input
             id="feed-url"
             value={urlInput}
@@ -75,7 +77,7 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
           {feedQuery.isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            'Load'
+            t('load')
           )}
         </Button>
       </div>
@@ -83,7 +85,7 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
       {/* Error state */}
       {feedQuery.error && (
         <div className="text-destructive mb-4">
-          Failed to load feed: {feedQuery.error.message}
+          {t('loadFailed', { error: feedQuery.error.message })}
         </div>
       )}
 
@@ -96,11 +98,11 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Filter episodes by title..."
+                placeholder={t('filterPlaceholder')}
               />
             </div>
             <span className="text-sm text-muted-foreground whitespace-nowrap">
-              {filteredAndSorted.length} of {feedQuery.data.length} episodes
+              {t('episodeCount', { filtered: filteredAndSorted.length, total: feedQuery.data.length })}
             </span>
           </div>
 
@@ -109,14 +111,14 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
               <thead>
                 <tr className="border-b bg-muted/50">
                   <SortableHeader
-                    label="Title"
+                    label={t('columnTitle')}
                     field="title"
                     currentField={sortField}
                     direction={sortDirection}
                     onSort={handleSort}
                   />
                   <SortableHeader
-                    label="Season"
+                    label={t('columnSeason')}
                     field="seasonNumber"
                     currentField={sortField}
                     direction={sortDirection}
@@ -124,7 +126,7 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
                     className="w-24"
                   />
                   <SortableHeader
-                    label="Episode"
+                    label={t('columnEpisode')}
                     field="episodeNumber"
                     currentField={sortField}
                     direction={sortDirection}
@@ -132,7 +134,7 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
                     className="w-24"
                   />
                   <SortableHeader
-                    label="Published"
+                    label={t('columnPublished')}
                     field="publishedAt"
                     currentField={sortField}
                     direction={sortDirection}
@@ -151,7 +153,7 @@ export function FeedViewer({ initialUrl }: FeedViewerProps) {
                       colSpan={4}
                       className="text-center py-8 text-muted-foreground"
                     >
-                      No episodes found
+                      {t('noEpisodes')}
                     </td>
                   </tr>
                 )}

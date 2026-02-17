@@ -1,0 +1,16 @@
+{
+  "cancel": "キャンセル",
+  "retry": "再試行",
+  "dismiss": "閉じる",
+  "generate": "生成",
+  "revoke": "取り消し",
+  "help": "ヘルプ",
+  "appTitle": "audiflow スマートプレイリスト エディタ",
+  "signInGithub": "GitHub でサインイン",
+  "settings": "設定",
+  "createNew": "新規作成",
+  "unauthorized": "認証エラー",
+  "httpError": "HTTP {{status}}: {{text}}",
+  "loadPatternsFailed": "パターンの読み込みに失敗しました: {{error}}",
+  "noPatternsFound": "パターンが見つかりません。最初のパターンを作成してください！"
+}

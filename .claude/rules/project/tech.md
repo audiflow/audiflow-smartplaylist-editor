@@ -1,4 +1,4 @@
-# Audiflow v2 - Tech Stack
+# audiflow v2 - Tech Stack
 
 ## Core Stack
 - **Flutter 3.38.5** / **Dart 3.10.4**
