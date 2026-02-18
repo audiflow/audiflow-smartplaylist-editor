@@ -1,4 +1,4 @@
-# Audiflow SmartPlaylist - Terraform Variables
+# audiflow SmartPlaylist - Terraform Variables
 #
 # Non-secret config: environments/dev.tfvars, environments/prod.tfvars
 # Secrets: .envrc (project root, gitignored) with suffixed env vars

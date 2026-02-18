@@ -1,0 +1,16 @@
+{
+  "title": "Feed Viewer",
+  "feedUrl": "Feed URL",
+  "load": "Load",
+  "loadFailed": "Failed to load feed: {{error}}",
+  "filterPlaceholder": "Filter episodes by title...",
+  "episodeCount": "{{filtered}} of {{total}} episodes",
+  "columnTitle": "Title",
+  "columnSeason": "Season",
+  "columnEpisode": "Episode",
+  "columnPublished": "Published",
+  "noEpisodes": "No episodes found",
+  "loadConfigFailed": "Failed to load config: {{error}}",
+  "playlists_one": "{{count}} playlist",
+  "playlists_other": "{{count}} playlists"
+}

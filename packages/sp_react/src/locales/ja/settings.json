@@ -1,0 +1,17 @@
+{
+  "apiKeys": "API キー",
+  "apiKeysDescription": "プログラムからのアクセス用 API キーを管理します。キーは生成直後にのみ表示されます。",
+  "keyNamePlaceholder": "キー名（例: CI パイプライン）",
+  "saveKeyWarning": "このキーを今すぐ保存してください。再度表示されません。",
+  "existingKeys": "既存のキー",
+  "noKeysYet": "API キーはまだありません。上のフォームから生成してください。",
+  "createdAt": "作成日: {{date}}",
+  "revokeTitle": "API キーを取り消しますか？",
+  "revokeDescription": "本当に取り消しますか？この操作は元に戻せません。このキーを使用しているすべての連携が直ちに停止します。",
+  "toastKeyGenerated": "API キーを生成しました",
+  "toastKeyGenerateFailed": "API キーの生成に失敗しました",
+  "toastKeyRevoked": "API キーを取り消しました",
+  "toastKeyRevokeFailed": "API キーの取り消しに失敗しました",
+  "toastCopied": "クリップボードにコピーしました",
+  "toastCopyFailed": "クリップボードへのコピーに失敗しました"
+}

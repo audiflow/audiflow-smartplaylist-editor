@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Label } from '@/components/ui/label.tsx';
 import {
   Tooltip,
@@ -12,6 +13,9 @@ interface HintLabelProps extends ComponentProps<typeof Label> {
 }
 
 export function HintLabel({ hint, children, ...props }: HintLabelProps) {
+  const { t } = useTranslation('hints');
+  const { t: tCommon } = useTranslation('common');
+
   if (!hint) {
     return <Label {...props}>{children}</Label>;
   }
@@ -22,9 +26,9 @@ export function HintLabel({ hint, children, ...props }: HintLabelProps) {
       <Tooltip>
         <TooltipTrigger type="button" tabIndex={-1} className="text-muted-foreground hover:text-foreground">
           <CircleHelp className="h-3.5 w-3.5" />
-          <span className="sr-only">Help</span>
+          <span className="sr-only">{tCommon('help')}</span>
         </TooltipTrigger>
-        <TooltipContent side="top">{hint}</TooltipContent>
+        <TooltipContent side="top">{t(hint)}</TooltipContent>
       </Tooltip>
     </div>
   );

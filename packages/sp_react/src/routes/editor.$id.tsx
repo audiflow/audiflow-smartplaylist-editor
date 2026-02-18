@@ -1,4 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store.ts';
 import { useAssembledConfig } from '@/api/queries.ts';
@@ -14,6 +15,7 @@ export const Route = createFileRoute('/editor/$id')({
 });
 
 function EditorWithId() {
+  const { t } = useTranslation('feed');
   const { id } = Route.useParams();
   const { data: config, isLoading, error } = useAssembledConfig(id);
 
@@ -28,7 +30,7 @@ function EditorWithId() {
   if (error) {
     return (
       <div className="text-center py-12 text-destructive">
-        Failed to load config: {error.message}
+        {t('loadConfigFailed', { error: error.message })}
       </div>
     );
   }

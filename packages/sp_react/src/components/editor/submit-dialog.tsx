@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { useSubmitPr } from '@/api/queries.ts';
 import { Button } from '@/components/ui/button.tsx';
@@ -28,6 +29,7 @@ export function SubmitDialog({
   patternMeta,
   isNewPattern,
 }: SubmitDialogProps) {
+  const { t } = useTranslation('editor');
   const submitPr = useSubmitPr();
 
   const handleSubmit = () => {
@@ -44,10 +46,9 @@ export function SubmitDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Submit Configuration</DialogTitle>
+          <DialogTitle>{t('submitTitle')}</DialogTitle>
           <DialogDescription>
-            Create a pull request on GitHub with your SmartPlaylist
-            configuration.
+            {t('submitDescription')}
           </DialogDescription>
         </DialogHeader>
         {renderBody(submitPr, patternId, handleSubmit, onOpenChange)}
@@ -85,44 +86,51 @@ function ConfirmContent({
   onSubmit: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation('editor');
+  const { t: tCommon } = useTranslation('common');
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Pattern: <span className="font-mono text-foreground">{patternId}</span>
+        {t('submitPattern', { patternId })}
       </p>
       <DialogFooter>
         <Button variant="outline" onClick={onCancel}>
-          Cancel
+          {tCommon('cancel')}
         </Button>
-        <Button onClick={onSubmit}>Submit PR</Button>
+        <Button onClick={onSubmit}>{t('submitPr')}</Button>
       </DialogFooter>
     </div>
   );
 }
 
 function PendingContent() {
+  const { t } = useTranslation('editor');
+
   return (
     <div className="flex flex-col items-center py-8 gap-4">
       <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">Submitting...</p>
+      <p className="text-sm text-muted-foreground">{t('submitting')}</p>
     </div>
   );
 }
 
 function SuccessContent({ prUrl }: { prUrl: string | undefined }) {
+  const { t } = useTranslation('editor');
+
   const handleOpen = () => {
     if (prUrl) window.open(prUrl, '_blank');
   };
 
   return (
     <div className="flex flex-col items-center py-4 gap-4">
-      <p className="text-sm font-medium">Pull request created!</p>
+      <p className="text-sm font-medium">{t('submitSuccess')}</p>
       {prUrl && (
         <p className="text-xs text-muted-foreground font-mono break-all text-center">
           {prUrl}
         </p>
       )}
-      <Button onClick={handleOpen}>Open PR</Button>
+      <Button onClick={handleOpen}>{t('openPr')}</Button>
     </div>
   );
 }
@@ -134,13 +142,16 @@ function ErrorContent({
   message: string | undefined;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation('editor');
+  const { t: tCommon } = useTranslation('common');
+
   return (
     <div className="flex flex-col items-center py-4 gap-4">
       <p className="text-sm text-destructive">
-        Failed to submit: {message ?? 'Unknown error'}
+        {t('submitFailed', { error: message ?? 'Unknown error' })}
       </p>
       <Button variant="outline" onClick={onRetry}>
-        Retry
+        {tCommon('retry')}
       </Button>
     </div>
   );

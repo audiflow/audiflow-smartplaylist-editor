@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
-import { FIELD_HINTS } from '@/components/editor/field-hints.ts';
 import {
   Select,
   SelectContent,
@@ -39,9 +39,10 @@ const EMPTY_TITLES: readonly string[] = [];
 
 export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const { watch } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
   const prefix = `playlists.${index}` as const;
 
-  const displayName = watch(`${prefix}.displayName`) || `Playlist ${index + 1}`;
+  const displayName = watch(`${prefix}.displayName`) || t('playlistFallbackName', { number: index + 1 });
   const titleFilter = watch(`${prefix}.titleFilter`) ?? '';
   const excludeFilter = watch(`${prefix}.excludeFilter`) ?? '';
   const requireFilter = watch(`${prefix}.requireFilter`) ?? '';
@@ -89,35 +90,36 @@ function BasicSettings({
   prefix: `playlists.${number}`;
 }) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium">Basic Settings</h4>
+      <h4 className="text-sm font-medium">{t('basicSettings')}</h4>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-id`} hint={FIELD_HINTS.playlistId}>ID</HintLabel>
+          <HintLabel htmlFor={`playlist-${index}-id`} hint="playlistId">{t('playlistId')}</HintLabel>
           <Input
             id={`playlist-${index}-id`}
             {...register(`${prefix}.id`)}
-            placeholder="playlist-id"
+            placeholder={t('placeholderPlaylistId')}
           />
         </div>
         <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-displayName`} hint={FIELD_HINTS.displayName}>Display Name</HintLabel>
+          <HintLabel htmlFor={`playlist-${index}-displayName`} hint="displayName">{t('displayName')}</HintLabel>
           <Input
             id={`playlist-${index}-displayName`}
             {...register(`${prefix}.displayName`)}
-            placeholder="My Playlist"
+            placeholder={t('placeholderDisplayName')}
           />
         </div>
         <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-resolverType`} hint={FIELD_HINTS.resolverType}>Resolver Type</HintLabel>
+          <HintLabel htmlFor={`playlist-${index}-resolverType`} hint="resolverType">{t('resolverType')}</HintLabel>
           <Select
             value={watch(`${prefix}.resolverType`) ?? ''}
             onValueChange={(val) => setValue(`${prefix}.resolverType`, val)}
           >
             <SelectTrigger id={`playlist-${index}-resolverType`}>
-              <SelectValue placeholder="Select resolver" />
+              <SelectValue placeholder={t('selectResolver')} />
             </SelectTrigger>
             <SelectContent>
               {RESOLVER_TYPES.map((type) => (
@@ -129,7 +131,7 @@ function BasicSettings({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-priority`} hint={FIELD_HINTS.priority}>Priority</HintLabel>
+          <HintLabel htmlFor={`playlist-${index}-priority`} hint="priority">{t('priority')}</HintLabel>
           <Input
             id={`playlist-${index}-priority`}
             type="number"
@@ -155,23 +157,24 @@ function FilterSettings({
   episodeTitles: readonly string[];
 }) {
   const { register } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium">Filters</h4>
+      <h4 className="text-sm font-medium">{t('filters')}</h4>
       <div className="space-y-1.5">
-        <HintLabel hint={FIELD_HINTS.titleFilter}>Title Filter</HintLabel>
-        <Input {...register(`${prefix}.titleFilter`)} placeholder="Regex pattern" />
+        <HintLabel hint="titleFilter">{t('titleFilter')}</HintLabel>
+        <Input {...register(`${prefix}.titleFilter`)} placeholder={t('placeholderRegex')} />
         {titleFilter && <RegexTester pattern={titleFilter} variant="include" titles={episodeTitles} />}
       </div>
       <div className="space-y-1.5">
-        <HintLabel hint={FIELD_HINTS.excludeFilter}>Exclude Filter</HintLabel>
-        <Input {...register(`${prefix}.excludeFilter`)} placeholder="Regex pattern" />
+        <HintLabel hint="excludeFilter">{t('excludeFilter')}</HintLabel>
+        <Input {...register(`${prefix}.excludeFilter`)} placeholder={t('placeholderRegex')} />
         {excludeFilter && <RegexTester pattern={excludeFilter} variant="exclude" titles={episodeTitles} />}
       </div>
       <div className="space-y-1.5">
-        <HintLabel hint={FIELD_HINTS.requireFilter}>Require Filter</HintLabel>
-        <Input {...register(`${prefix}.requireFilter`)} placeholder="Regex pattern" />
+        <HintLabel hint="requireFilter">{t('requireFilter')}</HintLabel>
+        <Input {...register(`${prefix}.requireFilter`)} placeholder={t('placeholderRegex')} />
         {requireFilter && <RegexTester pattern={requireFilter} variant="include" titles={episodeTitles} />}
       </div>
     </div>
@@ -186,6 +189,7 @@ function BooleanSettings({
   prefix: `playlists.${number}`;
 }) {
   const { watch, setValue } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
 
   return (
     <div className="flex gap-6">
@@ -197,8 +201,8 @@ function BooleanSettings({
             setValue(`${prefix}.episodeYearHeaders`, !!checked)
           }
         />
-        <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint={FIELD_HINTS.episodeYearHeaders}>
-          Episode Year Headers
+        <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint="episodeYearHeaders">
+          {t('episodeYearHeaders')}
         </HintLabel>
       </div>
       <div className="flex items-center gap-2">
@@ -209,26 +213,30 @@ function BooleanSettings({
             setValue(`${prefix}.showDateRange`, !!checked)
           }
         />
-        <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint={FIELD_HINTS.showDateRange}>Show Date Range</HintLabel>
+        <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>
       </div>
     </div>
   );
 }
 
 function AdvancedNote() {
+  const { t } = useTranslation('editor');
+
   return (
     <p className="text-xs text-muted-foreground">
-      Advanced fields (groups, extractors, sort) can be edited in JSON mode.
+      {t('advancedNote')}
     </p>
   );
 }
 
 function RemoveButton({ onRemove }: { onRemove: () => void }) {
+  const { t } = useTranslation('editor');
+
   return (
     <div className="flex justify-end">
       <Button variant="destructive" size="sm" type="button" onClick={onRemove}>
         <Trash2 className="mr-2 h-4 w-4" />
-        Remove Playlist
+        {t('removePlaylist')}
       </Button>
     </div>
   );
