@@ -121,10 +121,14 @@ function BasicSettings({
             <SelectTrigger id={`playlist-${index}-resolverType`}>
               <SelectValue placeholder={t('selectResolver')} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="min-w-[280px]">
               {RESOLVER_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
+                <SelectItem
+                  key={type}
+                  value={type}
+                  description={t(`resolverDesc_${type}`)}
+                >
+                  {t(`resolverLabel_${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>

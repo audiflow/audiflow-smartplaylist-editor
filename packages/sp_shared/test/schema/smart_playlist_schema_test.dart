@@ -56,7 +56,7 @@ void main() {
         expect(version['const'], SmartPlaylistSchema.currentVersion);
       });
 
-      test('SmartPlaylistDefinition has resolver type enum', () {
+      test('SmartPlaylistDefinition has resolver type oneOf with descriptions', () {
         final schema = SmartPlaylistSchema.generate();
         final decoded = jsonDecode(schema) as Map<String, dynamic>;
         final defs = decoded[r'$defs'] as Map<String, dynamic>;
@@ -65,7 +65,20 @@ void main() {
         final props = definition['properties'] as Map<String, dynamic>;
         final resolverType = props['resolverType'] as Map<String, dynamic>;
 
-        expect(resolverType['enum'], SmartPlaylistSchema.validResolverTypes);
+        final oneOf = resolverType['oneOf'] as List<dynamic>;
+        final values = oneOf.map(
+          (e) => (e as Map<String, dynamic>)['const'] as String,
+        ).toList();
+        expect(values, SmartPlaylistSchema.validResolverTypes);
+
+        for (final entry in oneOf) {
+          final item = entry as Map<String, dynamic>;
+          expect(
+            item,
+            contains('description'),
+            reason: 'Resolver type "${item['const']}" should have a description',
+          );
+        }
       });
     });
 

@@ -18,6 +18,28 @@ final class SmartPlaylistSchema {
     'titleAppearanceOrder',
   ];
 
+  /// Descriptions for each resolver type (used in schema generation).
+  static const Map<String, String> _resolverTypeDescriptions = {
+    'rss':
+        'RSS Metadata: Groups episodes by their season number '
+        'from RSS feed metadata (e.g., itunes:season). Best for '
+        'podcasts that properly tag seasons in their feed.',
+    'category':
+        'Category: Groups episodes by matching their titles '
+        'against regex patterns defined in the "groups" section. '
+        'Use when episodes follow naming conventions like '
+        '"Arc 1: ..." or "Mystery Series: ...".',
+    'year':
+        'Year: Groups episodes by their publication year. '
+        'Good for long-running podcasts where yearly grouping '
+        'is a natural fit.',
+    'titleAppearanceOrder':
+        'Title Appearance Order: Groups episodes by a recurring '
+        'pattern in their titles, ordered by when each pattern '
+        'first appears in the feed. Useful for podcasts with '
+        'titled story arcs or series.',
+  };
+
   /// Valid content types for playlist definitions.
   static const List<String> validContentTypes = ['episodes', 'groups'];
 
@@ -187,9 +209,14 @@ final class SmartPlaylistSchema {
           'description': 'Human-readable name for display.',
         },
         'resolverType': {
-          'type': 'string',
-          'enum': validResolverTypes,
           'description': 'Type of resolver to use for episode grouping.',
+          'oneOf': [
+            for (final type in validResolverTypes)
+              {
+                'const': type,
+                'description': _resolverTypeDescriptions[type],
+              },
+          ],
         },
         'priority': {
           'type': 'integer',
