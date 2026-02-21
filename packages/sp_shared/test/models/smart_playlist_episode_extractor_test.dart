@@ -76,6 +76,31 @@ void main() {
         expect(extractor.fallbackEpisodeCaptureGroup, 1);
         expect(extractor.fallbackSeasonNumber, isNull);
         expect(extractor.fallbackEpisodePattern, isNull);
+        expect(extractor.fallbackToRss, isFalse);
+      });
+
+      test('parses null seasonGroup as null (episode-only mode)', () {
+        final json = {
+          'source': 'title',
+          'pattern': r'E(\d+)',
+          'seasonGroup': null,
+        };
+
+        final extractor = SmartPlaylistEpisodeExtractor.fromJson(json);
+
+        expect(extractor.seasonGroup, isNull);
+      });
+
+      test('parses fallbackToRss from JSON', () {
+        final json = {
+          'source': 'title',
+          'pattern': r'E(\d+)',
+          'fallbackToRss': true,
+        };
+
+        final extractor = SmartPlaylistEpisodeExtractor.fromJson(json);
+
+        expect(extractor.fallbackToRss, isTrue);
       });
 
       test('converts to JSON', () {
@@ -108,6 +133,32 @@ void main() {
 
         expect(json.containsKey('fallbackSeasonNumber'), isFalse);
         expect(json.containsKey('fallbackEpisodePattern'), isFalse);
+        expect(json.containsKey('fallbackToRss'), isFalse);
+      });
+
+      test('omits seasonGroup when null', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'E(\d+)',
+          seasonGroup: null,
+          episodeGroup: 1,
+        );
+
+        final json = extractor.toJson();
+
+        expect(json.containsKey('seasonGroup'), isFalse);
+      });
+
+      test('includes fallbackToRss when true', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'E(\d+)',
+          fallbackToRss: true,
+        );
+
+        final json = extractor.toJson();
+
+        expect(json['fallbackToRss'], isTrue);
       });
     });
 
@@ -202,6 +253,48 @@ void main() {
 
         expect(result.seasonNumber, 5);
         expect(result.episodeNumber, 10);
+      });
+
+      test('skips season extraction when seasonGroup is null', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'E(\d+)',
+          seasonGroup: null,
+          episodeGroup: 1,
+        );
+
+        final episode = makeEpisode(title: 'E15 - Title');
+        final result = extractor.extract(episode);
+
+        expect(result.seasonNumber, isNull);
+        expect(result.episodeNumber, 15);
+      });
+
+      test('falls back to RSS episodeNumber when fallbackToRss is true', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'S(\d+)E(\d+)',
+          fallbackToRss: true,
+        );
+
+        final episode = makeEpisode(title: 'No match here', episodeNumber: 42);
+        final result = extractor.extract(episode);
+
+        expect(result.seasonNumber, isNull);
+        expect(result.episodeNumber, 42);
+      });
+
+      test('returns empty when fallbackToRss is false and no match', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'S(\d+)E(\d+)',
+          fallbackToRss: false,
+        );
+
+        final episode = makeEpisode(title: 'No match here', episodeNumber: 42);
+        final result = extractor.extract(episode);
+
+        expect(result.hasValues, isFalse);
       });
 
       test('handles custom capture groups', () {

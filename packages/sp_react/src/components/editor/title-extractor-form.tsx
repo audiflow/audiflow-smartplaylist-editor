@@ -61,6 +61,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
+  const resolverType = watch(`playlists.${index}.resolverType`);
   const extractor = watch(`playlists.${index}.titleExtractor`);
   const steps = useMemo(() => flattenChain(extractor), [extractor]);
   const fallbackValue = extractor?.fallbackValue ?? null;
@@ -111,6 +112,17 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
     },
     [steps, index, setValue],
   );
+
+  if (resolverType === 'category') {
+    return (
+      <div className="space-y-2">
+        <h4 className="text-sm font-medium">{t('titleExtractor')}</h4>
+        <p className="text-muted-foreground text-sm">
+          {t('titleExtractorDisabledNote')}
+        </p>
+      </div>
+    );
+  }
 
   if (!extractor) {
     return (

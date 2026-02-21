@@ -2,7 +2,6 @@ library;
 
 // Models
 export 'src/models/episode_data.dart';
-export 'src/models/episode_number_extractor.dart';
 export 'src/models/pattern_meta.dart';
 export 'src/models/pattern_summary.dart';
 export 'src/models/root_meta.dart';
@@ -29,5 +28,6 @@ export 'src/schema/smart_playlist_schema.dart';
 // Services
 export 'src/services/config_assembler.dart';
 export 'src/services/episode_sorter.dart';
+export 'src/services/group_sorter.dart';
 export 'src/services/smart_playlist_pattern_loader.dart';
 export 'src/services/smart_playlist_resolver_service.dart';

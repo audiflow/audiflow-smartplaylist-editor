@@ -6,7 +6,6 @@ import {
   groupDefSchema,
   titleExtractorSchema,
   episodeExtractorSchema,
-  episodeNumberExtractorSchema,
 } from '../config-schema';
 
 describe('playlistDefinitionSchema', () => {
@@ -52,16 +51,12 @@ describe('playlistDefinitionSchema', () => {
         pattern: '\\[(.+?)\\]',
         group: 1,
       },
-      episodeNumberExtractor: {
-        pattern: '\\[(\\d+)\\]',
-        captureGroup: 1,
-        fallbackToRss: false,
-      },
       smartPlaylistEpisodeExtractor: {
         source: 'title',
         pattern: '\\[(\\d+)-(\\d+)\\]',
         seasonGroup: 1,
         episodeGroup: 2,
+        fallbackToRss: true,
       },
     };
     const result = playlistDefinitionSchema.parse(input);
@@ -86,17 +81,13 @@ describe('playlistDefinitionSchema', () => {
       pattern: '\\[(.+?)\\]',
       group: 1,
     });
-    expect(result.episodeNumberExtractor).toEqual({
-      pattern: '\\[(\\d+)\\]',
-      captureGroup: 1,
-      fallbackToRss: false,
-    });
     expect(result.smartPlaylistEpisodeExtractor).toEqual({
       source: 'title',
       pattern: '\\[(\\d+)-(\\d+)\\]',
       seasonGroup: 1,
       episodeGroup: 2,
       fallbackEpisodeCaptureGroup: 1,
+      fallbackToRss: true,
     });
   });
 
@@ -270,9 +261,29 @@ describe('episodeExtractorSchema', () => {
       source: 'title',
       pattern: '\\[(\\d+)-(\\d+)\\]',
     });
-    expect(result.seasonGroup).toBe(1);
     expect(result.episodeGroup).toBe(2);
     expect(result.fallbackEpisodeCaptureGroup).toBe(1);
+    expect(result.fallbackToRss).toBe(false);
+  });
+
+  it('parses with null seasonGroup (episode-only mode)', () => {
+    const result = episodeExtractorSchema.parse({
+      source: 'title',
+      pattern: 'E(\\d+)',
+      seasonGroup: null,
+      episodeGroup: 1,
+    });
+    expect(result.seasonGroup).toBeNull();
+    expect(result.episodeGroup).toBe(1);
+  });
+
+  it('parses with fallbackToRss enabled', () => {
+    const result = episodeExtractorSchema.parse({
+      source: 'title',
+      pattern: 'E(\\d+)',
+      fallbackToRss: true,
+    });
+    expect(result.fallbackToRss).toBe(true);
   });
 
   it('parses full extractor with fallback', () => {
@@ -284,28 +295,10 @@ describe('episodeExtractorSchema', () => {
       fallbackSeasonNumber: 0,
       fallbackEpisodePattern: '\\[bangai-hen#(\\d+)\\]',
       fallbackEpisodeCaptureGroup: 1,
+      fallbackToRss: true,
     });
     expect(result.fallbackSeasonNumber).toBe(0);
     expect(result.fallbackEpisodePattern).toBe('\\[bangai-hen#(\\d+)\\]');
-  });
-});
-
-describe('episodeNumberExtractorSchema', () => {
-  it('parses with defaults', () => {
-    const result = episodeNumberExtractorSchema.parse({
-      pattern: '\\[(\\d+)\\]',
-    });
-    expect(result.captureGroup).toBe(1);
     expect(result.fallbackToRss).toBe(true);
-  });
-
-  it('parses with overridden defaults', () => {
-    const result = episodeNumberExtractorSchema.parse({
-      pattern: '(\\d+)',
-      captureGroup: 2,
-      fallbackToRss: false,
-    });
-    expect(result.captureGroup).toBe(2);
-    expect(result.fallbackToRss).toBe(false);
   });
 });
