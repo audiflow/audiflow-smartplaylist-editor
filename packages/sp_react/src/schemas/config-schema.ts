@@ -80,7 +80,7 @@ export const titleExtractorSchema: z.ZodType<TitleExtractorInput> = z.lazy(
     z.object({
       source: z.string(),
       pattern: z.string().nullish(),
-      group: z.number().default(0),
+      group: z.number().nullish().transform((v) => v ?? 0),
       template: z.string().nullish(),
       fallback: titleExtractorSchema.nullish(),
       fallbackValue: z.string().nullish(),
@@ -90,17 +90,17 @@ export const titleExtractorSchema: z.ZodType<TitleExtractorInput> = z.lazy(
 export const episodeExtractorSchema = z.object({
   source: z.string(),
   pattern: z.string(),
-  seasonGroup: z.number().default(1),
-  episodeGroup: z.number().default(2),
+  seasonGroup: z.number().nullish().transform((v) => v ?? 1),
+  episodeGroup: z.number().nullish().transform((v) => v ?? 2),
   fallbackSeasonNumber: z.number().nullish(),
   fallbackEpisodePattern: z.string().nullish(),
-  fallbackEpisodeCaptureGroup: z.number().default(1),
+  fallbackEpisodeCaptureGroup: z.number().nullish().transform((v) => v ?? 1),
 });
 
 export const episodeNumberExtractorSchema = z.object({
   pattern: z.string(),
-  captureGroup: z.number().default(1),
-  fallbackToRss: z.boolean().default(true),
+  captureGroup: z.number().nullish().transform((v) => v ?? 1),
+  fallbackToRss: z.boolean().nullish().transform((v) => v ?? true),
 });
 
 // -- Playlist definition --
@@ -115,8 +115,8 @@ export const playlistDefinitionSchema = z.object({
     .transform((v) => v ?? 0),
   contentType: z.string().nullish(),
   yearHeaderMode: z.string().nullish(),
-  episodeYearHeaders: z.boolean().default(false),
-  showDateRange: z.boolean().default(false),
+  episodeYearHeaders: z.boolean().nullish().transform((v) => v ?? false),
+  showDateRange: z.boolean().nullish().transform((v) => v ?? false),
   titleFilter: z.string().nullish(),
   excludeFilter: z.string().nullish(),
   requireFilter: z.string().nullish(),
@@ -134,7 +134,7 @@ export const patternConfigSchema = z.object({
   id: z.string(),
   podcastGuid: z.string().nullish(),
   feedUrls: z.array(z.string()).nullish(),
-  yearGroupedEpisodes: z.boolean().default(false),
+  yearGroupedEpisodes: z.boolean().nullish().transform((v) => v ?? false),
   playlists: z.array(playlistDefinitionSchema),
 });
 

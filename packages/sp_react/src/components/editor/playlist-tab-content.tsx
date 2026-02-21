@@ -5,6 +5,7 @@ import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { PlaylistDebugStats } from '@/components/preview/playlist-debug-stats.tsx';
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
 import { PlaylistTree } from '@/components/preview/playlist-tree.tsx';
+import { ExtractionPreview } from '@/components/preview/extraction-preview.tsx';
 
 interface PlaylistTabContentProps {
   index: number;
@@ -30,13 +31,14 @@ export function PlaylistTabContent({
         </div>
 
         {/* Preview side */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
           {previewPlaylist ? (
             <>
               {previewPlaylist.debug && (
                 <PlaylistDebugStats debug={previewPlaylist.debug} />
               )}
               <PlaylistTree playlists={[previewPlaylist]} />
+              <ExtractionPreview playlist={previewPlaylist} />
               <ClaimedEpisodesSection
                 episodes={previewPlaylist.claimedByOthers ?? []}
               />

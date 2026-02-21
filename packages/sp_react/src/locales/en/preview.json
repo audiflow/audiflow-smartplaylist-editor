@@ -14,5 +14,10 @@
   "claimedLabel": "Claimed: ",
   "lostLabel": "Lost to others: ",
   "claimedByOthers": "Claimed by other playlists ({{count}})",
-  "claimedBy": "claimed by {{name}}"
+  "claimedBy": "claimed by {{name}}",
+  "sortOrder": "Sort Order",
+  "extractionResults": "Extraction Results",
+  "extractedName": "Display Name",
+  "season": "Season",
+  "episode": "Episode"
 }

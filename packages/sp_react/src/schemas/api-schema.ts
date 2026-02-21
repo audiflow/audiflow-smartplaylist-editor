@@ -37,8 +37,10 @@ export const feedEpisodeSchema = z.object({
 export const previewEpisodeSchema = z.object({
   id: z.number(),
   title: z.string(),
+  publishedAt: z.string().nullish(),
   seasonNumber: z.number().nullish(),
   episodeNumber: z.number().nullish(),
+  extractedDisplayName: z.string().nullish(),
 });
 
 export const previewGroupSchema = z.object({

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
@@ -21,6 +21,9 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion.tsx';
 import { RegexTester } from '@/components/editor/regex-tester.tsx';
+import { GroupsForm } from '@/components/editor/groups-form.tsx';
+import { SortForm } from '@/components/editor/sort-form.tsx';
+import { ExtractorsForm } from '@/components/editor/extractors-form.tsx';
 import { Trash2 } from 'lucide-react';
 
 const RESOLVER_TYPES = [
@@ -72,7 +75,9 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
 
         <BooleanSettings index={index} prefix={prefix} />
 
-        <AdvancedNote />
+        <GroupsForm index={index} />
+        <SortForm index={index} />
+        <ExtractorsForm index={index} />
 
         <RemoveButton onRemove={onRemove} />
       </AccordionContent>
@@ -192,44 +197,60 @@ function BooleanSettings({
   index: number;
   prefix: `playlists.${number}`;
 }) {
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue, control } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
   return (
-    <div className="flex gap-6">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id={`playlist-${index}-episodeYearHeaders`}
-          checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
-          onCheckedChange={(checked) =>
-            setValue(`${prefix}.episodeYearHeaders`, !!checked)
-          }
-        />
-        <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint="episodeYearHeaders">
-          {t('episodeYearHeaders')}
-        </HintLabel>
+    <div className="space-y-4">
+      <div className="flex gap-6">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`playlist-${index}-episodeYearHeaders`}
+            checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
+            onCheckedChange={(checked) =>
+              setValue(`${prefix}.episodeYearHeaders`, !!checked)
+            }
+          />
+          <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint="episodeYearHeaders">
+            {t('episodeYearHeaders')}
+          </HintLabel>
+        </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`playlist-${index}-showDateRange`}
+            checked={watch(`${prefix}.showDateRange`) ?? false}
+            onCheckedChange={(checked) =>
+              setValue(`${prefix}.showDateRange`, !!checked)
+            }
+          />
+          <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id={`playlist-${index}-showDateRange`}
-          checked={watch(`${prefix}.showDateRange`) ?? false}
-          onCheckedChange={(checked) =>
-            setValue(`${prefix}.showDateRange`, !!checked)
-          }
+      <div className="space-y-2">
+        <HintLabel htmlFor={`${prefix}.yearHeaderMode`} hint="yearHeaderMode">
+          {t('yearHeaderMode')}
+        </HintLabel>
+        <Controller
+          name={`${prefix}.yearHeaderMode`}
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value ?? 'none'}
+              onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t('yearHeaderMode_none')}</SelectItem>
+                <SelectItem value="firstEpisode">{t('yearHeaderMode_firstEpisode')}</SelectItem>
+                <SelectItem value="perEpisode">{t('yearHeaderMode_perEpisode')}</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         />
-        <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>
       </div>
     </div>
-  );
-}
-
-function AdvancedNote() {
-  const { t } = useTranslation('editor');
-
-  return (
-    <p className="text-xs text-muted-foreground">
-      {t('advancedNote')}
-    </p>
   );
 }
 
