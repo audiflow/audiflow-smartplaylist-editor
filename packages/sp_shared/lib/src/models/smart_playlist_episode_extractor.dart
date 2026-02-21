@@ -34,18 +34,22 @@ final class SmartPlaylistEpisodeExtractor {
     this.fallbackSeasonNumber,
     this.fallbackEpisodePattern,
     this.fallbackEpisodeCaptureGroup = 1,
+    this.fallbackToRss = false,
   });
 
   factory SmartPlaylistEpisodeExtractor.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistEpisodeExtractor(
       source: json['source'] as String,
       pattern: json['pattern'] as String,
-      seasonGroup: (json['seasonGroup'] as int?) ?? 1,
+      seasonGroup: json.containsKey('seasonGroup')
+          ? json['seasonGroup'] as int?
+          : 1,
       episodeGroup: (json['episodeGroup'] as int?) ?? 2,
       fallbackSeasonNumber: json['fallbackSeasonNumber'] as int?,
       fallbackEpisodePattern: json['fallbackEpisodePattern'] as String?,
       fallbackEpisodeCaptureGroup:
           (json['fallbackEpisodeCaptureGroup'] as int?) ?? 1,
+      fallbackToRss: (json['fallbackToRss'] as bool?) ?? false,
     );
   }
 
@@ -58,7 +62,9 @@ final class SmartPlaylistEpisodeExtractor {
   final String pattern;
 
   /// Capture group index for season number (default: 1).
-  final int seasonGroup;
+  ///
+  /// Set to null to skip season extraction (episode-only mode).
+  final int? seasonGroup;
 
   /// Capture group index for episode number (default: 2).
   final int episodeGroup;
@@ -78,11 +84,15 @@ final class SmartPlaylistEpisodeExtractor {
   /// (default: 1).
   final int fallbackEpisodeCaptureGroup;
 
+  /// Whether to fall back to RSS episodeNumber when no pattern
+  /// matches (default: false).
+  final bool fallbackToRss;
+
   Map<String, dynamic> toJson() {
     return {
       'source': source,
       'pattern': pattern,
-      'seasonGroup': seasonGroup,
+      if (seasonGroup != null) 'seasonGroup': seasonGroup,
       'episodeGroup': episodeGroup,
       if (fallbackSeasonNumber != null)
         'fallbackSeasonNumber': fallbackSeasonNumber,
@@ -90,6 +100,7 @@ final class SmartPlaylistEpisodeExtractor {
         'fallbackEpisodePattern': fallbackEpisodePattern,
       if (fallbackEpisodeCaptureGroup != 1)
         'fallbackEpisodeCaptureGroup': fallbackEpisodeCaptureGroup,
+      if (fallbackToRss) 'fallbackToRss': fallbackToRss,
     };
   }
 
@@ -100,7 +111,7 @@ final class SmartPlaylistEpisodeExtractor {
   SmartPlaylistEpisodeResult extract(EpisodeData episode) {
     final sourceValue = _getSourceValue(episode);
     if (sourceValue == null) {
-      return const SmartPlaylistEpisodeResult();
+      return _rssFallback(episode);
     }
 
     // Try primary pattern first
@@ -111,10 +122,20 @@ final class SmartPlaylistEpisodeExtractor {
 
     // Try fallback pattern if configured
     if (fallbackEpisodePattern != null) {
-      return _extractFromFallback(sourceValue);
+      final fallbackResult = _extractFromFallback(sourceValue);
+      if (fallbackResult.hasValues) {
+        return fallbackResult;
+      }
     }
 
-    return const SmartPlaylistEpisodeResult();
+    return _rssFallback(episode);
+  }
+
+  SmartPlaylistEpisodeResult _rssFallback(EpisodeData episode) {
+    if (!fallbackToRss) {
+      return const SmartPlaylistEpisodeResult();
+    }
+    return SmartPlaylistEpisodeResult(episodeNumber: episode.episodeNumber);
   }
 
   String? _getSourceValue(EpisodeData episode) {
@@ -136,8 +157,8 @@ final class SmartPlaylistEpisodeExtractor {
     int? season;
     int? episode;
 
-    if (seasonGroup <= match.groupCount) {
-      final captured = match.group(seasonGroup);
+    if (seasonGroup != null && seasonGroup! <= match.groupCount) {
+      final captured = match.group(seasonGroup!);
       if (captured != null) {
         season = int.tryParse(captured);
       }

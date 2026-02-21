@@ -1,4 +1,3 @@
-import 'episode_number_extractor.dart';
 import 'smart_playlist_episode_extractor.dart';
 import 'smart_playlist_sort.dart';
 import 'smart_playlist_title_extractor.dart';
@@ -15,7 +14,6 @@ final class SmartPlaylistPattern {
     this.priority = 0,
     this.customSort,
     this.titleExtractor,
-    this.episodeNumberExtractor,
     this.smartPlaylistEpisodeExtractor,
     this.yearGroupedEpisodes = false,
   });
@@ -46,12 +44,6 @@ final class SmartPlaylistPattern {
   ///
   /// When provided, overrides the default title generation logic.
   final SmartPlaylistTitleExtractor? titleExtractor;
-
-  /// Custom episode number extractor for on-demand extraction.
-  ///
-  /// When provided, extracts episode-in-playlist numbers from
-  /// episode titles.
-  final EpisodeNumberExtractor? episodeNumberExtractor;
 
   /// Extracts both playlist and episode numbers from episode title
   /// prefix.

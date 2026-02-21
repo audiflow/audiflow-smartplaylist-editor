@@ -101,17 +101,12 @@ export const titleExtractorSchema: z.ZodType<TitleExtractorInput> = z.lazy(
 export const episodeExtractorSchema = z.object({
   source: z.string(),
   pattern: z.string(),
-  seasonGroup: z.number().nullish().transform((v) => v ?? 1),
+  seasonGroup: z.number().nullish(),
   episodeGroup: z.number().nullish().transform((v) => v ?? 2),
   fallbackSeasonNumber: z.number().nullish(),
   fallbackEpisodePattern: z.string().nullish(),
   fallbackEpisodeCaptureGroup: z.number().nullish().transform((v) => v ?? 1),
-});
-
-export const episodeNumberExtractorSchema = z.object({
-  pattern: z.string(),
-  captureGroup: z.number().nullish().transform((v) => v ?? 1),
-  fallbackToRss: z.boolean().nullish().transform((v) => v ?? true),
+  fallbackToRss: z.boolean().nullish().transform((v) => v ?? false),
 });
 
 // -- Playlist definition --
@@ -138,7 +133,6 @@ export const playlistDefinitionSchema = z.object({
   groups: z.array(groupDefSchema).nullish(),
   customSort: smartPlaylistSortSpecSchema.nullish(),
   titleExtractor: titleExtractorSchema.nullish(),
-  episodeNumberExtractor: episodeNumberExtractorSchema.nullish(),
   smartPlaylistEpisodeExtractor: episodeExtractorSchema.nullish(),
 });
 
@@ -165,8 +159,5 @@ export type SmartPlaylistSortSpec = z.infer<typeof smartPlaylistSortSpecSchema>;
 export type GroupDef = z.infer<typeof groupDefSchema>;
 export type TitleExtractor = z.infer<typeof titleExtractorSchema>;
 export type EpisodeExtractor = z.infer<typeof episodeExtractorSchema>;
-export type EpisodeNumberExtractor = z.infer<
-  typeof episodeNumberExtractorSchema
->;
 export type PlaylistDefinition = z.infer<typeof playlistDefinitionSchema>;
 export type PatternConfig = z.infer<typeof patternConfigSchema>;

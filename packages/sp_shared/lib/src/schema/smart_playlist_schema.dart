@@ -58,6 +58,16 @@ final class SmartPlaylistSchema {
     'alphabetical',
   ];
 
+  /// Descriptions for each sort field (used in schema generation).
+  static const Map<String, String> _sortFieldDescriptions = {
+    'playlistNumber': 'Sort by group key (season number, year, etc.).',
+    'newestEpisodeDate': 'Sort by the most recent episode date in each group.',
+    'progress':
+        'Sort by listening progress. Mobile-only; '
+        'has no effect in web preview.',
+    'alphabetical': 'Sort alphabetically by group display name.',
+  };
+
   /// Valid sort orders.
   static const List<String> validSortOrders = ['ascending', 'descending'];
 
@@ -115,7 +125,6 @@ final class SmartPlaylistSchema {
         'SmartPlaylistSortRule': _sortRuleSchema(),
         'SmartPlaylistSortCondition': _sortConditionSchema(),
         'SmartPlaylistTitleExtractor': _titleExtractorSchema(),
-        'EpisodeNumberExtractor': _episodeNumberExtractorSchema(),
         'SmartPlaylistEpisodeExtractor': _episodeExtractorSchema(),
       },
     };
@@ -212,16 +221,18 @@ final class SmartPlaylistSchema {
           'description': 'Type of resolver to use for episode grouping.',
           'oneOf': [
             for (final type in validResolverTypes)
-              {
-                'const': type,
-                'description': _resolverTypeDescriptions[type],
-              },
+              {'const': type, 'description': _resolverTypeDescriptions[type]},
           ],
         },
         'priority': {
           'type': 'integer',
           'default': 0,
-          'description': 'Sort priority among sibling playlists.',
+          'description':
+              'Controls episode claiming order among sibling playlists. '
+              'Lower numbers are processed first and claim matching episodes '
+              'before higher-numbered playlists. Playlists with filters are '
+              'always processed before filter-less fallback playlists, '
+              'regardless of priority value.',
         },
         'contentType': {
           'type': 'string',
@@ -270,19 +281,19 @@ final class SmartPlaylistSchema {
         },
         'customSort': {
           r'$ref': '#/\$defs/SmartPlaylistSortSpec',
-          'description': 'Custom sort specification for this playlist.',
+          'description':
+              'Custom sort specification for this playlist. '
+              'Only applies when contentType is "groups". '
+              'Has no effect in episodes mode since there are '
+              'no groups to sort.',
         },
         'titleExtractor': {
           r'$ref': '#/\$defs/SmartPlaylistTitleExtractor',
           'description':
               'Configuration for extracting playlist '
-              'display names from episode data.',
-        },
-        'episodeNumberExtractor': {
-          r'$ref': '#/\$defs/EpisodeNumberExtractor',
-          'description':
-              'Configuration for extracting episode numbers '
-              'from episode titles.',
+              'display names from episode data. '
+              'Not used by the category resolver, which '
+              'uses static display names from group definitions.',
         },
         'smartPlaylistEpisodeExtractor': {
           r'$ref': '#/\$defs/SmartPlaylistEpisodeExtractor',
@@ -349,9 +360,14 @@ final class SmartPlaylistSchema {
           'properties': {
             'type': {'type': 'string', 'const': 'simple'},
             'field': {
-              'type': 'string',
-              'enum': validSortFields,
               'description': 'Field to sort by.',
+              'oneOf': [
+                for (final field in validSortFields)
+                  {
+                    'const': field,
+                    'description': _sortFieldDescriptions[field],
+                  },
+              ],
             },
             'order': {
               'type': 'string',
@@ -387,9 +403,11 @@ final class SmartPlaylistSchema {
       'additionalProperties': false,
       'properties': {
         'field': {
-          'type': 'string',
-          'enum': validSortFields,
           'description': 'Field to sort by.',
+          'oneOf': [
+            for (final field in validSortFields)
+              {'const': field, 'description': _sortFieldDescriptions[field]},
+          ],
         },
         'order': {
           'type': 'string',
@@ -467,35 +485,6 @@ final class SmartPlaylistSchema {
     };
   }
 
-  static Map<String, dynamic> _episodeNumberExtractorSchema() {
-    return {
-      'type': 'object',
-      'description':
-          'Extracts episode-in-season number from episode '
-          'titles using regex.',
-      'required': ['pattern'],
-      'additionalProperties': false,
-      'properties': {
-        'pattern': {
-          'type': 'string',
-          'description': 'Regex pattern to extract episode number.',
-        },
-        'captureGroup': {
-          'type': 'integer',
-          'default': 1,
-          'description': 'Capture group index for the episode number.',
-        },
-        'fallbackToRss': {
-          'type': 'boolean',
-          'default': true,
-          'description':
-              'Whether to fall back to RSS episodeNumber on '
-              'regex failure.',
-        },
-      },
-    };
-  }
-
   static Map<String, dynamic> _episodeExtractorSchema() {
     return {
       'type': 'object',
@@ -518,9 +507,12 @@ final class SmartPlaylistSchema {
               'episode numbers.',
         },
         'seasonGroup': {
-          'type': 'integer',
+          'type': ['integer', 'null'],
           'default': 1,
-          'description': 'Capture group index for season number.',
+          'description':
+              'Capture group index for season number. '
+              'Set to null to skip season extraction '
+              '(episode-only mode).',
         },
         'episodeGroup': {
           'type': 'integer',
@@ -541,6 +533,13 @@ final class SmartPlaylistSchema {
           'type': 'integer',
           'default': 1,
           'description': 'Capture group for episode number in fallback.',
+        },
+        'fallbackToRss': {
+          'type': 'boolean',
+          'default': false,
+          'description':
+              'Whether to fall back to RSS episodeNumber '
+              'when no pattern matches.',
         },
       },
     };
@@ -675,19 +674,6 @@ final class SmartPlaylistSchema {
         _validateTitleExtractor(
           def['titleExtractor'] as Map<String, dynamic>,
           '$path.titleExtractor',
-          errors,
-        );
-      }
-    }
-
-    // episodeNumberExtractor
-    if (def.containsKey('episodeNumberExtractor')) {
-      if (def['episodeNumberExtractor'] is! Map<String, dynamic>) {
-        errors.add('$path.episodeNumberExtractor: must be an object');
-      } else {
-        _validateEpisodeNumberExtractor(
-          def['episodeNumberExtractor'] as Map<String, dynamic>,
-          '$path.episodeNumberExtractor',
           errors,
         );
       }
@@ -830,16 +816,6 @@ final class SmartPlaylistSchema {
     }
   }
 
-  static void _validateEpisodeNumberExtractor(
-    Map<String, dynamic> extractor,
-    String path,
-    List<String> errors,
-  ) {
-    _requireString(extractor, 'pattern', path, errors);
-    _optionalInt(extractor, 'captureGroup', path, errors);
-    _optionalBool(extractor, 'fallbackToRss', path, errors);
-  }
-
   static void _validateEpisodeExtractor(
     Map<String, dynamic> extractor,
     String path,
@@ -853,11 +829,12 @@ final class SmartPlaylistSchema {
       errors,
     );
     _requireString(extractor, 'pattern', path, errors);
-    _optionalInt(extractor, 'seasonGroup', path, errors);
+    _optionalNullableInt(extractor, 'seasonGroup', path, errors);
     _optionalInt(extractor, 'episodeGroup', path, errors);
     _optionalInt(extractor, 'fallbackSeasonNumber', path, errors);
     _optionalString(extractor, 'fallbackEpisodePattern', path, errors);
     _optionalInt(extractor, 'fallbackEpisodeCaptureGroup', path, errors);
+    _optionalBool(extractor, 'fallbackToRss', path, errors);
   }
 
   // -- Field validation primitives --
@@ -902,6 +879,17 @@ final class SmartPlaylistSchema {
   ) {
     if (map.containsKey(field) && map[field] is! String) {
       errors.add('$path.$field: must be a string');
+    }
+  }
+
+  static void _optionalNullableInt(
+    Map<String, dynamic> map,
+    String field,
+    String path,
+    List<String> errors,
+  ) {
+    if (map.containsKey(field) && map[field] != null && map[field] is! int) {
+      errors.add('$path.$field: must be an integer or null');
     }
   }
 

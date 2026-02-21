@@ -26,6 +26,8 @@ export function SortForm({ index }: SortFormProps) {
   const { t } = useTranslation('editor');
   const prefix = `playlists.${index}.customSort` as const;
 
+  const contentType = watch(`playlists.${index}.contentType`);
+  const isGroupsMode = contentType === 'groups';
   const customSort = watch(prefix);
 
   const { fields, append, remove } = useFieldArray({
@@ -60,113 +62,119 @@ export function SortForm({ index }: SortFormProps) {
     <div className="space-y-4">
       <h4 className="text-sm font-medium">{t('sortSection')}</h4>
 
-      <div className="space-y-1.5">
-        <HintLabel hint="customSort">{t('sortType')}</HintLabel>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant={currentMode === 'simple' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleModeChange('simple')}
-          >
-            {t('sortSimple')}
-          </Button>
-          <Button
-            type="button"
-            variant={currentMode === 'composite' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleModeChange('composite')}
-          >
-            {t('sortComposite')}
-          </Button>
-        </div>
-      </div>
-
-      {currentMode === 'simple' && (
-        <div className="grid grid-cols-2 gap-3">
+      {!isGroupsMode ? (
+        <p className="text-muted-foreground text-sm">{t('sortDisabledNote')}</p>
+      ) : (
+        <>
           <div className="space-y-1.5">
-            <HintLabel
-              htmlFor={`playlist-${index}-sort-field`}
-              hint="sortField"
-            >
-              {t('sortField')}
-            </HintLabel>
-            <Controller
-              control={control}
-              name={`${prefix}.field` as `playlists.${number}.customSort.field`}
-              render={({ field }) => (
-                <Select
-                  value={field.value as string | undefined}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger id={`playlist-${index}-sort-field`} className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_FIELDS.map((f) => (
-                      <SelectItem key={f} value={f}>
-                        {t(`sortField_${f}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <HintLabel hint="customSort">{t('sortType')}</HintLabel>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={currentMode === 'simple' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleModeChange('simple')}
+              >
+                {t('sortSimple')}
+              </Button>
+              <Button
+                type="button"
+                variant={currentMode === 'composite' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleModeChange('composite')}
+              >
+                {t('sortComposite')}
+              </Button>
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <HintLabel
-              htmlFor={`playlist-${index}-sort-order`}
-              hint="sortOrder"
-            >
-              {t('sortOrder')}
-            </HintLabel>
-            <Controller
-              control={control}
-              name={`${prefix}.order` as `playlists.${number}.customSort.order`}
-              render={({ field }) => (
-                <Select
-                  value={field.value as string | undefined}
-                  onValueChange={field.onChange}
+          {currentMode === 'simple' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <HintLabel
+                  htmlFor={`playlist-${index}-sort-field`}
+                  hint="sortField"
                 >
-                  <SelectTrigger id={`playlist-${index}-sort-order`} className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_ORDERS.map((o) => (
-                      <SelectItem key={o} value={o}>
-                        {t(`sortOrder_${o}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-        </div>
-      )}
+                  {t('sortField')}
+                </HintLabel>
+                <Controller
+                  control={control}
+                  name={`${prefix}.field` as `playlists.${number}.customSort.field`}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value as string | undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger id={`playlist-${index}-sort-field`} className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SORT_FIELDS.map((f) => (
+                          <SelectItem key={f} value={f} disabled={f === 'progress'}>
+                            {t(`sortField_${f}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
 
-      {currentMode === 'composite' && (
-        <div className="space-y-3">
-          {fields.map((field, ruleIndex) => (
-            <SortRuleCard
-              key={field.id}
-              playlistIndex={index}
-              ruleIndex={ruleIndex}
-              onRemove={() => remove(ruleIndex)}
-            />
-          ))}
+              <div className="space-y-1.5">
+                <HintLabel
+                  htmlFor={`playlist-${index}-sort-order`}
+                  hint="sortOrder"
+                >
+                  {t('sortOrder')}
+                </HintLabel>
+                <Controller
+                  control={control}
+                  name={`${prefix}.order` as `playlists.${number}.customSort.order`}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value as string | undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger id={`playlist-${index}-sort-order`} className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SORT_ORDERS.map((o) => (
+                          <SelectItem key={o} value={o}>
+                            {t(`sortOrder_${o}`)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+          )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            type="button"
-            onClick={() => append({ ...EMPTY_RULE })}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {t('addSortRule')}
-          </Button>
-        </div>
+          {currentMode === 'composite' && (
+            <div className="space-y-3">
+              {fields.map((field, ruleIndex) => (
+                <SortRuleCard
+                  key={field.id}
+                  playlistIndex={index}
+                  ruleIndex={ruleIndex}
+                  onRemove={() => remove(ruleIndex)}
+                />
+              ))}
+
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={() => append({ ...EMPTY_RULE })}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t('addSortRule')}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

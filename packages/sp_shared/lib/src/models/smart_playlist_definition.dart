@@ -1,4 +1,3 @@
-import 'episode_number_extractor.dart';
 import 'smart_playlist_episode_extractor.dart';
 import 'smart_playlist_group_def.dart';
 import 'smart_playlist_sort.dart';
@@ -21,7 +20,6 @@ final class SmartPlaylistDefinition {
     this.groups,
     this.customSort,
     this.titleExtractor,
-    this.episodeNumberExtractor,
     this.showDateRange = false,
     this.smartPlaylistEpisodeExtractor,
   });
@@ -61,11 +59,6 @@ final class SmartPlaylistDefinition {
               json['titleExtractor'] as Map<String, dynamic>,
             )
           : null,
-      episodeNumberExtractor: json['episodeNumberExtractor'] != null
-          ? EpisodeNumberExtractor.fromJson(
-              json['episodeNumberExtractor'] as Map<String, dynamic>,
-            )
-          : null,
       smartPlaylistEpisodeExtractor:
           json['smartPlaylistEpisodeExtractor'] != null
           ? SmartPlaylistEpisodeExtractor.fromJson(
@@ -84,7 +77,7 @@ final class SmartPlaylistDefinition {
   /// Type of resolver to use for episode grouping.
   final String resolverType;
 
-  /// Sort priority among sibling playlists (default: 0).
+  /// Episode claiming order among siblings (lower = first, default: 0).
   final int priority;
 
   /// Content type hint (e.g., "bonus", "main").
@@ -117,9 +110,6 @@ final class SmartPlaylistDefinition {
   /// Configuration for extracting playlist display names.
   final SmartPlaylistTitleExtractor? titleExtractor;
 
-  /// Configuration for extracting episode numbers.
-  final EpisodeNumberExtractor? episodeNumberExtractor;
-
   /// Whether group cards should display a date range.
   final bool showDateRange;
 
@@ -144,8 +134,6 @@ final class SmartPlaylistDefinition {
       if (groups != null) 'groups': groups!.map((g) => g.toJson()).toList(),
       if (customSort != null) 'customSort': customSort!.toJson(),
       if (titleExtractor != null) 'titleExtractor': titleExtractor!.toJson(),
-      if (episodeNumberExtractor != null)
-        'episodeNumberExtractor': episodeNumberExtractor!.toJson(),
       if (smartPlaylistEpisodeExtractor != null)
         'smartPlaylistEpisodeExtractor': smartPlaylistEpisodeExtractor!
             .toJson(),

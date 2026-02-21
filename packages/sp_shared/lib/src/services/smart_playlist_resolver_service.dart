@@ -7,6 +7,7 @@ import '../models/smart_playlist_pattern_config.dart';
 import '../resolvers/rss_metadata_resolver.dart';
 import '../resolvers/smart_playlist_resolver.dart';
 import 'episode_sorter.dart';
+import 'group_sorter.dart';
 
 /// Service that orchestrates the smart playlist resolver chain.
 ///
@@ -38,7 +39,7 @@ class SmartPlaylistResolverService {
 
     final config = _findMatchingConfig(podcastGuid, feedUrl);
     if (config != null) {
-      final result = _resolveWithConfig(config, episodes);
+      final result = _resolveWithConfig(config, episodes, episodeById);
       if (result != null) return _sortGroupingEpisodes(result, episodeById);
       return null;
     }
@@ -67,7 +68,7 @@ class SmartPlaylistResolverService {
     if (config == null) return null;
 
     final episodeById = {for (final e in episodes) e.id: e};
-    final result = _resolveWithConfigForPreview(config, episodes);
+    final result = _resolveWithConfigForPreview(config, episodes, episodeById);
     if (result == null) return null;
 
     return _sortPreviewGrouping(result, episodeById);
@@ -77,6 +78,7 @@ class SmartPlaylistResolverService {
   PreviewGrouping? _resolveWithConfigForPreview(
     SmartPlaylistPatternConfig config,
     List<EpisodeData> episodes,
+    Map<int, EpisodeData> episodeById,
   ) {
     final playlistResults = <PlaylistPreviewResult>[];
     final allUngroupedIds = <int>{};
@@ -141,7 +143,7 @@ class SmartPlaylistResolverService {
       // Groups mode: resolver playlists become groups inside one playlist.
       // Episodes mode: resolver playlists become groups to maintain
       // the 1:1 mapping of definition -> PlaylistPreviewResult.
-      final groups = result.playlists.map((p) {
+      final unsortedGroups = result.playlists.map((p) {
         return SmartPlaylistGroup(
           id: p.id,
           displayName: p.displayName,
@@ -150,6 +152,11 @@ class SmartPlaylistResolverService {
           thumbnailUrl: p.thumbnailUrl,
         );
       }).toList();
+      final groups = sortGroups(
+        unsortedGroups,
+        definition.customSort,
+        episodeById,
+      );
       final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
 
       final playlist = SmartPlaylist(
@@ -239,6 +246,7 @@ class SmartPlaylistResolverService {
   SmartPlaylistGrouping? _resolveWithConfig(
     SmartPlaylistPatternConfig config,
     List<EpisodeData> episodes,
+    Map<int, EpisodeData> episodeById,
   ) {
     final allPlaylists = <SmartPlaylist>[];
     final allUngroupedIds = <int>{};
@@ -274,7 +282,7 @@ class SmartPlaylistResolverService {
           for (final g in definition.groups ?? <SmartPlaylistGroupDef>[])
             g.id: g,
         };
-        final groups = result.playlists.map((p) {
+        final unsortedGroups = result.playlists.map((p) {
           final gDef = groupDefMap[p.id];
           return SmartPlaylistGroup(
             id: p.id,
@@ -286,6 +294,11 @@ class SmartPlaylistResolverService {
             showDateRange: gDef?.showDateRange ?? definition.showDateRange,
           );
         }).toList();
+        final groups = sortGroups(
+          unsortedGroups,
+          definition.customSort,
+          episodeById,
+        );
         final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
 
         allPlaylists.add(

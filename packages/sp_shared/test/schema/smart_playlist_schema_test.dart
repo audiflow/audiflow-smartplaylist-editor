@@ -28,7 +28,6 @@ void main() {
         expect(defs, contains('SmartPlaylistSortRule'));
         expect(defs, contains('SmartPlaylistSortCondition'));
         expect(defs, contains('SmartPlaylistTitleExtractor'));
-        expect(defs, contains('EpisodeNumberExtractor'));
         expect(defs, contains('SmartPlaylistEpisodeExtractor'));
       });
 
@@ -56,30 +55,96 @@ void main() {
         expect(version['const'], SmartPlaylistSchema.currentVersion);
       });
 
-      test('SmartPlaylistDefinition has resolver type oneOf with descriptions', () {
+      test('sort field uses oneOf with per-value descriptions', () {
+        final schema = SmartPlaylistSchema.generate();
+        final decoded = jsonDecode(schema) as Map<String, dynamic>;
+        final defs = decoded[r'$defs'] as Map<String, dynamic>;
+
+        // Check simple sort spec
+        final sortSpec = defs['SmartPlaylistSortSpec'] as Map<String, dynamic>;
+        final simpleVariant =
+            (sortSpec['oneOf'] as List<dynamic>).first as Map<String, dynamic>;
+        final simpleField =
+            (simpleVariant['properties'] as Map<String, dynamic>)['field']
+                as Map<String, dynamic>;
+        final simpleOneOf = simpleField['oneOf'] as List<dynamic>;
+        final simpleValues = simpleOneOf
+            .map((e) => (e as Map<String, dynamic>)['const'] as String)
+            .toList();
+        expect(simpleValues, SmartPlaylistSchema.validSortFields);
+
+        for (final entry in simpleOneOf) {
+          final item = entry as Map<String, dynamic>;
+          expect(
+            item,
+            contains('description'),
+            reason: 'Sort field "${item['const']}" should have a description',
+          );
+        }
+
+        // Check sort rule
+        final sortRule = defs['SmartPlaylistSortRule'] as Map<String, dynamic>;
+        final ruleField =
+            (sortRule['properties'] as Map<String, dynamic>)['field']
+                as Map<String, dynamic>;
+        final ruleOneOf = ruleField['oneOf'] as List<dynamic>;
+        final ruleValues = ruleOneOf
+            .map((e) => (e as Map<String, dynamic>)['const'] as String)
+            .toList();
+        expect(ruleValues, SmartPlaylistSchema.validSortFields);
+
+        // Verify progress description mentions mobile-only
+        final progressEntry =
+            simpleOneOf.firstWhere(
+                  (e) => (e as Map<String, dynamic>)['const'] == 'progress',
+                )
+                as Map<String, dynamic>;
+        expect(progressEntry['description'] as String, contains('Mobile-only'));
+      });
+
+      test('customSort description mentions groups-only limitation', () {
         final schema = SmartPlaylistSchema.generate();
         final decoded = jsonDecode(schema) as Map<String, dynamic>;
         final defs = decoded[r'$defs'] as Map<String, dynamic>;
         final definition =
             defs['SmartPlaylistDefinition'] as Map<String, dynamic>;
         final props = definition['properties'] as Map<String, dynamic>;
-        final resolverType = props['resolverType'] as Map<String, dynamic>;
+        final customSort = props['customSort'] as Map<String, dynamic>;
 
-        final oneOf = resolverType['oneOf'] as List<dynamic>;
-        final values = oneOf.map(
-          (e) => (e as Map<String, dynamic>)['const'] as String,
-        ).toList();
-        expect(values, SmartPlaylistSchema.validResolverTypes);
-
-        for (final entry in oneOf) {
-          final item = entry as Map<String, dynamic>;
-          expect(
-            item,
-            contains('description'),
-            reason: 'Resolver type "${item['const']}" should have a description',
-          );
-        }
+        expect(
+          customSort['description'] as String,
+          contains('Only applies when contentType is "groups"'),
+        );
       });
+
+      test(
+        'SmartPlaylistDefinition has resolver type oneOf with descriptions',
+        () {
+          final schema = SmartPlaylistSchema.generate();
+          final decoded = jsonDecode(schema) as Map<String, dynamic>;
+          final defs = decoded[r'$defs'] as Map<String, dynamic>;
+          final definition =
+              defs['SmartPlaylistDefinition'] as Map<String, dynamic>;
+          final props = definition['properties'] as Map<String, dynamic>;
+          final resolverType = props['resolverType'] as Map<String, dynamic>;
+
+          final oneOf = resolverType['oneOf'] as List<dynamic>;
+          final values = oneOf
+              .map((e) => (e as Map<String, dynamic>)['const'] as String)
+              .toList();
+          expect(values, SmartPlaylistSchema.validResolverTypes);
+
+          for (final entry in oneOf) {
+            final item = entry as Map<String, dynamic>;
+            expect(
+              item,
+              contains('description'),
+              reason:
+                  'Resolver type "${item['const']}" should have a description',
+            );
+          }
+        },
+      );
     });
 
     group('validate()', () {
@@ -231,11 +296,6 @@ void main() {
                       'template': 'Season {value}',
                       'fallbackValue': 'Specials',
                     },
-                  },
-                  'episodeNumberExtractor': {
-                    'pattern': r'\[\w+\s+(\d+)\]',
-                    'captureGroup': 1,
-                    'fallbackToRss': true,
                   },
                   'smartPlaylistEpisodeExtractor': {
                     'source': 'title',
@@ -414,7 +474,8 @@ void main() {
                   'id': 'main',
                   'displayName': 'Main',
                   'resolverType': 'rss',
-                  'episodeNumberExtractor': {
+                  'smartPlaylistEpisodeExtractor': {
+                    'source': 'title',
                     // Missing required 'pattern'
                   },
                 },

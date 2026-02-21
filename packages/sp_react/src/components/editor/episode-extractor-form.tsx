@@ -5,6 +5,7 @@ import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
+import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import {
   Select,
@@ -42,6 +43,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               seasonGroup: 1,
               episodeGroup: 2,
               fallbackEpisodeCaptureGroup: 1,
+              fallbackToRss: false,
             })
           }
         >
@@ -126,7 +128,12 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               <Input
                 id={`ep-ext-${index}-seasonGroup`}
                 type="number"
-                {...register(`${prefix}.seasonGroup`, { valueAsNumber: true })}
+                {...register(`${prefix}.seasonGroup`, {
+                  setValueAs: (v) =>
+                    v === '' || v === null || v === undefined
+                      ? null
+                      : Number(v),
+                })}
               />
             </div>
 
@@ -143,6 +150,22 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
                 {...register(`${prefix}.episodeGroup`, { valueAsNumber: true })}
               />
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`ep-ext-${index}-fallbackToRss`}
+              checked={watch(`${prefix}.fallbackToRss`) ?? false}
+              onCheckedChange={(checked) =>
+                setValue(`${prefix}.fallbackToRss`, !!checked)
+              }
+            />
+            <HintLabel
+              htmlFor={`ep-ext-${index}-fallbackToRss`}
+              hint="episodeExtractorFallbackToRss"
+            >
+              {t('episodeExtractorFallbackToRss')}
+            </HintLabel>
           </div>
 
           <div className="space-y-3 border-t pt-3">

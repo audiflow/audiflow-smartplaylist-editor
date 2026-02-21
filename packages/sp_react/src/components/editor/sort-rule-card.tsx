@@ -77,7 +77,7 @@ export function SortRuleCard({ playlistIndex, ruleIndex, onRemove }: SortRuleCar
                   </SelectTrigger>
                   <SelectContent>
                     {SORT_FIELDS.map((f) => (
-                      <SelectItem key={f} value={f}>
+                      <SelectItem key={f} value={f} disabled={f === 'progress'}>
                         {t(`sortField_${f}`)}
                       </SelectItem>
                     ))}

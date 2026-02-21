@@ -22,10 +22,6 @@ void main() {
           source: 'seasonNumber',
           template: 'Season {value}',
         ),
-        episodeNumberExtractor: const EpisodeNumberExtractor(
-          pattern: r'\[(\d+)-(\d+)\]',
-          captureGroup: 2,
-        ),
         smartPlaylistEpisodeExtractor: const SmartPlaylistEpisodeExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
@@ -47,7 +43,6 @@ void main() {
       expect(decoded.nullSeasonGroupKey, 0);
       expect(decoded.customSort, isA<SimpleSmartPlaylistSort>());
       expect(decoded.titleExtractor, isNotNull);
-      expect(decoded.episodeNumberExtractor, isNotNull);
       expect(decoded.smartPlaylistEpisodeExtractor, isNotNull);
     });
 
@@ -144,7 +139,6 @@ void main() {
       expect(decoded.groups, isNull);
       expect(decoded.customSort, isNull);
       expect(decoded.titleExtractor, isNull);
-      expect(decoded.episodeNumberExtractor, isNull);
       expect(decoded.smartPlaylistEpisodeExtractor, isNull);
     });
   });
