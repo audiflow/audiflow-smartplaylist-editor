@@ -169,6 +169,31 @@ String _extractorRss() => '''<?xml version="1.0" encoding="UTF-8"?>
   </channel>
 </rss>''';
 
+/// RSS feed with pubDate for testing publishedAt serialization.
+String _enrichedRss() => '''<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <item>
+      <title>S1E1 Pilot</title>
+      <pubDate>2024-01-15T10:00:00Z</pubDate>
+      <itunes:season>1</itunes:season>
+      <itunes:episode>1</itunes:episode>
+    </item>
+    <item>
+      <title>S1E2 Next</title>
+      <pubDate>2024-02-01T10:00:00Z</pubDate>
+      <itunes:season>1</itunes:season>
+      <itunes:episode>2</itunes:episode>
+    </item>
+    <item>
+      <title>S2E1 Return</title>
+      <pubDate>2024-06-01T10:00:00Z</pubDate>
+      <itunes:season>2</itunes:season>
+      <itunes:episode>1</itunes:episode>
+    </item>
+  </channel>
+</rss>''';
+
 /// Creates a FeedCacheService that routes URLs to fake RSS responses.
 FeedCacheService _createFeedCacheService() {
   return FeedCacheService(
@@ -178,6 +203,7 @@ FeedCacheService _createFeedCacheService() {
         'https://example.com/empty.xml': _emptyRss(),
         'https://example.com/mixed.xml': _mixedRss(),
         'https://example.com/extractor.xml': _extractorRss(),
+        'https://example.com/enriched.xml': _enrichedRss(),
       };
       final body = responses[url.toString()];
       if (body != null) return body;
@@ -1059,6 +1085,157 @@ void main() {
         final ungrouped = body['ungrouped'] as List;
         expect(ungrouped, isEmpty);
       });
+
+      test('includes enriched episode fields in group episodes', () async {
+        final previewBody = jsonEncode({
+          'config': {
+            'id': 'test',
+            'feedUrls': ['https://example.com/enriched.xml'],
+            'playlists': [
+              {
+                'id': 'seasons',
+                'displayName': 'Seasons',
+                'resolverType': 'rss',
+              },
+            ],
+          },
+          'feedUrl': 'https://example.com/enriched.xml',
+        });
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/preview'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: previewBody,
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        final playlists = body['playlists'] as List;
+        expect(playlists.length, equals(1));
+
+        final playlist = playlists[0] as Map<String, dynamic>;
+        final groups = playlist['groups'] as List;
+        expect(groups.length, equals(2));
+
+        // Season 1 has 2 episodes
+        final season1 = groups[0] as Map<String, dynamic>;
+        final episodes = season1['episodes'] as List;
+        expect(episodes.length, equals(2));
+
+        // Verify first episode has enriched fields
+        final firstEpisode = episodes[0] as Map<String, dynamic>;
+        expect(firstEpisode['id'], equals(0));
+        expect(firstEpisode['title'], equals('S1E1 Pilot'));
+        expect(firstEpisode['publishedAt'], equals('2024-01-15T10:00:00.000Z'));
+        expect(firstEpisode['seasonNumber'], equals(1));
+        expect(firstEpisode['episodeNumber'], equals(1));
+
+        // Verify second episode
+        final secondEpisode = episodes[1] as Map<String, dynamic>;
+        expect(secondEpisode['seasonNumber'], equals(1));
+        expect(secondEpisode['episodeNumber'], equals(2));
+        expect(
+          secondEpisode['publishedAt'],
+          equals('2024-02-01T10:00:00.000Z'),
+        );
+
+        // No extractedDisplayName when no titleExtractor configured
+        expect(firstEpisode.containsKey('extractedDisplayName'), isFalse);
+      });
+
+      test(
+        'includes extractedDisplayName when titleExtractor is configured',
+        () async {
+          final previewBody = jsonEncode({
+            'config': {
+              'id': 'test',
+              'feedUrls': ['https://example.com/extractor.xml'],
+              'playlists': [
+                {
+                  'id': 'regular',
+                  'displayName': 'Regular',
+                  'resolverType': 'rss',
+                  'nullSeasonGroupKey': 0,
+                  'titleExtractor': {
+                    'source': 'title',
+                    'pattern': r'Series (\w+)',
+                    'group': 1,
+                    'fallbackValue': 'Extras',
+                  },
+                  'smartPlaylistEpisodeExtractor': {
+                    'source': 'title',
+                    'pattern': r'\[(\d+)-(\d+)\]',
+                    'seasonGroup': 1,
+                    'episodeGroup': 2,
+                  },
+                },
+              ],
+            },
+            'feedUrl': 'https://example.com/extractor.xml',
+          });
+
+          final request = Request(
+            'POST',
+            Uri.parse('http://localhost/api/configs/preview'),
+            headers: {
+              'Authorization': 'Bearer $validToken',
+              'Content-Type': 'application/json',
+            },
+            body: previewBody,
+          );
+
+          final response = await handler(request);
+
+          expect(response.statusCode, equals(200));
+          final body =
+              jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+          final playlists = body['playlists'] as List;
+          expect(playlists.length, equals(1));
+
+          final playlist = playlists[0] as Map<String, dynamic>;
+          final groups = playlist['groups'] as List;
+          expect(groups.length, equals(2));
+
+          // Season 1 group: episodes with titles containing
+          // "Series Alpha1" and "Series Alpha2"
+          final season1 = groups[0] as Map<String, dynamic>;
+          final season1Episodes = season1['episodes'] as List;
+
+          // Each episode should have extractedDisplayName from
+          // the titleExtractor pattern "Series (\w+)"
+          for (final ep in season1Episodes) {
+            final episode = ep as Map<String, dynamic>;
+            expect(
+              episode.containsKey('extractedDisplayName'),
+              isTrue,
+              reason:
+                  'Episode ${episode['id']} should have '
+                  'extractedDisplayName',
+            );
+            expect(
+              (episode['extractedDisplayName'] as String).startsWith('Alpha'),
+              isTrue,
+              reason:
+                  'extractedDisplayName should match "Series (\\w+)" '
+                  'group 1',
+            );
+          }
+
+          // Season 2 group: episode with title "[2-1] New Arc
+          // [Series Beta1]"
+          final season2 = groups[1] as Map<String, dynamic>;
+          final season2Episodes = season2['episodes'] as List;
+          final beta = season2Episodes[0] as Map<String, dynamic>;
+          expect(beta['extractedDisplayName'], equals('Beta1'));
+        },
+      );
 
       test('includes per-playlist debug fields', () async {
         final previewBody = jsonEncode({

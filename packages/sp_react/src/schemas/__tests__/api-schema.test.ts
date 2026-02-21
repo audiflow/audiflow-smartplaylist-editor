@@ -100,6 +100,29 @@ describe('previewEpisodeSchema', () => {
     expect(result.seasonNumber).toBeUndefined();
     expect(result.episodeNumber).toBeUndefined();
   });
+
+  it('parses enriched episode with all fields', () => {
+    const input = {
+      id: 1,
+      title: 'S01E03 - Rome',
+      publishedAt: '2024-01-15T00:00:00Z',
+      seasonNumber: 1,
+      episodeNumber: 3,
+      extractedDisplayName: 'Rome',
+    };
+    const result = previewEpisodeSchema.parse(input);
+    expect(result.publishedAt).toBe('2024-01-15T00:00:00Z');
+    expect(result.seasonNumber).toBe(1);
+    expect(result.episodeNumber).toBe(3);
+    expect(result.extractedDisplayName).toBe('Rome');
+  });
+
+  it('parses minimal episode without optional fields', () => {
+    const input = { id: 1, title: 'Episode 1' };
+    const result = previewEpisodeSchema.parse(input);
+    expect(result.publishedAt).toBeUndefined();
+    expect(result.extractedDisplayName).toBeUndefined();
+  });
 });
 
 describe('previewGroupSchema', () => {

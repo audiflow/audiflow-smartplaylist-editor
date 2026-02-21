@@ -380,6 +380,21 @@ Map<String, dynamic> _runPreview(
     for (final e in enriched) e.id: e,
   };
 
+  // Pre-compute extracted display names per definition
+  final extractedDisplayNames = <String, Map<int, String>>{};
+  for (final definition in config.playlists) {
+    final extractor = definition.titleExtractor;
+    if (extractor == null) continue;
+    final names = <int, String>{};
+    for (final episode in enriched) {
+      final name = extractor.extract(episode);
+      if (name != null) {
+        names[episode.id] = name;
+      }
+    }
+    extractedDisplayNames[definition.id] = names;
+  }
+
   final groupedCount = result.playlistResults.fold<int>(
     0,
     (sum, pr) => sum + pr.playlist.episodeIds.length,
@@ -388,7 +403,12 @@ Map<String, dynamic> _runPreview(
   return {
     'playlists': result.playlistResults
         .map(
-          (pr) => _serializePreviewResult(pr, result.resolverType, episodeById),
+          (pr) => _serializePreviewResult(
+            pr,
+            result.resolverType,
+            episodeById,
+            extractedDisplayNames: extractedDisplayNames[pr.definitionId],
+          ),
         )
         .toList(),
     'ungrouped': result.ungroupedEpisodeIds
@@ -407,8 +427,9 @@ Map<String, dynamic> _runPreview(
 Map<String, dynamic> _serializePlaylist(
   SmartPlaylist playlist,
   String? resolverType,
-  Map<int, SimpleEpisodeData> episodeById,
-) {
+  Map<int, SimpleEpisodeData> episodeById, {
+  Map<int, String>? extractedDisplayNames,
+}) {
   return {
     'id': playlist.id,
     'displayName': playlist.displayName,
@@ -417,7 +438,13 @@ Map<String, dynamic> _serializePlaylist(
     'episodeCount': playlist.episodeCount,
     if (playlist.groups != null)
       'groups': playlist.groups!
-          .map((g) => _serializeGroup(g, episodeById))
+          .map(
+            (g) => _serializeGroup(
+              g,
+              episodeById,
+              extractedDisplayNames: extractedDisplayNames,
+            ),
+          )
           .toList(),
   };
 }
@@ -425,9 +452,15 @@ Map<String, dynamic> _serializePlaylist(
 Map<String, dynamic> _serializePreviewResult(
   PlaylistPreviewResult pr,
   String? resolverType,
-  Map<int, SimpleEpisodeData> episodeById,
-) {
-  final base = _serializePlaylist(pr.playlist, resolverType, episodeById);
+  Map<int, SimpleEpisodeData> episodeById, {
+  Map<int, String>? extractedDisplayNames,
+}) {
+  final base = _serializePlaylist(
+    pr.playlist,
+    resolverType,
+    episodeById,
+    extractedDisplayNames: extractedDisplayNames,
+  );
 
   if (pr.claimedByOthers.isNotEmpty) {
     base['claimedByOthers'] = pr.claimedByOthers.entries.map((entry) {
@@ -457,23 +490,41 @@ Map<String, dynamic> _serializePreviewResult(
 
 Map<String, dynamic> _serializeGroup(
   SmartPlaylistGroup group,
-  Map<int, SimpleEpisodeData> episodeById,
-) {
+  Map<int, SimpleEpisodeData> episodeById, {
+  Map<int, String>? extractedDisplayNames,
+}) {
   return {
     'id': group.id,
     'displayName': group.displayName,
     'sortKey': group.sortKey,
     'episodeCount': group.episodeCount,
     'episodes': group.episodeIds
-        .map((id) => _serializeEpisode(episodeById[id]))
+        .map(
+          (id) => _serializeEpisode(
+            episodeById[id],
+            extractedDisplayName: extractedDisplayNames?[id],
+          ),
+        )
         .whereType<Map<String, dynamic>>()
         .toList(),
   };
 }
 
-Map<String, dynamic>? _serializeEpisode(SimpleEpisodeData? episode) {
+Map<String, dynamic>? _serializeEpisode(
+  SimpleEpisodeData? episode, {
+  String? extractedDisplayName,
+}) {
   if (episode == null) return null;
-  return {'id': episode.id, 'title': episode.title};
+  return {
+    'id': episode.id,
+    'title': episode.title,
+    if (episode.publishedAt != null)
+      'publishedAt': episode.publishedAt!.toIso8601String(),
+    if (episode.seasonNumber != null) 'seasonNumber': episode.seasonNumber,
+    if (episode.episodeNumber != null) 'episodeNumber': episode.episodeNumber,
+    if (extractedDisplayName != null)
+      'extractedDisplayName': extractedDisplayName,
+  };
 }
 
 Response _error(int status, String message) {

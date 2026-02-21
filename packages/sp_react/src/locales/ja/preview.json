@@ -14,5 +14,10 @@
   "claimedLabel": "取得済み: ",
   "lostLabel": "他に取得: ",
   "claimedByOthers": "他のプレイリストが取得 ({{count}})",
-  "claimedBy": "{{name}} が取得"
+  "claimedBy": "{{name}} が取得",
+  "sortOrder": "ソート順",
+  "extractionResults": "抽出結果",
+  "extractedName": "表示名",
+  "season": "シーズン",
+  "episode": "エピソード"
 }
