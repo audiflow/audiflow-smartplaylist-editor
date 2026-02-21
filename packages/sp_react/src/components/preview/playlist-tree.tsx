@@ -20,30 +20,17 @@ export function PlaylistTree({ playlists }: PlaylistTreeProps) {
   const { t } = useTranslation('preview');
 
   return (
-    <Accordion type="multiple" className="w-full">
+    <div className="w-full space-y-4">
       {playlists.map((playlist) => (
-        <AccordionItem key={playlist.id} value={playlist.id}>
-          <AccordionTrigger>
-            <div className="flex items-center gap-2">
-              <span>{playlist.displayName}</span>
-              {playlist.resolverType && (
-                <Badge variant="outline">{playlist.resolverType}</Badge>
-              )}
-              <Badge variant="secondary">
-                {t('episodes', { count: playlist.episodeCount })}
-              </Badge>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            {playlist.groups && 0 < playlist.groups.length ? (
-              <GroupList groups={playlist.groups} />
-            ) : (
-              <p className="text-sm text-muted-foreground py-2">{t('noGroups')}</p>
-            )}
-          </AccordionContent>
-        </AccordionItem>
+        <div key={playlist.id}>
+          {playlist.groups && 0 < playlist.groups.length ? (
+            <GroupList groups={playlist.groups} />
+          ) : (
+            <p className="text-sm text-muted-foreground py-2">{t('noGroups')}</p>
+          )}
+        </div>
       ))}
-    </Accordion>
+    </div>
   );
 }
 

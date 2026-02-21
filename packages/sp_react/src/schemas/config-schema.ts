@@ -41,7 +41,7 @@ export const sortRuleSchema = z.object({
   condition: sortConditionSchema.optional(),
 });
 
-export const smartPlaylistSortSpecSchema = z.discriminatedUnion('type', [
+const sortSpecUnionSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('simple'),
     field: sortFieldSchema,
@@ -52,6 +52,17 @@ export const smartPlaylistSortSpecSchema = z.discriminatedUnion('type', [
     rules: z.array(sortRuleSchema),
   }),
 ]);
+
+// Accept objects missing the `type` discriminator (e.g. `{ rules: [] }` from
+// manual JSON editing) by coercing them to null instead of failing validation.
+export const smartPlaylistSortSpecSchema = z
+  .unknown()
+  .transform((v) => {
+    if (v == null || typeof v !== 'object') return null;
+    if (!('type' in (v as Record<string, unknown>))) return null;
+    return v;
+  })
+  .pipe(sortSpecUnionSchema.nullable());
 
 // -- Group definition --
 
@@ -114,7 +125,10 @@ export const playlistDefinitionSchema = z.object({
     .nullish()
     .transform((v) => v ?? 0),
   contentType: z.string().nullish(),
-  yearHeaderMode: z.string().nullish(),
+  yearHeaderMode: z
+    .string()
+    .nullish()
+    .transform((v) => (v === 'none' ? null : v)),
   episodeYearHeaders: z.boolean().nullish().transform((v) => v ?? false),
   showDateRange: z.boolean().nullish().transform((v) => v ?? false),
   titleFilter: z.string().nullish(),

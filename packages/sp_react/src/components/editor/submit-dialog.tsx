@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { useSubmitPr } from '@/api/queries.ts';
@@ -11,30 +11,72 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
+import { useEditorStore } from '@/stores/editor-store.ts';
 
 interface SubmitDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  patternId: string;
-  playlist: unknown;
-  patternMeta?: unknown;
-  isNewPattern?: boolean;
+  config: Record<string, unknown>;
+  configId: string | null;
+}
+
+/**
+ * Extracts the submit payload from the full PatternConfig.
+ * The server expects `patternId`, `playlists` (array), and optional
+ * `patternMeta` (feedUrls, podcastGuid, yearGroupedEpisodes).
+ */
+function buildSubmitPayload(
+  config: Record<string, unknown>,
+  configId: string | null,
+) {
+  const patternId = (config.id as string) || configId || '';
+  const playlists = (config.playlists as unknown[]) ?? [];
+
+  const patternMeta: Record<string, unknown> = {};
+  if (config.podcastGuid != null) patternMeta.podcastGuid = config.podcastGuid;
+  if (config.feedUrls != null) patternMeta.feedUrls = config.feedUrls;
+  if (config.yearGroupedEpisodes != null) {
+    patternMeta.yearGroupedEpisodes = config.yearGroupedEpisodes;
+  }
+
+  return { patternId, playlists, patternMeta };
 }
 
 export function SubmitDialog({
   open,
   onOpenChange,
-  patternId,
-  playlist,
-  patternMeta,
-  isNewPattern,
+  config,
+  configId,
 }: SubmitDialogProps) {
   const { t } = useTranslation('editor');
   const submitPr = useSubmitPr();
+  const lastSubmittedBranch = useEditorStore((s) => s.lastSubmittedBranch);
+  const lastPrUrl = useEditorStore((s) => s.lastPrUrl);
+  const setLastSubmission = useEditorStore((s) => s.setLastSubmission);
 
-  const handleSubmit = () => {
-    submitPr.mutate({ patternId, playlist, patternMeta, isNewPattern });
+  const payload = useMemo(
+    () => buildSubmitPayload(config, configId),
+    [config, configId],
+  );
+
+  const handleCreateNew = () => {
+    submitPr.mutate(payload);
   };
+
+  const handleUpdateExisting = () => {
+    if (lastSubmittedBranch) {
+      submitPr.mutate({ ...payload, branch: lastSubmittedBranch });
+    }
+  };
+
+  // Store submission result on success
+  useEffect(() => {
+    if (submitPr.status === 'success' && submitPr.data) {
+      const { branch, prUrl } = submitPr.data;
+      setLastSubmission(branch, prUrl ?? lastPrUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitPr.status, submitPr.data]);
 
   // Reset mutation state when dialog closes
   useEffect(() => {
@@ -51,7 +93,15 @@ export function SubmitDialog({
             {t('submitDescription')}
           </DialogDescription>
         </DialogHeader>
-        {renderBody(submitPr, patternId, handleSubmit, onOpenChange)}
+        {renderBody(
+          submitPr,
+          payload.patternId,
+          lastSubmittedBranch,
+          lastPrUrl,
+          handleCreateNew,
+          handleUpdateExisting,
+          onOpenChange,
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -62,28 +112,48 @@ type SubmitMutation = ReturnType<typeof useSubmitPr>;
 function renderBody(
   submitPr: SubmitMutation,
   patternId: string,
-  onSubmit: () => void,
+  lastBranch: string | null,
+  lastPrUrl: string | null,
+  onCreateNew: () => void,
+  onUpdateExisting: () => void,
   onOpenChange: (open: boolean) => void,
 ) {
   switch (submitPr.status) {
     case 'idle':
-      return <ConfirmContent patternId={patternId} onSubmit={onSubmit} onCancel={() => onOpenChange(false)} />;
+      return (
+        <ConfirmContent
+          patternId={patternId}
+          hasExistingPr={lastBranch != null}
+          onCreateNew={onCreateNew}
+          onUpdateExisting={onUpdateExisting}
+          onCancel={() => onOpenChange(false)}
+        />
+      );
     case 'pending':
       return <PendingContent />;
     case 'success':
-      return <SuccessContent prUrl={submitPr.data?.prUrl} />;
+      return (
+        <SuccessContent
+          prUrl={submitPr.data?.prUrl ?? lastPrUrl}
+          isUpdate={submitPr.data?.prUrl == null}
+        />
+      );
     case 'error':
-      return <ErrorContent message={submitPr.error?.message} onRetry={onSubmit} />;
+      return <ErrorContent message={submitPr.error?.message} onRetry={onCreateNew} />;
   }
 }
 
 function ConfirmContent({
   patternId,
-  onSubmit,
+  hasExistingPr,
+  onCreateNew,
+  onUpdateExisting,
   onCancel,
 }: {
   patternId: string;
-  onSubmit: () => void;
+  hasExistingPr: boolean;
+  onCreateNew: () => void;
+  onUpdateExisting: () => void;
   onCancel: () => void;
 }) {
   const { t } = useTranslation('editor');
@@ -98,7 +168,18 @@ function ConfirmContent({
         <Button variant="outline" onClick={onCancel}>
           {tCommon('cancel')}
         </Button>
-        <Button onClick={onSubmit}>{t('submitPr')}</Button>
+        {hasExistingPr ? (
+          <>
+            <Button variant="outline" onClick={onCreateNew}>
+              {t('createNewPr')}
+            </Button>
+            <Button onClick={onUpdateExisting}>
+              {t('updatePr')}
+            </Button>
+          </>
+        ) : (
+          <Button onClick={onCreateNew}>{t('submitPr')}</Button>
+        )}
       </DialogFooter>
     </div>
   );
@@ -115,7 +196,13 @@ function PendingContent() {
   );
 }
 
-function SuccessContent({ prUrl }: { prUrl: string | undefined }) {
+function SuccessContent({
+  prUrl,
+  isUpdate,
+}: {
+  prUrl: string | undefined | null;
+  isUpdate: boolean;
+}) {
   const { t } = useTranslation('editor');
 
   const handleOpen = () => {
@@ -124,13 +211,15 @@ function SuccessContent({ prUrl }: { prUrl: string | undefined }) {
 
   return (
     <div className="flex flex-col items-center py-4 gap-4">
-      <p className="text-sm font-medium">{t('submitSuccess')}</p>
+      <p className="text-sm font-medium">
+        {isUpdate ? t('updatePrSuccess') : t('submitSuccess')}
+      </p>
       {prUrl && (
         <p className="text-xs text-muted-foreground font-mono break-all text-center">
           {prUrl}
         </p>
       )}
-      <Button onClick={handleOpen}>{t('openPr')}</Button>
+      {prUrl && <Button onClick={handleOpen}>{t('openPr')}</Button>}
     </div>
   );
 }

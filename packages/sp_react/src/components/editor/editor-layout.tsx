@@ -50,6 +50,13 @@ const DEFAULT_CONFIG: PatternConfig = {
   yearGroupedEpisodes: false,
 };
 
+/** Run form values through Zod (applies transforms like yearHeaderMode
+ *  "none" -> null) then strip empty/null keys for the server. */
+function normalizeForSubmit(raw: unknown): Record<string, unknown> {
+  const result = patternConfigSchema.safeParse(raw);
+  return sanitizeConfig(result.success ? result.data : raw) as Record<string, unknown>;
+}
+
 interface EditorLayoutProps {
   configId: string | null;
   initialConfig?: PatternConfig;
@@ -195,22 +202,39 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   return (
     <div className="container mx-auto max-w-7xl p-6">
-      {/* Header */}
-      <EditorHeader
-        configId={configId}
-        feedUrl={feedUrl || null}
-        lastAutoSavedAt={lastAutoSavedAt}
-        isJsonMode={isJsonMode}
-        onBack={() => {
-          resetEditorStore();
-          void navigate({ to: '/browse' });
-        }}
-        onModeToggle={handleModeToggle}
-        onSubmit={() => setSubmitOpen(true)}
-      />
+      {/* Header + Preview button (sticky) */}
+      <div className="sticky top-0 z-10 bg-background pb-4 border-b">
+        <EditorHeader
+          configId={configId}
+          feedUrl={feedUrl || null}
+          lastAutoSavedAt={lastAutoSavedAt}
+          isJsonMode={isJsonMode}
+          onBack={() => {
+            resetEditorStore();
+            void navigate({ to: '/browse' });
+          }}
+          onModeToggle={handleModeToggle}
+          onSubmit={() => setSubmitOpen(true)}
+        />
+
+        <div className="flex items-center justify-between">
+          {previewMutation.data?.debug && (
+            <DebugInfoPanel debug={previewMutation.data.debug} />
+          )}
+          {!previewMutation.data?.debug && <div />}
+          <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
+            {previewMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="mr-2 h-4 w-4" />
+            )}
+            {t('runPreview')}
+          </Button>
+        </div>
+      </div>
 
       {/* Feed URL Input */}
-      <div className="mb-6">
+      <div className="my-6">
         <FeedUrlInput
           feedUrls={initialConfig?.feedUrls ?? undefined}
           value={feedUrl}
@@ -220,22 +244,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           }}
           isLoading={feedQuery.isLoading}
         />
-      </div>
-
-      {/* Preview Controls */}
-      <div className="flex items-center justify-between my-4">
-        {previewMutation.data?.debug && (
-          <DebugInfoPanel debug={previewMutation.data.debug} />
-        )}
-        {!previewMutation.data?.debug && <div />}
-        <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
-          {previewMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Play className="mr-2 h-4 w-4" />
-          )}
-          {t('runPreview')}
-        </Button>
       </div>
 
       {/* Main Content */}
@@ -311,8 +319,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       <SubmitDialog
         open={submitOpen}
         onOpenChange={setSubmitOpen}
-        patternId={form.getValues().id || configId || ''}
-        playlist={sanitizeConfig(parsedJsonConfig ?? form.getValues())}
+        config={normalizeForSubmit(parsedJsonConfig ?? form.getValues())}
+        configId={configId}
       />
 
       {/* Draft Restore Dialog */}

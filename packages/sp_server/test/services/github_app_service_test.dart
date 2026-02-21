@@ -116,13 +116,17 @@ void main() {
     });
 
     group('commitFile', () {
-      test('succeeds on 201 response', () async {
+      test('creates new file on 201 response', () async {
         Map<String, dynamic>? capturedBody;
         final service = GitHubAppService(
           token: 'tok',
           owner: 'owner',
           repo: 'repo',
           httpFn: (method, url, {headers, body}) async {
+            if (method == 'GET') {
+              // File does not exist.
+              return GitHubHttpResponse(statusCode: 404, body: '{}');
+            }
             expect(method, equals('PUT'));
             expect(url.path, contains('contents/configs/test.json'));
             capturedBody = jsonDecode(body as String) as Map<String, dynamic>;
@@ -142,6 +146,7 @@ void main() {
 
         expect(capturedBody!['message'], equals('Add test config'));
         expect(capturedBody!['branch'], equals('feat-branch'));
+        expect(capturedBody, isNot(contains('sha')));
 
         // Verify content is base64 encoded.
         final decoded = utf8.decode(
@@ -150,12 +155,47 @@ void main() {
         expect(decoded, equals('{"id":"test"}'));
       });
 
+      test('updates existing file with sha', () async {
+        Map<String, dynamic>? capturedBody;
+        final service = GitHubAppService(
+          token: 'tok',
+          owner: 'owner',
+          repo: 'repo',
+          httpFn: (method, url, {headers, body}) async {
+            if (method == 'GET') {
+              // File exists with known SHA.
+              return GitHubHttpResponse(
+                statusCode: 200,
+                body: '{"sha":"abc123","path":"configs/test.json"}',
+              );
+            }
+            capturedBody = jsonDecode(body as String) as Map<String, dynamic>;
+            return GitHubHttpResponse(
+              statusCode: 200,
+              body: '{"content":{"path":"configs/test.json"}}',
+            );
+          },
+        );
+
+        await service.commitFile(
+          branchName: 'feat-branch',
+          filePath: 'configs/test.json',
+          content: '{"id":"updated"}',
+          message: 'Update config',
+        );
+
+        expect(capturedBody!['sha'], equals('abc123'));
+      });
+
       test('throws on failure', () async {
         final service = GitHubAppService(
           token: 'tok',
           owner: 'owner',
           repo: 'repo',
           httpFn: (method, url, {headers, body}) async {
+            if (method == 'GET') {
+              return GitHubHttpResponse(statusCode: 404, body: '{}');
+            }
             return GitHubHttpResponse(
               statusCode: 500,
               body: '{"message":"Internal Server Error"}',

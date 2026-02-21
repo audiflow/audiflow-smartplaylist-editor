@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { sanitizeConfig } from '../sanitize-config';
 
 describe('sanitizeConfig', () => {
-  it('strips empty strings from filter fields', () => {
+  it('removes keys with empty string values', () => {
     const config = {
       id: 'test',
       displayName: 'Test',
@@ -20,6 +20,20 @@ describe('sanitizeConfig', () => {
     expect(result).not.toHaveProperty('titleFilter');
     expect(result).not.toHaveProperty('excludeFilter');
     expect(result).not.toHaveProperty('requireFilter');
+  });
+
+  it('removes keys with null values', () => {
+    const config = {
+      id: 'test',
+      titleFilter: null,
+      customSort: null,
+    };
+
+    const result = sanitizeConfig(config) as Record<string, unknown>;
+
+    expect(result.id).toBe('test');
+    expect(result).not.toHaveProperty('titleFilter');
+    expect(result).not.toHaveProperty('customSort');
   });
 
   it('preserves non-empty strings', () => {
@@ -74,7 +88,6 @@ describe('sanitizeConfig', () => {
       priority: 0,
       episodeYearHeaders: false,
       showDateRange: true,
-      nullSeasonGroupKey: null,
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
@@ -82,6 +95,5 @@ describe('sanitizeConfig', () => {
     expect(result.priority).toBe(0);
     expect(result.episodeYearHeaders).toBe(false);
     expect(result.showDateRange).toBe(true);
-    expect(result.nullSeasonGroupKey).toBeNull();
   });
 });

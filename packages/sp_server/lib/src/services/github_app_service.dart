@@ -67,7 +67,7 @@ class GitHubAppService {
 
     if (response.statusCode != 200) {
       throw GitHubApiException(
-        'Failed to get default branch SHA',
+        'Failed to get default branch SHA: ${url}',
         response.statusCode,
         response.body,
       );
@@ -100,6 +100,10 @@ class GitHubAppService {
 
   /// Creates or updates a file on [branchName]
   /// via the Contents API.
+  ///
+  /// Automatically fetches the existing blob SHA when
+  /// the file already exists (required by GitHub API for
+  /// updates).
   Future<void> commitFile({
     required String branchName,
     required String filePath,
@@ -108,26 +112,47 @@ class GitHubAppService {
   }) async {
     final url = _apiUrl('/repos/$_owner/$_repo/contents/$filePath');
 
+    // Check if file exists on the branch to get its SHA.
+    final existingSha = await _getFileSha(filePath, branchName);
+
     final encoded = base64Encode(utf8.encode(content));
+    final payload = <String, dynamic>{
+      'message': message,
+      'content': encoded,
+      'branch': branchName,
+    };
+    if (existingSha != null) {
+      payload['sha'] = existingSha;
+    }
 
     final response = await _httpFn(
       'PUT',
       url,
       headers: _headers,
-      body: jsonEncode({
-        'message': message,
-        'content': encoded,
-        'branch': branchName,
-      }),
+      body: jsonEncode(payload),
     );
 
-    if (response.statusCode != 201) {
+    // 200 = updated existing file, 201 = created new file.
+    if (response.statusCode != 200 && response.statusCode != 201) {
       throw GitHubApiException(
         'Failed to commit file: $filePath',
         response.statusCode,
         response.body,
       );
     }
+  }
+
+  /// Returns the blob SHA of [filePath] on [branch], or
+  /// null if the file does not exist.
+  Future<String?> _getFileSha(String filePath, String branch) async {
+    final url = _apiUrl('/repos/$_owner/$_repo/contents/$filePath');
+    final queryUrl = url.replace(queryParameters: {'ref': branch});
+
+    final response = await _httpFn('GET', queryUrl, headers: _headers);
+    if (response.statusCode != 200) return null;
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['sha'] as String?;
   }
 
   /// Opens a pull request on the repository.
