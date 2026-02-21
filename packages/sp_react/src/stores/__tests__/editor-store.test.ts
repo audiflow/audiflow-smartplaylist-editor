@@ -12,6 +12,8 @@ describe('editorStore', () => {
     expect(state.feedUrl).toBe('');
     expect(state.lastAutoSavedAt).toBeNull();
     expect(state.configVersion).toBe(0);
+    expect(state.lastSubmittedBranch).toBeNull();
+    expect(state.lastPrUrl).toBeNull();
   });
 
   it('toggles JSON mode', () => {
@@ -39,10 +41,25 @@ describe('editorStore', () => {
     expect(useEditorStore.getState().configVersion).toBe(2);
   });
 
+  it('sets last submission', () => {
+    useEditorStore.getState().setLastSubmission('feat/branch-1', 'https://github.com/o/r/pull/1');
+    const state = useEditorStore.getState();
+    expect(state.lastSubmittedBranch).toBe('feat/branch-1');
+    expect(state.lastPrUrl).toBe('https://github.com/o/r/pull/1');
+  });
+
+  it('sets last submission with null prUrl', () => {
+    useEditorStore.getState().setLastSubmission('feat/branch-1', null);
+    const state = useEditorStore.getState();
+    expect(state.lastSubmittedBranch).toBe('feat/branch-1');
+    expect(state.lastPrUrl).toBeNull();
+  });
+
   it('resets state', () => {
     useEditorStore.getState().setFeedUrl('https://example.com');
     useEditorStore.getState().toggleJsonMode();
     useEditorStore.getState().incrementConfigVersion();
+    useEditorStore.getState().setLastSubmission('feat/branch', 'https://github.com/o/r/pull/1');
     useEditorStore.getState().reset();
 
     const state = useEditorStore.getState();
@@ -50,5 +67,7 @@ describe('editorStore', () => {
     expect(state.feedUrl).toBe('');
     expect(state.lastAutoSavedAt).toBeNull();
     expect(state.configVersion).toBe(0);
+    expect(state.lastSubmittedBranch).toBeNull();
+    expect(state.lastPrUrl).toBeNull();
   });
 });

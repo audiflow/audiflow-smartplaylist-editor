@@ -23,8 +23,19 @@ Map<String, dynamic> _validPatternMeta() => {
   'playlists': ['seasons'],
 };
 
+/// Records GitHub API calls for assertion.
+class _CallLog {
+  final String method;
+  final String path;
+  final Map<String, dynamic>? body;
+
+  _CallLog(this.method, this.path, this.body);
+}
+
 /// Builds a mock GitHubAppService that records
 /// calls and returns predictable responses.
+///
+/// [calls] collects every HTTP call for inspection.
 GitHubAppService _mockGitHubService({
   String defaultSha = 'abc123',
   String prUrl = 'https://github.com/o/r/pull/1',
@@ -32,6 +43,7 @@ GitHubAppService _mockGitHubService({
   bool failOnCreateBranch = false,
   bool failOnCommit = false,
   bool failOnCreatePr = false,
+  List<_CallLog>? calls,
 }) {
   return GitHubAppService(
     token: 'test-token',
@@ -39,6 +51,18 @@ GitHubAppService _mockGitHubService({
     repo: 'repo',
     httpFn: (method, url, {headers, body}) async {
       final path = url.path;
+      final parsedBody = body is String
+          ? jsonDecode(body) as Map<String, dynamic>?
+          : null;
+      calls?.add(_CallLog(method, path, parsedBody));
+
+      // GET file SHA (contents endpoint with ref query)
+      if (method == 'GET' && path.contains('contents/')) {
+        return GitHubHttpResponse(
+          statusCode: 404,
+          body: '{"message":"Not Found"}',
+        );
+      }
 
       // GET default branch SHA
       if (method == 'GET' && path.contains('git/ref')) {
@@ -105,6 +129,12 @@ GitHubAppService _mockGitHubService({
       );
     },
   );
+}
+
+/// Extracts committed file content from a PUT call log entry.
+String _decodeCommittedContent(_CallLog call) {
+  final encoded = call.body!['content'] as String;
+  return utf8.decode(base64Decode(encoded));
 }
 
 void main() {
@@ -561,6 +591,358 @@ void main() {
 
         final response = await router.call(request);
         expect(response.headers['content-type'], equals('application/json'));
+      });
+    });
+
+    group('meta.json structure', () {
+      test('always commits meta.json even without patternMeta', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(calls: calls),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+
+        // Find the meta.json commit.
+        final metaCommits = calls.where(
+          (c) => c.method == 'PUT' && c.path.contains('meta.json'),
+        );
+        expect(metaCommits, hasLength(1));
+
+        final metaContent = _decodeCommittedContent(metaCommits.first);
+        final metaJson = jsonDecode(metaContent) as Map<String, dynamic>;
+        expect(metaJson['version'], equals(1));
+        expect(metaJson['id'], equals('test-podcast'));
+        expect(metaJson['feedUrls'], equals([]));
+        expect(metaJson['playlists'], equals(['seasons']));
+      });
+
+      test('builds complete meta from client patternMeta fields', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(calls: calls),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
+            'patternMeta': {
+              'feedUrls': ['https://example.com/feed.xml'],
+              'podcastGuid': 'abc-123',
+              'yearGroupedEpisodes': true,
+            },
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+
+        final metaCommit = calls.firstWhere(
+          (c) => c.method == 'PUT' && c.path.contains('meta.json'),
+        );
+        final metaJson =
+            jsonDecode(_decodeCommittedContent(metaCommit))
+                as Map<String, dynamic>;
+        expect(metaJson['version'], equals(1));
+        expect(metaJson['id'], equals('test-podcast'));
+        expect(metaJson['podcastGuid'], equals('abc-123'));
+        expect(metaJson['feedUrls'], equals(['https://example.com/feed.xml']));
+        expect(metaJson['yearGroupedEpisodes'], isTrue);
+        expect(metaJson['playlists'], equals(['seasons']));
+      });
+
+      test('meta playlists field lists all submitted playlist IDs', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(calls: calls),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlists': [
+              _validPlaylist(),
+              {
+                'id': 'bonus',
+                'displayName': 'Bonus',
+                'resolverType': 'category',
+              },
+            ],
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+
+        final metaCommit = calls.firstWhere(
+          (c) => c.method == 'PUT' && c.path.contains('meta.json'),
+        );
+        final metaJson =
+            jsonDecode(_decodeCommittedContent(metaCommit))
+                as Map<String, dynamic>;
+        expect(metaJson['playlists'], equals(['seasons', 'bonus']));
+      });
+    });
+
+    group('JSON normalization', () {
+      test('strips default values from committed playlist JSON', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(calls: calls),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        // Client sends playlist with explicit defaults
+        // (priority=0, groups=[], showDateRange=false).
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': {
+              'id': 'seasons',
+              'displayName': 'Seasons',
+              'resolverType': 'rss',
+              'priority': 0,
+              'showDateRange': false,
+              'episodeYearHeaders': false,
+            },
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+
+        final playlistCommit = calls.firstWhere(
+          (c) => c.method == 'PUT' && c.path.contains('playlists/seasons.json'),
+        );
+        final playlistJson =
+            jsonDecode(_decodeCommittedContent(playlistCommit))
+                as Map<String, dynamic>;
+
+        // Default values should be stripped.
+        expect(playlistJson.containsKey('priority'), isFalse);
+        expect(playlistJson.containsKey('showDateRange'), isFalse);
+        expect(playlistJson.containsKey('episodeYearHeaders'), isFalse);
+
+        // Required fields remain.
+        expect(playlistJson['id'], equals('seasons'));
+        expect(playlistJson['displayName'], equals('Seasons'));
+        expect(playlistJson['resolverType'], equals('rss'));
+      });
+
+      test('preserves non-default values in committed JSON', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(calls: calls),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': {
+              'id': 'seasons',
+              'displayName': 'Seasons',
+              'resolverType': 'rss',
+              'priority': 5,
+              'showDateRange': true,
+              'titleFilter': r'S\d+',
+            },
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+
+        final playlistCommit = calls.firstWhere(
+          (c) => c.method == 'PUT' && c.path.contains('playlists/seasons.json'),
+        );
+        final playlistJson =
+            jsonDecode(_decodeCommittedContent(playlistCommit))
+                as Map<String, dynamic>;
+
+        expect(playlistJson['priority'], equals(5));
+        expect(playlistJson['showDateRange'], isTrue);
+        expect(playlistJson['titleFilter'], equals(r'S\d+'));
+      });
+
+      test('meta.json omits yearGroupedEpisodes when false', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(calls: calls),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
+            'patternMeta': {
+              'feedUrls': ['https://example.com/feed.xml'],
+              'yearGroupedEpisodes': false,
+            },
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+
+        final metaCommit = calls.firstWhere(
+          (c) => c.method == 'PUT' && c.path.contains('meta.json'),
+        );
+        final metaJson =
+            jsonDecode(_decodeCommittedContent(metaCommit))
+                as Map<String, dynamic>;
+        expect(metaJson.containsKey('yearGroupedEpisodes'), isFalse);
+      });
+    });
+
+    group('update existing PR', () {
+      test('appends commits to existing branch without creating PR', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(calls: calls),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
+            'branch': 'smartplaylist/test-podcast-12345',
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(200));
+
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['branch'], equals('smartplaylist/test-podcast-12345'));
+        expect(body.containsKey('prUrl'), isFalse);
+
+        // Should NOT have called getDefaultBranchSha or createBranch.
+        final branchCreations = calls.where(
+          (c) => c.method == 'POST' && c.path.contains('git/refs'),
+        );
+        expect(branchCreations, isEmpty);
+
+        // Should NOT have called createPullRequest.
+        final prCreations = calls.where(
+          (c) => c.method == 'POST' && c.path.contains('pulls'),
+        );
+        expect(prCreations, isEmpty);
+
+        // Should have committed files.
+        final commits = calls.where(
+          (c) => c.method == 'PUT' && c.path.contains('contents/'),
+        );
+        expect(commits.length, equals(2)); // playlist + meta
+      });
+
+      test('new submission creates branch and PR', () async {
+        final calls = <_CallLog>[];
+        final router = submitRouter(
+          gitHubAppService: _mockGitHubService(
+            calls: calls,
+            prUrl: 'https://github.com/o/r/pull/99',
+          ),
+          jwtService: jwtService,
+          apiKeyService: apiKeyService,
+        );
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/submit'),
+          headers: {
+            'Authorization': 'Bearer $validToken',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'patternId': 'test-podcast',
+            'playlist': _validPlaylist(),
+          }),
+        );
+
+        final response = await router.call(request);
+        expect(response.statusCode, equals(201));
+
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['prUrl'], equals('https://github.com/o/r/pull/99'));
+        expect(body['branch'], contains('smartplaylist/test-podcast-'));
+
+        // Should have called createBranch.
+        final branchCreations = calls.where(
+          (c) => c.method == 'POST' && c.path.contains('git/refs'),
+        );
+        expect(branchCreations, hasLength(1));
+
+        // Should have called createPullRequest.
+        final prCreations = calls.where(
+          (c) => c.method == 'POST' && c.path.contains('pulls'),
+        );
+        expect(prCreations, hasLength(1));
       });
     });
   });

@@ -57,9 +57,10 @@ export function useSubmitPr() {
   return useMutation({
     mutationFn: (params: {
       patternId: string;
-      playlist: unknown;
+      playlists: unknown[];
       patternMeta?: unknown;
       isNewPattern?: boolean;
+      branch?: string;
     }) => client.post<SubmitResponse>('/api/configs/submit', params),
   });
 }

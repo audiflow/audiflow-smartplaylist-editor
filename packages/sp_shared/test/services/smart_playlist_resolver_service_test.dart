@@ -310,18 +310,18 @@ void main() {
       expect(result, isNotNull);
 
       // All episodes in 2024, so each definition produces one
-      // year-based playlist. Bonus (higher priority) is resolved
-      // first, then main gets remaining episodes.
+      // year-based playlist. Main (lower priority number) is resolved
+      // first, then bonus gets remaining episodes.
       expect(result!.playlists.length, 2);
 
       // Collect all episode IDs per playlist
       final firstIds = result.playlists[0].episodeIds;
       final secondIds = result.playlists[1].episodeIds;
 
-      // Bonus playlist gets episodes matching requireFilter
-      expect(firstIds, unorderedEquals([2, 4]));
       // Main playlist gets episodes not matching excludeFilter
-      expect(secondIds, unorderedEquals([1, 3]));
+      expect(firstIds, unorderedEquals([1, 3]));
+      // Bonus playlist gets episodes matching requireFilter
+      expect(secondIds, unorderedEquals([2, 4]));
     });
 
     test('empty string filters are treated as no filters', () {
@@ -698,19 +698,19 @@ void main() {
         expect(result, isNotNull);
         expect(result!.playlistResults, hasLength(2));
 
-        // Priority A (higher) gets both episodes, no claims lost
-        final aResult = result.playlistResults.firstWhere(
-          (r) => r.definitionId == 'priority-a',
-        );
-        expect(aResult.playlist.episodeIds, unorderedEquals([1, 2]));
-        expect(aResult.claimedByOthers, isEmpty);
-
-        // Priority B: all candidates were claimed by A
+        // Priority B (lower number = higher precedence) gets both episodes
         final bResult = result.playlistResults.firstWhere(
           (r) => r.definitionId == 'priority-b',
         );
-        expect(bResult.playlist.episodeIds, isEmpty);
-        expect(bResult.claimedByOthers, {1: 'priority-a', 2: 'priority-a'});
+        expect(bResult.playlist.episodeIds, unorderedEquals([1, 2]));
+        expect(bResult.claimedByOthers, isEmpty);
+
+        // Priority A: all candidates were claimed by B
+        final aResult = result.playlistResults.firstWhere(
+          (r) => r.definitionId == 'priority-a',
+        );
+        expect(aResult.playlist.episodeIds, isEmpty);
+        expect(aResult.claimedByOthers, {1: 'priority-b', 2: 'priority-b'});
       });
 
       test('sorts episode IDs by publishedAt ascending', () {

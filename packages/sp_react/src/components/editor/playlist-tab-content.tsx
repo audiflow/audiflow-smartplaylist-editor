@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
-import { Accordion } from '@/components/ui/accordion.tsx';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { PlaylistDebugStats } from '@/components/preview/playlist-debug-stats.tsx';
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
@@ -21,17 +20,18 @@ export function PlaylistTabContent({
   const { t } = useTranslation('editor');
 
   return (
-    <div className="space-y-4 pt-4">
+    <div className="pt-2">
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Config side */}
-        <div>
-          <Accordion type="multiple" defaultValue={[`playlist-${index}`]}>
-            <PlaylistForm index={index} onRemove={onRemove} />
-          </Accordion>
+        <div className="space-y-4">
+          <PlaylistForm index={index} onRemove={onRemove} />
         </div>
 
         {/* Preview side */}
-        <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+        <div className="rounded-lg border bg-muted/30 p-4 space-y-3 lg:sticky lg:top-20 lg:self-start">
+          <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {t('previewSectionTitle')}
+          </h4>
           {previewPlaylist ? (
             <>
               {previewPlaylist.debug && (
@@ -44,7 +44,7 @@ export function PlaylistTabContent({
               />
             </>
           ) : (
-            <p className="text-sm text-muted-foreground py-8 text-center">
+            <p className="text-sm text-muted-foreground py-4 text-center">
               {t('tabPreviewEmpty')}
             </p>
           )}

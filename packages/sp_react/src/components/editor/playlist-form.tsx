@@ -15,11 +15,6 @@ import {
 } from '@/components/ui/select.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from '@/components/ui/accordion.tsx';
 import { RegexTester } from '@/components/editor/regex-tester.tsx';
 import { GroupsForm } from '@/components/editor/groups-form.tsx';
 import { SortForm } from '@/components/editor/sort-form.tsx';
@@ -45,7 +40,6 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const { t } = useTranslation('editor');
   const prefix = `playlists.${index}` as const;
 
-  const displayName = watch(`${prefix}.displayName`) || t('playlistFallbackName', { number: index + 1 });
   const titleFilter = watch(`${prefix}.titleFilter`) ?? '';
   const excludeFilter = watch(`${prefix}.excludeFilter`) ?? '';
   const requireFilter = watch(`${prefix}.requireFilter`) ?? '';
@@ -58,30 +52,25 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   );
 
   return (
-    <AccordionItem value={`playlist-${index}`}>
-      <AccordionTrigger>
-        <span className="font-medium">{displayName}</span>
-      </AccordionTrigger>
-      <AccordionContent className="space-y-4 p-4">
-        <BasicSettings index={index} prefix={prefix} />
+    <div className="space-y-4">
+      <BasicSettings index={index} prefix={prefix} />
 
-        <FilterSettings
-          prefix={prefix}
-          titleFilter={titleFilter}
-          excludeFilter={excludeFilter}
-          requireFilter={requireFilter}
-          episodeTitles={episodeTitles}
-        />
+      <FilterSettings
+        prefix={prefix}
+        titleFilter={titleFilter}
+        excludeFilter={excludeFilter}
+        requireFilter={requireFilter}
+        episodeTitles={episodeTitles}
+      />
 
-        <BooleanSettings index={index} prefix={prefix} />
+      <BooleanSettings index={index} prefix={prefix} />
 
-        <GroupsForm index={index} />
-        <SortForm index={index} />
-        <ExtractorsForm index={index} />
+      <GroupsForm index={index} />
+      <SortForm index={index} />
+      <ExtractorsForm index={index} />
 
-        <RemoveButton onRemove={onRemove} />
-      </AccordionContent>
-    </AccordionItem>
+      <RemoveButton onRemove={onRemove} />
+    </div>
   );
 }
 

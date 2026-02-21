@@ -60,27 +60,27 @@ Future<Response> _handleSubmit(
     return _error(400, 'Missing or invalid "patternId" field');
   }
 
-  final playlistId = parsed['playlistId'] as String?;
-  final playlistJson = parsed['playlist'];
-  final patternMetaJson = parsed['patternMeta'];
   final isNewPattern = parsed['isNewPattern'] as bool? ?? false;
   final description =
       parsed['description'] as String? ?? 'Update config $patternId';
 
-  // At minimum we need a playlist to submit.
-  if (playlistJson is! Map<String, dynamic>) {
-    return _error(400, 'Missing or invalid "playlist" field');
+  // Accept either `playlists` (array) or `playlist` (single, legacy).
+  final List<Map<String, dynamic>> playlistJsonList;
+  final playlistsRaw = parsed['playlists'];
+  final playlistRaw = parsed['playlist'];
+  if (playlistsRaw is List && playlistsRaw.isNotEmpty) {
+    playlistJsonList = playlistsRaw.cast<Map<String, dynamic>>();
+  } else if (playlistRaw is Map<String, dynamic>) {
+    playlistJsonList = [playlistRaw];
+  } else {
+    return _error(400, 'Missing "playlists" or "playlist" field');
   }
 
-  // Validate playlist against schema by wrapping in
-  // the root format expected by SmartPlaylistSchema.
+  // Validate all playlists against schema.
   final wrappedConfig = jsonEncode({
     'version': SmartPlaylistSchema.currentVersion,
     'patterns': [
-      {
-        'id': patternId,
-        'playlists': [playlistJson],
-      },
+      {'id': patternId, 'playlists': playlistJsonList},
     ],
   });
   final errors = SmartPlaylistSchema.validate(wrappedConfig);
@@ -95,53 +95,83 @@ Future<Response> _handleSubmit(
     );
   }
 
-  final SmartPlaylistDefinition playlistDef;
+  // Parse all playlist definitions.
+  final List<SmartPlaylistDefinition> playlistDefs;
   try {
-    playlistDef = SmartPlaylistDefinition.fromJson(playlistJson);
+    playlistDefs = [
+      for (final json in playlistJsonList)
+        SmartPlaylistDefinition.fromJson(json),
+    ];
   } on Object catch (e) {
     return _error(400, 'Invalid playlist definition: $e');
   }
 
-  // Submit PR via GitHub API.
-  try {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final branch = 'smartplaylist/$patternId-$timestamp';
+  // Build canonical PatternMeta from known data + client fields.
+  final patternMetaJson = parsed['patternMeta'] as Map<String, dynamic>? ?? {};
+  final patternMeta = PatternMeta(
+    version: SmartPlaylistSchema.currentVersion,
+    id: patternId,
+    feedUrls:
+        (patternMetaJson['feedUrls'] as List<dynamic>?)?.cast<String>() ?? [],
+    playlists: playlistDefs.map((d) => d.id).toList(),
+    podcastGuid: patternMetaJson['podcastGuid'] as String?,
+    yearGroupedEpisodes:
+        (patternMetaJson['yearGroupedEpisodes'] as bool?) ?? false,
+  );
 
-    final baseSha = await gitHubAppService.getDefaultBranchSha();
-    await gitHubAppService.createBranch(branch, baseSha);
+  // If `branch` is provided, append commits to existing branch.
+  final existingBranch = parsed['branch'] as String?;
+
+  // Submit via GitHub API.
+  try {
+    final String branch;
+    if (existingBranch != null) {
+      branch = existingBranch;
+    } else {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      branch = 'smartplaylist/$patternId-$timestamp';
+      final baseSha = await gitHubAppService.getDefaultBranchSha();
+      await gitHubAppService.createBranch(branch, baseSha);
+    }
 
     final encoder = const JsonEncoder.withIndent('  ');
 
-    // Commit playlist file.
-    final effectivePlaylistId = playlistId ?? playlistDef.id;
-    final playlistContent = encoder.convert(playlistJson);
-    await gitHubAppService.commitFile(
-      branchName: branch,
-      filePath: '$patternId/playlists/$effectivePlaylistId.json',
-      content: '$playlistContent\n',
-      message: 'Add playlist: $effectivePlaylistId',
-    );
-
-    // Commit pattern meta if provided.
-    if (patternMetaJson is Map<String, dynamic>) {
-      final metaContent = encoder.convert(patternMetaJson);
+    // Commit each playlist file (normalized via Dart model).
+    for (final def in playlistDefs) {
+      final playlistContent = encoder.convert(def.toJson());
       await gitHubAppService.commitFile(
         branchName: branch,
-        filePath: '$patternId/meta.json',
-        content: '$metaContent\n',
+        filePath: '$patternId/playlists/${def.id}.json',
+        content: '$playlistContent\n',
         message: isNewPattern
-            ? 'Add pattern meta: $patternId'
-            : 'Update pattern meta: $patternId',
+            ? 'Add playlist: ${def.id}'
+            : 'Update playlist: ${def.id}',
+      );
+    }
+
+    // Always commit meta.json with canonical structure.
+    final metaContent = encoder.convert(patternMeta.toJson());
+    await gitHubAppService.commitFile(
+      branchName: branch,
+      filePath: '$patternId/meta.json',
+      content: '$metaContent\n',
+      message: isNewPattern
+          ? 'Add pattern meta: $patternId'
+          : 'Update pattern meta: $patternId',
+    );
+
+    // Skip PR creation when updating an existing branch.
+    if (existingBranch != null) {
+      return Response(
+        200,
+        body: jsonEncode({'branch': branch}),
+        headers: _jsonHeaders,
       );
     }
 
     final userId = request.context['userId'] as String?;
-    final prBody = _buildPrBody(
-      description,
-      patternId,
-      effectivePlaylistId,
-      userId,
-    );
+    final playlistIds = playlistDefs.map((d) => d.id).join(', ');
+    final prBody = _buildPrBody(description, patternId, playlistIds, userId);
 
     final prUrl = await gitHubAppService.createPullRequest(
       title: isNewPattern
@@ -168,7 +198,7 @@ Future<Response> _handleSubmit(
 String _buildPrBody(
   String description,
   String patternId,
-  String playlistId,
+  String playlistIds,
   String? userId,
 ) {
   final buffer = StringBuffer()
@@ -179,7 +209,7 @@ String _buildPrBody(
     ..writeln('## Config')
     ..writeln()
     ..writeln('- Pattern: `$patternId`')
-    ..writeln('- Playlist: `$playlistId`');
+    ..writeln('- Playlists: `$playlistIds`');
 
   if (userId != null) {
     buffer

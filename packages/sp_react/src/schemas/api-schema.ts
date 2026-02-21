@@ -113,7 +113,7 @@ export const generatedKeySchema = z.object({
 // -- Submit --
 
 export const submitResponseSchema = z.object({
-  prUrl: z.string(),
+  prUrl: z.string().optional(),
   branch: z.string(),
 });
 
