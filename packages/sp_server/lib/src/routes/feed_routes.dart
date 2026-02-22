@@ -2,41 +2,25 @@ import 'dart:convert';
 
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
-
-import '../middleware/api_key_middleware.dart';
-import '../services/api_key_service.dart';
-import '../services/feed_cache_service.dart';
-import '../services/jwt_service.dart';
+import 'package:sp_shared/sp_shared.dart';
 
 /// Registers feed routes under `/api/feeds`.
-///
-/// All routes require unified authentication
-/// (JWT or API key).
 Router feedRouter({
-  required FeedCacheService feedCacheService,
-  required JwtService jwtService,
-  required ApiKeyService apiKeyService,
+  required DiskFeedCacheService feedCacheService,
 }) {
   final router = Router();
 
-  final auth = unifiedAuthMiddleware(
-    jwtService: jwtService,
-    apiKeyService: apiKeyService,
+  router.get(
+    '/api/feeds',
+    (Request request) => _handleGetFeed(request, feedCacheService),
   );
-
-  final getHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler(
-        (Request request) => _handleGetFeed(request, feedCacheService),
-      );
-  router.get('/api/feeds', getHandler);
 
   return router;
 }
 
 Future<Response> _handleGetFeed(
   Request request,
-  FeedCacheService feedCacheService,
+  DiskFeedCacheService feedCacheService,
 ) async {
   final url = request.url.queryParameters['url'];
   if (url == null || url.isEmpty) {

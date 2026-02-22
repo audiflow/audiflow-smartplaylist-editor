@@ -4,111 +4,61 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:sp_shared/sp_shared.dart';
 
-import '../middleware/api_key_middleware.dart';
-import '../services/api_key_service.dart';
-import '../services/config_repository.dart';
-import '../services/feed_cache_service.dart';
-import '../services/jwt_service.dart';
+import '../services/local_config_repository.dart';
 
 /// Registers config routes under `/api/configs`.
-///
-/// All routes require unified authentication
-/// (JWT or API key).
 Router configRouter({
-  required ConfigRepository configRepository,
-  required FeedCacheService feedCacheService,
-  required JwtService jwtService,
-  required ApiKeyService apiKeyService,
+  required LocalConfigRepository configRepository,
+  required DiskFeedCacheService feedCacheService,
   required SmartPlaylistValidator validator,
 }) {
   final router = Router();
 
-  final auth = unifiedAuthMiddleware(
-    jwtService: jwtService,
-    apiKeyService: apiKeyService,
+  // GET /api/configs/patterns/<id>/assembled
+  // Must be registered before /api/configs/patterns/<id> to avoid
+  // path conflicts.
+  router.get(
+    '/api/configs/patterns/<id>/assembled',
+    (Request r) => _handleAssembled(r, configRepository),
   );
 
-  // Legacy endpoints (adapted for split backend)
-
-  // GET /api/configs
-  final listHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleList(r, configRepository));
-  router.get('/api/configs', listHandler);
-
-  // GET /api/configs/patterns/<id>/assembled
-  // Must be registered before /api/configs/<id> to avoid
-  // path conflicts.
-  final assembledHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleAssembled(r, configRepository));
-  router.get('/api/configs/patterns/<id>/assembled', assembledHandler);
-
   // GET /api/configs/patterns/<id>/playlists/<pid>
-  final playlistHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePlaylist(r, configRepository));
-  router.get('/api/configs/patterns/<id>/playlists/<pid>', playlistHandler);
+  router.get(
+    '/api/configs/patterns/<id>/playlists/<pid>',
+    (Request r) => _handlePlaylist(r, configRepository),
+  );
 
   // GET /api/configs/patterns/<id>
-  final patternMetaHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePatternMeta(r, configRepository));
-  router.get('/api/configs/patterns/<id>', patternMetaHandler);
+  router.get(
+    '/api/configs/patterns/<id>',
+    (Request r) => _handlePatternMeta(r, configRepository),
+  );
 
   // GET /api/configs/patterns
-  final patternsHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePatterns(r, configRepository));
-  router.get('/api/configs/patterns', patternsHandler);
-
-  // GET /api/configs/<id> (legacy: returns assembled config)
-  final getHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleGet(r, configRepository));
-  router.get('/api/configs/<id>', getHandler);
+  router.get(
+    '/api/configs/patterns',
+    (Request r) => _handlePatterns(r, configRepository),
+  );
 
   // POST /api/configs/validate
-  final validateHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleValidate(r, validator));
-  router.post('/api/configs/validate', validateHandler);
+  router.post(
+    '/api/configs/validate',
+    (Request r) => _handleValidate(r, validator),
+  );
 
   // POST /api/configs/preview
-  final previewHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePreview(r, feedCacheService));
-  router.post('/api/configs/preview', previewHandler);
+  router.post(
+    '/api/configs/preview',
+    (Request r) => _handlePreview(r, feedCacheService),
+  );
 
   return router;
-}
-
-/// GET /api/configs -- legacy list endpoint.
-///
-/// Returns pattern summaries wrapped in {configs: [...]}.
-Future<Response> _handleList(
-  Request request,
-  ConfigRepository configRepository,
-) async {
-  try {
-    final patterns = await configRepository.listPatterns();
-    return Response.ok(
-      jsonEncode({'configs': patterns.map((p) => p.toJson()).toList()}),
-      headers: _jsonHeaders,
-    );
-  } on Object catch (e) {
-    return Response(
-      502,
-      body: jsonEncode({'error': 'Failed to fetch configs: $e'}),
-      headers: _jsonHeaders,
-    );
-  }
 }
 
 /// GET /api/configs/patterns -- returns pattern summaries.
 Future<Response> _handlePatterns(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   try {
     final patterns = await configRepository.listPatterns();
@@ -128,7 +78,7 @@ Future<Response> _handlePatterns(
 /// GET /api/configs/patterns/<id> -- returns pattern metadata.
 Future<Response> _handlePatternMeta(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   final id = request.params['id'];
   if (id == null || id.isEmpty) {
@@ -150,7 +100,7 @@ Future<Response> _handlePatternMeta(
 /// GET /api/configs/patterns/<id>/playlists/<pid>
 Future<Response> _handlePlaylist(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   final id = request.params['id'];
   final pid = request.params['pid'];
@@ -176,7 +126,7 @@ Future<Response> _handlePlaylist(
 /// GET /api/configs/patterns/<id>/assembled
 Future<Response> _handleAssembled(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   final id = request.params['id'];
   if (id == null || id.isEmpty) {
@@ -190,32 +140,6 @@ Future<Response> _handleAssembled(
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to assemble config: $e'}),
-      headers: _jsonHeaders,
-    );
-  }
-}
-
-/// GET /api/configs/<id> -- legacy: returns assembled config.
-Future<Response> _handleGet(
-  Request request,
-  ConfigRepository configRepository,
-) async {
-  final id = request.params['id'];
-  if (id == null || id.isEmpty) {
-    return Response(
-      400,
-      body: jsonEncode({'error': 'Missing config ID'}),
-      headers: _jsonHeaders,
-    );
-  }
-
-  try {
-    final config = await configRepository.assembleConfig(id);
-    return Response.ok(jsonEncode(config.toJson()), headers: _jsonHeaders);
-  } on Object catch (e) {
-    return Response(
-      502,
-      body: jsonEncode({'error': 'Failed to fetch config: $e'}),
       headers: _jsonHeaders,
     );
   }
@@ -243,7 +167,7 @@ Future<Response> _handleValidate(
 
 Future<Response> _handlePreview(
   Request request,
-  FeedCacheService feedCacheService,
+  DiskFeedCacheService feedCacheService,
 ) async {
   final body = await request.readAsString();
   if (body.isEmpty) {

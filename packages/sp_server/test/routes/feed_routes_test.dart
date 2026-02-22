@@ -1,12 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
+import 'package:sp_shared/sp_shared.dart';
 import 'package:sp_server/src/routes/feed_routes.dart';
-import 'package:sp_server/src/services/api_key_service.dart';
-import 'package:sp_server/src/services/feed_cache_service.dart';
-import 'package:sp_server/src/services/jwt_service.dart';
 
 const _sampleRss = '''
 <?xml version="1.0" encoding="UTF-8"?>
@@ -32,47 +31,29 @@ const _sampleRss = '''
 
 void main() {
   group('feedRouter', () {
-    late JwtService jwtService;
-    late ApiKeyService apiKeyService;
-    late FeedCacheService feedCacheService;
+    late DiskFeedCacheService feedCacheService;
     late Handler handler;
-    late String validToken;
+    late Directory cacheDir;
 
-    setUp(() {
-      jwtService = JwtService(secret: 'test-secret');
-      apiKeyService = ApiKeyService();
-      validToken = jwtService.createToken('user-1');
-
-      feedCacheService = FeedCacheService(
+    setUp(() async {
+      cacheDir = await Directory.systemTemp.createTemp('feed_routes_test_');
+      feedCacheService = DiskFeedCacheService(
+        cacheDir: cacheDir.path,
         httpGet: (Uri url) async => _sampleRss,
       );
 
-      final router = feedRouter(
-        feedCacheService: feedCacheService,
-        jwtService: jwtService,
-        apiKeyService: apiKeyService,
-      );
+      final router = feedRouter(feedCacheService: feedCacheService);
       handler = router.call;
     });
 
-    test('returns 401 without authentication', () async {
-      final request = Request(
-        'GET',
-        Uri.parse(
-          'http://localhost/api/feeds?url=https://example.com/feed.xml',
-        ),
-      );
-
-      final response = await handler(request);
-
-      expect(response.statusCode, equals(401));
+    tearDown(() async {
+      await cacheDir.delete(recursive: true);
     });
 
     test('returns 400 when url param is missing', () async {
       final request = Request(
         'GET',
         Uri.parse('http://localhost/api/feeds'),
-        headers: {'Authorization': 'Bearer $validToken'},
       );
 
       final response = await handler(request);
@@ -87,7 +68,6 @@ void main() {
       final request = Request(
         'GET',
         Uri.parse('http://localhost/api/feeds?url='),
-        headers: {'Authorization': 'Bearer $validToken'},
       );
 
       final response = await handler(request);
@@ -99,7 +79,6 @@ void main() {
       final request = Request(
         'GET',
         Uri.parse('http://localhost/api/feeds?url=not-a-url'),
-        headers: {'Authorization': 'Bearer $validToken'},
       );
 
       final response = await handler(request);
@@ -117,7 +96,6 @@ void main() {
           'http://localhost/api/feeds'
           '?url=https://example.com/feed.xml',
         ),
-        headers: {'Authorization': 'Bearer $validToken'},
       );
 
       final response = await handler(request);
@@ -131,35 +109,16 @@ void main() {
       expect(episodes[1]['title'], equals('Episode Two'));
     });
 
-    test('accepts API key authentication', () async {
-      final keyResult = apiKeyService.generateKey('user-1', 'Test Key');
-
-      final request = Request(
-        'GET',
-        Uri.parse(
-          'http://localhost/api/feeds'
-          '?url=https://example.com/feed.xml',
-        ),
-        headers: {'X-API-Key': keyResult.plaintext},
-      );
-
-      final response = await handler(request);
-
-      expect(response.statusCode, equals(200));
-    });
-
     test('returns 502 when feed fetch fails', () async {
-      final failingService = FeedCacheService(
+      final failDir = await Directory.systemTemp.createTemp('feed_fail_test_');
+      final failingService = DiskFeedCacheService(
+        cacheDir: failDir.path,
         httpGet: (Uri url) async {
           throw Exception('Connection refused');
         },
       );
 
-      final router = feedRouter(
-        feedCacheService: failingService,
-        jwtService: jwtService,
-        apiKeyService: apiKeyService,
-      );
+      final router = feedRouter(feedCacheService: failingService);
       final failHandler = router.call;
 
       final request = Request(
@@ -168,7 +127,6 @@ void main() {
           'http://localhost/api/feeds'
           '?url=https://example.com/fail.xml',
         ),
-        headers: {'Authorization': 'Bearer $validToken'},
       );
 
       final response = await failHandler(request);
@@ -177,6 +135,8 @@ void main() {
       final body =
           jsonDecode(await response.readAsString()) as Map<String, dynamic>;
       expect(body['error'], contains('Failed'));
+
+      await failDir.delete(recursive: true);
     });
 
     test('response has JSON content type', () async {
@@ -186,7 +146,6 @@ void main() {
           'http://localhost/api/feeds'
           '?url=https://example.com/feed.xml',
         ),
-        headers: {'Authorization': 'Bearer $validToken'},
       );
 
       final response = await handler(request);
