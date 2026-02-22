@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   json_annotation: ^4.9.0
+  json_schema: ^5.2.2
   meta: ^1.16.0
 
 dev_dependencies:

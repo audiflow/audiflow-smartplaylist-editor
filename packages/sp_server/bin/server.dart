@@ -5,6 +5,7 @@ import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:sp_shared/sp_shared.dart';
 import 'package:sp_server/src/handlers/static_file_handler.dart';
 import 'package:sp_server/src/middleware/cors_middleware.dart';
 import 'package:sp_server/src/routes/auth_routes.dart';
@@ -54,6 +55,8 @@ Future<void> main() async {
     baseUrl: configBaseUrl,
   );
 
+  final validator = SmartPlaylistValidator();
+
   // Top-level router that mounts sub-routers.
   final router = Router();
 
@@ -62,7 +65,7 @@ Future<void> main() async {
   router.get('/api/health', health.call);
 
   // Mount schema routes (public, no auth required).
-  final schema = schemaRouter();
+  final schema = schemaRouter(validator: validator);
   router.get('/api/schema', schema.call);
 
   // Mount auth routes.
@@ -86,6 +89,7 @@ Future<void> main() async {
     feedCacheService: feedCacheService,
     jwtService: jwtService,
     apiKeyService: apiKeyService,
+    validator: validator,
   );
   router.get('/api/configs', configs.call);
   router.get('/api/configs/patterns', configs.call);
@@ -109,6 +113,7 @@ Future<void> main() async {
     gitHubAppService: gitHubAppService,
     jwtService: jwtService,
     apiKeyService: apiKeyService,
+    validator: validator,
   );
   router.post('/api/configs/submit', submit.call);
 

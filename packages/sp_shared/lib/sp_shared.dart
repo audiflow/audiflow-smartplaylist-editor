@@ -23,7 +23,9 @@ export 'src/resolvers/year_resolver.dart';
 export 'src/resolvers/title_appearance_order_resolver.dart';
 
 // Schema
+export 'src/schema/schema_data.dart';
 export 'src/schema/smart_playlist_schema.dart';
+export 'src/schema/smart_playlist_validator.dart';
 
 // Services
 export 'src/services/config_assembler.dart';

@@ -33,6 +33,10 @@ export const sortConditionSchema = z.discriminatedUnion('type', [
     type: z.literal('sortKeyGreaterThan'),
     value: z.number(),
   }),
+  z.object({
+    type: z.literal('greaterThan'),
+    value: z.number(),
+  }),
 ]);
 
 export const sortRuleSchema = z.object({

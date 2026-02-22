@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
+import 'package:sp_shared/sp_shared.dart';
 import 'package:sp_server/src/routes/submit_routes.dart';
 import 'package:sp_server/src/services/api_key_service.dart';
 import 'package:sp_server/src/services/github_app_service.dart';
@@ -141,11 +142,13 @@ void main() {
   group('submitRouter', () {
     late JwtService jwtService;
     late ApiKeyService apiKeyService;
+    late SmartPlaylistValidator validator;
     late String validToken;
 
     setUp(() {
       jwtService = JwtService(secret: 'test-secret');
       apiKeyService = ApiKeyService();
+      validator = SmartPlaylistValidator();
       validToken = jwtService.createToken('user-1');
     });
 
@@ -155,6 +158,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -174,6 +178,7 @@ void main() {
           ),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -204,6 +209,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -231,6 +237,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -258,6 +265,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -282,6 +290,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -303,6 +312,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -327,6 +337,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -351,6 +362,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -375,6 +387,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -399,6 +412,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         // Playlist without required fields.
@@ -424,6 +438,7 @@ void main() {
           gitHubAppService: _mockGitHubService(failOnCreateBranch: true),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -451,6 +466,7 @@ void main() {
           gitHubAppService: _mockGitHubService(failOnCreatePr: true),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -478,6 +494,7 @@ void main() {
           gitHubAppService: _mockGitHubService(failOnCommit: true),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -502,6 +519,7 @@ void main() {
           gitHubAppService: _mockGitHubService(failOnGetSha: true),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -526,6 +544,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -550,6 +569,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -574,6 +594,7 @@ void main() {
           gitHubAppService: _mockGitHubService(),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -601,6 +622,7 @@ void main() {
           gitHubAppService: _mockGitHubService(calls: calls),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -639,6 +661,7 @@ void main() {
           gitHubAppService: _mockGitHubService(calls: calls),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -682,6 +705,7 @@ void main() {
           gitHubAppService: _mockGitHubService(calls: calls),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -724,6 +748,7 @@ void main() {
           gitHubAppService: _mockGitHubService(calls: calls),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         // Client sends playlist with explicit defaults
@@ -775,6 +800,7 @@ void main() {
           gitHubAppService: _mockGitHubService(calls: calls),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -818,6 +844,7 @@ void main() {
           gitHubAppService: _mockGitHubService(calls: calls),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -857,6 +884,7 @@ void main() {
           gitHubAppService: _mockGitHubService(calls: calls),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -909,6 +937,7 @@ void main() {
           ),
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(

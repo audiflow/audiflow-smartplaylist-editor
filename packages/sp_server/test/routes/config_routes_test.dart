@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
+import 'package:sp_shared/sp_shared.dart';
 import 'package:sp_server/src/routes/config_routes.dart';
 import 'package:sp_server/src/services/api_key_service.dart';
 import 'package:sp_server/src/services/config_repository.dart';
@@ -218,6 +219,7 @@ void main() {
     late ApiKeyService apiKeyService;
     late ConfigRepository configRepository;
     late FeedCacheService feedCacheService;
+    late SmartPlaylistValidator validator;
     late Handler handler;
     late String validToken;
 
@@ -227,12 +229,14 @@ void main() {
       validToken = jwtService.createToken('user-1');
       configRepository = _createRepo();
       feedCacheService = _createFeedCacheService();
+      validator = SmartPlaylistValidator();
 
       final router = configRouter(
         configRepository: configRepository,
         feedCacheService: feedCacheService,
         jwtService: jwtService,
         apiKeyService: apiKeyService,
+        validator: validator,
       );
       handler = router.call;
     });
@@ -296,6 +300,7 @@ void main() {
           feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -316,6 +321,7 @@ void main() {
           feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -378,6 +384,7 @@ void main() {
           feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -426,6 +433,7 @@ void main() {
           feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -478,6 +486,7 @@ void main() {
           feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -534,6 +543,7 @@ void main() {
           feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
@@ -555,6 +565,7 @@ void main() {
           feedCacheService: feedCacheService,
           jwtService: jwtService,
           apiKeyService: apiKeyService,
+          validator: validator,
         );
 
         final request = Request(
