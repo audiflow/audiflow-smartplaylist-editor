@@ -28,6 +28,7 @@ export 'src/schema/smart_playlist_schema.dart';
 export 'src/schema/smart_playlist_validator.dart';
 
 // Services
+export 'src/services/disk_feed_cache_service.dart';
 export 'src/services/config_assembler.dart';
 export 'src/services/episode_sorter.dart';
 export 'src/services/group_sorter.dart';
