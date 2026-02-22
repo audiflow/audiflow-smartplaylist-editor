@@ -8,33 +8,41 @@ Dart monorepo with three Dart workspace packages plus a React SPA.
 audiflow-smartplaylist-web/
 ├── packages/
 │   ├── sp_shared/     # Domain models, resolvers, services (pure Dart)
-│   ├── sp_server/     # REST API server (shelf)
+│   ├── sp_server/     # Local API server (shelf)
 │   └── sp_react/      # React SPA web editor (TanStack + Zustand + shadcn/ui)
 └── mcp_server/        # MCP server for Claude integration
 ```
 
 | Package | Role | Dependencies |
 |---------|------|-------------|
-| `sp_shared` | Shared domain layer: models, resolvers, schema, services | None (pure Dart) |
-| `sp_server` | Backend API: auth, config fetching, preview, PR submission | sp_shared, shelf |
+| `sp_shared` | Shared domain layer: models, resolvers, schema, services, DiskFeedCacheService | None (pure Dart) |
+| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching | sp_shared, shelf |
 | `sp_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod, CodeMirror 6 |
-| `mcp_server` | Exposes smart playlist operations as MCP tools | sp_shared |
+| `mcp_server` | Exposes smart playlist operations as MCP tools | sp_shared, sp_server |
 
 ## Ecosystem Context
 
 This repo is one part of a three-component ecosystem:
 
 ```
-[audiflow-smartplaylist-web]     [audiflow-smartplaylist]        [GCS]              [audiflow app]
- (this repo)              PR      (config data repo)      CI sync  (static hosting)    fetch
- sp_react ───────────────────>  JSON files on GitHub  ──────────>  GCS bucket  <────────  audiflow_domain
- sp_server                      (source of truth)                                        (cached locally)
+User clones data repo locally
+                |
+                v
+[audiflow-smartplaylist-web]              Local data repo clone         GitHub (remote)
+ (this repo)                  read/write  (on user's machine)  push    (source of truth)
+ sp_server + sp_react  <────────────────>  JSON files on disk  ──────>  origin/main
+ mcp_server            <────────────────>
+                                                                CI sync
+                                                                ──────>  GitHub Pages / GCS
+                                                                            ^
+                                                                            |
+                                                                         audiflow app fetches
 ```
 
 - **audiflow-smartplaylist** (data repo): Static JSON files on GitHub, source of truth
-- **GCS**: Mirrors the data repo; the mobile app fetches configs from here
+- **GitHub Pages / GCS**: Mirrors the data repo; the mobile app fetches configs from here
 - **audiflow app**: Consumes configs via `audiflow_domain` with local caching
-- **This repo**: Web editor that reads configs and submits changes as PRs
+- **This repo**: Local web editor and MCP server that read/write files in a cloned data repo
 
 Model serialization (JSON keys, field structure) must stay aligned across all three.
 
@@ -91,6 +99,7 @@ Content type determines output shape:
 | `SmartPlaylistResolverService` | Resolver chain orchestrator (described above) |
 | `ConfigAssembler` | Combines `PatternMeta` + playlist definitions into unified config |
 | `SmartPlaylistPatternLoader` | Parses JSON into pattern configs with version validation |
+| `DiskFeedCacheService` | Disk-based feed cache with SHA-256 URL hashing and configurable TTL |
 | `sortEpisodeIdsByPublishedAt` | Episode sorting utility (ascending, nulls last, stable) |
 
 ### Schema
@@ -99,55 +108,44 @@ Content type determines output shape:
 
 ## sp_server
 
-Shelf-based REST API with Cascade routing.
+Shelf-based local API server with Cascade routing. Runs on localhost only, no authentication required.
 
 ### Routes
 
-| Endpoint | Auth | Purpose |
-|----------|------|---------|
-| `GET /api/health` | None | Health check |
-| `GET /api/schema` | None | JSON Schema for configs |
-| `GET /api/configs/patterns` | JWT/Key | List pattern summaries |
-| `GET /api/configs/patterns/<id>` | JWT/Key | Get pattern metadata |
-| `GET /api/configs/patterns/<id>/playlists/<pid>` | JWT/Key | Get playlist definition |
-| `GET /api/configs/patterns/<id>/assembled` | JWT/Key | Assemble full config |
-| `POST /api/configs/validate` | JWT/Key | Validate config against schema |
-| `POST /api/configs/preview` | JWT/Key | Preview smart playlists from config + feed |
-| `POST /api/configs/submit` | JWT | Submit config changes as PR |
-| `GET /api/feeds` | JWT/Key | Fetch and parse RSS feed |
-| `POST /api/drafts` | JWT/Key | Draft CRUD |
-| `GET /api/auth/github` | None | OAuth flow |
-| `POST /api/auth/refresh` | None | Token refresh |
-| `POST /api/keys` | JWT | API key management |
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/health` | Health check |
+| `GET /api/schema` | JSON Schema for configs |
+| `GET /api/configs/patterns` | List pattern summaries |
+| `POST /api/configs/patterns` | Create new pattern |
+| `GET /api/configs/patterns/<id>` | Get pattern metadata |
+| `DELETE /api/configs/patterns/<id>` | Delete pattern and all playlists |
+| `PUT /api/configs/patterns/<id>/meta` | Update pattern metadata |
+| `GET /api/configs/patterns/<id>/assembled` | Assemble full config |
+| `GET /api/configs/patterns/<id>/playlists/<pid>` | Get playlist definition |
+| `PUT /api/configs/patterns/<id>/playlists/<pid>` | Save playlist definition |
+| `DELETE /api/configs/patterns/<id>/playlists/<pid>` | Delete playlist |
+| `POST /api/configs/validate` | Validate config against schema |
+| `POST /api/configs/preview` | Preview smart playlists from config + feed |
+| `GET /api/feeds` | Fetch and parse RSS feed |
+| `GET /api/events` | SSE stream of file change events |
 
 ### Services
 
 | Service | Purpose |
 |---------|---------|
-| `ConfigRepository` | Lazy-loads configs from GitHub with TTL caching (5min root, 30min files) |
-| `FeedCacheService` | Fetches/parses RSS feeds with 15min memory cache |
-| `JwtService` | JWT generation and validation (access + refresh tokens) |
-| `ApiKeyService` | API key CRUD |
-| `GitHubOAuthService` | OAuth authorization flow |
-| `GitHubAppService` | GitHub API: branches, commits, PRs via Git Trees API |
-| `DraftService` | In-memory draft storage |
+| `LocalConfigRepository` | Read/write config files on disk with atomic writes |
+| `FileWatcherService` | Watch data directory for changes, emit SSE events |
+| `DiskFeedCacheService` (from sp_shared) | Disk-based feed cache with SHA-256 URL hashing |
+| `SmartPlaylistValidator` (from sp_shared) | Schema validation |
 
-### PR Submission Flow
+### Local-First Architecture
 
-1. Validate playlist JSON against schema
-2. Parse into `SmartPlaylistDefinition`
-3. Create branch: `smartplaylist/{patternId}-{timestamp}`
-4. Commit playlist file to `{patternId}/playlists/{playlistId}.json`
-5. Commit pattern meta if provided
-6. Create PR with formatted body
-7. Return PR URL
-
-### Authentication
-
-- **JWT Bearer**: Primary auth for authenticated users
-- **API Key**: Secondary auth for programmatic access
-- `unifiedAuthMiddleware` accepts either
-- Silent token refresh on 401 via `ApiClient` in sp_react
+- Server auto-detects data dir from CWD (requires `patterns/meta.json`)
+- Binds to localhost only (`InternetAddress.loopbackIPv4`)
+- No authentication required
+- File changes trigger SSE events to connected browsers
+- Feed cache stored in `$dataDir/.cache/feeds/`
 
 ## sp_react
 
@@ -157,7 +155,7 @@ React 19 SPA built with Vite + TypeScript.
 
 - **Routing**: TanStack Router (file-based)
 - **Server state**: TanStack Query (caching, refetching)
-- **Local state**: Zustand (auth-store, editor-store)
+- **Local state**: Zustand (editor-store)
 - **Forms**: React Hook Form + Zod (zodResolver)
 - **Styling**: Tailwind CSS v4 + shadcn/ui (new-york style)
 - **JSON editing**: CodeMirror 6
@@ -167,18 +165,41 @@ React 19 SPA built with Vite + TypeScript.
 
 | Route | Screen |
 |-------|--------|
-| `/login` | OAuth login |
 | `/browse` | Pattern listing |
 | `/editor` | Create new config |
 | `/editor/$id` | Edit existing pattern |
-| `/settings` | API key management |
+| `/feeds` | Feed browser |
 
 ### Key Components
 
-- `ApiClient`: HTTP wrapper with JWT/API key headers and silent 401 refresh with Promise deduplication
-- `DraftService`: Browser localStorage persistence for drafts with three-way JSON merge on restore
-- Stores (Zustand): `auth-store` (tokens + persistence), `editor-store` (UI state)
-- Query hooks: `usePatterns`, `useAssembledConfig`, `useFeed`, `usePreviewMutation`, `useSubmitPr`, etc.
+- `ApiClient`: Simple HTTP wrapper for API calls (no auth)
+- Stores (Zustand): `editor-store` (UI state)
+- `useFileEvents`: SSE hook for real-time cache invalidation
+- Query hooks: `usePatterns`, `useAssembledConfig`, `useFeed`, `usePreviewMutation`, `useSavePlaylist`, `useSavePatternMeta`, `useDeletePlaylist`, `useDeletePattern`, `useCreatePattern`, etc.
+
+## mcp_server
+
+Exposes smart playlist operations as MCP tools over stdio.
+
+### Tools
+
+| Tool | Purpose |
+|------|---------|
+| `search_configs` | Search pattern configs by keyword |
+| `get_config` | Get assembled config by pattern ID |
+| `get_schema` | Get JSON Schema from disk |
+| `fetch_feed` | Fetch and cache RSS feed |
+| `validate_config` | Validate config against schema |
+| `preview_config` | Preview playlists from config + feed |
+| `submit_config` | Save config to disk (validates first) |
+
+### Architecture
+
+- Auto-detects data directory from CWD (same as sp_server)
+- Uses `LocalConfigRepository` for config CRUD
+- Uses `DiskFeedCacheService` for feed caching
+- Uses `SmartPlaylistValidator` for schema validation
+- Communicates via stdio (JSON-RPC over stdin/stdout)
 
 ## Split Config Structure
 
@@ -192,7 +213,7 @@ meta.json                               # Root: version + pattern summaries
     {playlistId}.json                   # SmartPlaylistDefinition
 ```
 
-`ConfigRepository` lazy-loads each level independently with TTL caching.
+`LocalConfigRepository` reads/writes each level as local files with atomic writes.
 `ConfigAssembler` combines pattern meta + playlist files into a unified `SmartPlaylistPatternConfig`.
 
 ## Key Design Decisions
@@ -200,6 +221,7 @@ meta.json                               # Root: version + pattern summaries
 - **Hand-written JSON serialization**: No code generation; `fromJson()`/`toJson()` on every model
 - **`final class` for models**: Immutable value objects throughout
 - **`abstract interface class` for abstractions**: `EpisodeData`, `SmartPlaylistResolver`
-- **Dependency injection via function types**: `HttpGetFn`, `GitHubHttpFn` for testability
-- **TTL-based caching**: ConfigRepository caches at each level; FeedCacheService caches feeds
+- **Local-first**: Server and MCP read/write local files, no remote API calls for config operations
+- **Atomic file writes**: Write to `.tmp` then rename to prevent partial reads
+- **SSE for reactivity**: FileWatcherService streams changes to connected browsers
 - **Schema validation at boundaries**: Validate JSON before parsing into `SmartPlaylistDefinition`
