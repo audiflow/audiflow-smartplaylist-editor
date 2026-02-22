@@ -22,11 +22,10 @@ describe('ApiClient', () => {
     client = new ApiClient('http://localhost:8080');
   });
 
-  it('sends GET with auth header', async () => {
+  it('sends GET and parses JSON response', async () => {
     const fetchMock = mockFetch([{ status: 200, body: { ok: true } }]);
     globalThis.fetch = fetchMock;
 
-    client.setToken('test-token');
     const result = await client.get<{ ok: boolean }>('/api/health');
 
     expect(result).toEqual({ ok: true });
@@ -34,14 +33,14 @@ describe('ApiClient', () => {
     const url = call[0];
     const opts = call[1]!;
     expect(url).toBe('http://localhost:8080/api/health');
-    expect((opts.headers as Record<string, string>)['Authorization']).toBe('Bearer test-token');
+    expect(opts.method).toBe('GET');
+    expect((opts.headers as Record<string, string>)['Content-Type']).toBe('application/json');
   });
 
   it('sends POST with JSON body', async () => {
     const fetchMock = mockFetch([{ status: 200, body: { created: true } }]);
     globalThis.fetch = fetchMock;
 
-    client.setToken('t');
     const result = await client.post<{ created: boolean }>('/api/data', { name: 'test' });
 
     expect(result).toEqual({ created: true });
@@ -51,66 +50,46 @@ describe('ApiClient', () => {
     expect(JSON.parse(opts.body as string)).toEqual({ name: 'test' });
   });
 
-  it('retries on 401 after successful refresh', async () => {
-    const fetchMock = mockFetch([
-      { status: 401 },
-      { status: 200, body: { accessToken: 'new-t', refreshToken: 'new-rt' } },
-      { status: 200, body: { data: 'success' } },
-    ]);
+  it('sends PUT with JSON body', async () => {
+    const fetchMock = mockFetch([{ status: 200, body: { updated: true } }]);
     globalThis.fetch = fetchMock;
 
-    client.setToken('old-t');
-    client.setRefreshToken('old-rt');
-    const result = await client.get<{ data: string }>('/api/test');
+    const result = await client.put<{ updated: boolean }>('/api/data/1', { name: 'updated' });
 
-    expect(result).toEqual({ data: 'success' });
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(result).toEqual({ updated: true });
+    const call = fetchMock.mock.calls[0]!;
+    const opts = call[1]!;
+    expect(opts.method).toBe('PUT');
+    expect(JSON.parse(opts.body as string)).toEqual({ name: 'updated' });
   });
 
-  it('calls onUnauthorized when refresh fails', async () => {
-    const fetchMock = mockFetch([
-      { status: 401 },
-      { status: 401 },
-    ]);
+  it('sends DELETE request', async () => {
+    const fetchMock = mockFetch([{ status: 200, body: { deleted: true } }]);
     globalThis.fetch = fetchMock;
 
-    const onUnauthorized = vi.fn();
-    client.onUnauthorized = onUnauthorized;
-    client.setToken('t');
-    client.setRefreshToken('rt');
+    const result = await client.delete<{ deleted: boolean }>('/api/data/1');
 
-    await expect(client.get('/api/test')).rejects.toThrow();
-    expect(onUnauthorized).toHaveBeenCalled();
+    expect(result).toEqual({ deleted: true });
+    const call = fetchMock.mock.calls[0]!;
+    const opts = call[1]!;
+    expect(opts.method).toBe('DELETE');
   });
 
-  it('deduplicates concurrent refresh attempts', async () => {
-    let refreshCallCount = 0;
-    const impl: typeof globalThis.fetch = async (input) => {
-      const url = String(input);
-      if (url.includes('/api/auth/refresh')) {
-        refreshCallCount++;
-        return {
-          status: 200,
-          ok: true,
-          json: async () => ({ accessToken: 'new-t', refreshToken: 'new-rt' }),
-        } as Response;
-      }
-      if (refreshCallCount === 0) {
-        return { status: 401, ok: false, json: async () => ({}) } as Response;
-      }
-      return { status: 200, ok: true, json: async () => ({ ok: true }) } as Response;
-    };
-    const fetchMock = vi.fn(impl);
+  it('throws on non-ok response', async () => {
+    const fetchMock = mockFetch([{ status: 500, body: 'Internal Server Error' }]);
     globalThis.fetch = fetchMock;
 
-    client.setToken('t');
-    client.setRefreshToken('rt');
+    await expect(client.get('/api/fail')).rejects.toThrow();
+  });
 
-    await Promise.all([
-      client.get('/api/a'),
-      client.get('/api/b'),
-    ]);
+  it('sends POST without body when body is undefined', async () => {
+    const fetchMock = mockFetch([{ status: 200, body: { ok: true } }]);
+    globalThis.fetch = fetchMock;
 
-    expect(refreshCallCount).toBe(1);
+    await client.post('/api/action');
+
+    const call = fetchMock.mock.calls[0]!;
+    const opts = call[1]!;
+    expect(opts.body).toBeUndefined();
   });
 });
