@@ -3,6 +3,7 @@ export const DEFAULT_PLAYLIST = {
   displayName: '',
   resolverType: '',
   priority: 0,
+  yearHeaderMode: null,
   episodeYearHeaders: false,
   showDateRange: false,
 } as const;

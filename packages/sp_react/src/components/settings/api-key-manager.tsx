@@ -27,7 +27,6 @@ import { Copy, Key, Loader2, Plus, Trash2 } from 'lucide-react';
 
 export function ApiKeyManager() {
   const { t } = useTranslation('settings');
-  const { t: tCommon } = useTranslation('common');
   const { data: keysData, isLoading } = useApiKeys();
   const generateKey = useGenerateKey();
   const revokeKey = useRevokeKey();

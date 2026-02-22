@@ -1,0 +1,43 @@
+name: CI / React
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/sp_react/**"
+      - ".github/workflows/ci-react.yml"
+  pull_request:
+    paths:
+      - "packages/sp_react/**"
+      - ".github/workflows/ci-react.yml"
+
+jobs:
+  react:
+    name: Lint + Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/sp_react
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: packages/sp_react/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: packages/sp_react/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: npx tsc -b --noEmit
+
+      - name: Lint
+        run: npx oxlint
+
+      - name: Test
+        run: pnpm test -- --run

@@ -37,7 +37,6 @@ const EMPTY_TITLES: readonly string[] = [];
 
 export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const { watch } = useFormContext<PatternConfig>();
-  const { t } = useTranslation('editor');
   const prefix = `playlists.${index}` as const;
 
   const titleFilter = watch(`${prefix}.titleFilter`) ?? '';
