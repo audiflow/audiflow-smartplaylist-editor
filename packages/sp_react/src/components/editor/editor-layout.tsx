@@ -40,6 +40,7 @@ import {
   Loader2,
   Play,
   Plus,
+  Settings,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -357,6 +358,7 @@ function EditorHeader({
   onSubmit,
 }: EditorHeaderProps) {
   const { t } = useTranslation('editor');
+  const navigate = useNavigate();
 
   const handleViewFeed = useCallback(() => {
     if (!feedUrl) return;
@@ -382,6 +384,13 @@ function EditorHeader({
         </div>
       </div>
       <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => void navigate({ to: '/settings' })}
+        >
+          <Settings className="h-4 w-4" />
+        </Button>
         <Button
           variant="outline"
           onClick={() => window.open('/docs/schema.html', '_blank')}

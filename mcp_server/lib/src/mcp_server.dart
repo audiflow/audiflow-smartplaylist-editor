@@ -55,7 +55,7 @@ final class SpMcpServer {
     },
   ];
 
-  /// Starts the server loop, reading JSON-RPC messages
+  /// Starts the stdio loop, reading JSON-RPC messages
   /// from stdin and writing responses to stdout.
   Future<void> run() async {
     final lines = stdin.transform(utf8.decoder).transform(const LineSplitter());
@@ -79,6 +79,8 @@ final class SpMcpServer {
       _handleMessage(raw);
 
   /// Parses and dispatches a single JSON-RPC message.
+  ///
+  /// Returns null for notifications (no response needed).
   Future<Map<String, dynamic>?> _handleMessage(String raw) async {
     final Object? parsed;
     try {

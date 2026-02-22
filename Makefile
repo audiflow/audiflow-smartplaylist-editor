@@ -1,4 +1,4 @@
-.PHONY: deps build-runner server dev test test-shared test-server test-react test-mcp \
+.PHONY: deps build-runner server dev mcp test test-shared test-server test-react test-mcp \
 	analyze lint format clean help update-schema \
 	docker-build-dev docker-push-dev docker-build-prod docker-push-prod deploy-dev deploy-prod \
 	tf-init tf-plan-dev tf-apply-dev tf-plan-prod tf-apply-prod
@@ -53,6 +53,9 @@ dev: ## Start server and React web app together (Ctrl+C stops both)
 	(cd $(SP_SERVER) && $(LOCAL_ENV) dart run bin/server.dart) & \
 	echo "sp_server started on port $(SERVER_PORT)"; \
 	cd $(SP_REACT) && pnpm dev
+
+mcp: ## Start the MCP server (requires sp_server running)
+	SP_API_URL="http://localhost:$(SERVER_PORT)" dart run $(MCP_SERVER)/bin/mcp_server.dart
 
 # -- Testing -----------------------------------------------------------------
 
