@@ -82,7 +82,7 @@ analyze: ## Run static analysis on all packages
 
 lint: ## Run linters (ESLint for React, dart analyze for Dart)
 	dart analyze
-	cd $(SP_REACT) && npx eslint .
+	cd $(SP_REACT) && npx oxlint
 
 format: ## Format all Dart files
 	dart format .

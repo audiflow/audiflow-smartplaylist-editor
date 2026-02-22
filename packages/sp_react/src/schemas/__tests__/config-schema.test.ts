@@ -155,7 +155,7 @@ describe('smartPlaylistSortSpecSchema', () => {
       field: 'playlistNumber',
       order: 'ascending',
     };
-    const result = smartPlaylistSortSpecSchema.parse(input);
+    const result = smartPlaylistSortSpecSchema.parse(input)!;
     expect(result.type).toBe('simple');
     if (result.type === 'simple') {
       expect(result.field).toBe('playlistNumber');
@@ -181,7 +181,7 @@ describe('smartPlaylistSortSpecSchema', () => {
         },
       ],
     };
-    const result = smartPlaylistSortSpecSchema.parse(input);
+    const result = smartPlaylistSortSpecSchema.parse(input)!;
     expect(result.type).toBe('composite');
     if (result.type === 'composite') {
       expect(result.rules).toHaveLength(2);

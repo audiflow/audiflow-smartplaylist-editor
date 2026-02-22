@@ -28,7 +28,6 @@ export function GroupsForm({ index }: GroupsFormProps) {
   const prefix = `playlists.${index}` as const;
 
   const resolverType = watch(`${prefix}.resolverType`);
-  const contentType = watch(`${prefix}.contentType`);
 
   const { fields, append, remove } = useFieldArray({
     control,
