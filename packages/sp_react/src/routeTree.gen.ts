@@ -9,8 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as FeedsRouteImport } from './routes/feeds'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as BrowseRouteImport } from './routes/browse'
@@ -18,16 +16,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as EditorIndexRouteImport } from './routes/editor.index'
 import { Route as EditorIdRouteImport } from './routes/editor.$id'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const FeedsRoute = FeedsRouteImport.update({
   id: '/feeds',
   path: '/feeds',
@@ -64,8 +52,6 @@ export interface FileRoutesByFullPath {
   '/browse': typeof BrowseRoute
   '/editor': typeof EditorRouteWithChildren
   '/feeds': typeof FeedsRoute
-  '/login': typeof LoginRoute
-  '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
   '/editor/': typeof EditorIndexRoute
 }
@@ -73,8 +59,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/feeds': typeof FeedsRoute
-  '/login': typeof LoginRoute
-  '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
   '/editor': typeof EditorIndexRoute
 }
@@ -84,39 +68,20 @@ export interface FileRoutesById {
   '/browse': typeof BrowseRoute
   '/editor': typeof EditorRouteWithChildren
   '/feeds': typeof FeedsRoute
-  '/login': typeof LoginRoute
-  '/settings': typeof SettingsRoute
   '/editor/$id': typeof EditorIdRoute
   '/editor/': typeof EditorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/browse'
-    | '/editor'
-    | '/feeds'
-    | '/login'
-    | '/settings'
-    | '/editor/$id'
-    | '/editor/'
+  fullPaths: '/' | '/browse' | '/editor' | '/feeds' | '/editor/$id' | '/editor/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/browse'
-    | '/feeds'
-    | '/login'
-    | '/settings'
-    | '/editor/$id'
-    | '/editor'
+  to: '/' | '/browse' | '/feeds' | '/editor/$id' | '/editor'
   id:
     | '__root__'
     | '/'
     | '/browse'
     | '/editor'
     | '/feeds'
-    | '/login'
-    | '/settings'
     | '/editor/$id'
     | '/editor/'
   fileRoutesById: FileRoutesById
@@ -126,26 +91,10 @@ export interface RootRouteChildren {
   BrowseRoute: typeof BrowseRoute
   EditorRoute: typeof EditorRouteWithChildren
   FeedsRoute: typeof FeedsRoute
-  LoginRoute: typeof LoginRoute
-  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/feeds': {
       id: '/feeds'
       path: '/feeds'
@@ -209,8 +158,6 @@ const rootRouteChildren: RootRouteChildren = {
   BrowseRoute: BrowseRoute,
   EditorRoute: EditorRouteWithChildren,
   FeedsRoute: FeedsRoute,
-  LoginRoute: LoginRoute,
-  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

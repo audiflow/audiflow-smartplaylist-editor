@@ -1,11 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useApiClient } from './client-context.ts';
 import type {
   PatternSummary,
   FeedEpisode,
   PreviewResult,
-  ApiKey,
-  SubmitResponse,
 } from '../schemas/api-schema.ts';
 import type { PatternConfig } from '../schemas/config-schema.ts';
 
@@ -49,49 +47,5 @@ export function usePreviewMutation() {
   return useMutation({
     mutationFn: (params: { config: unknown; feedUrl: string }) =>
       client.post<PreviewResult>('/api/configs/preview', params),
-  });
-}
-
-export function useSubmitPr() {
-  const client = useApiClient();
-  return useMutation({
-    mutationFn: (params: {
-      patternId: string;
-      playlists: unknown[];
-      patternMeta?: unknown;
-      isNewPattern?: boolean;
-      branch?: string;
-    }) => client.post<SubmitResponse>('/api/configs/submit', params),
-  });
-}
-
-export function useApiKeys() {
-  const client = useApiClient();
-  return useQuery({
-    queryKey: ['apiKeys'],
-    queryFn: () => client.get<{ keys: ApiKey[] }>('/api/keys'),
-  });
-}
-
-export function useGenerateKey() {
-  const client = useApiClient();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (params: { name: string }) =>
-      client.post<{ key: string; metadata: ApiKey }>('/api/keys', params),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
-    },
-  });
-}
-
-export function useRevokeKey() {
-  const client = useApiClient();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => client.delete<void>(`/api/keys/${id}`),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
-    },
   });
 }

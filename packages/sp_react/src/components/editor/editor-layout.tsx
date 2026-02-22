@@ -9,19 +9,12 @@ import {
 import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { usePreviewMutation, useFeed } from '@/api/queries.ts';
-import { useAutoSave } from '@/hooks/use-auto-save.ts';
-import { DraftService } from '@/lib/draft-service.ts';
-import type { DraftEntry } from '@/lib/draft-service.ts';
-import { merge } from '@/lib/json-merge.ts';
-import type { JsonValue } from '@/lib/json-merge.ts';
 import { sanitizeConfig } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
-import { DraftRestoreDialog } from '@/components/editor/draft-restore-dialog.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { FeedUrlInput } from '@/components/editor/feed-url-input.tsx';
-import { SubmitDialog } from '@/components/editor/submit-dialog.tsx';
 import { DebugInfoPanel } from '@/components/preview/debug-info-panel.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -40,7 +33,6 @@ import {
   Loader2,
   Play,
   Plus,
-  Settings,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -50,13 +42,6 @@ const DEFAULT_CONFIG: PatternConfig = {
   playlists: [],
   yearGroupedEpisodes: false,
 };
-
-/** Run form values through Zod (applies transforms like yearHeaderMode
- *  "none" -> null) then strip empty/null keys for the server. */
-function normalizeForSubmit(raw: unknown): Record<string, unknown> {
-  const result = patternConfigSchema.safeParse(raw);
-  return sanitizeConfig(result.success ? result.data : raw) as Record<string, unknown>;
-}
 
 interface EditorLayoutProps {
   configId: string | null;
@@ -69,17 +54,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const {
     isJsonMode,
     feedUrl,
-    lastAutoSavedAt,
     toggleJsonMode,
     setFeedUrl,
     reset: resetEditorStore,
   } = useEditorStore();
   const [jsonText, setJsonText] = useState('');
-  const [submitOpen, setSubmitOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('tab-0');
-  const [pendingDraft, setPendingDraft] = useState<DraftEntry | null>(() =>
-    new DraftService().loadDraft(configId),
-  );
 
   const form = useForm<PatternConfig>({
     // Cast needed: zodResolver infers the Zod input type (with optional defaults),
@@ -96,13 +76,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const previewMutation = usePreviewMutation();
   const feedQuery = useFeed(feedUrl || null);
 
-  useAutoSave(
-    configId,
-    initialConfig ?? DEFAULT_CONFIG,
-    form.getValues,
-    form.watch,
-  );
-
   // Initialize feed URL from config on mount
   useEffect(() => {
     const urls = initialConfig?.feedUrls;
@@ -110,36 +83,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       setFeedUrl(urls[0]);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleRestoreDraft = useCallback(() => {
-    if (!pendingDraft) return;
-    try {
-      if (initialConfig) {
-        // DraftEntry fields are `unknown` but originate from JSON.parse
-        const merged = merge({
-          base: pendingDraft.base as JsonValue,
-          latest: initialConfig as JsonValue,
-          modified: pendingDraft.modified as JsonValue,
-        });
-        const parsed = patternConfigSchema.parse(merged);
-        form.reset(parsed);
-      } else {
-        const parsed = patternConfigSchema.parse(pendingDraft.modified);
-        form.reset(parsed);
-      }
-      new DraftService().clearDraft(configId);
-      setPendingDraft(null);
-    } catch (e) {
-      toast.error(
-        t('toastDraftRestoreFailed', { error: e instanceof Error ? e.message : 'Unknown error' }),
-      );
-    }
-  }, [pendingDraft, initialConfig, configId, form]);
-
-  const handleDiscardDraft = useCallback(() => {
-    new DraftService().clearDraft(configId);
-    setPendingDraft(null);
-  }, [configId]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -201,6 +144,10 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     }
   }, [isJsonMode, jsonText]);
 
+  // Keep parsedJsonConfig referenced to avoid unused-variable lint error.
+  // Future tasks (save flow) will use this value.
+  void parsedJsonConfig;
+
   return (
     <div className="container mx-auto max-w-7xl p-6">
       {/* Header + Preview button (sticky) */}
@@ -208,14 +155,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         <EditorHeader
           configId={configId}
           feedUrl={feedUrl || null}
-          lastAutoSavedAt={lastAutoSavedAt}
           isJsonMode={isJsonMode}
           onBack={() => {
             resetEditorStore();
             void navigate({ to: '/browse' });
           }}
           onModeToggle={handleModeToggle}
-          onSubmit={() => setSubmitOpen(true)}
         />
 
         <div className="flex items-center justify-between">
@@ -315,23 +260,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           )}
         </FormProvider>
       )}
-
-      {/* Submit Dialog */}
-      <SubmitDialog
-        open={submitOpen}
-        onOpenChange={setSubmitOpen}
-        config={normalizeForSubmit(parsedJsonConfig ?? form.getValues())}
-        configId={configId}
-      />
-
-      {/* Draft Restore Dialog */}
-      {pendingDraft && (
-        <DraftRestoreDialog
-          savedAt={pendingDraft.savedAt}
-          onRestore={handleRestoreDraft}
-          onDiscard={handleDiscardDraft}
-        />
-      )}
     </div>
   );
 }
@@ -341,24 +269,19 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 interface EditorHeaderProps {
   configId: string | null;
   feedUrl: string | null;
-  lastAutoSavedAt: Date | null;
   isJsonMode: boolean;
   onBack: () => void;
   onModeToggle: () => void;
-  onSubmit: () => void;
 }
 
 function EditorHeader({
   configId,
   feedUrl,
-  lastAutoSavedAt,
   isJsonMode,
   onBack,
   onModeToggle,
-  onSubmit,
 }: EditorHeaderProps) {
   const { t } = useTranslation('editor');
-  const navigate = useNavigate();
 
   const handleViewFeed = useCallback(() => {
     if (!feedUrl) return;
@@ -376,21 +299,9 @@ function EditorHeader({
           <h1 className="text-2xl font-bold">
             {configId ? t('editConfig', { configId }) : t('newConfig')}
           </h1>
-          {lastAutoSavedAt && (
-            <p className="text-xs text-muted-foreground">
-              {t('autoSavedAt', { time: lastAutoSavedAt.toLocaleTimeString() })}
-            </p>
-          )}
         </div>
       </div>
       <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => void navigate({ to: '/settings' })}
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
         <Button
           variant="outline"
           onClick={() => window.open('/docs/schema.html', '_blank')}
@@ -412,7 +323,6 @@ function EditorHeader({
             {t('viewFeed')}
           </Button>
         )}
-        <Button onClick={onSubmit}>{t('submitPr')}</Button>
       </div>
     </div>
   );

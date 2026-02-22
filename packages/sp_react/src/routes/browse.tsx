@@ -1,6 +1,5 @@
-import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '@/stores/auth-store.ts';
 import { usePatterns } from '@/api/queries.ts';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -10,14 +9,9 @@ import {
   CardDescription,
 } from '@/components/ui/card.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
-import { Settings, Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 
 export const Route = createFileRoute('/browse')({
-  beforeLoad: () => {
-    if (!useAuthStore.getState().isAuthenticated) {
-      throw redirect({ to: '/login' });
-    }
-  },
   component: BrowseScreen,
 });
 
@@ -50,13 +44,6 @@ function BrowseHeader({
     <div className="flex items-center justify-between mb-6">
       <h1 className="text-2xl font-bold">{t('appTitle')}</h1>
       <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => void navigate({ to: '/settings' })}
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
         <Button onClick={() => void navigate({ to: '/editor' })}>
           <Plus className="mr-2 h-4 w-4" />
           {t('createNew')}
