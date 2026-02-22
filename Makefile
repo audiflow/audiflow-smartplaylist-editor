@@ -1,5 +1,5 @@
 .PHONY: deps build-runner server dev test test-shared test-server test-react test-mcp \
-	analyze lint format clean help \
+	analyze lint format clean help update-schema \
 	docker-build-dev docker-push-dev docker-build-prod docker-push-prod deploy-dev deploy-prod \
 	tf-init tf-plan-dev tf-apply-dev tf-plan-prod tf-apply-prod
 
@@ -142,6 +142,12 @@ tf-apply-prod: ## Apply Terraform for prod
 deploy-dev: docker-build-dev docker-push-dev tf-apply-dev ## Build, push, and deploy to dev
 
 deploy-prod: docker-build-prod docker-push-prod tf-apply-prod ## Build, push, and deploy to prod
+
+# -- Schema ------------------------------------------------------------------
+
+update-schema: ## Fetch latest schema.json from upstream schema repo
+	curl -sL https://raw.githubusercontent.com/reedom/audiflow-smartplaylist-schema/main/schema.json \
+		-o $(SP_SHARED)/assets/schema.json
 
 # -- Cleanup -----------------------------------------------------------------
 

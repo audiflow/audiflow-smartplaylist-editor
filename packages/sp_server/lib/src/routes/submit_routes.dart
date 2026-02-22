@@ -16,6 +16,7 @@ Router submitRouter({
   required GitHubAppService gitHubAppService,
   required JwtService jwtService,
   required ApiKeyService apiKeyService,
+  required SmartPlaylistValidator validator,
 }) {
   final router = Router();
 
@@ -27,7 +28,7 @@ Router submitRouter({
   // POST /api/configs/submit
   final submitHandler = const Pipeline()
       .addMiddleware(auth)
-      .addHandler((Request r) => _handleSubmit(r, gitHubAppService));
+      .addHandler((Request r) => _handleSubmit(r, gitHubAppService, validator));
   router.post('/api/configs/submit', submitHandler);
 
   return router;
@@ -36,6 +37,7 @@ Router submitRouter({
 Future<Response> _handleSubmit(
   Request request,
   GitHubAppService gitHubAppService,
+  SmartPlaylistValidator validator,
 ) async {
   // Parse body.
   final body = await request.readAsString();
@@ -78,12 +80,12 @@ Future<Response> _handleSubmit(
 
   // Validate all playlists against schema.
   final wrappedConfig = jsonEncode({
-    'version': SmartPlaylistSchema.currentVersion,
+    'version': SmartPlaylistSchemaConstants.currentVersion,
     'patterns': [
       {'id': patternId, 'playlists': playlistJsonList},
     ],
   });
-  final errors = SmartPlaylistSchema.validate(wrappedConfig);
+  final errors = validator.validateString(wrappedConfig);
   if (errors.isNotEmpty) {
     return Response(
       400,
@@ -109,7 +111,7 @@ Future<Response> _handleSubmit(
   // Build canonical PatternMeta from known data + client fields.
   final patternMetaJson = parsed['patternMeta'] as Map<String, dynamic>? ?? {};
   final patternMeta = PatternMeta(
-    version: SmartPlaylistSchema.currentVersion,
+    version: SmartPlaylistSchemaConstants.currentVersion,
     id: patternId,
     feedUrls:
         (patternMetaJson['feedUrls'] as List<dynamic>?)?.cast<String>() ?? [],

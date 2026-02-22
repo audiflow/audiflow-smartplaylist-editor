@@ -19,6 +19,7 @@ Router configRouter({
   required FeedCacheService feedCacheService,
   required JwtService jwtService,
   required ApiKeyService apiKeyService,
+  required SmartPlaylistValidator validator,
 }) {
   final router = Router();
 
@@ -70,7 +71,7 @@ Router configRouter({
   // POST /api/configs/validate
   final validateHandler = const Pipeline()
       .addMiddleware(auth)
-      .addHandler((Request r) => _handleValidate(r));
+      .addHandler((Request r) => _handleValidate(r, validator));
   router.post('/api/configs/validate', validateHandler);
 
   // POST /api/configs/preview
@@ -220,7 +221,10 @@ Future<Response> _handleGet(
   }
 }
 
-Future<Response> _handleValidate(Request request) async {
+Future<Response> _handleValidate(
+  Request request,
+  SmartPlaylistValidator validator,
+) async {
   final body = await request.readAsString();
   if (body.isEmpty) {
     return Response(
@@ -230,7 +234,7 @@ Future<Response> _handleValidate(Request request) async {
     );
   }
 
-  final errors = SmartPlaylistSchema.validate(body);
+  final errors = validator.validateString(body);
   return Response.ok(
     jsonEncode({'valid': errors.isEmpty, 'errors': errors}),
     headers: _jsonHeaders,

@@ -193,6 +193,34 @@ describe('smartPlaylistSortSpecSchema', () => {
     }
   });
 
+  it('parses composite sort with greaterThan condition', () => {
+    const input = {
+      type: 'composite',
+      rules: [
+        {
+          field: 'playlistNumber',
+          order: 'ascending',
+          condition: {
+            type: 'greaterThan',
+            value: 5,
+          },
+        },
+        {
+          field: 'newestEpisodeDate',
+          order: 'descending',
+        },
+      ],
+    };
+    const result = smartPlaylistSortSpecSchema.parse(input)!;
+    expect(result.type).toBe('composite');
+    if (result.type === 'composite') {
+      expect(result.rules[0].condition).toEqual({
+        type: 'greaterThan',
+        value: 5,
+      });
+    }
+  });
+
   it('rejects unknown sort type', () => {
     expect(() =>
       smartPlaylistSortSpecSchema.parse({

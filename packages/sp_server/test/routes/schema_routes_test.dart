@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:shelf/shelf.dart';
+import 'package:sp_shared/sp_shared.dart';
 import 'package:test/test.dart';
 
 import 'package:sp_server/src/routes/schema_routes.dart';
@@ -10,7 +11,8 @@ void main() {
     late Handler handler;
 
     setUp(() {
-      handler = schemaRouter().call;
+      final validator = SmartPlaylistValidator();
+      handler = schemaRouter(validator: validator).call;
     });
 
     test('returns 200', () async {
