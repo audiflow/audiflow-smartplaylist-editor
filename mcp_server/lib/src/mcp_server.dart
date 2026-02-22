@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'http_client.dart';
+import 'package:http/http.dart' as http;
+import 'package:sp_server/src/services/local_config_repository.dart';
+import 'package:sp_shared/sp_shared.dart';
+
 import 'tools/fetch_feed_tool.dart';
 import 'tools/get_config_tool.dart';
 import 'tools/get_schema_tool.dart';
@@ -22,11 +25,34 @@ abstract final class JsonRpcError {
 
 /// MCP server that exposes SmartPlaylist operations as tools.
 ///
+/// Reads and writes configs from a local data repo directory.
 /// Communicates via JSON-RPC 2.0 over stdin/stdout.
 final class SpMcpServer {
-  SpMcpServer({required this.httpClient});
+  SpMcpServer({
+    required String dataDir,
+    LocalConfigRepository? configRepo,
+    DiskFeedCacheService? feedService,
+    SmartPlaylistValidator? validator,
+  }) : _dataDir = dataDir,
+       _configRepo = configRepo ??
+           LocalConfigRepository(dataDir: dataDir),
+       _feedService = feedService ??
+           DiskFeedCacheService(
+             cacheDir: '$dataDir/.cache/feeds',
+             httpGet: _defaultHttpGet,
+           ),
+       _validator = validator ?? SmartPlaylistValidator();
 
-  final McpHttpClient httpClient;
+  final String _dataDir;
+  final LocalConfigRepository _configRepo;
+  final DiskFeedCacheService _feedService;
+  final SmartPlaylistValidator _validator;
+
+  /// Default HTTP GET function for DiskFeedCacheService.
+  static Future<String> _defaultHttpGet(Uri url) async {
+    final response = await http.get(url);
+    return response.body;
+  }
 
   /// All available tool definitions.
   static const _tools = <ToolDefinition>[
@@ -120,8 +146,12 @@ final class SpMcpServer {
       );
     } on ArgumentError catch (e) {
       return _errorResponse(id, JsonRpcError.invalidParams, e.message);
-    } on HttpException catch (e) {
-      return _errorResponse(id, JsonRpcError.internalError, 'HTTP error: $e');
+    } on FileSystemException catch (e) {
+      return _errorResponse(
+        id,
+        JsonRpcError.internalError,
+        'File error: $e',
+      );
     } on Exception catch (e) {
       return _errorResponse(
         id,
@@ -183,16 +213,6 @@ final class SpMcpServer {
       };
     } on ArgumentError {
       rethrow;
-    } on HttpException catch (e) {
-      return {
-        'content': [
-          {
-            'type': 'text',
-            'text': jsonEncode({'error': e.toString()}),
-          },
-        ],
-        'isError': true,
-      };
     } on Exception catch (e) {
       return {
         'content': [
@@ -212,13 +232,17 @@ final class SpMcpServer {
     Map<String, dynamic> arguments,
   ) async {
     return switch (name) {
-      'search_configs' => executeSearchConfigs(httpClient, arguments),
-      'get_config' => executeGetConfig(httpClient, arguments),
-      'get_schema' => executeGetSchema(httpClient, arguments),
-      'fetch_feed' => executeFetchFeed(httpClient, arguments),
-      'validate_config' => executeValidateConfig(httpClient, arguments),
-      'preview_config' => executePreviewConfig(httpClient, arguments),
-      'submit_config' => executeSubmitConfig(httpClient, arguments),
+      'search_configs' => executeSearchConfigs(_configRepo, arguments),
+      'get_config' => executeGetConfig(_configRepo, arguments),
+      'get_schema' => executeGetSchema(_dataDir, arguments),
+      'fetch_feed' => executeFetchFeed(_feedService, arguments),
+      'validate_config' => executeValidateConfig(_validator, arguments),
+      'preview_config' => executePreviewConfig(_feedService, arguments),
+      'submit_config' => executeSubmitConfig(
+        _configRepo,
+        _validator,
+        arguments,
+      ),
       _ => throw ArgumentError('Unknown tool: $name'),
     };
   }
@@ -245,7 +269,8 @@ final class SpMcpServer {
   }
 
   Future<Map<String, dynamic>> _readSchemaResource() async {
-    final raw = await httpClient.getRaw('/api/schema');
+    final file = File('$_dataDir/schema/schema.json');
+    final raw = await file.readAsString();
     return {
       'contents': [
         {
@@ -258,7 +283,10 @@ final class SpMcpServer {
   }
 
   Future<Map<String, dynamic>> _readConfigsResource() async {
-    final result = await httpClient.get('/api/configs');
+    final patterns = await _configRepo.listPatterns();
+    final result = {
+      'configs': patterns.map((p) => p.toJson()).toList(),
+    };
     return {
       'contents': [
         {

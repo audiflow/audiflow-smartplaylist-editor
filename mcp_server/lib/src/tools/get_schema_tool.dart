@@ -1,11 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
-import '../http_client.dart';
 import 'tool_definition.dart';
 
 /// Gets the JSON Schema for SmartPlaylist configs.
 ///
-/// Calls `GET /api/schema` on the sp_server.
+/// Reads the schema from the local data repo's schema directory.
 const getSchemaTool = ToolDefinition(
   name: 'get_schema',
   description: 'Get the JSON Schema for SmartPlaylist configs',
@@ -14,13 +14,13 @@ const getSchemaTool = ToolDefinition(
 
 /// Executes the get_schema tool.
 ///
-/// The schema endpoint returns raw JSON, so we use [McpHttpClient.getRaw]
-/// and decode the response ourselves.
+/// Reads schema.json from disk at `$dataDir/schema/schema.json`.
 Future<Map<String, dynamic>> executeGetSchema(
-  McpHttpClient client,
+  String dataDir,
   Map<String, dynamic> arguments,
 ) async {
-  final raw = await client.getRaw('/api/schema');
+  final file = File('$dataDir/schema/schema.json');
+  final raw = await file.readAsString();
   final decoded = jsonDecode(raw);
   if (decoded is Map<String, dynamic>) return decoded;
   return {'schema': decoded};
