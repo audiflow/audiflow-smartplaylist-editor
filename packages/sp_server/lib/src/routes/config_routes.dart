@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
@@ -22,16 +23,46 @@ Router configRouter({
     (Request r) => _handleAssembled(r, configRepository),
   );
 
+  // PUT /api/configs/patterns/<id>/playlists/<pid>
+  router.put(
+    '/api/configs/patterns/<id>/playlists/<pid>',
+    (Request r) => _handleSavePlaylist(r, configRepository, validator),
+  );
+
+  // DELETE /api/configs/patterns/<id>/playlists/<pid>
+  router.delete(
+    '/api/configs/patterns/<id>/playlists/<pid>',
+    (Request r) => _handleDeletePlaylist(r, configRepository),
+  );
+
   // GET /api/configs/patterns/<id>/playlists/<pid>
   router.get(
     '/api/configs/patterns/<id>/playlists/<pid>',
     (Request r) => _handlePlaylist(r, configRepository),
   );
 
+  // PUT /api/configs/patterns/<id>/meta
+  router.put(
+    '/api/configs/patterns/<id>/meta',
+    (Request r) => _handleSavePatternMeta(r, configRepository),
+  );
+
+  // DELETE /api/configs/patterns/<id>
+  router.delete(
+    '/api/configs/patterns/<id>',
+    (Request r) => _handleDeletePattern(r, configRepository),
+  );
+
   // GET /api/configs/patterns/<id>
   router.get(
     '/api/configs/patterns/<id>',
     (Request r) => _handlePatternMeta(r, configRepository),
+  );
+
+  // POST /api/configs/patterns (create new pattern)
+  router.post(
+    '/api/configs/patterns',
+    (Request r) => _handleCreatePattern(r, configRepository),
   );
 
   // GET /api/configs/patterns
@@ -140,6 +171,202 @@ Future<Response> _handleAssembled(
     return Response(
       502,
       body: jsonEncode({'error': 'Failed to assemble config: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// PUT /api/configs/patterns/<id>/playlists/<pid> -- saves playlist to disk.
+Future<Response> _handleSavePlaylist(
+  Request request,
+  LocalConfigRepository configRepository,
+  SmartPlaylistValidator validator,
+) async {
+  final id = request.params['id'];
+  final pid = request.params['pid'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+  if (pid == null || pid.isEmpty) return _error(400, 'Missing playlist ID');
+
+  final bodyStr = await request.readAsString();
+  if (bodyStr.isEmpty) return _error(400, 'Request body is empty');
+
+  final Object? parsed;
+  try {
+    parsed = jsonDecode(bodyStr);
+  } on FormatException {
+    return _error(400, 'Invalid JSON');
+  }
+
+  if (parsed is! Map<String, dynamic>) {
+    return _error(400, 'Request body must be a JSON object');
+  }
+
+  // Validate the playlist by wrapping in a full config envelope
+  final envelope = {
+    'version': 1,
+    'patterns': [
+      {
+        'id': id,
+        'playlists': [parsed],
+      },
+    ],
+  };
+  final errors = validator.validate(envelope);
+  if (errors.isNotEmpty) {
+    return Response(
+      400,
+      body: jsonEncode({
+        'error': 'Validation failed',
+        'errors': errors,
+      }),
+      headers: _jsonHeaders,
+    );
+  }
+
+  try {
+    await configRepository.savePlaylist(id, pid, parsed);
+    return Response.ok(
+      jsonEncode({'ok': true}),
+      headers: _jsonHeaders,
+    );
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to save playlist: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// PUT /api/configs/patterns/<id>/meta -- saves pattern meta to disk.
+Future<Response> _handleSavePatternMeta(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+
+  final bodyStr = await request.readAsString();
+  if (bodyStr.isEmpty) return _error(400, 'Request body is empty');
+
+  final Object? parsed;
+  try {
+    parsed = jsonDecode(bodyStr);
+  } on FormatException {
+    return _error(400, 'Invalid JSON');
+  }
+
+  if (parsed is! Map<String, dynamic>) {
+    return _error(400, 'Request body must be a JSON object');
+  }
+
+  try {
+    await configRepository.savePatternMeta(id, parsed);
+    return Response.ok(
+      jsonEncode({'ok': true}),
+      headers: _jsonHeaders,
+    );
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to save pattern meta: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// POST /api/configs/patterns -- creates a new pattern directory with meta.
+Future<Response> _handleCreatePattern(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final bodyStr = await request.readAsString();
+  if (bodyStr.isEmpty) return _error(400, 'Request body is empty');
+
+  final Object? parsed;
+  try {
+    parsed = jsonDecode(bodyStr);
+  } on FormatException {
+    return _error(400, 'Invalid JSON');
+  }
+
+  if (parsed is! Map<String, dynamic>) {
+    return _error(400, 'Request body must be a JSON object');
+  }
+
+  final id = parsed['id'];
+  final meta = parsed['meta'];
+
+  if (id is! String || id.isEmpty) {
+    return _error(400, 'Missing or invalid "id" field');
+  }
+  if (meta is! Map<String, dynamic>) {
+    return _error(400, 'Missing or invalid "meta" field');
+  }
+
+  try {
+    await configRepository.createPattern(id, meta);
+    return Response(
+      201,
+      body: jsonEncode({'ok': true, 'id': id}),
+      headers: _jsonHeaders,
+    );
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to create pattern: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// DELETE /api/configs/patterns/<id>/playlists/<pid>
+Future<Response> _handleDeletePlaylist(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  final pid = request.params['pid'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+  if (pid == null || pid.isEmpty) return _error(400, 'Missing playlist ID');
+
+  try {
+    await configRepository.deletePlaylist(id, pid);
+    return Response.ok(
+      jsonEncode({'ok': true}),
+      headers: _jsonHeaders,
+    );
+  } on FileSystemException {
+    return _error(404, 'Playlist not found');
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to delete playlist: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// DELETE /api/configs/patterns/<id>
+Future<Response> _handleDeletePattern(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+
+  try {
+    await configRepository.deletePattern(id);
+    return Response.ok(
+      jsonEncode({'ok': true}),
+      headers: _jsonHeaders,
+    );
+  } on FileSystemException {
+    return _error(404, 'Pattern not found');
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to delete pattern: $e'}),
       headers: _jsonHeaders,
     );
   }

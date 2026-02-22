@@ -983,5 +983,353 @@ void main() {
         expect(playlist.containsKey('claimedByOthers'), isFalse);
       });
     });
+
+    group('PUT /api/configs/patterns/<id>/playlists/<pid>', () {
+      test('saves valid playlist and returns 200', () async {
+        final playlistJson = {
+          'id': 'seasons',
+          'displayName': 'Updated Seasons',
+          'resolverType': 'rss',
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(playlistJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify file was written to disk
+        final file = File(
+          '$dataDir/patterns/podcast-a/playlists/seasons.json',
+        );
+        final content =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        expect(content['displayName'], equals('Updated Seasons'));
+      });
+
+      test('returns 400 with validation errors for invalid playlist', () async {
+        final invalidJson = {
+          'id': 'seasons',
+          // Missing required 'displayName' and 'resolverType'
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(invalidJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], isNotNull);
+        expect(body['errors'], isNotEmpty);
+      });
+
+      test('returns 400 for empty body', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          body: '',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for invalid JSON syntax', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: '{not valid json',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for invalid resolverType', () async {
+        final invalidJson = {
+          'id': 'seasons',
+          'displayName': 'Seasons',
+          'resolverType': 'invalidType',
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(invalidJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['errors'], isNotEmpty);
+      });
+    });
+
+    group('PUT /api/configs/patterns/<id>/meta', () {
+      test('saves pattern meta and returns 200', () async {
+        final metaJson = {
+          'version': 1,
+          'id': 'podcast-a',
+          'podcastGuid': 'guid-a-updated',
+          'feedUrls': ['https://example.com/a/feed.xml'],
+          'playlists': ['seasons'],
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/meta',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(metaJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify file was written to disk
+        final file = File('$dataDir/patterns/podcast-a/meta.json');
+        final content =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        expect(content['podcastGuid'], equals('guid-a-updated'));
+      });
+
+      test('returns 400 for empty body', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/meta',
+          ),
+          body: '',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for invalid JSON syntax', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/meta',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: '{bad json',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+    });
+
+    group('POST /api/configs/patterns', () {
+      test('creates new pattern and returns 201', () async {
+        final body = {
+          'id': 'podcast-new',
+          'meta': {
+            'version': 1,
+            'id': 'podcast-new',
+            'feedUrls': ['https://example.com/new/feed.xml'],
+            'playlists': [],
+          },
+        };
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(201));
+        final responseBody =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(responseBody['ok'], isTrue);
+        expect(responseBody['id'], equals('podcast-new'));
+
+        // Verify directory and meta.json were created
+        final dir = Directory('$dataDir/patterns/podcast-new');
+        expect(await dir.exists(), isTrue);
+
+        final metaFile = File('$dataDir/patterns/podcast-new/meta.json');
+        expect(await metaFile.exists(), isTrue);
+
+        final content =
+            jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
+        expect(content['id'], equals('podcast-new'));
+
+        // Verify playlists subdirectory was created
+        final playlistsDir = Directory(
+          '$dataDir/patterns/podcast-new/playlists',
+        );
+        expect(await playlistsDir.exists(), isTrue);
+      });
+
+      test('returns 400 for missing id', () async {
+        final body = {
+          'meta': {'version': 1, 'id': 'x', 'playlists': []},
+        };
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for missing meta', () async {
+        final body = {'id': 'podcast-new'};
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for empty body', () async {
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          body: '',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+    });
+
+    group('DELETE /api/configs/patterns/<id>/playlists/<pid>', () {
+      test('deletes playlist file and returns 200', () async {
+        // Verify file exists before delete
+        final file = File(
+          '$dataDir/patterns/podcast-a/playlists/seasons.json',
+        );
+        expect(await file.exists(), isTrue);
+
+        final request = Request(
+          'DELETE',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify file was deleted
+        expect(await file.exists(), isFalse);
+      });
+
+      test('returns 404 for non-existent playlist', () async {
+        final request = Request(
+          'DELETE',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/nonexistent',
+          ),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(404));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('not found'));
+      });
+    });
+
+    group('DELETE /api/configs/patterns/<id>', () {
+      test('deletes pattern directory and returns 200', () async {
+        // Verify directory exists before delete
+        final dir = Directory('$dataDir/patterns/podcast-a');
+        expect(await dir.exists(), isTrue);
+
+        final request = Request(
+          'DELETE',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a',
+          ),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify directory was deleted
+        expect(await dir.exists(), isFalse);
+      });
+
+      test('returns 404 for non-existent pattern', () async {
+        final request = Request(
+          'DELETE',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/nonexistent',
+          ),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(404));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('not found'));
+      });
+    });
   });
 }
