@@ -139,6 +139,41 @@ void main() {
       expect(result, isNull);
     });
 
+    test('assigns incrementing sortKeys to groups', () {
+      const definition = SmartPlaylistDefinition(
+        id: 'test',
+        displayName: 'Test',
+        resolverType: 'category',
+        groups: [
+          SmartPlaylistGroupDef(
+            id: 'alpha',
+            displayName: 'Alpha',
+            pattern: r'AAA',
+          ),
+          SmartPlaylistGroupDef(
+            id: 'beta',
+            displayName: 'Beta',
+            pattern: r'BBB',
+          ),
+          SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
+        ],
+      );
+
+      final episodes = [
+        _makeEpisode(1, 'AAA episode'),
+        _makeEpisode(2, 'BBB episode'),
+        _makeEpisode(3, 'CCC episode'),
+      ];
+
+      final result = resolver.resolve(episodes, definition);
+
+      expect(result, isNotNull);
+      expect(result!.playlists, hasLength(3));
+      expect(result.playlists[0].sortKey, 1);
+      expect(result.playlists[1].sortKey, 2);
+      expect(result.playlists[2].sortKey, 3);
+    });
+
     test('fallback group collects unmatched episodes', () {
       const definition = SmartPlaylistDefinition(
         id: 'test',

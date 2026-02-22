@@ -65,8 +65,8 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
 
       <BooleanSettings index={index} prefix={prefix} />
 
-      <GroupsForm index={index} />
       <SortForm index={index} />
+      <GroupsForm index={index} />
       <ExtractorsForm index={index} />
 
       <RemoveButton onRemove={onRemove} />

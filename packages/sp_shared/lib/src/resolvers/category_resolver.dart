@@ -91,6 +91,7 @@ class CategoryResolver implements SmartPlaylistResolver {
     }
 
     final groups = <SmartPlaylistGroup>[];
+    var sortKey = 1;
     for (final pg in patternGroups) {
       final ids = grouped[pg.id];
       if (ids != null && ids.isNotEmpty) {
@@ -98,10 +99,12 @@ class CategoryResolver implements SmartPlaylistResolver {
           SmartPlaylistGroup(
             id: pg.id,
             displayName: pg.displayName,
+            sortKey: sortKey,
             episodeIds: ids,
             episodeYearHeaders: pg.episodeYearHeaders,
           ),
         );
+        sortKey++;
       }
     }
 
@@ -110,6 +113,7 @@ class CategoryResolver implements SmartPlaylistResolver {
         SmartPlaylistGroup(
           id: fallbackId!,
           displayName: fallbackDisplayName!,
+          sortKey: sortKey,
           episodeIds: fallbackIds,
           episodeYearHeaders: fallbackEpisodeYearHeaders,
         ),
