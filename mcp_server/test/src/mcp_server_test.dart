@@ -28,7 +28,6 @@ void main() {
       'method': method,
       if (params != null) 'params': params,
     };
-    // Access the private handler via the public test helper.
     return server.handleMessageForTest(jsonEncode(request));
   }
 
