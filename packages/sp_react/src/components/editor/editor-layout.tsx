@@ -8,12 +8,19 @@ import {
 } from '@/schemas/config-schema.ts';
 import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
-import { usePreviewMutation, useFeed } from '@/api/queries.ts';
+import {
+  usePreviewMutation,
+  useFeed,
+  useAssembledConfig,
+  useSavePlaylist,
+  useSavePatternMeta,
+} from '@/api/queries.ts';
 import { sanitizeConfig } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
+import { ConflictDialog } from '@/components/editor/conflict-dialog.tsx';
 import { FeedUrlInput } from '@/components/editor/feed-url-input.tsx';
 import { DebugInfoPanel } from '@/components/preview/debug-info-panel.tsx';
 import { Button } from '@/components/ui/button.tsx';
@@ -33,6 +40,7 @@ import {
   Loader2,
   Play,
   Plus,
+  Save,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -54,8 +62,17 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const {
     isJsonMode,
     feedUrl,
+    isDirty,
+    isSaving,
+    conflictDetected,
+    conflictPath,
     toggleJsonMode,
     setFeedUrl,
+    setDirty,
+    setSaving,
+    setLastSavedAt,
+    setConflict,
+    clearConflict,
     reset: resetEditorStore,
   } = useEditorStore();
   const [jsonText, setJsonText] = useState('');
@@ -75,6 +92,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   const previewMutation = usePreviewMutation();
   const feedQuery = useFeed(feedUrl || null);
+  const savePlaylistMutation = useSavePlaylist();
+  const savePatternMetaMutation = useSavePatternMeta();
+
+  // Track the config snapshot that was last loaded/saved for conflict detection
+  const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(initialConfig);
+
+  // Watch the assembled config query for external changes
+  const assembledConfigQuery = useAssembledConfig(configId);
 
   // Initialize feed URL from config on mount
   useEffect(() => {
@@ -83,6 +108,28 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       setFeedUrl(urls[0]);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Detect external changes while user has unsaved edits (conflict detection)
+  useEffect(() => {
+    if (!assembledConfigQuery.data || !isDirty) return;
+    if (JSON.stringify(assembledConfigQuery.data) !== JSON.stringify(lastLoadedConfig)) {
+      setConflict(`patterns/${configId}`);
+    }
+  }, [assembledConfigQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Dirty tracking via form.watch()
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      if (!initialConfig) {
+        setDirty(true);
+        return;
+      }
+      const current = form.getValues();
+      const changed = JSON.stringify(current) !== JSON.stringify(lastLoadedConfig);
+      setDirty(changed);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, lastLoadedConfig, setDirty, initialConfig]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -144,9 +191,80 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     }
   }, [isJsonMode, jsonText]);
 
-  // Keep parsedJsonConfig referenced to avoid unused-variable lint error.
-  // Future tasks (save flow) will use this value.
-  void parsedJsonConfig;
+  // Save handler: persist each playlist + pattern meta to disk
+  const handleSave = useCallback(async () => {
+    if (!configId || isSaving) return;
+
+    const config = isJsonMode && parsedJsonConfig
+      ? parsedJsonConfig
+      : form.getValues();
+
+    setSaving(true);
+    try {
+      for (const playlist of config.playlists) {
+        await savePlaylistMutation.mutateAsync({
+          patternId: configId,
+          playlistId: playlist.id,
+          data: playlist,
+        });
+      }
+
+      await savePatternMetaMutation.mutateAsync({
+        patternId: configId,
+        data: {
+          version: 1,
+          id: configId,
+          feedUrls: config.feedUrls ?? [],
+          yearGroupedEpisodes: config.yearGroupedEpisodes ?? false,
+          playlists: config.playlists.map((p) => p.id),
+        },
+      });
+
+      setLastSavedAt(new Date());
+      setLastLoadedConfig(config);
+      toast.success(t('toastSaved', 'Saved successfully'));
+    } catch (error) {
+      toast.error(
+        t('toastSaveError', {
+          error: error instanceof Error ? error.message : 'Save failed',
+          defaultValue: 'Save failed: {{error}}',
+        }),
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [configId, isSaving, isJsonMode, parsedJsonConfig, form, savePlaylistMutation, savePatternMetaMutation, setSaving, setLastSavedAt, t]);
+
+  // Ctrl+S / Cmd+S keyboard shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        void handleSave();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleSave]);
+
+  // Conflict resolution: reload from disk
+  const handleReload = useCallback(() => {
+    if (assembledConfigQuery.data) {
+      form.reset(assembledConfigQuery.data);
+      setLastLoadedConfig(assembledConfigQuery.data);
+      setDirty(false);
+    }
+    clearConflict();
+  }, [assembledConfigQuery.data, form, setDirty, clearConflict]);
+
+  // Conflict resolution: keep current changes
+  const handleKeepChanges = useCallback(() => {
+    clearConflict();
+    // Update lastLoadedConfig so we don't re-trigger conflict
+    if (assembledConfigQuery.data) {
+      setLastLoadedConfig(assembledConfigQuery.data);
+    }
+  }, [assembledConfigQuery.data, clearConflict]);
 
   return (
     <div className="container mx-auto max-w-7xl p-6">
@@ -168,14 +286,28 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
             <DebugInfoPanel debug={previewMutation.data.debug} />
           )}
           {!previewMutation.data?.debug && <div />}
-          <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
-            {previewMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Play className="mr-2 h-4 w-4" />
-            )}
-            {t('runPreview')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => void handleSave()}
+              disabled={!isDirty || isSaving || !configId}
+              variant={isDirty ? 'default' : 'outline'}
+            >
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {t('save', 'Save')}
+            </Button>
+            <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
+              {previewMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="mr-2 h-4 w-4" />
+              )}
+              {t('runPreview')}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -260,6 +392,13 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           )}
         </FormProvider>
       )}
+
+      <ConflictDialog
+        open={conflictDetected}
+        filePath={conflictPath}
+        onReload={handleReload}
+        onKeepChanges={handleKeepChanges}
+      />
     </div>
   );
 }
