@@ -46,15 +46,15 @@ export function SortForm({ index }: SortFormProps) {
   function handleModeChange(mode: SortMode) {
     if (mode === currentMode) {
       // Deselect current mode
-      setValue(prefix, null);
+      setValue(prefix, null, { shouldDirty: true });
       return;
     }
     if (mode === 'simple') {
-      setValue(prefix, { type: 'simple', field: 'playlistNumber', order: 'ascending' });
+      setValue(prefix, { type: 'simple', field: 'playlistNumber', order: 'ascending' }, { shouldDirty: true });
     } else if (mode === 'composite') {
-      setValue(prefix, { type: 'composite', rules: [{ ...EMPTY_RULE }] });
+      setValue(prefix, { type: 'composite', rules: [{ ...EMPTY_RULE }] }, { shouldDirty: true });
     } else {
-      setValue(prefix, null);
+      setValue(prefix, null, { shouldDirty: true });
     }
   }
 

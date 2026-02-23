@@ -88,7 +88,7 @@ function BasicSettings({
   return (
     <div className="space-y-3">
       <h4 className="text-sm font-medium">{t('basicSettings')}</h4>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div className="space-y-1.5">
           <HintLabel htmlFor={`playlist-${index}-id`} hint="playlistId">{t('playlistId')}</HintLabel>
           <Input
@@ -109,7 +109,7 @@ function BasicSettings({
           <HintLabel htmlFor={`playlist-${index}-resolverType`} hint="resolverType">{t('resolverType')}</HintLabel>
           <Select
             value={watch(`${prefix}.resolverType`) ?? ''}
-            onValueChange={(val) => setValue(`${prefix}.resolverType`, val)}
+            onValueChange={(val) => setValue(`${prefix}.resolverType`, val, { shouldDirty: true })}
           >
             <SelectTrigger id={`playlist-${index}-resolverType`}>
               <SelectValue placeholder={t('selectResolver')} />
@@ -196,7 +196,7 @@ function BooleanSettings({
             id={`playlist-${index}-episodeYearHeaders`}
             checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
             onCheckedChange={(checked) =>
-              setValue(`${prefix}.episodeYearHeaders`, !!checked)
+              setValue(`${prefix}.episodeYearHeaders`, !!checked, { shouldDirty: true })
             }
           />
           <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint="episodeYearHeaders">
@@ -208,7 +208,7 @@ function BooleanSettings({
             id={`playlist-${index}-showDateRange`}
             checked={watch(`${prefix}.showDateRange`) ?? false}
             onCheckedChange={(checked) =>
-              setValue(`${prefix}.showDateRange`, !!checked)
+              setValue(`${prefix}.showDateRange`, !!checked, { shouldDirty: true })
             }
           />
           <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>

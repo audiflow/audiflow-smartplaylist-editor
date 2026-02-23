@@ -44,7 +44,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               episodeGroup: 2,
               fallbackEpisodeCaptureGroup: 1,
               fallbackToRss: false,
-            })
+            }, { shouldDirty: true })
           }
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -71,6 +71,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
                 setValue(
                   `playlists.${index}.smartPlaylistEpisodeExtractor`,
                   null,
+                  { shouldDirty: true },
                 )
               }
             >
@@ -89,7 +90,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               </HintLabel>
               <Select
                 value={watch(`${prefix}.source`) ?? 'title'}
-                onValueChange={(val) => setValue(`${prefix}.source`, val)}
+                onValueChange={(val) => setValue(`${prefix}.source`, val, { shouldDirty: true })}
               >
                 <SelectTrigger id={`ep-ext-${index}-source`}>
                   <SelectValue />
@@ -157,7 +158,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               id={`ep-ext-${index}-fallbackToRss`}
               checked={watch(`${prefix}.fallbackToRss`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.fallbackToRss`, !!checked)
+                setValue(`${prefix}.fallbackToRss`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel

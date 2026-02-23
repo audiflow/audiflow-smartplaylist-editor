@@ -46,7 +46,7 @@ export function PatternSettingsCard() {
             id="config-yearGroupedEpisodes"
             checked={watch('yearGroupedEpisodes') ?? false}
             onCheckedChange={(checked) =>
-              setValue('yearGroupedEpisodes', !!checked)
+              setValue('yearGroupedEpisodes', !!checked, { shouldDirty: true })
             }
           />
           <HintLabel htmlFor="config-yearGroupedEpisodes" hint="yearGroupedEpisodes">
@@ -74,7 +74,7 @@ function FeedUrlsField() {
             .split(',')
             .map((u) => u.trim())
             .filter(Boolean);
-          setValue('feedUrls', urls);
+          setValue('feedUrls', urls, { shouldDirty: true });
         }}
         placeholder={t('placeholderFeedUrls')}
       />

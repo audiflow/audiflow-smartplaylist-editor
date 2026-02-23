@@ -71,6 +71,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
       setValue(
         `playlists.${index}.titleExtractor`,
         nestChain(nextSteps, nextFallbackValue ?? fallbackValue),
+        { shouldDirty: true },
       );
     },
     [index, setValue, fallbackValue],
@@ -84,7 +85,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
   const handleRemove = useCallback(
     (stepIndex: number) => {
       if (stepIndex === 0 && steps.length === 1) {
-        setValue(`playlists.${index}.titleExtractor`, null);
+        setValue(`playlists.${index}.titleExtractor`, null, { shouldDirty: true });
         return;
       }
       const nextSteps = steps.filter((_, i) => i !== stepIndex);
@@ -108,6 +109,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
       setValue(
         `playlists.${index}.titleExtractor`,
         nestChain(steps, value || null),
+        { shouldDirty: true },
       );
     },
     [steps, index, setValue],
@@ -136,7 +138,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
             setValue(`playlists.${index}.titleExtractor`, {
               source: 'title',
               group: 0,
-            })
+            }, { shouldDirty: true })
           }
         >
           <Plus className="mr-2 h-4 w-4" />

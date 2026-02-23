@@ -128,9 +128,9 @@ export function SortRuleCard({ playlistIndex, ruleIndex, onRemove }: SortRuleCar
               checked={hasCondition}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  setValue(`${prefix}.condition`, DEFAULT_CONDITION);
+                  setValue(`${prefix}.condition`, DEFAULT_CONDITION, { shouldDirty: true });
                 } else {
-                  setValue(`${prefix}.condition`, undefined);
+                  setValue(`${prefix}.condition`, undefined, { shouldDirty: true });
                 }
               }}
             />
@@ -157,7 +157,7 @@ export function SortRuleCard({ playlistIndex, ruleIndex, onRemove }: SortRuleCar
                   setValue(`${prefix}.condition`, {
                     type: 'sortKeyGreaterThan',
                     value: e.target.valueAsNumber,
-                  });
+                  }, { shouldDirty: true });
                 }}
                 className="w-32"
               />

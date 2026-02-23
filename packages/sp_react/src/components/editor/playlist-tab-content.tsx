@@ -5,6 +5,13 @@ import { PlaylistDebugStats } from '@/components/preview/playlist-debug-stats.ts
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
 import { PlaylistTree } from '@/components/preview/playlist-tree.tsx';
 import { ExtractionPreview } from '@/components/preview/extraction-preview.tsx';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs.tsx';
+import { Badge } from '@/components/ui/badge.tsx';
 
 interface PlaylistTabContentProps {
   index: number;
@@ -18,6 +25,9 @@ export function PlaylistTabContent({
   onRemove,
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
+  const { t: tp } = useTranslation('preview');
+
+  const claimedCount = previewPlaylist?.claimedByOthers?.length ?? 0;
 
   return (
     <div className="pt-2">
@@ -37,11 +47,38 @@ export function PlaylistTabContent({
               {previewPlaylist.debug && (
                 <PlaylistDebugStats debug={previewPlaylist.debug} />
               )}
-              <PlaylistTree playlists={[previewPlaylist]} />
-              <ExtractionPreview playlist={previewPlaylist} />
-              <ClaimedEpisodesSection
-                episodes={previewPlaylist.claimedByOthers ?? []}
-              />
+              <Tabs defaultValue="groups">
+                <TabsList>
+                  <TabsTrigger value="groups">
+                    {tp('tabGroups')}
+                    <Badge variant="secondary" className="ml-1.5">
+                      {previewPlaylist.episodeCount}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="extraction">
+                    {tp('tabExtraction')}
+                  </TabsTrigger>
+                  <TabsTrigger value="claimed">
+                    {tp('tabClaimed')}
+                    {0 < claimedCount && (
+                      <Badge variant="secondary" className="ml-1.5">
+                        {claimedCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="groups">
+                  <PlaylistTree playlists={[previewPlaylist]} />
+                </TabsContent>
+                <TabsContent value="extraction">
+                  <ExtractionPreview playlist={previewPlaylist} />
+                </TabsContent>
+                <TabsContent value="claimed">
+                  <ClaimedEpisodesSection
+                    episodes={previewPlaylist.claimedByOthers ?? []}
+                  />
+                </TabsContent>
+              </Tabs>
             </>
           ) : (
             <p className="text-sm text-muted-foreground py-4 text-center">
