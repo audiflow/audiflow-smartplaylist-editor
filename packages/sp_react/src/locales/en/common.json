@@ -12,5 +12,6 @@
   "unauthorized": "Unauthorized",
   "httpError": "HTTP {{status}}: {{text}}",
   "loadPatternsFailed": "Failed to load patterns: {{error}}",
-  "noPatternsFound": "No patterns found. Create your first one!"
+  "noPatternsFound": "No patterns found. Create your first one!",
+  "confirm": "Confirm"
 }

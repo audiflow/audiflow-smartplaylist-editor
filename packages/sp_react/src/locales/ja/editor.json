@@ -127,5 +127,10 @@
   "sortDisabledNote": "ソートはコンテンツタイプが「グループ」の場合にのみ適用されます。",
   "titleExtractorDisabledNote": "タイトル抽出器はカテゴリリゾルバでは使用されません。カテゴリグループは静的な表示名を使用します。",
   "contentType_episodes": "エピソード",
-  "contentType_groups": "グループ"
+  "contentType_groups": "グループ",
+  "reorderGroups": "並べ替え",
+  "reorderGroupsTitle": "グループの並べ替え",
+  "reorderGroupsDescription": "ドラッグしてグループの順序を変更します。グループの順序はマッチングの優先度を決定します。",
+  "moveGroupUp": "グループを上に移動",
+  "moveGroupDown": "グループを下に移動"
 }

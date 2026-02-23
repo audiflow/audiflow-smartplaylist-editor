@@ -127,5 +127,10 @@
   "sortDisabledNote": "Sort only applies when content type is Groups.",
   "titleExtractorDisabledNote": "Title extractor is not used by the Category resolver. Category groups use static display names.",
   "contentType_episodes": "Episodes",
-  "contentType_groups": "Groups"
+  "contentType_groups": "Groups",
+  "reorderGroups": "Reorder",
+  "reorderGroupsTitle": "Reorder Groups",
+  "reorderGroupsDescription": "Drag groups to change their order. Group order determines matching priority.",
+  "moveGroupUp": "Move group up",
+  "moveGroupDown": "Move group down"
 }
