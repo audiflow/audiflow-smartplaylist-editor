@@ -109,7 +109,8 @@ void main() {
       for (var i = 0; i < 30; i++) {
         if (events.any(
           (e) => e.path == 'to-delete.json' && e.type == FileChangeType.deleted,
-        )) break;
+        ))
+          break;
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
       await subscription.cancel();
