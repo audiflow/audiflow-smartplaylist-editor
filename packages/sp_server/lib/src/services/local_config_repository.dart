@@ -97,14 +97,9 @@ class LocalConfigRepository {
   ///
   /// Throws [FileSystemException] if the file does not exist.
   Future<void> deletePlaylist(String patternId, String playlistId) async {
-    final file = File(
-      '$_patternsDir/$patternId/playlists/$playlistId.json',
-    );
+    final file = File('$_patternsDir/$patternId/playlists/$playlistId.json');
     if (!await file.exists()) {
-      throw FileSystemException(
-        'Playlist file not found',
-        file.path,
-      );
+      throw FileSystemException('Playlist file not found', file.path);
     }
     await file.delete();
   }
@@ -115,10 +110,7 @@ class LocalConfigRepository {
   Future<void> deletePattern(String patternId) async {
     final dir = Directory('$_patternsDir/$patternId');
     if (!await dir.exists()) {
-      throw FileSystemException(
-        'Pattern directory not found',
-        dir.path,
-      );
+      throw FileSystemException('Pattern directory not found', dir.path);
     }
     await dir.delete(recursive: true);
   }
@@ -138,10 +130,7 @@ class LocalConfigRepository {
   ///
   /// Output is pretty-printed with 2-space indent and a trailing
   /// newline.
-  Future<void> _atomicWrite(
-    String path,
-    Map<String, dynamic> json,
-  ) async {
+  Future<void> _atomicWrite(String path, Map<String, dynamic> json) async {
     final content = '${_jsonEncoder.convert(json)}\n';
     final tmpPath = '$path.tmp';
     final tmpFile = File(tmpPath);

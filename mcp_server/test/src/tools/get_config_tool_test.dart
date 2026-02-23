@@ -46,10 +46,7 @@ void main() {
     tearDown(() => cleanupDataDir(dataDir));
 
     test('throws ArgumentError when id is missing', () async {
-      expect(
-        () => executeGetConfig(repo, {}),
-        throwsA(isA<ArgumentError>()),
-      );
+      expect(() => executeGetConfig(repo, {}), throwsA(isA<ArgumentError>()));
     });
 
     test('throws ArgumentError when id is empty', () async {

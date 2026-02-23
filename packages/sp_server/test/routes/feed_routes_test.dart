@@ -51,10 +51,7 @@ void main() {
     });
 
     test('returns 400 when url param is missing', () async {
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost/api/feeds'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost/api/feeds'));
 
       final response = await handler(request);
 

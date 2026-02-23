@@ -51,7 +51,10 @@ Future<Map<String, dynamic>> executeSubmitConfig(
 
   // Wrap in root schema envelope for validation, since the
   // validator expects {version, patterns} at the top level.
-  final envelope = {'version': 1, 'patterns': [config]};
+  final envelope = {
+    'version': 1,
+    'patterns': [config],
+  };
   final errors = validator.validateString(jsonEncode(envelope));
   if (errors.isNotEmpty) {
     return {'success': false, 'errors': errors};

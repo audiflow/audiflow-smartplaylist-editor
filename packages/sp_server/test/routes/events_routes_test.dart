@@ -22,10 +22,7 @@ void main() {
     });
 
     test('returns 200 status', () async {
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost/api/events'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost/api/events'));
 
       final response = await handler(request);
 
@@ -33,32 +30,17 @@ void main() {
     });
 
     test('returns SSE content type headers', () async {
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost/api/events'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost/api/events'));
 
       final response = await handler(request);
 
-      expect(
-        response.headers['content-type'],
-        equals('text/event-stream'),
-      );
-      expect(
-        response.headers['cache-control'],
-        equals('no-cache'),
-      );
-      expect(
-        response.headers['connection'],
-        equals('keep-alive'),
-      );
+      expect(response.headers['content-type'], equals('text/event-stream'));
+      expect(response.headers['cache-control'], equals('no-cache'));
+      expect(response.headers['connection'], equals('keep-alive'));
     });
 
     test('streams events in SSE format', () async {
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost/api/events'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost/api/events'));
 
       final response = await handler(request);
 
@@ -70,10 +52,12 @@ void main() {
           .listen(chunks.add);
 
       // Emit a file change event
-      controller.add(const FileChangeEvent(
-        type: FileChangeType.modified,
-        path: 'patterns/pod-a/playlists/main.json',
-      ));
+      controller.add(
+        const FileChangeEvent(
+          type: FileChangeType.modified,
+          path: 'patterns/pod-a/playlists/main.json',
+        ),
+      );
 
       // Give the stream time to propagate
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -89,10 +73,7 @@ void main() {
     });
 
     test('streams multiple events sequentially', () async {
-      final request = Request(
-        'GET',
-        Uri.parse('http://localhost/api/events'),
-      );
+      final request = Request('GET', Uri.parse('http://localhost/api/events'));
 
       final response = await handler(request);
 
@@ -102,17 +83,21 @@ void main() {
           .transform(utf8.decoder)
           .listen(chunks.add);
 
-      controller.add(const FileChangeEvent(
-        type: FileChangeType.created,
-        path: 'patterns/new/meta.json',
-      ));
+      controller.add(
+        const FileChangeEvent(
+          type: FileChangeType.created,
+          path: 'patterns/new/meta.json',
+        ),
+      );
 
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      controller.add(const FileChangeEvent(
-        type: FileChangeType.deleted,
-        path: 'patterns/old/playlists/extra.json',
-      ));
+      controller.add(
+        const FileChangeEvent(
+          type: FileChangeType.deleted,
+          path: 'patterns/old/playlists/extra.json',
+        ),
+      );
 
       await Future<void>.delayed(const Duration(milliseconds: 50));
       await subscription.cancel();
@@ -120,9 +105,7 @@ void main() {
       expect(chunks, hasLength(2));
       expect(
         chunks[0],
-        equals(
-          'data: {"type":"created","path":"patterns/new/meta.json"}\n\n',
-        ),
+        equals('data: {"type":"created","path":"patterns/new/meta.json"}\n\n'),
       );
       expect(
         chunks[1],

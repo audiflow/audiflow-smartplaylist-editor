@@ -64,11 +64,7 @@ void main() {
         'id': 'test',
         'feedUrls': ['https://example.com/feed.xml'],
         'playlists': [
-          {
-            'id': 'seasons',
-            'displayName': 'Seasons',
-            'resolverType': 'rss',
-          },
+          {'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'},
         ],
       };
       final result = await executePreviewConfig(feedService, {

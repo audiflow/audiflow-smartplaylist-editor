@@ -66,26 +66,30 @@ Future<Directory> _createTestDataDir({
   await patternsDir.create();
 
   if (rootMeta != null) {
-    await File('${patternsDir.path}/meta.json')
-        .writeAsString(_prettyJson(rootMeta));
+    await File(
+      '${patternsDir.path}/meta.json',
+    ).writeAsString(_prettyJson(rootMeta));
   }
 
   if (patternMeta != null) {
     final patternDir = Directory('${patternsDir.path}/podcast-a');
     await patternDir.create();
-    await File('${patternDir.path}/meta.json')
-        .writeAsString(_prettyJson(patternMeta));
+    await File(
+      '${patternDir.path}/meta.json',
+    ).writeAsString(_prettyJson(patternMeta));
 
     final playlistsDir = Directory('${patternDir.path}/playlists');
     await playlistsDir.create();
 
     if (playlistSeasons != null) {
-      await File('${playlistsDir.path}/seasons.json')
-          .writeAsString(_prettyJson(playlistSeasons));
+      await File(
+        '${playlistsDir.path}/seasons.json',
+      ).writeAsString(_prettyJson(playlistSeasons));
     }
     if (playlistByYear != null) {
-      await File('${playlistsDir.path}/by-year.json')
-          .writeAsString(_prettyJson(playlistByYear));
+      await File(
+        '${playlistsDir.path}/by-year.json',
+      ).writeAsString(_prettyJson(playlistByYear));
     }
   }
 
@@ -118,23 +122,17 @@ void main() {
       });
 
       test('throws FileSystemException when meta.json is missing', () async {
-        tempDir = await Directory.systemTemp
-            .createTemp('local_config_test_');
+        tempDir = await Directory.systemTemp.createTemp('local_config_test_');
         await Directory('${tempDir.path}/patterns').create();
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
-        expect(
-          () => repo.listPatterns(),
-          throwsA(isA<FileSystemException>()),
-        );
+        expect(() => repo.listPatterns(), throwsA(isA<FileSystemException>()));
       });
     });
 
     group('getPatternMeta', () {
       test('reads pattern meta.json', () async {
-        tempDir = await _createTestDataDir(
-          patternMeta: _patternMetaJson(),
-        );
+        tempDir = await _createTestDataDir(patternMeta: _patternMetaJson());
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         final meta = await repo.getPatternMeta('podcast-a');
@@ -172,9 +170,7 @@ void main() {
       });
 
       test('throws FileSystemException for missing playlist', () async {
-        tempDir = await _createTestDataDir(
-          patternMeta: _patternMetaJson(),
-        );
+        tempDir = await _createTestDataDir(patternMeta: _patternMetaJson());
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         expect(
@@ -246,9 +242,7 @@ void main() {
       });
 
       test('creates file via atomic write', () async {
-        tempDir = await _createTestDataDir(
-          patternMeta: _patternMetaJson(),
-        );
+        tempDir = await _createTestDataDir(patternMeta: _patternMetaJson());
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         // Create playlists dir (it exists from _createTestDataDir
@@ -271,9 +265,7 @@ void main() {
 
     group('savePatternMeta', () {
       test('writes pattern meta to disk', () async {
-        tempDir = await _createTestDataDir(
-          patternMeta: _patternMetaJson(),
-        );
+        tempDir = await _createTestDataDir(patternMeta: _patternMetaJson());
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         final updatedMeta = {
@@ -284,9 +276,7 @@ void main() {
         };
         await repo.savePatternMeta('podcast-a', updatedMeta);
 
-        final file = File(
-          '${tempDir.path}/patterns/podcast-a/meta.json',
-        );
+        final file = File('${tempDir.path}/patterns/podcast-a/meta.json');
         final content = await file.readAsString();
         expect(content, equals(_prettyJson(updatedMeta)));
       });
@@ -305,9 +295,7 @@ void main() {
         };
         await repo.createPattern('new-pattern', metaJson);
 
-        final patternDir = Directory(
-          '${tempDir.path}/patterns/new-pattern',
-        );
+        final patternDir = Directory('${tempDir.path}/patterns/new-pattern');
         expect(await patternDir.exists(), isTrue);
 
         final playlistsDir = Directory(
@@ -315,9 +303,7 @@ void main() {
         );
         expect(await playlistsDir.exists(), isTrue);
 
-        final metaFile = File(
-          '${tempDir.path}/patterns/new-pattern/meta.json',
-        );
+        final metaFile = File('${tempDir.path}/patterns/new-pattern/meta.json');
         final content = await metaFile.readAsString();
         expect(content, equals(_prettyJson(metaJson)));
       });
@@ -347,9 +333,7 @@ void main() {
       });
 
       test('throws FileSystemException for missing file', () async {
-        tempDir = await _createTestDataDir(
-          patternMeta: _patternMetaJson(),
-        );
+        tempDir = await _createTestDataDir(patternMeta: _patternMetaJson());
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         expect(
@@ -370,9 +354,7 @@ void main() {
 
         await repo.deletePattern('podcast-a');
 
-        final patternDir = Directory(
-          '${tempDir.path}/patterns/podcast-a',
-        );
+        final patternDir = Directory('${tempDir.path}/patterns/podcast-a');
         expect(await patternDir.exists(), isFalse);
       });
 

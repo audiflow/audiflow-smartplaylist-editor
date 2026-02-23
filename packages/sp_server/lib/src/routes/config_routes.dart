@@ -215,20 +215,14 @@ Future<Response> _handleSavePlaylist(
   if (errors.isNotEmpty) {
     return Response(
       400,
-      body: jsonEncode({
-        'error': 'Validation failed',
-        'errors': errors,
-      }),
+      body: jsonEncode({'error': 'Validation failed', 'errors': errors}),
       headers: _jsonHeaders,
     );
   }
 
   try {
     await configRepository.savePlaylist(id, pid, parsed);
-    return Response.ok(
-      jsonEncode({'ok': true}),
-      headers: _jsonHeaders,
-    );
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(
       500,
@@ -262,10 +256,7 @@ Future<Response> _handleSavePatternMeta(
 
   try {
     await configRepository.savePatternMeta(id, parsed);
-    return Response.ok(
-      jsonEncode({'ok': true}),
-      headers: _jsonHeaders,
-    );
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(
       500,
@@ -332,10 +323,7 @@ Future<Response> _handleDeletePlaylist(
 
   try {
     await configRepository.deletePlaylist(id, pid);
-    return Response.ok(
-      jsonEncode({'ok': true}),
-      headers: _jsonHeaders,
-    );
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on FileSystemException {
     return _error(404, 'Playlist not found');
   } on Object catch (e) {
@@ -357,10 +345,7 @@ Future<Response> _handleDeletePattern(
 
   try {
     await configRepository.deletePattern(id);
-    return Response.ok(
-      jsonEncode({'ok': true}),
-      headers: _jsonHeaders,
-    );
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on FileSystemException {
     return _error(404, 'Pattern not found');
   } on Object catch (e) {

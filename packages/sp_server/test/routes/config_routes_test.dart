@@ -47,17 +47,13 @@ String _patternMetaB() => const JsonEncoder.withIndent('  ').convert({
 });
 
 /// Sample playlists.
-String _playlistSeasons() => const JsonEncoder.withIndent('  ').convert({
-  'id': 'seasons',
-  'displayName': 'Seasons',
-  'resolverType': 'rss',
-});
+String _playlistSeasons() => const JsonEncoder.withIndent(
+  '  ',
+).convert({'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'});
 
-String _playlistByYear() => const JsonEncoder.withIndent('  ').convert({
-  'id': 'by-year',
-  'displayName': 'By Year',
-  'resolverType': 'year',
-});
+String _playlistByYear() => const JsonEncoder.withIndent(
+  '  ',
+).convert({'id': 'by-year', 'displayName': 'By Year', 'resolverType': 'year'});
 
 String _playlistCategories() => const JsonEncoder.withIndent('  ').convert({
   'id': 'categories',
@@ -254,7 +250,8 @@ void main() {
       test('returns 502 on failure', () async {
         // Point to non-existent data dir
         final failRepo = LocalConfigRepository(
-          dataDir: '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
         );
         final failRouter = configRouter(
           configRepository: failRepo,
@@ -291,7 +288,8 @@ void main() {
 
       test('returns 502 on fetch failure', () async {
         final failRepo = LocalConfigRepository(
-          dataDir: '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
         );
         final failRouter = configRouter(
           configRepository: failRepo,
@@ -330,7 +328,8 @@ void main() {
 
       test('returns 502 on fetch failure', () async {
         final failRepo = LocalConfigRepository(
-          dataDir: '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
         );
         final failRouter = configRouter(
           configRepository: failRepo,
@@ -373,7 +372,8 @@ void main() {
 
       test('returns 502 on failure', () async {
         final failRepo = LocalConfigRepository(
-          dataDir: '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
         );
         final failRouter = configRouter(
           configRepository: failRepo,
@@ -1009,9 +1009,7 @@ void main() {
         expect(body['ok'], isTrue);
 
         // Verify file was written to disk
-        final file = File(
-          '$dataDir/patterns/podcast-a/playlists/seasons.json',
-        );
+        final file = File('$dataDir/patterns/podcast-a/playlists/seasons.json');
         final content =
             jsonDecode(await file.readAsString()) as Map<String, dynamic>;
         expect(content['displayName'], equals('Updated Seasons'));
@@ -1107,9 +1105,7 @@ void main() {
 
         final request = Request(
           'PUT',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a/meta',
-          ),
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(metaJson),
         );
@@ -1131,9 +1127,7 @@ void main() {
       test('returns 400 for empty body', () async {
         final request = Request(
           'PUT',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a/meta',
-          ),
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
           body: '',
         );
 
@@ -1145,9 +1139,7 @@ void main() {
       test('returns 400 for invalid JSON syntax', () async {
         final request = Request(
           'PUT',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a/meta',
-          ),
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
           headers: {'Content-Type': 'application/json'},
           body: '{bad json',
         );
@@ -1251,9 +1243,7 @@ void main() {
     group('DELETE /api/configs/patterns/<id>/playlists/<pid>', () {
       test('deletes playlist file and returns 200', () async {
         // Verify file exists before delete
-        final file = File(
-          '$dataDir/patterns/podcast-a/playlists/seasons.json',
-        );
+        final file = File('$dataDir/patterns/podcast-a/playlists/seasons.json');
         expect(await file.exists(), isTrue);
 
         final request = Request(
@@ -1299,9 +1289,7 @@ void main() {
 
         final request = Request(
           'DELETE',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a',
-          ),
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
         );
 
         final response = await handler(request);
@@ -1318,9 +1306,7 @@ void main() {
       test('returns 404 for non-existent pattern', () async {
         final request = Request(
           'DELETE',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/nonexistent',
-          ),
+          Uri.parse('http://localhost/api/configs/patterns/nonexistent'),
         );
 
         final response = await handler(request);

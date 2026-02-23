@@ -34,9 +34,9 @@ final class SpMcpServer {
     DiskFeedCacheService? feedService,
     SmartPlaylistValidator? validator,
   }) : _dataDir = dataDir,
-       _configRepo = configRepo ??
-           LocalConfigRepository(dataDir: dataDir),
-       _feedService = feedService ??
+       _configRepo = configRepo ?? LocalConfigRepository(dataDir: dataDir),
+       _feedService =
+           feedService ??
            DiskFeedCacheService(
              cacheDir: '$dataDir/.cache/feeds',
              httpGet: _defaultHttpGet,
@@ -147,11 +147,7 @@ final class SpMcpServer {
     } on ArgumentError catch (e) {
       return _errorResponse(id, JsonRpcError.invalidParams, e.message);
     } on FileSystemException catch (e) {
-      return _errorResponse(
-        id,
-        JsonRpcError.internalError,
-        'File error: $e',
-      );
+      return _errorResponse(id, JsonRpcError.internalError, 'File error: $e');
     } on Exception catch (e) {
       return _errorResponse(
         id,
@@ -284,9 +280,7 @@ final class SpMcpServer {
 
   Future<Map<String, dynamic>> _readConfigsResource() async {
     final patterns = await _configRepo.listPatterns();
-    final result = {
-      'configs': patterns.map((p) => p.toJson()).toList(),
-    };
+    final result = {'configs': patterns.map((p) => p.toJson()).toList()};
     return {
       'contents': [
         {

@@ -11,18 +11,15 @@ void main() {
         path: 'patterns/podcast-a/meta.json',
       );
 
-      expect(event.toJson(), equals({
-        'type': 'created',
-        'path': 'patterns/podcast-a/meta.json',
-      }));
+      expect(
+        event.toJson(),
+        equals({'type': 'created', 'path': 'patterns/podcast-a/meta.json'}),
+      );
     });
 
     test('toJson works for all change types', () {
       for (final changeType in FileChangeType.values) {
-        final event = FileChangeEvent(
-          type: changeType,
-          path: 'test.json',
-        );
+        final event = FileChangeEvent(type: changeType, path: 'test.json');
         expect(event.toJson()['type'], equals(changeType.name));
       }
     });
@@ -43,10 +40,7 @@ void main() {
       }
     });
     test('emits event when file is created', () async {
-      watcher = FileWatcherService(
-        watchDir: tempDir.path,
-        debounceMs: 100,
-      );
+      watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
       final events = <FileChangeEvent>[];
@@ -72,10 +66,7 @@ void main() {
       final file = File('${tempDir.path}/existing.json');
       await file.writeAsString('{"v": 1}');
 
-      watcher = FileWatcherService(
-        watchDir: tempDir.path,
-        debounceMs: 100,
-      );
+      watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
       final events = <FileChangeEvent>[];
@@ -100,10 +91,7 @@ void main() {
       final file = File('${tempDir.path}/to-delete.json');
       await file.writeAsString('{}');
 
-      watcher = FileWatcherService(
-        watchDir: tempDir.path,
-        debounceMs: 100,
-      );
+      watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
       final events = <FileChangeEvent>[];
@@ -164,10 +152,7 @@ void main() {
     });
 
     test('ignores .tmp files', () async {
-      watcher = FileWatcherService(
-        watchDir: tempDir.path,
-        debounceMs: 100,
-      );
+      watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
       final events = <FileChangeEvent>[];
@@ -194,47 +179,45 @@ void main() {
       );
     });
 
-    test('deduplicates events for the same path within debounce window',
-        () async {
-      watcher = FileWatcherService(
-        watchDir: tempDir.path,
-        debounceMs: 200,
-      );
-      await watcher.start();
+    test(
+      'deduplicates events for the same path within debounce window',
+      () async {
+        watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 200);
+        await watcher.start();
 
-      final events = <FileChangeEvent>[];
-      final subscription = watcher.events.listen(events.add);
+        final events = <FileChangeEvent>[];
+        final subscription = watcher.events.listen(events.add);
 
-      // Rapidly write to the same file multiple times within debounce window
-      final file = File('${tempDir.path}/rapid.json');
-      await file.writeAsString('{"v": 1}');
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-      await file.writeAsString('{"v": 2}');
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-      await file.writeAsString('{"v": 3}');
+        // Rapidly write to the same file multiple times within debounce window
+        final file = File('${tempDir.path}/rapid.json');
+        await file.writeAsString('{"v": 1}');
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await file.writeAsString('{"v": 2}');
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        await file.writeAsString('{"v": 3}');
 
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      await subscription.cancel();
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+        await subscription.cancel();
 
-      // Should have at most one event per debounce window for the same path
-      final rapidEvents = events.where((e) => e.path == 'rapid.json').toList();
-      // Due to deduplication, we expect fewer events than writes
-      // The exact count depends on timing, but should be less than 3
-      expect(
-        3 <= rapidEvents.length,
-        isFalse,
-        reason: 'Expected deduplication to reduce events for same path',
-      );
-    });
+        // Should have at most one event per debounce window for the same path
+        final rapidEvents = events
+            .where((e) => e.path == 'rapid.json')
+            .toList();
+        // Due to deduplication, we expect fewer events than writes
+        // The exact count depends on timing, but should be less than 3
+        expect(
+          3 <= rapidEvents.length,
+          isFalse,
+          reason: 'Expected deduplication to reduce events for same path',
+        );
+      },
+    );
 
     test('emits events for files in subdirectories', () async {
       final subDir = Directory('${tempDir.path}/patterns/podcast-a');
       await subDir.create(recursive: true);
 
-      watcher = FileWatcherService(
-        watchDir: tempDir.path,
-        debounceMs: 100,
-      );
+      watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
       final events = <FileChangeEvent>[];
@@ -254,10 +237,7 @@ void main() {
     });
 
     test('events stream is broadcast', () async {
-      watcher = FileWatcherService(
-        watchDir: tempDir.path,
-        debounceMs: 100,
-      );
+      watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
       // Multiple listeners should work on a broadcast stream

@@ -19,10 +19,7 @@ Future<String> createTestDataDir({
   final patternsDir = Directory('$dataDir/patterns');
   await patternsDir.create(recursive: true);
 
-  final rootMeta = {
-    'version': 1,
-    'patterns': patterns,
-  };
+  final rootMeta = {'version': 1, 'patterns': patterns};
   await _writeJson('$dataDir/patterns/meta.json', rootMeta);
 
   // Write pattern metas and playlists
@@ -41,9 +38,7 @@ Future<String> createTestDataDir({
       final playlistId = playlistEntry.key;
       final playlistJson = playlistEntry.value;
 
-      final playlistDir = Directory(
-        '$dataDir/patterns/$patternId/playlists',
-      );
+      final playlistDir = Directory('$dataDir/patterns/$patternId/playlists');
       if (!await playlistDir.exists()) {
         await playlistDir.create(recursive: true);
       }

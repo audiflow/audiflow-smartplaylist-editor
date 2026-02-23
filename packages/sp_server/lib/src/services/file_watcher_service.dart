@@ -6,10 +6,7 @@ enum FileChangeType { created, modified, deleted }
 
 /// An event describing a single file change.
 final class FileChangeEvent {
-  const FileChangeEvent({
-    required this.type,
-    required this.path,
-  });
+  const FileChangeEvent({required this.type, required this.path});
 
   /// The kind of change that occurred.
   final FileChangeType type;
@@ -18,10 +15,7 @@ final class FileChangeEvent {
   final String path;
 
   /// Serializes this event to a JSON-compatible map.
-  Map<String, String> toJson() => {
-        'type': type.name,
-        'path': path,
-      };
+  Map<String, String> toJson() => {'type': type.name, 'path': path};
 
   @override
   String toString() => 'FileChangeEvent(${type.name}, $path)';
@@ -93,10 +87,7 @@ class FileWatcherService {
     if (_shouldIgnore(relativePath)) return;
 
     final changeType = _mapEventType(event);
-    final changeEvent = FileChangeEvent(
-      type: changeType,
-      path: relativePath,
-    );
+    final changeEvent = FileChangeEvent(type: changeType, path: relativePath);
 
     _pending[relativePath] = changeEvent;
     _resetDebounceTimer();
@@ -105,8 +96,7 @@ class FileWatcherService {
   /// Converts an absolute filesystem path to a path relative to
   /// [watchDir]. Returns null if the path is not under watchDir.
   String? _toRelativePath(String absolutePath) {
-    final prefix =
-        watchDir.endsWith('/') ? watchDir : '$watchDir/';
+    final prefix = watchDir.endsWith('/') ? watchDir : '$watchDir/';
     if (!absolutePath.startsWith(prefix)) return null;
     return absolutePath.substring(prefix.length);
   }
@@ -137,10 +127,7 @@ class FileWatcherService {
   /// are flushed to the stream.
   void _resetDebounceTimer() {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(
-      Duration(milliseconds: debounceMs),
-      _flushPending,
-    );
+    _debounceTimer = Timer(Duration(milliseconds: debounceMs), _flushPending);
   }
 
   /// Emits all pending events and clears the buffer.

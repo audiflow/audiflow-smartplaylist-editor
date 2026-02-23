@@ -97,11 +97,7 @@ void main() {
         'id': 'test-pattern',
         'feedUrls': ['https://example.com/feed'],
         'playlists': [
-          {
-            'id': 'main',
-            'displayName': 'Main Episodes',
-            'resolverType': 'rss',
-          },
+          {'id': 'main', 'displayName': 'Main Episodes', 'resolverType': 'rss'},
         ],
       };
 
@@ -118,8 +114,8 @@ void main() {
         '$dataDir/patterns/test-pattern/playlists/main.json',
       );
       expect(await playlistFile.exists(), isTrue);
-      final written = jsonDecode(await playlistFile.readAsString())
-          as Map<String, dynamic>;
+      final written =
+          jsonDecode(await playlistFile.readAsString()) as Map<String, dynamic>;
       expect(written['id'], 'main');
       expect(written['displayName'], 'Main Episodes');
     });

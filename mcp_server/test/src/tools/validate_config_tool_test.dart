@@ -44,19 +44,12 @@ void main() {
             'id': 'test',
             'feedUrls': ['https://example.com/feed'],
             'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-              },
+              {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
             ],
           },
         ],
       };
-      final result = await executeValidateConfig(
-        validator,
-        {'config': config},
-      );
+      final result = await executeValidateConfig(validator, {'config': config});
 
       expect(result['valid'], isTrue);
       expect(result['errors'], isEmpty);
@@ -65,10 +58,7 @@ void main() {
     test('returns valid:false with errors for invalid config', () async {
       // Missing required fields
       final config = <String, dynamic>{};
-      final result = await executeValidateConfig(
-        validator,
-        {'config': config},
-      );
+      final result = await executeValidateConfig(validator, {'config': config});
 
       expect(result['valid'], isFalse);
       expect(result['errors'], isNotEmpty);

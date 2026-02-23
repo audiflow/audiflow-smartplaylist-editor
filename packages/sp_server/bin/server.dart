@@ -21,9 +21,7 @@ Future<void> main() async {
 
   final port = int.parse(env['PORT'] ?? '8080');
   final webRoot = env['WEB_ROOT'] ?? 'public';
-  final feedCacheTtlSeconds = int.parse(
-    env['SP_FEED_CACHE_TTL'] ?? '3600',
-  );
+  final feedCacheTtlSeconds = int.parse(env['SP_FEED_CACHE_TTL'] ?? '3600');
 
   // Auto-detect data directory from CWD
   final dataDir = Directory.current.path;

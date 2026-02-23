@@ -175,10 +175,7 @@ void main() {
         'jsonrpc': '2.0',
         'id': 7,
         'method': 'tools/call',
-        'params': {
-          'name': 'search_configs',
-          'arguments': {},
-        },
+        'params': {'name': 'search_configs', 'arguments': {}},
       });
 
       final response = await badServer.handleMessageForTest(request);

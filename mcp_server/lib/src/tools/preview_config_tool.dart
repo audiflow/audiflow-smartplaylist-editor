@@ -62,15 +62,23 @@ Future<Map<String, dynamic>> executePreviewConfig(
   );
 
   if (result == null) {
-    return {'playlists': <Object>[], 'ungrouped': <int>[], 'resolverType': null};
+    return {
+      'playlists': <Object>[],
+      'ungrouped': <int>[],
+      'resolverType': null,
+    };
   }
 
   return {
-    'playlists': result.playlistResults.map((pr) => {
-      'id': pr.playlist.id,
-      'displayName': pr.playlist.displayName,
-      'episodeCount': pr.playlist.episodeCount,
-    }).toList(),
+    'playlists': result.playlistResults
+        .map(
+          (pr) => {
+            'id': pr.playlist.id,
+            'displayName': pr.playlist.displayName,
+            'episodeCount': pr.playlist.episodeCount,
+          },
+        )
+        .toList(),
     'ungrouped': result.ungroupedEpisodeIds,
     'resolverType': result.resolverType,
   };

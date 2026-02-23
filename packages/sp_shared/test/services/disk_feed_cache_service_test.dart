@@ -154,16 +154,15 @@ void main() {
       // Verify files exist on disk
       final files = tempDir.listSync().whereType<File>().toList();
       final metaFiles = files.where((f) => f.path.endsWith('.meta')).toList();
-      final jsonFiles = files
-          .where((f) => f.path.endsWith('.json'))
-          .toList();
+      final jsonFiles = files.where((f) => f.path.endsWith('.json')).toList();
 
       expect(metaFiles, hasLength(1));
       expect(jsonFiles, hasLength(1));
 
       // Verify meta file content
       final metaContent =
-          jsonDecode(metaFiles.first.readAsStringSync()) as Map<String, dynamic>;
+          jsonDecode(metaFiles.first.readAsStringSync())
+              as Map<String, dynamic>;
       expect(metaContent['url'], 'https://example.com/feed.xml');
       expect(metaContent['fetchedAt'], isA<String>());
     });

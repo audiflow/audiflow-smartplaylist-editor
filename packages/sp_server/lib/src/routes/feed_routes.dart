@@ -5,9 +5,7 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:sp_shared/sp_shared.dart';
 
 /// Registers feed routes under `/api/feeds`.
-Router feedRouter({
-  required DiskFeedCacheService feedCacheService,
-}) {
+Router feedRouter({required DiskFeedCacheService feedCacheService}) {
   final router = Router();
 
   router.get(

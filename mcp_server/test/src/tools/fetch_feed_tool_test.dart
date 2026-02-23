@@ -45,10 +45,9 @@ void main() {
     });
 
     test('returns episodes from feed', () async {
-      final result = await executeFetchFeed(
-        feedService,
-        {'url': 'https://example.com/feed.xml'},
-      );
+      final result = await executeFetchFeed(feedService, {
+        'url': 'https://example.com/feed.xml',
+      });
 
       expect(result['episodes'], isList);
       final episodes = result['episodes'] as List;
