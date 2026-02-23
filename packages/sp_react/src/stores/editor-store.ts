@@ -3,36 +3,39 @@ import { create } from 'zustand';
 interface EditorState {
   isJsonMode: boolean;
   feedUrl: string;
-  lastAutoSavedAt: Date | null;
-  configVersion: number;
-  lastSubmittedBranch: string | null;
-  lastPrUrl: string | null;
+  isDirty: boolean;
+  isSaving: boolean;
+  lastSavedAt: Date | null;
+  conflictDetected: boolean;
+  conflictPath: string | null;
   toggleJsonMode: () => void;
   setFeedUrl: (url: string) => void;
-  setLastAutoSavedAt: (date: Date) => void;
-  incrementConfigVersion: () => void;
-  setLastSubmission: (branch: string, prUrl: string | null) => void;
+  setDirty: (dirty: boolean) => void;
+  setSaving: (saving: boolean) => void;
+  setLastSavedAt: (date: Date) => void;
+  setConflict: (path: string) => void;
+  clearConflict: () => void;
   reset: () => void;
 }
 
 const initialState = {
   isJsonMode: false,
   feedUrl: '',
-  lastAutoSavedAt: null as Date | null,
-  configVersion: 0,
-  lastSubmittedBranch: null as string | null,
-  lastPrUrl: null as string | null,
+  isDirty: false,
+  isSaving: false,
+  lastSavedAt: null as Date | null,
+  conflictDetected: false,
+  conflictPath: null as string | null,
 };
 
 export const useEditorStore = create<EditorState>((set) => ({
   ...initialState,
-
   toggleJsonMode: () => set((state) => ({ isJsonMode: !state.isJsonMode })),
   setFeedUrl: (url) => set({ feedUrl: url }),
-  setLastAutoSavedAt: (date) => set({ lastAutoSavedAt: date }),
-  incrementConfigVersion: () =>
-    set((state) => ({ configVersion: state.configVersion + 1 })),
-  setLastSubmission: (branch, prUrl) =>
-    set({ lastSubmittedBranch: branch, lastPrUrl: prUrl }),
+  setDirty: (dirty) => set({ isDirty: dirty }),
+  setSaving: (saving) => set({ isSaving: saving }),
+  setLastSavedAt: (date) => set({ lastSavedAt: date, isDirty: false }),
+  setConflict: (path) => set({ conflictDetected: true, conflictPath: path }),
+  clearConflict: () => set({ conflictDetected: false, conflictPath: null }),
   reset: () => set(initialState),
 }));

@@ -1,16 +1,10 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth-store.ts';
 import { useAssembledConfig } from '@/api/queries.ts';
 import { EditorLayout } from '@/components/editor/editor-layout.tsx';
 
 export const Route = createFileRoute('/editor/$id')({
-  beforeLoad: () => {
-    if (!useAuthStore.getState().isAuthenticated) {
-      throw redirect({ to: '/login' });
-    }
-  },
   component: EditorWithId,
 });
 

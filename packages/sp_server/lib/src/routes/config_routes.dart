@@ -1,114 +1,95 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 import 'package:sp_shared/sp_shared.dart';
 
-import '../middleware/api_key_middleware.dart';
-import '../services/api_key_service.dart';
-import '../services/config_repository.dart';
-import '../services/feed_cache_service.dart';
-import '../services/jwt_service.dart';
+import '../services/local_config_repository.dart';
 
 /// Registers config routes under `/api/configs`.
-///
-/// All routes require unified authentication
-/// (JWT or API key).
 Router configRouter({
-  required ConfigRepository configRepository,
-  required FeedCacheService feedCacheService,
-  required JwtService jwtService,
-  required ApiKeyService apiKeyService,
+  required LocalConfigRepository configRepository,
+  required DiskFeedCacheService feedCacheService,
   required SmartPlaylistValidator validator,
 }) {
   final router = Router();
 
-  final auth = unifiedAuthMiddleware(
-    jwtService: jwtService,
-    apiKeyService: apiKeyService,
+  // GET /api/configs/patterns/<id>/assembled
+  // Must be registered before /api/configs/patterns/<id> to avoid
+  // path conflicts.
+  router.get(
+    '/api/configs/patterns/<id>/assembled',
+    (Request r) => _handleAssembled(r, configRepository),
   );
 
-  // Legacy endpoints (adapted for split backend)
+  // PUT /api/configs/patterns/<id>/playlists/<pid>
+  router.put(
+    '/api/configs/patterns/<id>/playlists/<pid>',
+    (Request r) => _handleSavePlaylist(r, configRepository, validator),
+  );
 
-  // GET /api/configs
-  final listHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleList(r, configRepository));
-  router.get('/api/configs', listHandler);
-
-  // GET /api/configs/patterns/<id>/assembled
-  // Must be registered before /api/configs/<id> to avoid
-  // path conflicts.
-  final assembledHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleAssembled(r, configRepository));
-  router.get('/api/configs/patterns/<id>/assembled', assembledHandler);
+  // DELETE /api/configs/patterns/<id>/playlists/<pid>
+  router.delete(
+    '/api/configs/patterns/<id>/playlists/<pid>',
+    (Request r) => _handleDeletePlaylist(r, configRepository),
+  );
 
   // GET /api/configs/patterns/<id>/playlists/<pid>
-  final playlistHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePlaylist(r, configRepository));
-  router.get('/api/configs/patterns/<id>/playlists/<pid>', playlistHandler);
+  router.get(
+    '/api/configs/patterns/<id>/playlists/<pid>',
+    (Request r) => _handlePlaylist(r, configRepository),
+  );
+
+  // PUT /api/configs/patterns/<id>/meta
+  router.put(
+    '/api/configs/patterns/<id>/meta',
+    (Request r) => _handleSavePatternMeta(r, configRepository),
+  );
+
+  // DELETE /api/configs/patterns/<id>
+  router.delete(
+    '/api/configs/patterns/<id>',
+    (Request r) => _handleDeletePattern(r, configRepository),
+  );
 
   // GET /api/configs/patterns/<id>
-  final patternMetaHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePatternMeta(r, configRepository));
-  router.get('/api/configs/patterns/<id>', patternMetaHandler);
+  router.get(
+    '/api/configs/patterns/<id>',
+    (Request r) => _handlePatternMeta(r, configRepository),
+  );
+
+  // POST /api/configs/patterns (create new pattern)
+  router.post(
+    '/api/configs/patterns',
+    (Request r) => _handleCreatePattern(r, configRepository),
+  );
 
   // GET /api/configs/patterns
-  final patternsHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePatterns(r, configRepository));
-  router.get('/api/configs/patterns', patternsHandler);
-
-  // GET /api/configs/<id> (legacy: returns assembled config)
-  final getHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleGet(r, configRepository));
-  router.get('/api/configs/<id>', getHandler);
+  router.get(
+    '/api/configs/patterns',
+    (Request r) => _handlePatterns(r, configRepository),
+  );
 
   // POST /api/configs/validate
-  final validateHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handleValidate(r, validator));
-  router.post('/api/configs/validate', validateHandler);
+  router.post(
+    '/api/configs/validate',
+    (Request r) => _handleValidate(r, validator),
+  );
 
   // POST /api/configs/preview
-  final previewHandler = const Pipeline()
-      .addMiddleware(auth)
-      .addHandler((Request r) => _handlePreview(r, feedCacheService));
-  router.post('/api/configs/preview', previewHandler);
+  router.post(
+    '/api/configs/preview',
+    (Request r) => _handlePreview(r, feedCacheService),
+  );
 
   return router;
-}
-
-/// GET /api/configs -- legacy list endpoint.
-///
-/// Returns pattern summaries wrapped in {configs: [...]}.
-Future<Response> _handleList(
-  Request request,
-  ConfigRepository configRepository,
-) async {
-  try {
-    final patterns = await configRepository.listPatterns();
-    return Response.ok(
-      jsonEncode({'configs': patterns.map((p) => p.toJson()).toList()}),
-      headers: _jsonHeaders,
-    );
-  } on Object catch (e) {
-    return Response(
-      502,
-      body: jsonEncode({'error': 'Failed to fetch configs: $e'}),
-      headers: _jsonHeaders,
-    );
-  }
 }
 
 /// GET /api/configs/patterns -- returns pattern summaries.
 Future<Response> _handlePatterns(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   try {
     final patterns = await configRepository.listPatterns();
@@ -128,7 +109,7 @@ Future<Response> _handlePatterns(
 /// GET /api/configs/patterns/<id> -- returns pattern metadata.
 Future<Response> _handlePatternMeta(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   final id = request.params['id'];
   if (id == null || id.isEmpty) {
@@ -150,7 +131,7 @@ Future<Response> _handlePatternMeta(
 /// GET /api/configs/patterns/<id>/playlists/<pid>
 Future<Response> _handlePlaylist(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   final id = request.params['id'];
   final pid = request.params['pid'];
@@ -176,7 +157,7 @@ Future<Response> _handlePlaylist(
 /// GET /api/configs/patterns/<id>/assembled
 Future<Response> _handleAssembled(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
 ) async {
   final id = request.params['id'];
   if (id == null || id.isEmpty) {
@@ -195,27 +176,182 @@ Future<Response> _handleAssembled(
   }
 }
 
-/// GET /api/configs/<id> -- legacy: returns assembled config.
-Future<Response> _handleGet(
+/// PUT /api/configs/patterns/<id>/playlists/<pid> -- saves playlist to disk.
+Future<Response> _handleSavePlaylist(
   Request request,
-  ConfigRepository configRepository,
+  LocalConfigRepository configRepository,
+  SmartPlaylistValidator validator,
 ) async {
   final id = request.params['id'];
-  if (id == null || id.isEmpty) {
+  final pid = request.params['pid'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+  if (pid == null || pid.isEmpty) return _error(400, 'Missing playlist ID');
+
+  final bodyStr = await request.readAsString();
+  if (bodyStr.isEmpty) return _error(400, 'Request body is empty');
+
+  final Object? parsed;
+  try {
+    parsed = jsonDecode(bodyStr);
+  } on FormatException {
+    return _error(400, 'Invalid JSON');
+  }
+
+  if (parsed is! Map<String, dynamic>) {
+    return _error(400, 'Request body must be a JSON object');
+  }
+
+  // Validate the playlist by wrapping in a full config envelope
+  final envelope = {
+    'version': 1,
+    'patterns': [
+      {
+        'id': id,
+        'playlists': [parsed],
+      },
+    ],
+  };
+  final errors = validator.validate(envelope);
+  if (errors.isNotEmpty) {
     return Response(
       400,
-      body: jsonEncode({'error': 'Missing config ID'}),
+      body: jsonEncode({'error': 'Validation failed', 'errors': errors}),
       headers: _jsonHeaders,
     );
   }
 
   try {
-    final config = await configRepository.assembleConfig(id);
-    return Response.ok(jsonEncode(config.toJson()), headers: _jsonHeaders);
+    await configRepository.savePlaylist(id, pid, parsed);
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(
-      502,
-      body: jsonEncode({'error': 'Failed to fetch config: $e'}),
+      500,
+      body: jsonEncode({'error': 'Failed to save playlist: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// PUT /api/configs/patterns/<id>/meta -- saves pattern meta to disk.
+Future<Response> _handleSavePatternMeta(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+
+  final bodyStr = await request.readAsString();
+  if (bodyStr.isEmpty) return _error(400, 'Request body is empty');
+
+  final Object? parsed;
+  try {
+    parsed = jsonDecode(bodyStr);
+  } on FormatException {
+    return _error(400, 'Invalid JSON');
+  }
+
+  if (parsed is! Map<String, dynamic>) {
+    return _error(400, 'Request body must be a JSON object');
+  }
+
+  try {
+    await configRepository.savePatternMeta(id, parsed);
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to save pattern meta: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// POST /api/configs/patterns -- creates a new pattern directory with meta.
+Future<Response> _handleCreatePattern(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final bodyStr = await request.readAsString();
+  if (bodyStr.isEmpty) return _error(400, 'Request body is empty');
+
+  final Object? parsed;
+  try {
+    parsed = jsonDecode(bodyStr);
+  } on FormatException {
+    return _error(400, 'Invalid JSON');
+  }
+
+  if (parsed is! Map<String, dynamic>) {
+    return _error(400, 'Request body must be a JSON object');
+  }
+
+  final id = parsed['id'];
+  final meta = parsed['meta'];
+
+  if (id is! String || id.isEmpty) {
+    return _error(400, 'Missing or invalid "id" field');
+  }
+  if (meta is! Map<String, dynamic>) {
+    return _error(400, 'Missing or invalid "meta" field');
+  }
+
+  try {
+    await configRepository.createPattern(id, meta);
+    return Response(
+      201,
+      body: jsonEncode({'ok': true, 'id': id}),
+      headers: _jsonHeaders,
+    );
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to create pattern: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// DELETE /api/configs/patterns/<id>/playlists/<pid>
+Future<Response> _handleDeletePlaylist(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  final pid = request.params['pid'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+  if (pid == null || pid.isEmpty) return _error(400, 'Missing playlist ID');
+
+  try {
+    await configRepository.deletePlaylist(id, pid);
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
+  } on FileSystemException {
+    return _error(404, 'Playlist not found');
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to delete playlist: $e'}),
+      headers: _jsonHeaders,
+    );
+  }
+}
+
+/// DELETE /api/configs/patterns/<id>
+Future<Response> _handleDeletePattern(
+  Request request,
+  LocalConfigRepository configRepository,
+) async {
+  final id = request.params['id'];
+  if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
+
+  try {
+    await configRepository.deletePattern(id);
+    return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
+  } on FileSystemException {
+    return _error(404, 'Pattern not found');
+  } on Object catch (e) {
+    return Response(
+      500,
+      body: jsonEncode({'error': 'Failed to delete pattern: $e'}),
       headers: _jsonHeaders,
     );
   }
@@ -243,7 +379,7 @@ Future<Response> _handleValidate(
 
 Future<Response> _handlePreview(
   Request request,
-  FeedCacheService feedCacheService,
+  DiskFeedCacheService feedCacheService,
 ) async {
   final body = await request.readAsString();
   if (body.isEmpty) {

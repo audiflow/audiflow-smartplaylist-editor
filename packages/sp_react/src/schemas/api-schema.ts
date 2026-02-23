@@ -89,34 +89,6 @@ export const previewResultSchema = z.object({
   debug: previewDebugSchema.optional(),
 });
 
-// -- Auth --
-
-export const tokenResponseSchema = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(),
-});
-
-// -- API keys --
-
-export const apiKeySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  maskedKey: z.string(),
-  createdAt: z.string(),
-});
-
-export const generatedKeySchema = z.object({
-  key: z.string(),
-  metadata: apiKeySchema,
-});
-
-// -- Submit --
-
-export const submitResponseSchema = z.object({
-  prUrl: z.string().optional(),
-  branch: z.string(),
-});
-
 // -- Inferred types --
 
 export type PatternSummary = z.infer<typeof patternSummarySchema>;
@@ -129,7 +101,3 @@ export type ClaimedEpisode = z.infer<typeof claimedEpisodeSchema>;
 export type PlaylistDebug = z.infer<typeof playlistDebugSchema>;
 export type PreviewDebug = z.infer<typeof previewDebugSchema>;
 export type PreviewResult = z.infer<typeof previewResultSchema>;
-export type TokenResponse = z.infer<typeof tokenResponseSchema>;
-export type ApiKey = z.infer<typeof apiKeySchema>;
-export type GeneratedKey = z.infer<typeof generatedKeySchema>;
-export type SubmitResponse = z.infer<typeof submitResponseSchema>;

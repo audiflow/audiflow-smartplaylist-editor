@@ -1,6 +1,6 @@
 # audiflow-smartplaylist-web
 
-Web editor and API server for managing [audiflow](https://github.com/reedom/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser-based UI, preview resolver results against live RSS feeds, and submit changes as GitHub PRs to the data repos.
+Local-first web editor and MCP server for managing [audiflow](https://github.com/reedom/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser-based UI, preview resolver results against live RSS feeds, and save changes directly to your local data repo clone.
 
 ## Architecture
 
@@ -10,35 +10,66 @@ Dart workspace with three Dart packages plus a React SPA:
 audiflow-smartplaylist-web/
 ├── packages/
 │   ├── sp_shared/     # Domain models, resolvers, schema, services (pure Dart)
-│   ├── sp_server/     # REST API server (shelf)
+│   ├── sp_server/     # Local API server (shelf)
 │   └── sp_react/      # React SPA web editor
 └── mcp_server/        # MCP server for Claude integration
 ```
 
 | Package | Role | Stack |
 |---------|------|-------|
-| `sp_shared` | Shared domain layer: models, resolvers, JSON schema validation | Pure Dart |
-| `sp_server` | Backend API: auth, config CRUD, preview, PR submission | Dart, shelf |
+| `sp_shared` | Shared domain layer: models, resolvers, JSON schema validation, disk feed cache | Pure Dart |
+| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching, SSE | Dart, shelf |
 | `sp_react` | Web editor UI: pattern browsing, config editing, live preview | React 19, TanStack, Zustand, shadcn/ui |
 | `mcp_server` | Exposes smart playlist operations as MCP tools for Claude | Dart, JSON-RPC 2.0 over stdio |
+
+### How It Works
+
+Both the web server and MCP server read/write config files directly on disk. No authentication, no remote API calls for config operations.
+
+```
+Browser (sp_react)          sp_server (Dart)              MCP server (Dart)
+   |                           |                              |
+   |<--- HTTP REST API ------->|                              |
+   |<--- SSE (file changes) ---|                              |
+   |                           |                              |
+   |                     local data repo directory
+   |                     +-- schema/schema.json
+   |                     +-- patterns/meta.json
+   |                     +-- patterns/{id}/meta.json
+   |                     +-- patterns/{id}/playlists/{pid}.json
+   |                     +-- .cache/feeds/          (gitignored)
+   |                           |                              |
+   |                           |--- reads/writes/watches ---->|
+   |                           |                              |
+   |                           |<---- reads/writes -----------|
+   |                           |                              |
+                          localhost:8080              stdio JSON-RPC
+```
 
 ### Ecosystem
 
 This repo is part of a three-repo ecosystem:
 
 ```
-audiflow-smartplaylist-web          audiflow-smartplaylist           GitHub Pages        audiflow app
-(this repo)                   PR    (production config data)  CI    (static hosting)    fetch
-sp_react editor  ──────────────>  JSON files on main branch ────>  pages URL  <────────  audiflow_domain
-
-                                    audiflow-smartplaylist-dev      GCS
-                              PR    (dev config data)         CI    (dev bucket)
-sp_react editor  ──────────────>  JSON files on main branch ────>  audiflow-dev-config
+User clones data repo locally
+                |
+                v
+audiflow-smartplaylist-web              Local data repo clone         GitHub (remote)
+(this repo)                 read/write  (on user's machine)  push    (source of truth)
+sp_server + sp_react  <───────────────>  JSON files on disk  ──────>  origin/main
+mcp_server            <───────────────>
+                                                              CI
+                                                              ──────>  GitHub Pages / GCS
+                                                                          ^
+                                                                          |
+                                                                       audiflow app fetches
 ```
 
 - **[audiflow-smartplaylist](https://github.com/reedom/audiflow-smartplaylist)**: Production config data (JSON on GitHub, synced to GitHub Pages)
 - **[audiflow-smartplaylist-dev](https://github.com/reedom/audiflow-smartplaylist-dev)**: Dev config data (synced to GCS)
 - **[audiflow](https://github.com/reedom/audiflow)**: Flutter mobile app that consumes configs from hosting
+
+Users manage git operations (commit, push, PR) themselves.
 
 ## Prerequisites
 
@@ -57,33 +88,32 @@ dart pub get
 cd packages/sp_react && pnpm install
 ```
 
-### Environment Variables
+## Environment Variables
 
-Copy `.env.example` to `.env` (or create `.env`) and set the following:
-
-| Variable | Description |
-|----------|-------------|
-| `JWT_SECRET_LOCAL` | JWT signing secret for local development |
-| `GITHUB_CLIENT_ID_LOCAL` | GitHub OAuth app client ID |
-| `GITHUB_CLIENT_SECRET_LOCAL` | GitHub OAuth app client secret |
-| `GITHUB_TOKEN_LOCAL` | GitHub personal access token for config repo access |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SP_DATA_DIR` | CWD | Path to a cloned data repo. If unset, auto-detects from current working directory |
+| `PORT` | `8080` | Server listen port |
+| `WEB_ROOT` | `public` | Directory containing the built React SPA |
+| `SP_FEED_CACHE_TTL` | `3600` | Feed cache TTL in seconds |
 
 ## Development
+
+Clone a data repo alongside this project, then start the server:
 
 ```bash
 # Start both sp_server (port 8080) and React dev server
 make dev
 
+# Or with a custom data directory:
+DATA_DIR=/path/to/audiflow-smartplaylist make dev
+
 # Or run them separately:
-make server                   # Backend API only
-cd packages/sp_react && pnpm dev  # React SPA only
+make server                      # Backend API only
+cd packages/sp_react && pnpm dev # React SPA only
 ```
 
-The server port defaults to `8080` and can be changed with `SERVER_PORT`:
-
-```bash
-SERVER_PORT=3000 make dev
-```
+The data directory defaults to `../audiflow-smartplaylist` relative to this project root. Override it with `DATA_DIR` in Make or `SP_DATA_DIR` as an env var.
 
 ## Testing
 
@@ -107,7 +137,7 @@ make format-check  # Check formatting without applying
 
 ## MCP Server
 
-The MCP server exposes smart playlist operations as tools for Claude via the [Model Context Protocol](https://modelcontextprotocol.io/). It communicates over stdio using JSON-RPC 2.0 and proxies requests to the running `sp_server` REST API.
+The MCP server exposes smart playlist operations as tools for Claude via the [Model Context Protocol](https://modelcontextprotocol.io/). It reads and writes config files directly on the local filesystem and communicates over stdio using JSON-RPC 2.0.
 
 ### Available Tools
 
@@ -116,18 +146,19 @@ The MCP server exposes smart playlist operations as tools for Claude via the [Mo
 | `search_configs` | Search SmartPlaylist configs by keyword |
 | `get_config` | Get a specific config by ID |
 | `get_schema` | Retrieve JSON Schema for configs |
-| `fetch_feed` | Fetch and parse a podcast RSS feed |
+| `fetch_feed` | Fetch and parse a podcast RSS feed (disk-cached) |
 | `validate_config` | Validate a config against JSON Schema |
 | `preview_config` | Preview how a config resolves episodes from a feed |
-| `submit_config` | Submit a config change as a GitHub PR |
+| `submit_config` | Save a config to disk (validates first) |
 
 ### Running Standalone
 
-Start `sp_server` first, then run the MCP server:
-
 ```bash
-make server  # In one terminal
-make mcp     # In another terminal
+# Run from a data repo directory:
+cd /path/to/audiflow-smartplaylist && dart run /path/to/mcp_server/bin/mcp_server.dart
+
+# Or with SP_DATA_DIR:
+SP_DATA_DIR=/path/to/audiflow-smartplaylist dart run mcp_server/bin/mcp_server.dart
 ```
 
 ### Connecting from Claude Code
@@ -143,8 +174,7 @@ Add the following to your Claude Code MCP settings (`.claude/mcp.json` or projec
       "args": ["run", "mcp_server/bin/mcp_server.dart"],
       "cwd": "/path/to/audiflow-smartplaylist-web",
       "env": {
-        "SP_API_URL": "http://localhost:8080",
-        "SP_API_KEY": "<your-api-key>"
+        "SP_DATA_DIR": "/path/to/audiflow-smartplaylist"
       }
     }
   }
@@ -163,48 +193,27 @@ Add the following to `claude_desktop_config.json`:
       "args": ["run", "mcp_server/bin/mcp_server.dart"],
       "cwd": "/path/to/audiflow-smartplaylist-web",
       "env": {
-        "SP_API_URL": "http://localhost:8080",
-        "SP_API_KEY": "<your-api-key>"
+        "SP_DATA_DIR": "/path/to/audiflow-smartplaylist"
       }
     }
   }
 }
 ```
 
-### MCP Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SP_API_URL` | `http://localhost:8080` | Base URL of the sp_server REST API |
-| `SP_API_KEY` | _(none)_ | API key for authenticating with sp_server (optional for local dev) |
-
-## Deployment
-
-The project deploys as a single Docker image containing both the compiled Dart server and the built React SPA.
-
-```bash
-# Dev
-make deploy-dev    # Build, push, and deploy to dev (Cloud Run)
-
-# Production
-make deploy-prod   # Build, push, and deploy to prod (Cloud Run)
-```
-
-Infrastructure is managed with Terraform under `deploy/terraform/`.
-
 ## Split Config Structure
 
 Configs are stored as a three-level file hierarchy in the data repos:
 
 ```
-meta.json                               # Root: version + pattern summaries
-{patternId}/
-  meta.json                             # Pattern: feedUrls, playlistIds, flags
-  playlists/
-    {playlistId}.json                   # SmartPlaylistDefinition
+patterns/
+  meta.json                             # Root: version + pattern summaries
+  {patternId}/
+    meta.json                           # Pattern: feedUrls, playlistIds, flags
+    playlists/
+      {playlistId}.json                 # SmartPlaylistDefinition
 ```
 
-The canonical JSON Schema lives at `packages/sp_shared/assets/schema.json`.
+The canonical JSON Schema lives at `schema/schema.json` inside each data repo.
 
 ## License
 

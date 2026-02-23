@@ -1,19 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
 
 import 'package:sp_shared/sp_shared.dart';
 import 'package:sp_server/src/routes/config_routes.dart';
-import 'package:sp_server/src/services/api_key_service.dart';
-import 'package:sp_server/src/services/config_repository.dart';
-import 'package:sp_server/src/services/feed_cache_service.dart';
-import 'package:sp_server/src/services/jwt_service.dart';
+import 'package:sp_server/src/services/local_config_repository.dart';
 
-const _baseUrl = 'https://raw.githubusercontent.com/test/repo/main';
-
-/// Sample root meta.json.
-String _rootMeta() => jsonEncode({
+/// Creates root meta.json content.
+String _rootMeta() => const JsonEncoder.withIndent('  ').convert({
   'version': 1,
   'patterns': [
     {
@@ -33,8 +29,8 @@ String _rootMeta() => jsonEncode({
   ],
 });
 
-/// Sample pattern meta for podcast-a.
-String _patternMetaA() => jsonEncode({
+/// Pattern meta for podcast-a.
+String _patternMetaA() => const JsonEncoder.withIndent('  ').convert({
   'version': 1,
   'id': 'podcast-a',
   'podcastGuid': 'guid-a',
@@ -42,8 +38,8 @@ String _patternMetaA() => jsonEncode({
   'playlists': ['seasons'],
 });
 
-/// Sample pattern meta for podcast-b.
-String _patternMetaB() => jsonEncode({
+/// Pattern meta for podcast-b.
+String _patternMetaB() => const JsonEncoder.withIndent('  ').convert({
   'version': 1,
   'id': 'podcast-b',
   'feedUrls': ['https://example.com/b/feed.xml'],
@@ -51,19 +47,15 @@ String _patternMetaB() => jsonEncode({
 });
 
 /// Sample playlists.
-String _playlistSeasons() => jsonEncode({
-  'id': 'seasons',
-  'displayName': 'Seasons',
-  'resolverType': 'rss',
-});
+String _playlistSeasons() => const JsonEncoder.withIndent(
+  '  ',
+).convert({'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'});
 
-String _playlistByYear() => jsonEncode({
-  'id': 'by-year',
-  'displayName': 'By Year',
-  'resolverType': 'year',
-});
+String _playlistByYear() => const JsonEncoder.withIndent(
+  '  ',
+).convert({'id': 'by-year', 'displayName': 'By Year', 'resolverType': 'year'});
 
-String _playlistCategories() => jsonEncode({
+String _playlistCategories() => const JsonEncoder.withIndent('  ').convert({
   'id': 'categories',
   'displayName': 'Categories',
   'resolverType': 'category',
@@ -73,42 +65,40 @@ String _playlistCategories() => jsonEncode({
   ],
 });
 
-/// All mock responses for a complete test repo.
-Map<String, String> _allResponses() => {
-  '$_baseUrl/meta.json': _rootMeta(),
-  '$_baseUrl/podcast-a/meta.json': _patternMetaA(),
-  '$_baseUrl/podcast-b/meta.json': _patternMetaB(),
-  '$_baseUrl/podcast-a/playlists/seasons.json': _playlistSeasons(),
-  '$_baseUrl/podcast-b/playlists/by-year.json': _playlistByYear(),
-  '$_baseUrl/podcast-b/playlists/categories.json': _playlistCategories(),
-};
+/// Writes the full test fixture tree into a temp directory.
+Future<String> _createTestDataDir() async {
+  final tmpDir = await Directory.systemTemp.createTemp('config_routes_test_');
+  final dataDir = tmpDir.path;
+  final patternsDir = '$dataDir/patterns';
 
-ConfigRepository _createRepo({
-  Map<String, String>? responses,
-  bool failAll = false,
-}) {
-  return ConfigRepository(
-    httpGet: (Uri url) async {
-      if (failAll) throw Exception('Network error');
-      final resp = (responses ?? _allResponses())[url.toString()];
-      if (resp == null) throw Exception('No mock: $url');
-      return resp;
-    },
-    baseUrl: _baseUrl,
+  // Root meta.json
+  await _writeFile('$patternsDir/meta.json', _rootMeta());
+
+  // podcast-a
+  await _writeFile('$patternsDir/podcast-a/meta.json', _patternMetaA());
+  await _writeFile(
+    '$patternsDir/podcast-a/playlists/seasons.json',
+    _playlistSeasons(),
   );
+
+  // podcast-b
+  await _writeFile('$patternsDir/podcast-b/meta.json', _patternMetaB());
+  await _writeFile(
+    '$patternsDir/podcast-b/playlists/by-year.json',
+    _playlistByYear(),
+  );
+  await _writeFile(
+    '$patternsDir/podcast-b/playlists/categories.json',
+    _playlistCategories(),
+  );
+
+  return dataDir;
 }
 
-/// Creates a repo that returns malformed JSON to trigger
-/// TypeError (Error, not Exception) during parsing.
-ConfigRepository _createMalformedRepo() {
-  return ConfigRepository(
-    httpGet: (Uri url) async {
-      // Return valid JSON that is missing required fields,
-      // causing a TypeError when fromJson casts null as int.
-      return '{"unexpected": true}';
-    },
-    baseUrl: _baseUrl,
-  );
+Future<void> _writeFile(String path, String content) async {
+  final file = File(path);
+  await file.parent.create(recursive: true);
+  await file.writeAsString(content);
 }
 
 /// RSS feed with 3 episodes across 2 seasons.
@@ -195,9 +185,12 @@ String _enrichedRss() => '''<?xml version="1.0" encoding="UTF-8"?>
   </channel>
 </rss>''';
 
-/// Creates a FeedCacheService that routes URLs to fake RSS responses.
-FeedCacheService _createFeedCacheService() {
-  return FeedCacheService(
+/// Creates a DiskFeedCacheService backed by a temp directory
+/// that routes URLs to fake RSS responses via httpGet.
+Future<DiskFeedCacheService> _createFeedCacheService() async {
+  final cacheDir = await Directory.systemTemp.createTemp('feed_cache_test_');
+  return DiskFeedCacheService(
+    cacheDir: cacheDir.path,
     httpGet: (Uri url) async {
       final responses = {
         'https://example.com/feed.xml': _sampleRss(),
@@ -215,140 +208,28 @@ FeedCacheService _createFeedCacheService() {
 
 void main() {
   group('configRouter', () {
-    late JwtService jwtService;
-    late ApiKeyService apiKeyService;
-    late ConfigRepository configRepository;
-    late FeedCacheService feedCacheService;
+    late LocalConfigRepository configRepository;
+    late DiskFeedCacheService feedCacheService;
     late SmartPlaylistValidator validator;
     late Handler handler;
-    late String validToken;
+    late String dataDir;
 
-    setUp(() {
-      jwtService = JwtService(secret: 'test-secret');
-      apiKeyService = ApiKeyService();
-      validToken = jwtService.createToken('user-1');
-      configRepository = _createRepo();
-      feedCacheService = _createFeedCacheService();
+    setUp(() async {
+      dataDir = await _createTestDataDir();
+      configRepository = LocalConfigRepository(dataDir: dataDir);
+      feedCacheService = await _createFeedCacheService();
       validator = SmartPlaylistValidator();
 
       final router = configRouter(
         configRepository: configRepository,
         feedCacheService: feedCacheService,
-        jwtService: jwtService,
-        apiKeyService: apiKeyService,
         validator: validator,
       );
       handler = router.call;
     });
 
-    group('GET /api/configs', () {
-      test('returns 401 without authentication', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs'),
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(401));
-      });
-
-      test('returns list of pattern summaries', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs'),
-          headers: {'Authorization': 'Bearer $validToken'},
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(200));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        final configs = body['configs'] as List;
-        expect(configs.length, equals(2));
-
-        final first = configs[0] as Map<String, dynamic>;
-        expect(first['id'], equals('podcast-a'));
-        expect(first['displayName'], equals('Podcast A'));
-        expect(first['playlistCount'], equals(1));
-
-        final second = configs[1] as Map<String, dynamic>;
-        expect(second['id'], equals('podcast-b'));
-        expect(second['playlistCount'], equals(2));
-      });
-
-      test('accepts API key authentication', () async {
-        final keyResult = apiKeyService.generateKey('user-1', 'Test Key');
-
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs'),
-          headers: {'X-API-Key': keyResult.plaintext},
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(200));
-      });
-
-      test('returns 502 on fetch failure', () async {
-        final failingRepo = _createRepo(failAll: true);
-
-        final failRouter = configRouter(
-          configRepository: failingRepo,
-          feedCacheService: feedCacheService,
-          jwtService: jwtService,
-          apiKeyService: apiKeyService,
-          validator: validator,
-        );
-
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs'),
-          headers: {'Authorization': 'Bearer $validToken'},
-        );
-
-        final response = await failRouter.call(request);
-
-        expect(response.statusCode, equals(502));
-      });
-
-      test('returns 502 on malformed upstream data', () async {
-        final malformedRepo = _createMalformedRepo();
-        final malformedRouter = configRouter(
-          configRepository: malformedRepo,
-          feedCacheService: feedCacheService,
-          jwtService: jwtService,
-          apiKeyService: apiKeyService,
-          validator: validator,
-        );
-
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs'),
-          headers: {'Authorization': 'Bearer $validToken'},
-        );
-
-        final response = await malformedRouter.call(request);
-
-        expect(response.statusCode, equals(502));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], isNotNull);
-      });
-
-      test('has JSON content type', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs'),
-          headers: {'Authorization': 'Bearer $validToken'},
-        );
-
-        final response = await handler(request);
-
-        expect(response.headers['content-type'], equals('application/json'));
-      });
+    tearDown(() async {
+      await Directory(dataDir).delete(recursive: true);
     });
 
     group('GET /api/configs/patterns', () {
@@ -356,7 +237,6 @@ void main() {
         final request = Request(
           'GET',
           Uri.parse('http://localhost/api/configs/patterns'),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await handler(request);
@@ -367,30 +247,21 @@ void main() {
         expect((body[0] as Map)['id'], equals('podcast-a'));
       });
 
-      test('returns 401 without auth', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs/patterns'),
-        );
-
-        final response = await handler(request);
-        expect(response.statusCode, equals(401));
-      });
-
       test('returns 502 on failure', () async {
-        final failingRepo = _createRepo(failAll: true);
+        // Point to non-existent data dir
+        final failRepo = LocalConfigRepository(
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+        );
         final failRouter = configRouter(
-          configRepository: failingRepo,
+          configRepository: failRepo,
           feedCacheService: feedCacheService,
-          jwtService: jwtService,
-          apiKeyService: apiKeyService,
           validator: validator,
         );
 
         final request = Request(
           'GET',
           Uri.parse('http://localhost/api/configs/patterns'),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await failRouter.call(request);
@@ -403,7 +274,6 @@ void main() {
         final request = Request(
           'GET',
           Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await handler(request);
@@ -416,30 +286,20 @@ void main() {
         expect(body['playlists'], equals(['seasons']));
       });
 
-      test('returns 401 without auth', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
-        );
-
-        final response = await handler(request);
-        expect(response.statusCode, equals(401));
-      });
-
       test('returns 502 on fetch failure', () async {
-        final failingRepo = _createRepo(failAll: true);
+        final failRepo = LocalConfigRepository(
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+        );
         final failRouter = configRouter(
-          configRepository: failingRepo,
+          configRepository: failRepo,
           feedCacheService: feedCacheService,
-          jwtService: jwtService,
-          apiKeyService: apiKeyService,
           validator: validator,
         );
 
         final request = Request(
           'GET',
           Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await failRouter.call(request);
@@ -454,7 +314,6 @@ void main() {
           Uri.parse(
             'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
           ),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await handler(request);
@@ -467,25 +326,14 @@ void main() {
         expect(body['resolverType'], equals('rss'));
       });
 
-      test('returns 401 without auth', () async {
-        final request = Request(
-          'GET',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
-          ),
-        );
-
-        final response = await handler(request);
-        expect(response.statusCode, equals(401));
-      });
-
       test('returns 502 on fetch failure', () async {
-        final failingRepo = _createRepo(failAll: true);
+        final failRepo = LocalConfigRepository(
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+        );
         final failRouter = configRouter(
-          configRepository: failingRepo,
+          configRepository: failRepo,
           feedCacheService: feedCacheService,
-          jwtService: jwtService,
-          apiKeyService: apiKeyService,
           validator: validator,
         );
 
@@ -494,7 +342,6 @@ void main() {
           Uri.parse(
             'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
           ),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await failRouter.call(request);
@@ -509,7 +356,6 @@ void main() {
           Uri.parse(
             'http://localhost/api/configs/patterns/podcast-a/assembled',
           ),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await handler(request);
@@ -524,25 +370,14 @@ void main() {
         expect((playlists[0] as Map)['id'], equals('seasons'));
       });
 
-      test('returns 401 without auth', () async {
-        final request = Request(
-          'GET',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a/assembled',
-          ),
-        );
-
-        final response = await handler(request);
-        expect(response.statusCode, equals(401));
-      });
-
       test('returns 502 on failure', () async {
-        final failingRepo = _createRepo(failAll: true);
+        final failRepo = LocalConfigRepository(
+          dataDir:
+              '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
+        );
         final failRouter = configRouter(
-          configRepository: failingRepo,
+          configRepository: failRepo,
           feedCacheService: feedCacheService,
-          jwtService: jwtService,
-          apiKeyService: apiKeyService,
           validator: validator,
         );
 
@@ -551,82 +386,10 @@ void main() {
           Uri.parse(
             'http://localhost/api/configs/patterns/podcast-a/assembled',
           ),
-          headers: {'Authorization': 'Bearer $validToken'},
         );
 
         final response = await failRouter.call(request);
         expect(response.statusCode, equals(502));
-      });
-
-      test('returns 502 on malformed upstream data', () async {
-        final malformedRepo = _createMalformedRepo();
-        final malformedRouter = configRouter(
-          configRepository: malformedRepo,
-          feedCacheService: feedCacheService,
-          jwtService: jwtService,
-          apiKeyService: apiKeyService,
-          validator: validator,
-        );
-
-        final request = Request(
-          'GET',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a/assembled',
-          ),
-          headers: {'Authorization': 'Bearer $validToken'},
-        );
-
-        final response = await malformedRouter.call(request);
-
-        expect(response.statusCode, equals(502));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('Failed to assemble config'));
-      });
-    });
-
-    group('GET /api/configs/<id>', () {
-      test('returns assembled config by ID (legacy)', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs/podcast-b'),
-          headers: {'Authorization': 'Bearer $validToken'},
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(200));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['id'], equals('podcast-b'));
-        final playlists = body['playlists'] as List;
-        expect(playlists.length, equals(2));
-      });
-
-      test('returns 502 for unknown ID', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs/nonexistent'),
-          headers: {'Authorization': 'Bearer $validToken'},
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(502));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('Failed to fetch config'));
-      });
-
-      test('returns 401 without authentication', () async {
-        final request = Request(
-          'GET',
-          Uri.parse('http://localhost/api/configs/podcast-a'),
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(401));
       });
     });
 
@@ -651,10 +414,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/validate'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: validConfig,
         );
 
@@ -676,10 +436,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/validate'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: invalidJson,
         );
 
@@ -697,7 +454,6 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/validate'),
-          headers: {'Authorization': 'Bearer $validToken'},
           body: '',
         );
 
@@ -720,10 +476,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/validate'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: invalidJson,
         );
 
@@ -758,10 +511,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: previewBody,
         );
 
@@ -771,8 +521,6 @@ void main() {
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         final playlists = body['playlists'] as List;
-        // resolveForPreview returns 1 entry per definition,
-        // with seasons as groups inside
         expect(playlists.length, equals(1));
 
         final playlist = playlists[0] as Map<String, dynamic>;
@@ -825,10 +573,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: previewBody,
         );
 
@@ -846,7 +591,6 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {'Authorization': 'Bearer $validToken'},
           body: '',
         );
 
@@ -859,10 +603,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'feedUrl': 'https://example.com/feed.xml'}),
         );
 
@@ -878,10 +619,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'config': {
               'id': 'test',
@@ -904,10 +642,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: '{invalid json',
         );
 
@@ -920,10 +655,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'config': {
               'id': 'test',
@@ -941,18 +673,6 @@ void main() {
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         expect(body['error'], contains('Preview failed'));
-      });
-
-      test('returns 401 without auth', () async {
-        final request = Request(
-          'POST',
-          Uri.parse('http://localhost/api/configs/preview'),
-          body: '{}',
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(401));
       });
 
       test('handles ungrouped episodes', () async {
@@ -974,10 +694,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: previewBody,
         );
 
@@ -990,7 +707,7 @@ void main() {
         final ungroupedIds = ungrouped
             .map((e) => (e as Map<String, dynamic>)['id'])
             .toList();
-        // FeedCacheService assigns 0-based IDs; episode without
+        // DiskFeedCacheService assigns 0-based IDs; episode without
         // season is at index 1.
         expect(ungroupedIds, contains(1));
       });
@@ -1009,10 +726,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: previewBody,
         );
 
@@ -1022,10 +736,6 @@ void main() {
       });
 
       test('enriches episodes with smartPlaylistEpisodeExtractor', () async {
-        // The extractor RSS feed has episodes with title-encoded
-        // season/episode numbers: [1-1], [1-2], [2-1].
-        // Episode at index 1 has no itunes:season in RSS, but the
-        // extractor should derive season 1 from the title pattern.
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
@@ -1057,10 +767,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: previewBody,
         );
 
@@ -1071,8 +778,6 @@ void main() {
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         final playlists = body['playlists'] as List;
 
-        // resolveForPreview returns 1 entry per definition,
-        // with seasons as groups inside.
         expect(playlists.length, equals(1));
 
         final playlist = playlists[0] as Map<String, dynamic>;
@@ -1082,8 +787,6 @@ void main() {
         final groups = playlist['groups'] as List;
         expect(groups.length, equals(2));
 
-        // Episode 2 should be enriched to season 1 (from title),
-        // NOT end up in the nullSeasonGroupKey=0 / "Extras" group.
         final season1 = groups[0] as Map<String, dynamic>;
         expect(season1['sortKey'], equals(1));
         expect(season1['episodeCount'], equals(2));
@@ -1116,10 +819,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: previewBody,
         );
 
@@ -1195,10 +895,7 @@ void main() {
           final request = Request(
             'POST',
             Uri.parse('http://localhost/api/configs/preview'),
-            headers: {
-              'Authorization': 'Bearer $validToken',
-              'Content-Type': 'application/json',
-            },
+            headers: {'Content-Type': 'application/json'},
             body: previewBody,
           );
 
@@ -1219,8 +916,6 @@ void main() {
           final season1 = groups[0] as Map<String, dynamic>;
           final season1Episodes = season1['episodes'] as List;
 
-          // Each episode should have extractedDisplayName from
-          // the titleExtractor pattern "Series (\w+)"
           for (final ep in season1Episodes) {
             final episode = ep as Map<String, dynamic>;
             expect(
@@ -1239,8 +934,7 @@ void main() {
             );
           }
 
-          // Season 2 group: episode with title "[2-1] New Arc
-          // [Series Beta1]"
+          // Season 2 group
           final season2 = groups[1] as Map<String, dynamic>;
           final season2Episodes = season2['episodes'] as List;
           final beta = season2Episodes[0] as Map<String, dynamic>;
@@ -1267,10 +961,7 @@ void main() {
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/preview'),
-          headers: {
-            'Authorization': 'Bearer $validToken',
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: previewBody,
         );
 
@@ -1290,6 +981,340 @@ void main() {
 
         // No claimedByOthers field when empty
         expect(playlist.containsKey('claimedByOthers'), isFalse);
+      });
+    });
+
+    group('PUT /api/configs/patterns/<id>/playlists/<pid>', () {
+      test('saves valid playlist and returns 200', () async {
+        final playlistJson = {
+          'id': 'seasons',
+          'displayName': 'Updated Seasons',
+          'resolverType': 'rss',
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(playlistJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify file was written to disk
+        final file = File('$dataDir/patterns/podcast-a/playlists/seasons.json');
+        final content =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        expect(content['displayName'], equals('Updated Seasons'));
+      });
+
+      test('returns 400 with validation errors for invalid playlist', () async {
+        final invalidJson = {
+          'id': 'seasons',
+          // Missing required 'displayName' and 'resolverType'
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(invalidJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], isNotNull);
+        expect(body['errors'], isNotEmpty);
+      });
+
+      test('returns 400 for empty body', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          body: '',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for invalid JSON syntax', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: '{not valid json',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for invalid resolverType', () async {
+        final invalidJson = {
+          'id': 'seasons',
+          'displayName': 'Seasons',
+          'resolverType': 'invalidType',
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(invalidJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['errors'], isNotEmpty);
+      });
+    });
+
+    group('PUT /api/configs/patterns/<id>/meta', () {
+      test('saves pattern meta and returns 200', () async {
+        final metaJson = {
+          'version': 1,
+          'id': 'podcast-a',
+          'podcastGuid': 'guid-a-updated',
+          'feedUrls': ['https://example.com/a/feed.xml'],
+          'playlists': ['seasons'],
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(metaJson),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify file was written to disk
+        final file = File('$dataDir/patterns/podcast-a/meta.json');
+        final content =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        expect(content['podcastGuid'], equals('guid-a-updated'));
+      });
+
+      test('returns 400 for empty body', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+          body: '',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for invalid JSON syntax', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+          headers: {'Content-Type': 'application/json'},
+          body: '{bad json',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+    });
+
+    group('POST /api/configs/patterns', () {
+      test('creates new pattern and returns 201', () async {
+        final body = {
+          'id': 'podcast-new',
+          'meta': {
+            'version': 1,
+            'id': 'podcast-new',
+            'feedUrls': ['https://example.com/new/feed.xml'],
+            'playlists': [],
+          },
+        };
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(201));
+        final responseBody =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(responseBody['ok'], isTrue);
+        expect(responseBody['id'], equals('podcast-new'));
+
+        // Verify directory and meta.json were created
+        final dir = Directory('$dataDir/patterns/podcast-new');
+        expect(await dir.exists(), isTrue);
+
+        final metaFile = File('$dataDir/patterns/podcast-new/meta.json');
+        expect(await metaFile.exists(), isTrue);
+
+        final content =
+            jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
+        expect(content['id'], equals('podcast-new'));
+
+        // Verify playlists subdirectory was created
+        final playlistsDir = Directory(
+          '$dataDir/patterns/podcast-new/playlists',
+        );
+        expect(await playlistsDir.exists(), isTrue);
+      });
+
+      test('returns 400 for missing id', () async {
+        final body = {
+          'meta': {'version': 1, 'id': 'x', 'playlists': []},
+        };
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for missing meta', () async {
+        final body = {'id': 'podcast-new'};
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(body),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+
+      test('returns 400 for empty body', () async {
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/patterns'),
+          body: '',
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(400));
+      });
+    });
+
+    group('DELETE /api/configs/patterns/<id>/playlists/<pid>', () {
+      test('deletes playlist file and returns 200', () async {
+        // Verify file exists before delete
+        final file = File('$dataDir/patterns/podcast-a/playlists/seasons.json');
+        expect(await file.exists(), isTrue);
+
+        final request = Request(
+          'DELETE',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify file was deleted
+        expect(await file.exists(), isFalse);
+      });
+
+      test('returns 404 for non-existent playlist', () async {
+        final request = Request(
+          'DELETE',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/nonexistent',
+          ),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(404));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('not found'));
+      });
+    });
+
+    group('DELETE /api/configs/patterns/<id>', () {
+      test('deletes pattern directory and returns 200', () async {
+        // Verify directory exists before delete
+        final dir = Directory('$dataDir/patterns/podcast-a');
+        expect(await dir.exists(), isTrue);
+
+        final request = Request(
+          'DELETE',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a'),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+
+        // Verify directory was deleted
+        expect(await dir.exists(), isFalse);
+      });
+
+      test('returns 404 for non-existent pattern', () async {
+        final request = Request(
+          'DELETE',
+          Uri.parse('http://localhost/api/configs/patterns/nonexistent'),
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(404));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('not found'));
       });
     });
   });

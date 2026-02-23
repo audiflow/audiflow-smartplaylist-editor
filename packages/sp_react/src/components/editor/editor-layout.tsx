@@ -8,20 +8,20 @@ import {
 } from '@/schemas/config-schema.ts';
 import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
-import { usePreviewMutation, useFeed } from '@/api/queries.ts';
-import { useAutoSave } from '@/hooks/use-auto-save.ts';
-import { DraftService } from '@/lib/draft-service.ts';
-import type { DraftEntry } from '@/lib/draft-service.ts';
-import { merge } from '@/lib/json-merge.ts';
-import type { JsonValue } from '@/lib/json-merge.ts';
+import {
+  usePreviewMutation,
+  useFeed,
+  useAssembledConfig,
+  useSavePlaylist,
+  useSavePatternMeta,
+} from '@/api/queries.ts';
 import { sanitizeConfig } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
-import { DraftRestoreDialog } from '@/components/editor/draft-restore-dialog.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
+import { ConflictDialog } from '@/components/editor/conflict-dialog.tsx';
 import { FeedUrlInput } from '@/components/editor/feed-url-input.tsx';
-import { SubmitDialog } from '@/components/editor/submit-dialog.tsx';
 import { DebugInfoPanel } from '@/components/preview/debug-info-panel.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -40,7 +40,7 @@ import {
   Loader2,
   Play,
   Plus,
-  Settings,
+  Save,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -50,13 +50,6 @@ const DEFAULT_CONFIG: PatternConfig = {
   playlists: [],
   yearGroupedEpisodes: false,
 };
-
-/** Run form values through Zod (applies transforms like yearHeaderMode
- *  "none" -> null) then strip empty/null keys for the server. */
-function normalizeForSubmit(raw: unknown): Record<string, unknown> {
-  const result = patternConfigSchema.safeParse(raw);
-  return sanitizeConfig(result.success ? result.data : raw) as Record<string, unknown>;
-}
 
 interface EditorLayoutProps {
   configId: string | null;
@@ -69,17 +62,21 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const {
     isJsonMode,
     feedUrl,
-    lastAutoSavedAt,
+    isDirty,
+    isSaving,
+    conflictDetected,
+    conflictPath,
     toggleJsonMode,
     setFeedUrl,
+    setDirty,
+    setSaving,
+    setLastSavedAt,
+    setConflict,
+    clearConflict,
     reset: resetEditorStore,
   } = useEditorStore();
   const [jsonText, setJsonText] = useState('');
-  const [submitOpen, setSubmitOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('tab-0');
-  const [pendingDraft, setPendingDraft] = useState<DraftEntry | null>(() =>
-    new DraftService().loadDraft(configId),
-  );
 
   const form = useForm<PatternConfig>({
     // Cast needed: zodResolver infers the Zod input type (with optional defaults),
@@ -95,13 +92,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   const previewMutation = usePreviewMutation();
   const feedQuery = useFeed(feedUrl || null);
+  const savePlaylistMutation = useSavePlaylist();
+  const savePatternMetaMutation = useSavePatternMeta();
 
-  useAutoSave(
-    configId,
-    initialConfig ?? DEFAULT_CONFIG,
-    form.getValues,
-    form.watch,
-  );
+  // Track the config snapshot that was last loaded/saved for conflict detection
+  const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(initialConfig);
+
+  // Watch the assembled config query for external changes
+  const assembledConfigQuery = useAssembledConfig(configId);
 
   // Initialize feed URL from config on mount
   useEffect(() => {
@@ -111,35 +109,27 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleRestoreDraft = useCallback(() => {
-    if (!pendingDraft) return;
-    try {
-      if (initialConfig) {
-        // DraftEntry fields are `unknown` but originate from JSON.parse
-        const merged = merge({
-          base: pendingDraft.base as JsonValue,
-          latest: initialConfig as JsonValue,
-          modified: pendingDraft.modified as JsonValue,
-        });
-        const parsed = patternConfigSchema.parse(merged);
-        form.reset(parsed);
-      } else {
-        const parsed = patternConfigSchema.parse(pendingDraft.modified);
-        form.reset(parsed);
-      }
-      new DraftService().clearDraft(configId);
-      setPendingDraft(null);
-    } catch (e) {
-      toast.error(
-        t('toastDraftRestoreFailed', { error: e instanceof Error ? e.message : 'Unknown error' }),
-      );
+  // Detect external changes while user has unsaved edits (conflict detection)
+  useEffect(() => {
+    if (!assembledConfigQuery.data || !isDirty) return;
+    if (JSON.stringify(assembledConfigQuery.data) !== JSON.stringify(lastLoadedConfig)) {
+      setConflict(`patterns/${configId}`);
     }
-  }, [pendingDraft, initialConfig, configId, form]);
+  }, [assembledConfigQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleDiscardDraft = useCallback(() => {
-    new DraftService().clearDraft(configId);
-    setPendingDraft(null);
-  }, [configId]);
+  // Dirty tracking via form.watch()
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      if (!initialConfig) {
+        setDirty(true);
+        return;
+      }
+      const current = form.getValues();
+      const changed = JSON.stringify(current) !== JSON.stringify(lastLoadedConfig);
+      setDirty(changed);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, lastLoadedConfig, setDirty, initialConfig]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -201,6 +191,81 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     }
   }, [isJsonMode, jsonText]);
 
+  // Save handler: persist each playlist + pattern meta to disk
+  const handleSave = useCallback(async () => {
+    if (!configId || isSaving) return;
+
+    const config = isJsonMode && parsedJsonConfig
+      ? parsedJsonConfig
+      : form.getValues();
+
+    setSaving(true);
+    try {
+      for (const playlist of config.playlists) {
+        await savePlaylistMutation.mutateAsync({
+          patternId: configId,
+          playlistId: playlist.id,
+          data: playlist,
+        });
+      }
+
+      await savePatternMetaMutation.mutateAsync({
+        patternId: configId,
+        data: {
+          version: 1,
+          id: configId,
+          feedUrls: config.feedUrls ?? [],
+          yearGroupedEpisodes: config.yearGroupedEpisodes ?? false,
+          playlists: config.playlists.map((p) => p.id),
+        },
+      });
+
+      setLastSavedAt(new Date());
+      setLastLoadedConfig(config);
+      toast.success(t('toastSaved', 'Saved successfully'));
+    } catch (error) {
+      toast.error(
+        t('toastSaveError', {
+          error: error instanceof Error ? error.message : 'Save failed',
+          defaultValue: 'Save failed: {{error}}',
+        }),
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [configId, isSaving, isJsonMode, parsedJsonConfig, form, savePlaylistMutation, savePatternMetaMutation, setSaving, setLastSavedAt, t]);
+
+  // Ctrl+S / Cmd+S keyboard shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        void handleSave();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleSave]);
+
+  // Conflict resolution: reload from disk
+  const handleReload = useCallback(() => {
+    if (assembledConfigQuery.data) {
+      form.reset(assembledConfigQuery.data);
+      setLastLoadedConfig(assembledConfigQuery.data);
+      setDirty(false);
+    }
+    clearConflict();
+  }, [assembledConfigQuery.data, form, setDirty, clearConflict]);
+
+  // Conflict resolution: keep current changes
+  const handleKeepChanges = useCallback(() => {
+    clearConflict();
+    // Update lastLoadedConfig so we don't re-trigger conflict
+    if (assembledConfigQuery.data) {
+      setLastLoadedConfig(assembledConfigQuery.data);
+    }
+  }, [assembledConfigQuery.data, clearConflict]);
+
   return (
     <div className="container mx-auto max-w-7xl p-6">
       {/* Header + Preview button (sticky) */}
@@ -208,14 +273,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         <EditorHeader
           configId={configId}
           feedUrl={feedUrl || null}
-          lastAutoSavedAt={lastAutoSavedAt}
           isJsonMode={isJsonMode}
           onBack={() => {
             resetEditorStore();
             void navigate({ to: '/browse' });
           }}
           onModeToggle={handleModeToggle}
-          onSubmit={() => setSubmitOpen(true)}
         />
 
         <div className="flex items-center justify-between">
@@ -223,14 +286,28 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
             <DebugInfoPanel debug={previewMutation.data.debug} />
           )}
           {!previewMutation.data?.debug && <div />}
-          <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
-            {previewMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Play className="mr-2 h-4 w-4" />
-            )}
-            {t('runPreview')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => void handleSave()}
+              disabled={!isDirty || isSaving || !configId}
+              variant={isDirty ? 'default' : 'outline'}
+            >
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {t('save', 'Save')}
+            </Button>
+            <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
+              {previewMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="mr-2 h-4 w-4" />
+              )}
+              {t('runPreview')}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -316,22 +393,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         </FormProvider>
       )}
 
-      {/* Submit Dialog */}
-      <SubmitDialog
-        open={submitOpen}
-        onOpenChange={setSubmitOpen}
-        config={normalizeForSubmit(parsedJsonConfig ?? form.getValues())}
-        configId={configId}
+      <ConflictDialog
+        open={conflictDetected}
+        filePath={conflictPath}
+        onReload={handleReload}
+        onKeepChanges={handleKeepChanges}
       />
-
-      {/* Draft Restore Dialog */}
-      {pendingDraft && (
-        <DraftRestoreDialog
-          savedAt={pendingDraft.savedAt}
-          onRestore={handleRestoreDraft}
-          onDiscard={handleDiscardDraft}
-        />
-      )}
     </div>
   );
 }
@@ -341,24 +408,19 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 interface EditorHeaderProps {
   configId: string | null;
   feedUrl: string | null;
-  lastAutoSavedAt: Date | null;
   isJsonMode: boolean;
   onBack: () => void;
   onModeToggle: () => void;
-  onSubmit: () => void;
 }
 
 function EditorHeader({
   configId,
   feedUrl,
-  lastAutoSavedAt,
   isJsonMode,
   onBack,
   onModeToggle,
-  onSubmit,
 }: EditorHeaderProps) {
   const { t } = useTranslation('editor');
-  const navigate = useNavigate();
 
   const handleViewFeed = useCallback(() => {
     if (!feedUrl) return;
@@ -376,21 +438,9 @@ function EditorHeader({
           <h1 className="text-2xl font-bold">
             {configId ? t('editConfig', { configId }) : t('newConfig')}
           </h1>
-          {lastAutoSavedAt && (
-            <p className="text-xs text-muted-foreground">
-              {t('autoSavedAt', { time: lastAutoSavedAt.toLocaleTimeString() })}
-            </p>
-          )}
         </div>
       </div>
       <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => void navigate({ to: '/settings' })}
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
         <Button
           variant="outline"
           onClick={() => window.open('/docs/schema.html', '_blank')}
@@ -412,7 +462,6 @@ function EditorHeader({
             {t('viewFeed')}
           </Button>
         )}
-        <Button onClick={onSubmit}>{t('submitPr')}</Button>
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import 'package:sp_mcp_server/src/tools/get_config_tool.dart';
+import 'package:sp_server/src/services/local_config_repository.dart';
 import 'package:test/test.dart';
 
-import '../../helpers/fake_http_client.dart';
+import '../../helpers/test_data_dir.dart';
 
 void main() {
   group('getConfigTool definition', () {
@@ -16,29 +17,53 @@ void main() {
   });
 
   group('executeGetConfig', () {
-    late FakeHttpClient client;
+    late String dataDir;
+    late LocalConfigRepository repo;
 
-    setUp(() {
-      client = FakeHttpClient();
+    setUp(() async {
+      dataDir = await createTestDataDir(
+        patternMetas: {
+          'test-config': {
+            'version': 1,
+            'id': 'test-config',
+            'feedUrls': ['https://example.com/feed'],
+            'playlists': ['main'],
+          },
+        },
+        playlists: {
+          'test-config': {
+            'main': {
+              'id': 'main',
+              'displayName': 'Main Episodes',
+              'resolverType': 'rss',
+            },
+          },
+        },
+      );
+      repo = LocalConfigRepository(dataDir: dataDir);
     });
 
+    tearDown(() => cleanupDataDir(dataDir));
+
     test('throws ArgumentError when id is missing', () async {
-      expect(() => executeGetConfig(client, {}), throwsA(isA<ArgumentError>()));
+      expect(() => executeGetConfig(repo, {}), throwsA(isA<ArgumentError>()));
     });
 
     test('throws ArgumentError when id is empty', () async {
       expect(
-        () => executeGetConfig(client, {'id': ''}),
+        () => executeGetConfig(repo, {'id': ''}),
         throwsA(isA<ArgumentError>()),
       );
     });
 
-    test('calls GET /api/configs/{id} with valid id', () async {
-      client.getResponse = {'id': 'test-config'};
+    test('returns assembled config for valid id', () async {
+      final result = await executeGetConfig(repo, {'id': 'test-config'});
 
-      await executeGetConfig(client, {'id': 'test-config'});
-
-      expect(client.lastGetPath, '/api/configs/test-config');
+      expect(result['id'], 'test-config');
+      expect(result['playlists'], isList);
+      final playlists = result['playlists'] as List;
+      expect(playlists.length, 1);
+      expect((playlists[0] as Map)['id'], 'main');
     });
   });
 }

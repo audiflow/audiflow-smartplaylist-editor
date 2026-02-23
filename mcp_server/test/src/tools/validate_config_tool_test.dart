@@ -1,7 +1,6 @@
 import 'package:sp_mcp_server/src/tools/validate_config_tool.dart';
+import 'package:sp_shared/sp_shared.dart';
 import 'package:test/test.dart';
-
-import '../../helpers/fake_http_client.dart';
 
 void main() {
   group('validateConfigTool definition', () {
@@ -17,34 +16,52 @@ void main() {
   });
 
   group('executeValidateConfig', () {
-    late FakeHttpClient client;
+    late SmartPlaylistValidator validator;
 
     setUp(() {
-      client = FakeHttpClient();
+      validator = SmartPlaylistValidator();
     });
 
     test('throws ArgumentError when config is missing', () async {
       expect(
-        () => executeValidateConfig(client, {}),
+        () => executeValidateConfig(validator, {}),
         throwsA(isA<ArgumentError>()),
       );
     });
 
     test('throws ArgumentError when config is not a Map', () async {
       expect(
-        () => executeValidateConfig(client, {'config': 'string'}),
+        () => executeValidateConfig(validator, {'config': 'string'}),
         throwsA(isA<ArgumentError>()),
       );
     });
 
-    test('calls POST /api/configs/validate with config', () async {
-      client.postResponse = {'valid': true, 'errors': []};
+    test('returns valid:true for a valid config', () async {
+      final config = {
+        'version': 1,
+        'patterns': [
+          {
+            'id': 'test',
+            'feedUrls': ['https://example.com/feed'],
+            'playlists': [
+              {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
+            ],
+          },
+        ],
+      };
+      final result = await executeValidateConfig(validator, {'config': config});
 
-      final config = {'id': 'test', 'playlists': []};
-      await executeValidateConfig(client, {'config': config});
+      expect(result['valid'], isTrue);
+      expect(result['errors'], isEmpty);
+    });
 
-      expect(client.lastPostPath, '/api/configs/validate');
-      expect(client.lastPostBody, {'config': config});
+    test('returns valid:false with errors for invalid config', () async {
+      // Missing required fields
+      final config = <String, dynamic>{};
+      final result = await executeValidateConfig(validator, {'config': config});
+
+      expect(result['valid'], isFalse);
+      expect(result['errors'], isNotEmpty);
     });
   });
 }

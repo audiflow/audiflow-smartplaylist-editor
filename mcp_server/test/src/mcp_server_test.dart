@@ -1,19 +1,49 @@
 import 'dart:convert';
 
-import 'package:sp_mcp_server/src/http_client.dart';
 import 'package:sp_mcp_server/src/mcp_server.dart';
+import 'package:sp_shared/sp_shared.dart';
 import 'package:test/test.dart';
 
-import '../helpers/fake_http_client.dart';
+import '../helpers/test_data_dir.dart';
 
 void main() {
-  late FakeHttpClient httpClient;
+  late String dataDir;
   late SpMcpServer server;
 
-  setUp(() {
-    httpClient = FakeHttpClient();
-    server = SpMcpServer(httpClient: httpClient);
+  setUp(() async {
+    dataDir = await createTestDataDir(
+      patterns: [
+        {
+          'id': 'test-podcast',
+          'version': 1,
+          'displayName': 'Test Podcast',
+          'feedUrlHint': 'https://example.com/feed',
+          'playlistCount': 1,
+        },
+      ],
+      patternMetas: {
+        'test-podcast': {
+          'version': 1,
+          'id': 'test-podcast',
+          'feedUrls': ['https://example.com/feed'],
+          'playlists': ['main'],
+        },
+      },
+      playlists: {
+        'test-podcast': {
+          'main': {
+            'id': 'main',
+            'displayName': 'Main Episodes',
+            'resolverType': 'rss',
+          },
+        },
+      },
+      schema: {'type': 'object', 'properties': {}},
+    );
+    server = SpMcpServer(dataDir: dataDir);
   });
+
+  tearDown(() => cleanupDataDir(dataDir));
 
   /// Sends a JSON-RPC request through the server's message handler
   /// and returns the parsed response.
@@ -86,8 +116,6 @@ void main() {
 
   group('tools/call', () {
     test('executes search_configs successfully', () async {
-      httpClient.getResponse = {'configs': []};
-
       final response = await sendRequest(
         id: 4,
         method: 'tools/call',
@@ -101,7 +129,10 @@ void main() {
       expect(content[0]['type'], 'text');
 
       final text = jsonDecode(content[0]['text'] as String);
-      expect(text['configs'], isEmpty);
+      expect(text['configs'], isList);
+      final configs = text['configs'] as List;
+      expect(configs.length, 1);
+      expect((configs[0] as Map)['id'], 'test-podcast');
     });
 
     test('returns error for unknown tool', () async {
@@ -129,11 +160,16 @@ void main() {
       expect(response['error']['code'], JsonRpcError.invalidParams);
     });
 
-    test('returns isError for HTTP failures', () async {
-      httpClient.getResponse = {};
-      // Override to throw.
-      final throwingClient = ThrowingHttpClient();
-      final throwingServer = SpMcpServer(httpClient: throwingClient);
+    test('returns isError for file system failures', () async {
+      // Create a server pointing at a nonexistent data directory
+      // so that file operations fail.
+      final badServer = SpMcpServer(
+        dataDir: '/nonexistent/path',
+        feedService: DiskFeedCacheService(
+          cacheDir: '/nonexistent/cache',
+          httpGet: (url) async => '',
+        ),
+      );
 
       final request = jsonEncode({
         'jsonrpc': '2.0',
@@ -142,7 +178,7 @@ void main() {
         'params': {'name': 'search_configs', 'arguments': {}},
       });
 
-      final response = await throwingServer.handleMessageForTest(request);
+      final response = await badServer.handleMessageForTest(request);
       expect(response, isNotNull);
       final result = response!['result'] as Map<String, dynamic>;
       expect(result['isError'], isTrue);
@@ -167,8 +203,6 @@ void main() {
 
   group('resources/read', () {
     test('reads schema resource', () async {
-      httpClient.getRawResponse = '{"type":"object"}';
-
       final response = await sendRequest(
         id: 9,
         method: 'resources/read',
@@ -183,8 +217,6 @@ void main() {
     });
 
     test('reads configs resource', () async {
-      httpClient.getResponse = {'configs': []};
-
       final response = await sendRequest(
         id: 10,
         method: 'resources/read',
@@ -241,15 +273,4 @@ void main() {
       expect(response, isNull);
     });
   });
-}
-
-/// A fake client that always throws [HttpException] on get.
-final class ThrowingHttpClient extends FakeHttpClient {
-  @override
-  Future<Map<String, dynamic>> get(
-    String path, [
-    Map<String, String>? queryParameters,
-  ]) async {
-    throw const HttpException(statusCode: 500, body: 'Internal Server Error');
-  }
 }

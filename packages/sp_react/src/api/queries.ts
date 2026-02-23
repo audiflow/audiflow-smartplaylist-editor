@@ -4,8 +4,6 @@ import type {
   PatternSummary,
   FeedEpisode,
   PreviewResult,
-  ApiKey,
-  SubmitResponse,
 } from '../schemas/api-schema.ts';
 import type { PatternConfig } from '../schemas/config-schema.ts';
 
@@ -52,46 +50,81 @@ export function usePreviewMutation() {
   });
 }
 
-export function useSubmitPr() {
-  const client = useApiClient();
-  return useMutation({
-    mutationFn: (params: {
-      patternId: string;
-      playlists: unknown[];
-      patternMeta?: unknown;
-      isNewPattern?: boolean;
-      branch?: string;
-    }) => client.post<SubmitResponse>('/api/configs/submit', params),
-  });
-}
-
-export function useApiKeys() {
-  const client = useApiClient();
-  return useQuery({
-    queryKey: ['apiKeys'],
-    queryFn: () => client.get<{ keys: ApiKey[] }>('/api/keys'),
-  });
-}
-
-export function useGenerateKey() {
+export function useSavePlaylist() {
   const client = useApiClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (params: { name: string }) =>
-      client.post<{ key: string; metadata: ApiKey }>('/api/keys', params),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+    mutationFn: (params: {
+      patternId: string;
+      playlistId: string;
+      data: unknown;
+    }) =>
+      client.put<void>(
+        `/api/configs/patterns/${params.patternId}/playlists/${params.playlistId}`,
+        params.data,
+      ),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['assembledConfig', variables.patternId],
+      });
     },
   });
 }
 
-export function useRevokeKey() {
+export function useSavePatternMeta() {
   const client = useApiClient();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => client.delete<void>(`/api/keys/${id}`),
+    mutationFn: (params: { patternId: string; data: unknown }) =>
+      client.put<void>(
+        `/api/configs/patterns/${params.patternId}/meta`,
+        params.data,
+      ),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['assembledConfig', variables.patternId],
+      });
+      void queryClient.invalidateQueries({ queryKey: ['patterns'] });
+    },
+  });
+}
+
+export function useCreatePattern() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { data: unknown }) =>
+      client.post<void>('/api/configs/patterns', params.data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+      void queryClient.invalidateQueries({ queryKey: ['patterns'] });
+    },
+  });
+}
+
+export function useDeletePlaylist() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { patternId: string; playlistId: string }) =>
+      client.delete<void>(
+        `/api/configs/patterns/${params.patternId}/playlists/${params.playlistId}`,
+      ),
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({
+        queryKey: ['assembledConfig', variables.patternId],
+      });
+    },
+  });
+}
+
+export function useDeletePattern() {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (patternId: string) =>
+      client.delete<void>(`/api/configs/patterns/${patternId}`),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['patterns'] });
     },
   });
 }

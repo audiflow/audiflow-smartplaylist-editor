@@ -8,5 +8,9 @@ environment:
 
 dependencies:
   http: ^1.6.0
+  sp_shared:
+    path: ../packages/sp_shared
+  sp_server:
+    path: ../packages/sp_server
 dev_dependencies:
   test: ^1.29.0

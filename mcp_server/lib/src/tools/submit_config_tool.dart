@@ -1,12 +1,17 @@
-import '../http_client.dart';
+import 'dart:convert';
+
+import 'package:sp_server/src/services/local_config_repository.dart';
+import 'package:sp_shared/sp_shared.dart';
+
 import 'tool_definition.dart';
 
-/// Submits a config as a GitHub PR.
+/// Saves a config to disk in the local data repo.
 ///
-/// Calls `POST /api/configs/submit` on the sp_server.
+/// Validates the config, then writes each playlist file and
+/// pattern meta using [LocalConfigRepository].
 const submitConfigTool = ToolDefinition(
   name: 'submit_config',
-  description: 'Submit a config as a GitHub PR',
+  description: 'Save a config to disk',
   inputSchema: {
     'type': 'object',
     'properties': {
@@ -31,7 +36,8 @@ const submitConfigTool = ToolDefinition(
 ///
 /// Throws [ArgumentError] if the required parameters are missing.
 Future<Map<String, dynamic>> executeSubmitConfig(
-  McpHttpClient client,
+  LocalConfigRepository repo,
+  SmartPlaylistValidator validator,
   Map<String, dynamic> arguments,
 ) async {
   final config = arguments['config'];
@@ -42,10 +48,23 @@ Future<Map<String, dynamic>> executeSubmitConfig(
   if (configId == null || configId.isEmpty) {
     throw ArgumentError('Missing required parameter: configId');
   }
-  final body = <String, dynamic>{'config': config, 'configId': configId};
-  final description = arguments['description'] as String?;
-  if (description != null && description.isNotEmpty) {
-    body['description'] = description;
+
+  // Wrap in root schema envelope for validation, since the
+  // validator expects {version, patterns} at the top level.
+  final envelope = {
+    'version': 1,
+    'patterns': [config],
+  };
+  final errors = validator.validateString(jsonEncode(envelope));
+  if (errors.isNotEmpty) {
+    return {'success': false, 'errors': errors};
   }
-  return client.post('/api/configs/submit', body);
+
+  // Parse and save each playlist
+  final patternConfig = SmartPlaylistPatternConfig.fromJson(config);
+  for (final playlist in patternConfig.playlists) {
+    await repo.savePlaylist(configId, playlist.id, playlist.toJson());
+  }
+
+  return {'success': true, 'patternId': configId};
 }

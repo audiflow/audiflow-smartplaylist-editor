@@ -1,19 +1,26 @@
 import 'dart:io';
 
-import 'package:sp_mcp_server/src/http_client.dart';
 import 'package:sp_mcp_server/src/mcp_server.dart';
 
 /// Entry point for the SmartPlaylist MCP server.
 ///
-/// Reads configuration from environment variables:
-/// - `SP_API_URL`: Base URL of the sp_server (default: http://localhost:8080)
-/// - `SP_API_KEY`: Optional API key for authentication
+/// Auto-detects the data directory by checking for patterns/meta.json
+/// in the current working directory.
 Future<void> main() async {
-  final baseUrl = Platform.environment['SP_API_URL'] ?? 'http://localhost:8080';
-  final apiKey = Platform.environment['SP_API_KEY'];
-
-  final httpClient = McpHttpClientImpl(baseUrl: baseUrl, apiKey: apiKey);
-
-  final server = SpMcpServer(httpClient: httpClient);
+  final dataDir = _detectDataDir();
+  final server = SpMcpServer(dataDir: dataDir);
   await server.run();
+}
+
+String _detectDataDir() {
+  final envDir = Platform.environment['SP_DATA_DIR'];
+  final dataDir = envDir ?? Directory.current.path;
+  final metaFile = File('$dataDir/patterns/meta.json');
+  if (metaFile.existsSync()) return dataDir;
+
+  stderr.writeln('Error: patterns/meta.json not found in $dataDir.');
+  stderr.writeln(
+    'Set SP_DATA_DIR or run this command from a SmartPlaylist data repository.',
+  );
+  exit(1);
 }

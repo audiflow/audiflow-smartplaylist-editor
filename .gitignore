@@ -9,11 +9,7 @@ pubspec.lock
 .env
 .envrc
 
-.terraform/
-*.tfstate
-*.tfstate.*
-.terraform.lock.hcl
-terraform.tfvars
+.cache/
 
 .claude/*
 !.claude/settings.json

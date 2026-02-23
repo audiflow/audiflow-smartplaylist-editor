@@ -1,70 +1,111 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:crypto/crypto.dart';
 import 'package:xml/xml.dart';
 
-/// A cached feed with a time-to-live (TTL).
-final class CachedFeed {
-  CachedFeed({
-    required this.episodes,
-    required this.fetchedAt,
-    this.ttl = const Duration(minutes: 15),
-  });
-
-  final List<Map<String, dynamic>> episodes;
-  final DateTime fetchedAt;
-  final Duration ttl;
-
-  /// Whether this cache entry has expired.
-  bool get isStale {
-    final elapsed = DateTime.now().difference(fetchedAt);
-    return ttl < elapsed;
-  }
-}
-
-/// Signature for an HTTP GET function, enabling
-/// dependency injection for testing.
+/// Signature for an HTTP GET function.
 typedef HttpGetFn = Future<String> Function(Uri url);
 
-/// Service that fetches podcast RSS feeds, parses
-/// episode data, and caches results in memory.
-class FeedCacheService {
-  FeedCacheService({
+/// Disk-based feed cache that can be shared between processes.
+///
+/// Caches parsed RSS episodes as JSON files on disk, keyed by
+/// SHA-256 hash of the feed URL. Two separate processes pointing
+/// at the same [cacheDir] will share cached data.
+class DiskFeedCacheService {
+  DiskFeedCacheService({
+    required String cacheDir,
     required HttpGetFn httpGet,
-    Duration cacheTtl = const Duration(minutes: 15),
-  }) : _httpGet = httpGet,
+    Duration cacheTtl = const Duration(hours: 1),
+  }) : _cacheDir = cacheDir,
+       _httpGet = httpGet,
        _cacheTtl = cacheTtl;
 
+  final String _cacheDir;
   final HttpGetFn _httpGet;
   final Duration _cacheTtl;
-  final Map<String, CachedFeed> _cache = {};
 
   /// Fetches episodes from the given feed [url].
   ///
-  /// Returns cached data if still fresh; otherwise
-  /// fetches and parses the RSS feed anew.
+  /// Returns cached data from disk if still fresh; otherwise
+  /// fetches the RSS feed, parses it, and caches to disk.
   Future<List<Map<String, dynamic>>> fetchFeed(String url) async {
-    final cached = _cache[url];
-    if (cached != null && !cached.isStale) {
-      return cached.episodes;
+    final hash = _hashUrl(url);
+    final cached = await _readCache(hash);
+    if (cached != null) {
+      return cached;
     }
 
     final xml = await _httpGet(Uri.parse(url));
     final episodes = _parseRss(xml);
-
-    _cache[url] = CachedFeed(
-      episodes: episodes,
-      fetchedAt: DateTime.now(),
-      ttl: _cacheTtl,
-    );
-
+    await _writeCache(hash, url, episodes);
     return episodes;
   }
 
-  /// Clears all cached feed data.
-  void clearCache() => _cache.clear();
+  // -- Cache I/O -------------------------------------------------------
 
-  /// Returns the number of cached feeds.
-  int get cacheSize => _cache.length;
+  String _hashUrl(String url) {
+    final bytes = utf8.encode(url);
+    return sha256.convert(bytes).toString();
+  }
 
-  /// Parses minimal episode data from RSS XML.
+  File _metaFile(String hash) => File('$_cacheDir/$hash.meta');
+  File _dataFile(String hash) => File('$_cacheDir/$hash.json');
+
+  /// Reads cached episodes from disk if the cache is fresh.
+  Future<List<Map<String, dynamic>>?> _readCache(String hash) async {
+    final metaFile = _metaFile(hash);
+    if (!await metaFile.exists()) return null;
+
+    try {
+      final metaJson =
+          jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
+      final fetchedAt = DateTime.parse(metaJson['fetchedAt'] as String);
+      final elapsed = DateTime.now().difference(fetchedAt);
+      if (_cacheTtl < elapsed) return null;
+
+      final dataFile = _dataFile(hash);
+      if (!await dataFile.exists()) return null;
+
+      final raw = jsonDecode(await dataFile.readAsString()) as List<dynamic>;
+      return raw.cast<Map<String, dynamic>>();
+    } on Object {
+      // Corrupted cache -- treat as miss.
+      return null;
+    }
+  }
+
+  /// Writes episodes and metadata to disk atomically.
+  Future<void> _writeCache(
+    String hash,
+    String url,
+    List<Map<String, dynamic>> episodes,
+  ) async {
+    final dir = Directory(_cacheDir);
+    if (!await dir.exists()) {
+      await dir.create(recursive: true);
+    }
+
+    final meta = jsonEncode({
+      'url': url,
+      'fetchedAt': DateTime.now().toIso8601String(),
+    });
+    final data = jsonEncode(episodes);
+
+    // Write data before meta so a crash between writes leaves stale meta
+    // (safe cache miss) rather than fresh meta pointing to stale data.
+    await _atomicWrite(_dataFile(hash), data);
+    await _atomicWrite(_metaFile(hash), meta);
+  }
+
+  Future<void> _atomicWrite(File target, String content) async {
+    final tmp = File('${target.path}.tmp');
+    await tmp.writeAsString(content, flush: true);
+    await tmp.rename(target.path);
+  }
+
+  // -- RSS parsing (ported from FeedCacheService in sp_server) ----------
+
   List<Map<String, dynamic>> _parseRss(String xml) {
     final XmlDocument document;
     try {
@@ -78,8 +119,7 @@ class FeedCacheService {
     var index = 0;
 
     for (final item in items) {
-      final episode = _parseItem(item, index);
-      episodes.add(episode);
+      episodes.add(_parseItem(item, index));
       index++;
     }
 
@@ -99,7 +139,6 @@ class FeedCacheService {
     };
   }
 
-  /// Extracts text content from a child element.
   String? _text(XmlElement parent, String name) {
     final elements = parent.findElements(name);
     if (elements.isEmpty) return null;
@@ -107,14 +146,10 @@ class FeedCacheService {
     return text.isEmpty ? null : text;
   }
 
-  /// Extracts text from an `itunes:*` namespaced
-  /// child element.
   String? _itunesText(XmlElement parent, String name) {
     for (final child in parent.children) {
       if (child is! XmlElement) continue;
-      final localName = child.name.local;
-      final prefix = child.name.prefix;
-      if (localName == name && prefix == 'itunes') {
+      if (child.name.local == name && child.name.prefix == 'itunes') {
         final text = child.innerText.trim();
         return text.isEmpty ? null : text;
       }
@@ -122,7 +157,6 @@ class FeedCacheService {
     return null;
   }
 
-  /// Extracts the image URL from `itunes:image`.
   String? _itunesImageUrl(XmlElement parent) {
     for (final child in parent.children) {
       if (child is! XmlElement) continue;
@@ -133,21 +167,15 @@ class FeedCacheService {
     return null;
   }
 
-  /// Parses an RFC 2822 date string to ISO 8601.
   String? _parseDate(String? dateStr) {
     if (dateStr == null) return null;
     final parsed = DateTime.tryParse(dateStr);
     if (parsed != null) return parsed.toIso8601String();
-
-    // Try RFC 2822 format commonly used in RSS.
-    final rfc2822 = _parseRfc2822(dateStr);
-    return rfc2822?.toIso8601String();
+    return _parseRfc2822(dateStr)?.toIso8601String();
   }
 
-  /// Best-effort RFC 2822 date parser.
   DateTime? _parseRfc2822(String input) {
     try {
-      // Remove day-of-week prefix if present.
       final cleaned = input.contains(',')
           ? input.substring(input.indexOf(',') + 1).trim()
           : input.trim();
@@ -167,9 +195,7 @@ class FeedCacheService {
     final month = _monthNumber(parts[1]);
     final year = int.tryParse(parts[2]);
 
-    if (day == null || month == null || year == null) {
-      return null;
-    }
+    if (day == null || month == null || year == null) return null;
 
     final timeParts = parts[3].split(':');
     final hour = int.tryParse(timeParts[0]) ?? 0;
@@ -179,7 +205,7 @@ class FeedCacheService {
     return DateTime.utc(year, month, day, hour, minute, second);
   }
 
-  int? _monthNumber(String abbr) {
+  static int? _monthNumber(String abbr) {
     const months = {
       'Jan': 1,
       'Feb': 2,

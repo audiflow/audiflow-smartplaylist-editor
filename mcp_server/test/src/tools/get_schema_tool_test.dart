@@ -1,7 +1,7 @@
 import 'package:sp_mcp_server/src/tools/get_schema_tool.dart';
 import 'package:test/test.dart';
 
-import '../../helpers/fake_http_client.dart';
+import '../../helpers/test_data_dir.dart';
 
 void main() {
   group('getSchemaTool definition', () {
@@ -16,19 +16,20 @@ void main() {
   });
 
   group('executeGetSchema', () {
-    late FakeHttpClient client;
+    late String dataDir;
 
-    setUp(() {
-      client = FakeHttpClient();
+    setUp(() async {
+      dataDir = await createTestDataDir(
+        schema: {'type': 'object', 'properties': {}},
+      );
     });
 
-    test('calls getRaw /api/schema', () async {
-      client.getRawResponse = '{"type": "object"}';
+    tearDown(() => cleanupDataDir(dataDir));
 
-      final result = await executeGetSchema(client, {});
+    test('reads schema from disk', () async {
+      final result = await executeGetSchema(dataDir, {});
 
-      expect(client.lastGetRawPath, '/api/schema');
-      expect(result, {'type': 'object'});
+      expect(result, {'type': 'object', 'properties': {}});
     });
   });
 }

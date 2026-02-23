@@ -1,9 +1,10 @@
-import '../http_client.dart';
+import 'package:sp_server/src/services/local_config_repository.dart';
+
 import 'tool_definition.dart';
 
 /// Gets a specific SmartPlaylist config by ID.
 ///
-/// Calls `GET /api/configs/{id}` on the sp_server.
+/// Assembles the full config from local pattern meta and playlist files.
 const getConfigTool = ToolDefinition(
   name: 'get_config',
   description: 'Get a specific SmartPlaylist config by ID',
@@ -23,12 +24,13 @@ const getConfigTool = ToolDefinition(
 ///
 /// Throws [ArgumentError] if the required `id` parameter is missing.
 Future<Map<String, dynamic>> executeGetConfig(
-  McpHttpClient client,
+  LocalConfigRepository repo,
   Map<String, dynamic> arguments,
 ) async {
   final id = arguments['id'] as String?;
   if (id == null || id.isEmpty) {
     throw ArgumentError('Missing required parameter: id');
   }
-  return client.get('/api/configs/$id');
+  final config = await repo.assembleConfig(id);
+  return config.toJson();
 }

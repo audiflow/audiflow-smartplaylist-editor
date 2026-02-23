@@ -8,10 +8,6 @@ import {
   previewPlaylistSchema,
   previewDebugSchema,
   previewResultSchema,
-  tokenResponseSchema,
-  apiKeySchema,
-  generatedKeySchema,
-  submitResponseSchema,
 } from '../api-schema';
 
 describe('patternSummarySchema', () => {
@@ -231,53 +227,3 @@ describe('previewResultSchema', () => {
   });
 });
 
-describe('tokenResponseSchema', () => {
-  it('parses token response', () => {
-    const result = tokenResponseSchema.parse({
-      accessToken: 'abc',
-      refreshToken: 'xyz',
-    });
-    expect(result.accessToken).toBe('abc');
-    expect(result.refreshToken).toBe('xyz');
-  });
-});
-
-describe('apiKeySchema', () => {
-  it('parses API key metadata', () => {
-    const result = apiKeySchema.parse({
-      id: 'key-1',
-      name: 'My Key',
-      maskedKey: 'sp_****abcd',
-      createdAt: '2024-01-15T00:00:00Z',
-    });
-    expect(result.id).toBe('key-1');
-    expect(result.createdAt).toBe('2024-01-15T00:00:00Z');
-  });
-});
-
-describe('generatedKeySchema', () => {
-  it('parses generated key with metadata', () => {
-    const result = generatedKeySchema.parse({
-      key: 'sp_full_plaintext_key',
-      metadata: {
-        id: 'key-1',
-        name: 'My Key',
-        maskedKey: 'sp_****abcd',
-        createdAt: '2024-01-15T00:00:00Z',
-      },
-    });
-    expect(result.key).toBe('sp_full_plaintext_key');
-    expect(result.metadata.name).toBe('My Key');
-  });
-});
-
-describe('submitResponseSchema', () => {
-  it('parses submit response', () => {
-    const result = submitResponseSchema.parse({
-      prUrl: 'https://github.com/org/repo/pull/42',
-      branch: 'smartplaylist/podcast-abc-1234567890',
-    });
-    expect(result.prUrl).toBe('https://github.com/org/repo/pull/42');
-    expect(result.branch).toBe('smartplaylist/podcast-abc-1234567890');
-  });
-});
