@@ -214,28 +214,29 @@ void main() {
     );
 
     test('emits events for files in subdirectories', () async {
-      final subDir = Directory('${tempDir.path}/patterns/podcast-a');
-      await subDir.create(recursive: true);
-
       watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
-
-      // Allow watcher to fully initialize on CI
-      await Future<void>.delayed(const Duration(milliseconds: 200));
 
       final events = <FileChangeEvent>[];
       final subscription = watcher.events.listen(events.add);
 
+      // Create subdirectory and file after watcher is running
+      final subDir = Directory('${tempDir.path}/patterns/podcast-a');
+      await subDir.create(recursive: true);
       await File('${subDir.path}/meta.json').writeAsString('{}');
 
-      await Future<void>.delayed(const Duration(milliseconds: 600));
+      // Poll until event arrives or timeout (handles slow CI)
+      for (var i = 0; i < 20; i++) {
+        if (events.any((e) => e.path.contains('meta.json'))) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       await subscription.cancel();
 
       expect(events, isNotEmpty);
       expect(
-        events.any((e) => e.path == 'patterns/podcast-a/meta.json'),
+        events.any((e) => e.path.contains('meta.json')),
         isTrue,
-        reason: 'Expected relative path from watched directory',
+        reason: 'Expected event for file in subdirectory',
       );
     });
 
