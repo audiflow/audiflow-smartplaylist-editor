@@ -26,18 +26,21 @@ void main() {
   });
 
   group('SmartPlaylistSortSpec', () {
-    test('simple sort spec holds field and order', () {
-      const spec = SimpleSmartPlaylistSort(
-        SmartPlaylistSortField.playlistNumber,
-        SortOrder.ascending,
-      );
+    test('single-rule sort spec holds one rule', () {
+      final spec = SmartPlaylistSortSpec([
+        SmartPlaylistSortRule(
+          field: SmartPlaylistSortField.playlistNumber,
+          order: SortOrder.ascending,
+        ),
+      ]);
 
-      expect(spec.field, SmartPlaylistSortField.playlistNumber);
-      expect(spec.order, SortOrder.ascending);
+      expect(spec.rules, hasLength(1));
+      expect(spec.rules[0].field, SmartPlaylistSortField.playlistNumber);
+      expect(spec.rules[0].order, SortOrder.ascending);
     });
 
-    test('composite sort spec holds multiple rules', () {
-      final spec = CompositeSmartPlaylistSort([
+    test('multi-rule sort spec holds multiple rules', () {
+      final spec = SmartPlaylistSortSpec([
         SmartPlaylistSortRule(
           field: SmartPlaylistSortField.playlistNumber,
           order: SortOrder.ascending,
@@ -49,20 +52,6 @@ void main() {
       ]);
 
       expect(spec.rules.length, 2);
-    });
-
-    test('exhaustive switch works on SmartPlaylistSortSpec', () {
-      const SmartPlaylistSortSpec spec = SimpleSmartPlaylistSort(
-        SmartPlaylistSortField.alphabetical,
-        SortOrder.ascending,
-      );
-
-      final result = switch (spec) {
-        SimpleSmartPlaylistSort() => 'simple',
-        CompositeSmartPlaylistSort() => 'composite',
-      };
-
-      expect(result, 'simple');
     });
   });
 }

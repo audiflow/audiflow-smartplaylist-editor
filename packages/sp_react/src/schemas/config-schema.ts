@@ -26,7 +26,7 @@ export const resolverTypeSchema = z.enum([
   'titleAppearanceOrder',
 ]);
 
-// -- Sort types (discriminated unions) --
+// -- Sort types --
 
 export const sortConditionSchema = z.discriminatedUnion('type', [
   z.object({
@@ -45,28 +45,33 @@ export const sortRuleSchema = z.object({
   condition: sortConditionSchema.optional(),
 });
 
-const sortSpecUnionSchema = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('simple'),
-    field: sortFieldSchema,
-    order: sortOrderSchema,
-  }),
-  z.object({
-    type: z.literal('composite'),
-    rules: z.array(sortRuleSchema),
-  }),
-]);
-
-// Accept objects missing the `type` discriminator (e.g. `{ rules: [] }` from
-// manual JSON editing) by coercing them to null instead of failing validation.
 export const smartPlaylistSortSpecSchema = z
   .unknown()
   .transform((v) => {
     if (v == null || typeof v !== 'object') return null;
-    if (!('type' in (v as Record<string, unknown>))) return null;
-    return v;
+    const obj = v as Record<string, unknown>;
+
+    // Legacy simple format: convert to rules array
+    if (obj.type === 'simple' && 'field' in obj && 'order' in obj) {
+      return { rules: [{ field: obj.field, order: obj.order }] };
+    }
+
+    // Legacy composite or new format: must have rules array
+    if ('rules' in obj && Array.isArray(obj.rules)) {
+      // Strip the legacy type field if present
+      const { type: _, ...rest } = obj;
+      return rest;
+    }
+
+    return null;
   })
-  .pipe(sortSpecUnionSchema.nullable());
+  .pipe(
+    z
+      .object({
+        rules: z.array(sortRuleSchema).min(1),
+      })
+      .nullable(),
+  );
 
 // -- Group definition --
 

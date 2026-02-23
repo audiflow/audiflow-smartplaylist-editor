@@ -11,10 +11,12 @@ class RssMetadataResolver implements SmartPlaylistResolver {
   String get type => 'rss';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SimpleSmartPlaylistSort(
-    SmartPlaylistSortField.playlistNumber,
-    SortOrder.ascending,
-  );
+  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
+    SmartPlaylistSortRule(
+      field: SmartPlaylistSortField.playlistNumber,
+      order: SortOrder.ascending,
+    ),
+  ]);
 
   @override
   SmartPlaylistGrouping? resolve(

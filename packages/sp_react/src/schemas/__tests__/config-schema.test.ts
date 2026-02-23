@@ -42,9 +42,7 @@ describe('playlistDefinitionSchema', () => {
         { id: 'g1', displayName: 'Group 1', pattern: 'pattern1' },
       ],
       customSort: {
-        type: 'simple',
-        field: 'playlistNumber',
-        order: 'ascending',
+        rules: [{ field: 'playlistNumber', order: 'ascending' }],
       },
       titleExtractor: {
         source: 'title',
@@ -72,9 +70,7 @@ describe('playlistDefinitionSchema', () => {
     expect(result.nullSeasonGroupKey).toBe(0);
     expect(result.groups).toHaveLength(1);
     expect(result.customSort).toEqual({
-      type: 'simple',
-      field: 'playlistNumber',
-      order: 'ascending',
+      rules: [{ field: 'playlistNumber', order: 'ascending' }],
     });
     expect(result.titleExtractor).toEqual({
       source: 'title',
@@ -149,21 +145,29 @@ describe('patternConfigSchema', () => {
 });
 
 describe('smartPlaylistSortSpecSchema', () => {
-  it('parses simple sort', () => {
+  it('parses new unified format', () => {
+    const input = {
+      rules: [{ field: 'playlistNumber', order: 'ascending' }],
+    };
+    const result = smartPlaylistSortSpecSchema.parse(input)!;
+    expect(result.rules).toHaveLength(1);
+    expect(result.rules[0].field).toBe('playlistNumber');
+    expect(result.rules[0].order).toBe('ascending');
+  });
+
+  it('converts legacy simple format to rules array', () => {
     const input = {
       type: 'simple',
       field: 'playlistNumber',
       order: 'ascending',
     };
     const result = smartPlaylistSortSpecSchema.parse(input)!;
-    expect(result.type).toBe('simple');
-    if (result.type === 'simple') {
-      expect(result.field).toBe('playlistNumber');
-      expect(result.order).toBe('ascending');
-    }
+    expect(result).toEqual({
+      rules: [{ field: 'playlistNumber', order: 'ascending' }],
+    });
   });
 
-  it('parses composite sort with condition', () => {
+  it('strips legacy type field from composite format', () => {
     const input = {
       type: 'composite',
       rules: [
@@ -182,20 +186,18 @@ describe('smartPlaylistSortSpecSchema', () => {
       ],
     };
     const result = smartPlaylistSortSpecSchema.parse(input)!;
-    expect(result.type).toBe('composite');
-    if (result.type === 'composite') {
-      expect(result.rules).toHaveLength(2);
-      expect(result.rules[0].condition).toEqual({
-        type: 'sortKeyGreaterThan',
-        value: 10,
-      });
-      expect(result.rules[1].condition).toBeUndefined();
-    }
+    expect(result.rules).toHaveLength(2);
+    expect(result.rules[0].condition).toEqual({
+      type: 'sortKeyGreaterThan',
+      value: 10,
+    });
+    expect(result.rules[1].condition).toBeUndefined();
+    // type field should be stripped
+    expect('type' in result).toBe(false);
   });
 
-  it('parses composite sort with greaterThan condition', () => {
+  it('parses rules with greaterThan condition', () => {
     const input = {
-      type: 'composite',
       rules: [
         {
           field: 'playlistNumber',
@@ -212,23 +214,24 @@ describe('smartPlaylistSortSpecSchema', () => {
       ],
     };
     const result = smartPlaylistSortSpecSchema.parse(input)!;
-    expect(result.type).toBe('composite');
-    if (result.type === 'composite') {
-      expect(result.rules[0].condition).toEqual({
-        type: 'greaterThan',
-        value: 5,
-      });
-    }
+    expect(result.rules[0].condition).toEqual({
+      type: 'greaterThan',
+      value: 5,
+    });
   });
 
-  it('rejects unknown sort type', () => {
-    expect(() =>
-      smartPlaylistSortSpecSchema.parse({
-        type: 'unknown',
-        field: 'playlistNumber',
-        order: 'ascending',
-      }),
-    ).toThrow();
+  it('returns null for invalid input', () => {
+    const result = smartPlaylistSortSpecSchema.parse({
+      type: 'unknown',
+      field: 'playlistNumber',
+      order: 'ascending',
+    });
+    expect(result).toBeNull();
+  });
+
+  it('returns null for non-object input', () => {
+    const result = smartPlaylistSortSpecSchema.parse('not-an-object');
+    expect(result).toBeNull();
   });
 });
 

@@ -59,25 +59,17 @@ describe('Zod enums match vendored schema.json', () => {
   });
 
   it('sortFields match schema', () => {
-    const sortSpec = defs.SmartPlaylistSortSpec;
-    const simpleVariant = (sortSpec.oneOf as Array<Record<string, unknown>>).find(
-      (v) =>
-        v.properties != null &&
-        (v.properties as Record<string, unknown>).field != null,
-    ) as Record<string, unknown>;
-    const field = (simpleVariant.properties as Record<string, Record<string, unknown>>).field;
+    const sortRule = defs.SmartPlaylistSortRule as Record<string, unknown>;
+    const props = sortRule.properties as Record<string, Record<string, unknown>>;
+    const field = props.field;
     const schemaValues = extractEnum(field);
     expect(sortFieldSchema.options).toEqual(schemaValues);
   });
 
   it('sortOrders match schema', () => {
-    const sortSpec = defs.SmartPlaylistSortSpec;
-    const simpleVariant = (sortSpec.oneOf as Array<Record<string, unknown>>).find(
-      (v) =>
-        v.properties != null &&
-        (v.properties as Record<string, unknown>).order != null,
-    ) as Record<string, unknown>;
-    const order = (simpleVariant.properties as Record<string, Record<string, unknown>>).order;
+    const sortRule = defs.SmartPlaylistSortRule as Record<string, unknown>;
+    const props = sortRule.properties as Record<string, Record<string, unknown>>;
+    const order = props.order;
     const schemaValues = extractEnum(order);
     expect(sortOrderSchema.options).toEqual(schemaValues);
   });
@@ -196,11 +188,9 @@ describe('Zod-parsed output validates against JSON Schema', () => {
     expect(valid).toBe(true);
   });
 
-  it('simple sort validates', () => {
+  it('sort spec validates', () => {
     const sort = smartPlaylistSortSpecSchema.parse({
-      type: 'simple',
-      field: 'alphabetical',
-      order: 'ascending',
+      rules: [{ field: 'alphabetical', order: 'ascending' }],
     });
     const wrapped = {
       version: 1,

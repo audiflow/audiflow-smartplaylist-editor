@@ -203,80 +203,21 @@
     },
     "SmartPlaylistSortSpec": {
       "type": "object",
-      "description": "Sort specification, either simple (single-field) or composite (multi-rule).",
+      "description": "Sort specification with one or more rules applied in order.",
       "required": [
-        "type"
+        "rules"
       ],
-      "oneOf": [
-        {
-          "type": "object",
-          "description": "Simple single-field sort.",
-          "required": [
-            "type",
-            "field",
-            "order"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "type": {
-              "type": "string",
-              "const": "simple"
-            },
-            "field": {
-              "description": "Field to sort by.",
-              "oneOf": [
-                {
-                  "const": "playlistNumber",
-                  "description": "Sort by group key (season number, year, etc.)."
-                },
-                {
-                  "const": "newestEpisodeDate",
-                  "description": "Sort by the most recent episode date in each group."
-                },
-                {
-                  "const": "progress",
-                  "description": "Sort by listening progress. Mobile-only; has no effect in web preview."
-                },
-                {
-                  "const": "alphabetical",
-                  "description": "Sort alphabetically by group display name."
-                }
-              ]
-            },
-            "order": {
-              "type": "string",
-              "enum": [
-                "ascending",
-                "descending"
-              ],
-              "description": "Sort direction."
-            }
-          }
-        },
-        {
-          "type": "object",
-          "description": "Composite sort with multiple rules.",
-          "required": [
-            "type",
-            "rules"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "type": {
-              "type": "string",
-              "const": "composite"
-            },
-            "rules": {
-              "type": "array",
-              "description": "Ordered list of sort rules.",
-              "items": {
-                "$ref": "#/$defs/SmartPlaylistSortRule"
-              },
-              "minItems": 1
-            }
-          }
+      "additionalProperties": false,
+      "properties": {
+        "rules": {
+          "type": "array",
+          "description": "Ordered list of sort rules.",
+          "items": {
+            "$ref": "#/$defs/SmartPlaylistSortRule"
+          },
+          "minItems": 1
         }
-      ]
+      }
     },
     "SmartPlaylistSortRule": {
       "type": "object",

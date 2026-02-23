@@ -38,27 +38,31 @@ void main() {
 
     test('returns groups unchanged when list has fewer than two elements', () {
       final groups = [_group('a')];
-      final sort = const SimpleSmartPlaylistSort(
-        SmartPlaylistSortField.playlistNumber,
-        SortOrder.ascending,
-      );
+      const sort = SmartPlaylistSortSpec([
+        SmartPlaylistSortRule(
+          field: SmartPlaylistSortField.playlistNumber,
+          order: SortOrder.ascending,
+        ),
+      ]);
 
       final result = sortGroups(groups, sort, {});
 
       expect(result.map((g) => g.id), ['a']);
     });
 
-    group('SimpleSmartPlaylistSort', () {
+    group('single-rule sort', () {
       test('sorts by playlistNumber ascending', () {
         final groups = [
           _group('c', sortKey: 3),
           _group('a', sortKey: 1),
           _group('b', sortKey: 2),
         ];
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.playlistNumber,
-          SortOrder.ascending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.playlistNumber,
+            order: SortOrder.ascending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, {});
 
@@ -71,10 +75,12 @@ void main() {
           _group('c', sortKey: 3),
           _group('b', sortKey: 2),
         ];
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.playlistNumber,
-          SortOrder.descending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.playlistNumber,
+            order: SortOrder.descending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, {});
 
@@ -94,10 +100,12 @@ void main() {
           4: DateTime(2024, 2, 1),
           5: DateTime(2024, 5, 1), // newest in 'mid'
         });
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.newestEpisodeDate,
-          SortOrder.ascending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.newestEpisodeDate,
+            order: SortOrder.ascending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, episodes);
 
@@ -113,10 +121,12 @@ void main() {
           1: DateTime(2024, 1, 1),
           2: DateTime(2024, 12, 1),
         });
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.newestEpisodeDate,
-          SortOrder.descending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.newestEpisodeDate,
+            order: SortOrder.descending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, episodes);
 
@@ -129,10 +139,12 @@ void main() {
           _group('has-date', episodeIds: [2]),
         ];
         final episodes = _episodeMap({1: null, 2: DateTime(2024, 1, 1)});
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.newestEpisodeDate,
-          SortOrder.ascending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.newestEpisodeDate,
+            order: SortOrder.ascending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, episodes);
 
@@ -145,10 +157,12 @@ void main() {
           _group('a', displayName: 'Alpha'),
           _group('b', displayName: 'Bravo'),
         ];
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.alphabetical,
-          SortOrder.ascending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.alphabetical,
+            order: SortOrder.ascending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, {});
 
@@ -161,10 +175,12 @@ void main() {
           _group('c', displayName: 'Charlie'),
           _group('b', displayName: 'Bravo'),
         ];
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.alphabetical,
-          SortOrder.descending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.alphabetical,
+            order: SortOrder.descending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, {});
 
@@ -173,10 +189,12 @@ void main() {
 
       test('progress sort is a no-op', () {
         final groups = [_group('b', sortKey: 2), _group('a', sortKey: 1)];
-        final sort = const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.progress,
-          SortOrder.ascending,
-        );
+        const sort = SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.progress,
+            order: SortOrder.ascending,
+          ),
+        ]);
 
         final result = sortGroups(groups, sort, {});
 
@@ -185,7 +203,7 @@ void main() {
       });
     });
 
-    group('CompositeSmartPlaylistSort', () {
+    group('multi-rule sort', () {
       test('partitions by SortKeyGreaterThan and sorts each partition', () {
         // Simulates coten_radio: seasons (sortKey > 0) ascending,
         // extras (sortKey <= 0) by newestEpisodeDate ascending.
@@ -201,7 +219,7 @@ void main() {
           20: DateTime(2024, 1, 1),
         });
 
-        final sort = CompositeSmartPlaylistSort([
+        final sort = SmartPlaylistSortSpec([
           SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
             order: SortOrder.ascending,
@@ -232,7 +250,7 @@ void main() {
           _group('a', sortKey: 1),
           _group('b', sortKey: 2),
         ];
-        final sort = CompositeSmartPlaylistSort([
+        final sort = SmartPlaylistSortSpec([
           const SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
             order: SortOrder.descending,
@@ -246,7 +264,7 @@ void main() {
 
       test('returns unchanged when no rules match', () {
         final groups = [_group('b'), _group('a')];
-        final sort = CompositeSmartPlaylistSort([]);
+        final sort = SmartPlaylistSortSpec([]);
 
         final result = sortGroups(groups, sort, {});
 
@@ -259,7 +277,7 @@ void main() {
           _group('s1', sortKey: 1),
           _group('s2', sortKey: 2),
         ];
-        final sort = CompositeSmartPlaylistSort([
+        final sort = SmartPlaylistSortSpec([
           SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
             order: SortOrder.ascending,
@@ -282,7 +300,7 @@ void main() {
           _group('a', sortKey: 0, displayName: 'Alpha'),
           _group('b', sortKey: -2, displayName: 'Bravo'),
         ];
-        final sort = CompositeSmartPlaylistSort([
+        final sort = SmartPlaylistSortSpec([
           SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
             order: SortOrder.ascending,
