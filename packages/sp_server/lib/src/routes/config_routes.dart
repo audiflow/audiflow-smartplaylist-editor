@@ -201,13 +201,17 @@ Future<Response> _handleSavePlaylist(
     return _error(400, 'Request body must be a JSON object');
   }
 
+  // Strip null values: JSON Schema "type": "integer" rejects null,
+  // but absent keys pass optional field validation.
+  final sanitized = _stripNulls(parsed) as Map<String, dynamic>;
+
   // Validate the playlist by wrapping in a full config envelope
   final envelope = {
     'version': 1,
     'patterns': [
       {
         'id': id,
-        'playlists': [parsed],
+        'playlists': [sanitized],
       },
     ],
   };
@@ -221,7 +225,7 @@ Future<Response> _handleSavePlaylist(
   }
 
   try {
-    await configRepository.savePlaylist(id, pid, parsed);
+    await configRepository.savePlaylist(id, pid, sanitized);
     return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(
@@ -665,6 +669,25 @@ Map<String, dynamic>? _serializeEpisode(
     if (extractedDisplayName != null)
       'extractedDisplayName': extractedDisplayName,
   };
+}
+
+/// Recursively removes null-valued keys from JSON maps.
+///
+/// Optional fields in JSON Schema pass when the key is absent but fail when
+/// the value is explicitly `null` (e.g. `"type": "integer"` rejects null).
+Object? _stripNulls(Object? value) {
+  if (value is Map<String, dynamic>) {
+    final result = <String, dynamic>{};
+    for (final entry in value.entries) {
+      if (entry.value == null) continue;
+      result[entry.key] = _stripNulls(entry.value);
+    }
+    return result;
+  }
+  if (value is List) {
+    return value.map(_stripNulls).toList();
+  }
+  return value;
 }
 
 Response _error(int status, String message) {

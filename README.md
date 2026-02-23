@@ -96,6 +96,7 @@ cd packages/sp_react && pnpm install
 | `PORT` | `8080` | Server listen port |
 | `WEB_ROOT` | `public` | Directory containing the built React SPA |
 | `SP_FEED_CACHE_TTL` | `3600` | Feed cache TTL in seconds |
+| `SP_LOG_LEVEL` | `info` | Log verbosity: `info` (method/path/status) or `debug` (also logs request/response bodies for write operations and errors) |
 
 ## Development
 

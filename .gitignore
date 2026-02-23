@@ -11,6 +11,8 @@ pubspec.lock
 
 .cache/
 
+deploy/terraform/.terraform/
+
 .claude/*
 !.claude/settings.json
 !.claude/agents/

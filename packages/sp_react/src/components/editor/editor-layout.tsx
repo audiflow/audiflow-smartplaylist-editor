@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useForm, useFieldArray, useWatch, FormProvider, type Resolver, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -111,7 +111,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   // Detect external changes while user has unsaved edits (conflict detection)
   useEffect(() => {
-    if (!assembledConfigQuery.data || !isDirty) return;
+    if (!assembledConfigQuery.data || !isDirty || isSaving) return;
     if (JSON.stringify(assembledConfigQuery.data) !== JSON.stringify(lastLoadedConfig)) {
       setConflict(`patterns/${configId}`);
     }
@@ -222,6 +222,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
       setLastSavedAt(new Date());
       setLastLoadedConfig(config);
+      setDirty(false);
       toast.success(t('toastSaved', 'Saved successfully'));
     } catch (error) {
       toast.error(
@@ -233,7 +234,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } finally {
       setSaving(false);
     }
-  }, [configId, isSaving, isJsonMode, parsedJsonConfig, form, savePlaylistMutation, savePatternMetaMutation, setSaving, setLastSavedAt, t]);
+  }, [configId, isSaving, isJsonMode, parsedJsonConfig, form, savePlaylistMutation, savePatternMetaMutation, setSaving, setDirty, setLastSavedAt, t]);
 
   // Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -246,6 +247,26 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [handleSave]);
+
+  // Cmd+Enter / Ctrl+Enter keyboard shortcut for preview
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRunPreview();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [handleRunPreview]);
+
+  // Auto-run preview when opening an existing config
+  const hasAutoPreviewedRef = useRef(false);
+  useEffect(() => {
+    if (hasAutoPreviewedRef.current || !configId || !feedUrl || !initialConfig) return;
+    hasAutoPreviewedRef.current = true;
+    handleRunPreview();
+  }, [configId, feedUrl, initialConfig, handleRunPreview]);
 
   // Conflict resolution: reload from disk
   const handleReload = useCallback(() => {

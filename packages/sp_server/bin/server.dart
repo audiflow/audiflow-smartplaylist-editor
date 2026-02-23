@@ -8,6 +8,7 @@ import 'package:sp_shared/sp_shared.dart';
 
 import 'package:sp_server/src/handlers/static_file_handler.dart';
 import 'package:sp_server/src/middleware/cors_middleware.dart';
+import 'package:sp_server/src/middleware/request_logger.dart';
 import 'package:sp_server/src/routes/config_routes.dart';
 import 'package:sp_server/src/routes/events_routes.dart';
 import 'package:sp_server/src/routes/feed_routes.dart';
@@ -22,6 +23,7 @@ Future<void> main() async {
   final port = int.parse(env['PORT'] ?? '8080');
   final webRoot = env['WEB_ROOT'] ?? 'public';
   final feedCacheTtlSeconds = int.parse(env['SP_FEED_CACHE_TTL'] ?? '3600');
+  final logLevel = parseLogLevel(env['SP_LOG_LEVEL']);
 
   // Resolve data directory: env var overrides CWD auto-detection
   final dataDir = env['SP_DATA_DIR'] ?? Directory.current.path;
@@ -105,7 +107,7 @@ Future<void> main() async {
   }
 
   final handler = const Pipeline()
-      .addMiddleware(logRequests())
+      .addMiddleware(requestLogger(level: logLevel))
       .addHandler(appHandler);
 
   // Start file watcher before binding server

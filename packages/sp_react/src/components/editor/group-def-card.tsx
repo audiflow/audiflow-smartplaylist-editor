@@ -77,7 +77,7 @@ export function GroupDefCard({ playlistIndex, groupIndex, onRemove }: GroupDefCa
               id={`group-${playlistIndex}-${groupIndex}-episodeYearHeaders`}
               checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.episodeYearHeaders`, !!checked)
+                setValue(`${prefix}.episodeYearHeaders`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel
@@ -93,7 +93,7 @@ export function GroupDefCard({ playlistIndex, groupIndex, onRemove }: GroupDefCa
               id={`group-${playlistIndex}-${groupIndex}-showDateRange`}
               checked={watch(`${prefix}.showDateRange`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.showDateRange`, !!checked)
+                setValue(`${prefix}.showDateRange`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel
