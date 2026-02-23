@@ -6,15 +6,27 @@ import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
-import { Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 interface GroupDefCardProps {
   playlistIndex: number;
   groupIndex: number;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
   onRemove: () => void;
 }
 
-export function GroupDefCard({ playlistIndex, groupIndex, onRemove }: GroupDefCardProps) {
+export function GroupDefCard({
+  playlistIndex,
+  groupIndex,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+}: GroupDefCardProps) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
   const prefix = `playlists.${playlistIndex}.groups.${groupIndex}` as const;
@@ -26,10 +38,32 @@ export function GroupDefCard({ playlistIndex, groupIndex, onRemove }: GroupDefCa
           <span className="text-sm font-medium">
             {watch(`${prefix}.displayName`) || t('groupDisplayName')}
           </span>
-          <Button variant="ghost" size="sm" type="button" onClick={onRemove}>
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">{t('removeGroup')}</span>
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              disabled={isFirst}
+              onClick={onMoveUp}
+              aria-label={t('moveGroupUp')}
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              type="button"
+              disabled={isLast}
+              onClick={onMoveDown}
+              aria-label={t('moveGroupDown')}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" type="button" onClick={onRemove}>
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">{t('removeGroup')}</span>
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

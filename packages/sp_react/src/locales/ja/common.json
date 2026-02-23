@@ -12,5 +12,6 @@
   "unauthorized": "認証エラー",
   "httpError": "HTTP {{status}}: {{text}}",
   "loadPatternsFailed": "パターンの読み込みに失敗しました: {{error}}",
-  "noPatternsFound": "パターンが見つかりません。最初のパターンを作成してください！"
+  "noPatternsFound": "パターンが見つかりません。最初のパターンを作成してください！",
+  "confirm": "確認"
 }
