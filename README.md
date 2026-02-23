@@ -1,4 +1,4 @@
-# audiflow-smartplaylist-web
+# audiflow-smartplaylist-editor
 
 Local-first web editor and MCP server for managing [audiflow](https://github.com/reedom/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser-based UI, preview resolver results against live RSS feeds, and save changes directly to your local data repo clone.
 
@@ -7,7 +7,7 @@ Local-first web editor and MCP server for managing [audiflow](https://github.com
 Dart workspace with three Dart packages plus a React SPA:
 
 ```
-audiflow-smartplaylist-web/
+audiflow-smartplaylist-editor/
 ├── packages/
 │   ├── sp_shared/     # Domain models, resolvers, schema, services (pure Dart)
 │   ├── sp_server/     # Local API server (shelf)
@@ -54,7 +54,7 @@ This repo is part of a three-repo ecosystem:
 User clones data repo locally
                 |
                 v
-audiflow-smartplaylist-web              Local data repo clone         GitHub (remote)
+audiflow-smartplaylist-editor              Local data repo clone         GitHub (remote)
 (this repo)                 read/write  (on user's machine)  push    (source of truth)
 sp_server + sp_react  <───────────────>  JSON files on disk  ──────>  origin/main
 mcp_server            <───────────────>
@@ -173,7 +173,7 @@ Add the following to your Claude Code MCP settings (`.claude/mcp.json` or projec
       "type": "stdio",
       "command": "dart",
       "args": ["run", "mcp_server/bin/mcp_server.dart"],
-      "cwd": "/path/to/audiflow-smartplaylist-web",
+      "cwd": "/path/to/audiflow-smartplaylist-editor",
       "env": {
         "SP_DATA_DIR": "/path/to/audiflow-smartplaylist"
       }
@@ -192,7 +192,7 @@ Add the following to `claude_desktop_config.json`:
     "audiflow-smartplaylist": {
       "command": "dart",
       "args": ["run", "mcp_server/bin/mcp_server.dart"],
-      "cwd": "/path/to/audiflow-smartplaylist-web",
+      "cwd": "/path/to/audiflow-smartplaylist-editor",
       "env": {
         "SP_DATA_DIR": "/path/to/audiflow-smartplaylist"
       }
