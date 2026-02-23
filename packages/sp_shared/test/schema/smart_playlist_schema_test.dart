@@ -198,7 +198,6 @@ void main() {
                 'showDateRange': true,
                 'nullSeasonGroupKey': 0,
                 'customSort': {
-                  'type': 'composite',
                   'rules': [
                     {
                       'field': 'playlistNumber',
@@ -259,9 +258,9 @@ void main() {
                 'resolverType': 'year',
                 'yearHeaderMode': 'perEpisode',
                 'customSort': {
-                  'type': 'simple',
-                  'field': 'alphabetical',
-                  'order': 'ascending',
+                  'rules': [
+                    {'field': 'alphabetical', 'order': 'ascending'},
+                  ],
                 },
               },
               {
@@ -336,9 +335,9 @@ void main() {
                 'displayName': 'Main',
                 'resolverType': 'rss',
                 'customSort': {
-                  'type': 'simple',
-                  'field': 'invalid',
-                  'order': 'ascending',
+                  'rules': [
+                    {'field': 'invalid', 'order': 'ascending'},
+                  ],
                 },
               },
             ],
@@ -475,7 +474,6 @@ void main() {
                 'displayName': 'Main',
                 'resolverType': 'rss',
                 'customSort': {
-                  'type': 'composite',
                   'rules': [
                     {
                       'field': 'playlistNumber',

@@ -14,37 +14,38 @@ List<SmartPlaylistGroup> sortGroups(
 ) {
   if (sortSpec == null || groups.length < 2) return groups;
 
-  return switch (sortSpec) {
-    SimpleSmartPlaylistSort() => _sortSimple(groups, sortSpec, episodeById),
-    CompositeSmartPlaylistSort() => _sortComposite(
-      groups,
-      sortSpec,
-      episodeById,
-    ),
-  };
+  final rules = sortSpec.rules;
+  if (rules.isEmpty) return groups;
+
+  // Single unconditional rule: simple sort.
+  if (rules.length == 1 && rules.first.condition == null) {
+    return _sortByRule(groups, rules.first, episodeById);
+  }
+
+  return _sortComposite(groups, rules, episodeById);
 }
 
-List<SmartPlaylistGroup> _sortSimple(
+List<SmartPlaylistGroup> _sortByRule(
   List<SmartPlaylistGroup> groups,
-  SimpleSmartPlaylistSort sort,
+  SmartPlaylistSortRule rule,
   Map<int, EpisodeData> episodeById,
 ) {
   final sorted = List.of(groups);
   sorted.sort(
-    (a, b) => _compareByField(sort.field, a, b, episodeById, sort.order),
+    (a, b) => _compareByField(rule.field, a, b, episodeById, rule.order),
   );
   return sorted;
 }
 
 List<SmartPlaylistGroup> _sortComposite(
   List<SmartPlaylistGroup> groups,
-  CompositeSmartPlaylistSort sort,
+  List<SmartPlaylistSortRule> rules,
   Map<int, EpisodeData> episodeById,
 ) {
   SmartPlaylistSortRule? conditionalRule;
   SmartPlaylistSortRule? unconditionalRule;
 
-  for (final rule in sort.rules) {
+  for (final rule in rules) {
     if (rule.condition != null && conditionalRule == null) {
       conditionalRule = rule;
     } else if (rule.condition == null && unconditionalRule == null) {
@@ -54,11 +55,7 @@ List<SmartPlaylistGroup> _sortComposite(
 
   if (conditionalRule == null) {
     if (unconditionalRule == null) return groups;
-    return _sortSimple(
-      groups,
-      SimpleSmartPlaylistSort(unconditionalRule.field, unconditionalRule.order),
-      episodeById,
-    );
+    return _sortByRule(groups, unconditionalRule, episodeById);
   }
 
   final matching = <SmartPlaylistGroup>[];

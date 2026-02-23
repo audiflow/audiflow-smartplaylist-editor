@@ -17,10 +17,12 @@ class CategoryResolver implements SmartPlaylistResolver {
   String get type => 'category';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SimpleSmartPlaylistSort(
-    SmartPlaylistSortField.playlistNumber,
-    SortOrder.ascending,
-  );
+  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
+    SmartPlaylistSortRule(
+      field: SmartPlaylistSortField.playlistNumber,
+      order: SortOrder.ascending,
+    ),
+  ]);
 
   @override
   SmartPlaylistGrouping? resolve(

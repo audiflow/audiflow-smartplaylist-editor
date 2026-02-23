@@ -132,10 +132,11 @@ void main() {
     });
 
     test('default sort is season number ascending', () {
-      expect(resolver.defaultSort, isA<SimpleSmartPlaylistSort>());
-      final sort = resolver.defaultSort as SimpleSmartPlaylistSort;
-      expect(sort.field, SmartPlaylistSortField.playlistNumber);
-      expect(sort.order, SortOrder.ascending);
+      expect(resolver.defaultSort, isA<SmartPlaylistSortSpec>());
+      final sort = resolver.defaultSort;
+      expect(sort.rules, hasLength(1));
+      expect(sort.rules[0].field, SmartPlaylistSortField.playlistNumber);
+      expect(sort.rules[0].order, SortOrder.ascending);
     });
 
     test('sortKey is season number regardless of episodeNumber', () {

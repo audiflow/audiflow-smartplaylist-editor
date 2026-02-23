@@ -59,10 +59,11 @@ void main() {
     });
 
     test('default sort is year descending (newest first)', () {
-      expect(resolver.defaultSort, isA<SimpleSmartPlaylistSort>());
-      final sort = resolver.defaultSort as SimpleSmartPlaylistSort;
-      expect(sort.field, SmartPlaylistSortField.playlistNumber);
-      expect(sort.order, SortOrder.descending);
+      expect(resolver.defaultSort, isA<SmartPlaylistSortSpec>());
+      final sort = resolver.defaultSort;
+      expect(sort.rules, hasLength(1));
+      expect(sort.rules[0].field, SmartPlaylistSortField.playlistNumber);
+      expect(sort.rules[0].order, SortOrder.descending);
     });
   });
 }

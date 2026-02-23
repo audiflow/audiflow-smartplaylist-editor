@@ -14,10 +14,12 @@ void main() {
         titleFilter: r'^\[\d+',
         excludeFilter: r'bonus',
         nullSeasonGroupKey: 0,
-        customSort: const SimpleSmartPlaylistSort(
-          SmartPlaylistSortField.playlistNumber,
-          SortOrder.ascending,
-        ),
+        customSort: const SmartPlaylistSortSpec([
+          SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.playlistNumber,
+            order: SortOrder.ascending,
+          ),
+        ]),
         titleExtractor: const SmartPlaylistTitleExtractor(
           source: 'seasonNumber',
           template: 'Season {value}',
@@ -41,7 +43,7 @@ void main() {
       expect(decoded.titleFilter, r'^\[\d+');
       expect(decoded.excludeFilter, r'bonus');
       expect(decoded.nullSeasonGroupKey, 0);
-      expect(decoded.customSort, isA<SimpleSmartPlaylistSort>());
+      expect(decoded.customSort, isA<SmartPlaylistSortSpec>());
       expect(decoded.titleExtractor, isNotNull);
       expect(decoded.smartPlaylistEpisodeExtractor, isNotNull);
     });

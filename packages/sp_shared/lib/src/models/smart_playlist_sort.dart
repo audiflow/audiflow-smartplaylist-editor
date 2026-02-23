@@ -17,54 +17,34 @@ enum SmartPlaylistSortField {
 enum SortOrder { ascending, descending }
 
 /// Specification for how to sort smart playlists.
-sealed class SmartPlaylistSortSpec {
-  const SmartPlaylistSortSpec();
+///
+/// Always contains a list of rules. Accepts legacy `simple` and
+/// `composite` JSON formats in [fromJson] for migration.
+final class SmartPlaylistSortSpec {
+  const SmartPlaylistSortSpec(this.rules);
 
-  /// Deserializes from JSON using a `type` discriminator.
+  /// Deserializes from JSON.
+  ///
+  /// Accepts three formats:
+  /// - New: `{ "rules": [...] }`
+  /// - Legacy simple: `{ "type": "simple", "field": "...", "order": "..." }`
+  /// - Legacy composite: `{ "type": "composite", "rules": [...] }`
   factory SmartPlaylistSortSpec.fromJson(Map<String, dynamic> json) {
     final type = json['type'] as String?;
-    return switch (type) {
-      'simple' => SimpleSmartPlaylistSort.fromJson(json),
-      'composite' => CompositeSmartPlaylistSort.fromJson(json),
-      _ => throw FormatException('Unknown SmartPlaylistSortSpec type: $type'),
-    };
-  }
 
-  /// Serializes to JSON with a `type` discriminator.
-  Map<String, dynamic> toJson();
-}
+    // Legacy simple format: convert to single-rule list.
+    if (type == 'simple') {
+      return SmartPlaylistSortSpec([
+        SmartPlaylistSortRule(
+          field: SmartPlaylistSortField.values.byName(json['field'] as String),
+          order: SortOrder.values.byName(json['order'] as String),
+        ),
+      ]);
+    }
 
-/// Simple single-field sort.
-final class SimpleSmartPlaylistSort extends SmartPlaylistSortSpec {
-  const SimpleSmartPlaylistSort(this.field, this.order);
-
-  /// Deserializes from JSON.
-  factory SimpleSmartPlaylistSort.fromJson(Map<String, dynamic> json) {
-    return SimpleSmartPlaylistSort(
-      SmartPlaylistSortField.values.byName(json['field'] as String),
-      SortOrder.values.byName(json['order'] as String),
-    );
-  }
-
-  final SmartPlaylistSortField field;
-  final SortOrder order;
-
-  @override
-  Map<String, dynamic> toJson() => {
-    'type': 'simple',
-    'field': field.name,
-    'order': order.name,
-  };
-}
-
-/// Composite sort with multiple rules and optional conditions.
-final class CompositeSmartPlaylistSort extends SmartPlaylistSortSpec {
-  const CompositeSmartPlaylistSort(this.rules);
-
-  /// Deserializes from JSON.
-  factory CompositeSmartPlaylistSort.fromJson(Map<String, dynamic> json) {
+    // Both new format and legacy composite have a `rules` array.
     final rulesJson = json['rules'] as List<dynamic>;
-    return CompositeSmartPlaylistSort(
+    return SmartPlaylistSortSpec(
       rulesJson
           .map((e) => SmartPlaylistSortRule.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -73,14 +53,13 @@ final class CompositeSmartPlaylistSort extends SmartPlaylistSortSpec {
 
   final List<SmartPlaylistSortRule> rules;
 
-  @override
+  /// Serializes to JSON. Never writes `type` discriminator.
   Map<String, dynamic> toJson() => {
-    'type': 'composite',
     'rules': rules.map((r) => r.toJson()).toList(),
   };
 }
 
-/// A single rule in a composite sort.
+/// A single rule in a sort specification.
 final class SmartPlaylistSortRule {
   const SmartPlaylistSortRule({
     required this.field,

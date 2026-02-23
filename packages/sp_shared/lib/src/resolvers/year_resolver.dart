@@ -11,10 +11,12 @@ class YearResolver implements SmartPlaylistResolver {
   String get type => 'year';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SimpleSmartPlaylistSort(
-    SmartPlaylistSortField.playlistNumber,
-    SortOrder.descending, // Newest years first
-  );
+  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
+    SmartPlaylistSortRule(
+      field: SmartPlaylistSortField.playlistNumber,
+      order: SortOrder.descending, // Newest years first
+    ),
+  ]);
 
   @override
   SmartPlaylistGrouping? resolve(
