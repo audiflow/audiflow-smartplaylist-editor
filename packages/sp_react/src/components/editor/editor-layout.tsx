@@ -195,13 +195,15 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const handleSave = useCallback(async () => {
     if (!configId || isSaving) return;
 
-    const config = isJsonMode && parsedJsonConfig
-      ? parsedJsonConfig
-      : form.getValues();
+    // Snapshot immediately: form.getValues() returns mutable references to RHF
+    // internal state, so clone before any awaits to avoid mid-save mutations.
+    const snapshot = structuredClone(
+      isJsonMode && parsedJsonConfig ? parsedJsonConfig : form.getValues(),
+    );
 
     setSaving(true);
     try {
-      for (const playlist of config.playlists) {
+      for (const playlist of snapshot.playlists) {
         await savePlaylistMutation.mutateAsync({
           patternId: configId,
           playlistId: playlist.id,
@@ -214,14 +216,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         data: {
           version: 1,
           id: configId,
-          feedUrls: config.feedUrls ?? [],
-          yearGroupedEpisodes: config.yearGroupedEpisodes ?? false,
-          playlists: config.playlists.map((p) => p.id),
+          feedUrls: snapshot.feedUrls ?? [],
+          yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
+          playlists: snapshot.playlists.map((p) => p.id),
         },
       });
 
       setLastSavedAt(new Date());
-      setLastLoadedConfig(config);
+      setLastLoadedConfig(snapshot);
       setDirty(false);
       toast.success(t('toastSaved', 'Saved successfully'));
     } catch (error) {
