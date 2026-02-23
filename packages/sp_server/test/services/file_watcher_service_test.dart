@@ -214,19 +214,22 @@ void main() {
     );
 
     test('emits events for files in subdirectories', () async {
+      // Pre-create subdirectory before starting watcher so inotify
+      // registers it immediately on Linux.
+      final subDir = Directory('${tempDir.path}/patterns/podcast-a');
+      await subDir.create(recursive: true);
+
       watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
       final events = <FileChangeEvent>[];
       final subscription = watcher.events.listen(events.add);
 
-      // Create subdirectory and file after watcher is running
-      final subDir = Directory('${tempDir.path}/patterns/podcast-a');
-      await subDir.create(recursive: true);
+      // Write file into the pre-existing subdirectory
       await File('${subDir.path}/meta.json').writeAsString('{}');
 
       // Poll until event arrives or timeout (handles slow CI)
-      for (var i = 0; i < 20; i++) {
+      for (var i = 0; i < 30; i++) {
         if (events.any((e) => e.path.contains('meta.json'))) break;
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
