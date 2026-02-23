@@ -114,6 +114,7 @@ describe('Zod-parsed output validates against JSON Schema', () => {
       yearHeaderMode: 'firstEpisode',
       episodeYearHeaders: true,
       showDateRange: true,
+      showSortOrderToggle: true,
       titleFilter: 'S\\d+',
       excludeFilter: 'Trailer',
       requireFilter: '\\[.+\\]',

@@ -21,6 +21,7 @@ final class SmartPlaylistDefinition {
     this.customSort,
     this.titleExtractor,
     this.showDateRange = false,
+    this.showSortOrderToggle = false,
     this.smartPlaylistEpisodeExtractor,
   });
 
@@ -40,6 +41,7 @@ final class SmartPlaylistDefinition {
       yearHeaderMode: _nullIfEmpty(json['yearHeaderMode']),
       episodeYearHeaders: (json['episodeYearHeaders'] as bool?) ?? false,
       showDateRange: (json['showDateRange'] as bool?) ?? false,
+      showSortOrderToggle: (json['showSortOrderToggle'] as bool?) ?? false,
       titleFilter: _nullIfEmpty(json['titleFilter']),
       excludeFilter: _nullIfEmpty(json['excludeFilter']),
       requireFilter: _nullIfEmpty(json['requireFilter']),
@@ -113,6 +115,9 @@ final class SmartPlaylistDefinition {
   /// Whether group cards should display a date range.
   final bool showDateRange;
 
+  /// Explicitly show the sort order toggle regardless of yearHeaderMode.
+  final bool showSortOrderToggle;
+
   /// Configuration for extracting both season and episode numbers.
   final SmartPlaylistEpisodeExtractor? smartPlaylistEpisodeExtractor;
 
@@ -127,6 +132,7 @@ final class SmartPlaylistDefinition {
       if (yearHeaderMode != null) 'yearHeaderMode': yearHeaderMode,
       if (episodeYearHeaders) 'episodeYearHeaders': episodeYearHeaders,
       if (showDateRange) 'showDateRange': showDateRange,
+      if (showSortOrderToggle) 'showSortOrderToggle': showSortOrderToggle,
       if (titleFilter != null) 'titleFilter': titleFilter,
       if (excludeFilter != null) 'excludeFilter': excludeFilter,
       if (requireFilter != null) 'requireFilter': requireFilter,
