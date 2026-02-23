@@ -5,7 +5,7 @@ Dart monorepo with three Dart workspace packages plus a React SPA.
 ## Package Overview
 
 ```
-audiflow-smartplaylist-web/
+audiflow-smartplaylist-editor/
 ├── packages/
 │   ├── sp_shared/     # Domain models, resolvers, services (pure Dart)
 │   ├── sp_server/     # Local API server (shelf)
@@ -28,7 +28,7 @@ This repo is one part of a three-component ecosystem:
 User clones data repo locally
                 |
                 v
-[audiflow-smartplaylist-web]              Local data repo clone         GitHub (remote)
+[audiflow-smartplaylist-editor]              Local data repo clone         GitHub (remote)
  (this repo)                  read/write  (on user's machine)  push    (source of truth)
  sp_server + sp_react  <────────────────>  JSON files on disk  ──────>  origin/main
  mcp_server            <────────────────>

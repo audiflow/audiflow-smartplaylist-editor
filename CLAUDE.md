@@ -1,6 +1,6 @@
 # Ecosystem Overview
 
-This repo (`audiflow-smartplaylist-web`) is part of a three-repo ecosystem:
+This repo (`audiflow-smartplaylist-editor`) is part of a three-repo ecosystem:
 
 | Repo | Role | What lives there |
 |------|------|-----------------|
@@ -14,7 +14,7 @@ This repo (`audiflow-smartplaylist-web`) is part of a three-repo ecosystem:
 User clones data repo locally
                 |
                 v
-audiflow-smartplaylist-web              Local data repo clone         GitHub (remote)
+audiflow-smartplaylist-editor              Local data repo clone         GitHub (remote)
 (this repo)                 read/write  (on user's machine)  push    (source of truth)
 sp_server + sp_react  <───────────────>  JSON files on disk  ──────>  origin/main
 mcp_server            <───────────────>
