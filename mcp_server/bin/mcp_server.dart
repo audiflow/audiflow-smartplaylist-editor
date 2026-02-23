@@ -13,11 +13,14 @@ Future<void> main() async {
 }
 
 String _detectDataDir() {
-  final cwd = Directory.current.path;
-  final metaFile = File('$cwd/patterns/meta.json');
-  if (metaFile.existsSync()) return cwd;
+  final envDir = Platform.environment['SP_DATA_DIR'];
+  final dataDir = envDir ?? Directory.current.path;
+  final metaFile = File('$dataDir/patterns/meta.json');
+  if (metaFile.existsSync()) return dataDir;
 
-  stderr.writeln('Error: patterns/meta.json not found in current directory.');
-  stderr.writeln('Run this command from a SmartPlaylist data repository.');
+  stderr.writeln('Error: patterns/meta.json not found in $dataDir.');
+  stderr.writeln(
+    'Set SP_DATA_DIR or run this command from a SmartPlaylist data repository.',
+  );
   exit(1);
 }

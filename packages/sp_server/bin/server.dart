@@ -23,13 +23,13 @@ Future<void> main() async {
   final webRoot = env['WEB_ROOT'] ?? 'public';
   final feedCacheTtlSeconds = int.parse(env['SP_FEED_CACHE_TTL'] ?? '3600');
 
-  // Auto-detect data directory from CWD
-  final dataDir = Directory.current.path;
+  // Resolve data directory: env var overrides CWD auto-detection
+  final dataDir = env['SP_DATA_DIR'] ?? Directory.current.path;
   final metaFile = File('$dataDir/patterns/meta.json');
   if (!metaFile.existsSync()) {
     stderr.writeln(
-      'Error: No patterns/meta.json found in current directory. '
-      'Run this server from a data repository root.',
+      'Error: No patterns/meta.json found in $dataDir. '
+      'Set SP_DATA_DIR or run this server from a data repository root.',
     );
     exit(1);
   }
