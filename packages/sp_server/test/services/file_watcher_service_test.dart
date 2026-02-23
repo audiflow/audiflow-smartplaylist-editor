@@ -220,12 +220,15 @@ void main() {
       watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
       await watcher.start();
 
+      // Allow watcher to fully initialize on CI
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+
       final events = <FileChangeEvent>[];
       final subscription = watcher.events.listen(events.add);
 
       await File('${subDir.path}/meta.json').writeAsString('{}');
 
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await Future<void>.delayed(const Duration(milliseconds: 600));
       await subscription.cancel();
 
       expect(events, isNotEmpty);
