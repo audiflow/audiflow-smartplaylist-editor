@@ -49,8 +49,11 @@ void main() {
       // Create a file after the watcher is started
       await File('${tempDir.path}/test.json').writeAsString('{}');
 
-      // Wait for debounce + FS watcher latency
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      // Poll until event arrives or timeout
+      for (var i = 0; i < 30; i++) {
+        if (events.any((e) => e.path == 'test.json')) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       await subscription.cancel();
 
       expect(events, isNotEmpty);
@@ -75,7 +78,10 @@ void main() {
       // Modify the file
       await file.writeAsString('{"v": 2}');
 
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      for (var i = 0; i < 30; i++) {
+        if (events.any((e) => e.path == 'existing.json')) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       await subscription.cancel();
 
       expect(events, isNotEmpty);
@@ -100,7 +106,12 @@ void main() {
       // Delete the file
       await file.delete();
 
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      for (var i = 0; i < 30; i++) {
+        if (events.any(
+          (e) => e.path == 'to-delete.json' && e.type == FileChangeType.deleted,
+        )) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       await subscription.cancel();
 
       expect(events, isNotEmpty);
@@ -133,7 +144,10 @@ void main() {
       // Also create a file that should NOT be ignored
       await File('${tempDir.path}/visible.json').writeAsString('{}');
 
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      for (var i = 0; i < 30; i++) {
+        if (events.any((e) => e.path == 'visible.json')) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       await subscription.cancel();
 
       // Should NOT contain .cache files
@@ -164,7 +178,10 @@ void main() {
       // Create a normal file (should be captured)
       await File('${tempDir.path}/data.json').writeAsString('{}');
 
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      for (var i = 0; i < 30; i++) {
+        if (events.any((e) => e.path == 'data.json')) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       await subscription.cancel();
 
       expect(
@@ -196,7 +213,10 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 20));
         await file.writeAsString('{"v": 3}');
 
-        await Future<void>.delayed(const Duration(milliseconds: 500));
+        for (var i = 0; i < 30; i++) {
+          if (events.any((e) => e.path == 'rapid.json')) break;
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
         await subscription.cancel();
 
         // Should have at most one event per debounce window for the same path
@@ -213,38 +233,33 @@ void main() {
       },
     );
 
-    // Recursive directory watching via inotify is unreliable in
-    // containerized Linux environments (GitHub Actions).
-    test(
-      'emits events for files in subdirectories',
-      onPlatform: {'linux': const Skip('inotify unreliable in CI containers')},
-      () async {
-        final subDir = Directory('${tempDir.path}/patterns/podcast-a');
-        await subDir.create(recursive: true);
+    test('emits events for files in subdirectories', () async {
+      // Pre-create subdirectory so watcher registers it at startup
+      final subDir = Directory('${tempDir.path}/patterns/podcast-a');
+      await subDir.create(recursive: true);
 
-        watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
-        await watcher.start();
+      watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
+      await watcher.start();
 
-        final events = <FileChangeEvent>[];
-        final subscription = watcher.events.listen(events.add);
+      final events = <FileChangeEvent>[];
+      final subscription = watcher.events.listen(events.add);
 
-        await File('${subDir.path}/meta.json').writeAsString('{}');
+      await File('${subDir.path}/meta.json').writeAsString('{}');
 
-        // Poll until event arrives or timeout
-        for (var i = 0; i < 30; i++) {
-          if (events.any((e) => e.path.contains('meta.json'))) break;
-          await Future<void>.delayed(const Duration(milliseconds: 100));
-        }
-        await subscription.cancel();
+      // Poll until event arrives or timeout
+      for (var i = 0; i < 30; i++) {
+        if (events.any((e) => e.path.contains('meta.json'))) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      await subscription.cancel();
 
-        expect(events, isNotEmpty);
-        expect(
-          events.any((e) => e.path.contains('meta.json')),
-          isTrue,
-          reason: 'Expected event for file in subdirectory',
-        );
-      },
-    );
+      expect(events, isNotEmpty);
+      expect(
+        events.any((e) => e.path.contains('meta.json')),
+        isTrue,
+        reason: 'Expected event for file in subdirectory',
+      );
+    });
 
     test('events stream is broadcast', () async {
       watcher = FileWatcherService(watchDir: tempDir.path, debounceMs: 100);
@@ -258,7 +273,10 @@ void main() {
 
       await File('${tempDir.path}/broadcast.json').writeAsString('{}');
 
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      for (var i = 0; i < 30; i++) {
+        if (events1.any((e) => e.path == 'broadcast.json')) break;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
       await sub1.cancel();
       await sub2.cancel();
 

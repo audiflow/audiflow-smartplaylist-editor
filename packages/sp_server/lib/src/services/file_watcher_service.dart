@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:io';
+
+import 'package:watcher/watcher.dart';
 
 /// Types of file changes detected by [FileWatcherService].
 enum FileChangeType { created, modified, deleted }
@@ -24,6 +25,11 @@ final class FileChangeEvent {
 /// Watches a directory for file changes and emits debounced,
 /// deduplicated [FileChangeEvent]s.
 ///
+/// Uses `package:watcher` which handles recursive subdirectory
+/// watching on Linux via manual inotify management, unlike
+/// `Directory.watch(recursive: true)` which is unreliable in
+/// some environments.
+///
 /// Events are collected during a debounce window and flushed as a
 /// batch. If the same path changes multiple times within one window,
 /// only the latest event is kept.
@@ -43,7 +49,8 @@ class FileWatcherService {
   /// Path prefixes to ignore (e.g. `.cache`).
   final List<String> ignorePatterns;
 
-  StreamSubscription<FileSystemEvent>? _watchSubscription;
+  DirectoryWatcher? _watcher;
+  StreamSubscription<WatchEvent>? _watchSubscription;
   StreamController<FileChangeEvent>? _controller;
   Timer? _debounceTimer;
 
@@ -61,9 +68,11 @@ class FileWatcherService {
   Future<void> start() async {
     _controller ??= StreamController<FileChangeEvent>.broadcast();
 
-    final dir = Directory(watchDir);
-    final fsStream = dir.watch(recursive: true);
-    _watchSubscription = fsStream.listen(_onFileSystemEvent);
+    _watcher = DirectoryWatcher(watchDir);
+    _watchSubscription = _watcher!.events.listen(_onWatchEvent);
+
+    // Wait for the watcher to fully enumerate the directory tree
+    await _watcher!.ready;
   }
 
   /// Stops watching and closes the event stream.
@@ -79,14 +88,14 @@ class FileWatcherService {
     _controller = null;
   }
 
-  /// Maps a raw [FileSystemEvent] to our domain model and queues it
+  /// Maps a [WatchEvent] to our domain model and queues it
   /// for debounced emission.
-  void _onFileSystemEvent(FileSystemEvent event) {
+  void _onWatchEvent(WatchEvent event) {
     final relativePath = _toRelativePath(event.path);
     if (relativePath == null) return;
     if (_shouldIgnore(relativePath)) return;
 
-    final changeType = _mapEventType(event);
+    final changeType = _mapChangeType(event.type);
     final changeEvent = FileChangeEvent(type: changeType, path: relativePath);
 
     _pending[relativePath] = changeEvent;
@@ -115,11 +124,10 @@ class FileWatcherService {
     return false;
   }
 
-  /// Maps a [FileSystemEvent] type to our [FileChangeType].
-  FileChangeType _mapEventType(FileSystemEvent event) {
-    if (event.type == FileSystemEvent.create) return FileChangeType.created;
-    if (event.type == FileSystemEvent.delete) return FileChangeType.deleted;
-    // modify and move both map to modified
+  /// Maps a [ChangeType] to our [FileChangeType].
+  FileChangeType _mapChangeType(ChangeType type) {
+    if (type == ChangeType.ADD) return FileChangeType.created;
+    if (type == ChangeType.REMOVE) return FileChangeType.deleted;
     return FileChangeType.modified;
   }
 
