@@ -36,6 +36,7 @@
   "requireFilter": "必須フィルター",
   "episodeYearHeaders": "エピソード年ヘッダー",
   "showDateRange": "日付範囲を表示",
+  "showSortOrderToggle": "並び順切替を表示",
   "advancedNote": "高度な設定（グループ、抽出器、ソート）は JSON モードで編集できます。",
   "removePlaylist": "プレイリストを削除",
   "feedUrl": "フィード URL",

@@ -6,4 +6,5 @@ export const DEFAULT_PLAYLIST = {
   yearHeaderMode: null,
   episodeYearHeaders: false,
   showDateRange: false,
+  showSortOrderToggle: false,
 } as const;

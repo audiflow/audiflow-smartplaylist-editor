@@ -5,9 +5,18 @@ import 'package:sp_shared/sp_shared.dart';
 import 'package:test/test.dart';
 
 /// Loads the vendored schema.json from assets.
+///
+/// Supports running from either the package directory or the repo root.
 String _loadSchemaJson() {
-  final file = File('packages/sp_shared/assets/schema.json');
-  return file.readAsStringSync();
+  final candidates = [
+    'assets/schema.json',
+    'packages/sp_shared/assets/schema.json',
+  ];
+  for (final path in candidates) {
+    final file = File(path);
+    if (file.existsSync()) return file.readAsStringSync();
+  }
+  throw StateError('schema.json not found in any candidate path');
 }
 
 void main() {

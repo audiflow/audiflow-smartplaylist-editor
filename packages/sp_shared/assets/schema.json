@@ -133,6 +133,11 @@
           "default": false,
           "description": "Whether group cards display a date range."
         },
+        "showSortOrderToggle": {
+          "type": "boolean",
+          "default": false,
+          "description": "Explicitly show the sort order toggle regardless of yearHeaderMode. Initial order derives from the first customSort rule."
+        },
         "titleFilter": {
           "type": "string",
           "description": "Regex pattern to filter episode titles (include)."

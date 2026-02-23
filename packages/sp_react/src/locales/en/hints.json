@@ -16,6 +16,7 @@
   "requireFilter": "A stricter regex that episodes must match to be included. Unlike title filter, this is applied after grouping and removes non-matching episodes from each group.",
   "episodeYearHeaders": "When enabled, episode lists within this playlist show year separator headers, helping users orient themselves in long episode lists.",
   "showDateRange": "When enabled, each group card displays the date range of its episodes (earliest to latest), giving users a quick sense of the group's timespan.",
+  "showSortOrderToggle": "When enabled, explicitly shows a sort order toggle in the app regardless of yearHeaderMode. The initial sort order derives from the first customSort rule.",
   "contentType": "Controls the output shape. 'episodes' creates flat playlists; 'groups' creates nested group structures within each playlist.",
   "nullSeasonGroupKey": "Routes episodes with null or zero season numbers into this group key. For example, set to 999 to collect special episodes in a 'Season 999' group.",
   "groupId": "Unique identifier for this group within the playlist. Used as the internal key.",
