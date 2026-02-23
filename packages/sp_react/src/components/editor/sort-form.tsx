@@ -1,15 +1,8 @@
-import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
-import { SortRuleCard, SORT_FIELDS, SORT_ORDERS } from '@/components/editor/sort-rule-card.tsx';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select.tsx';
+import { SortRuleCard } from '@/components/editor/sort-rule-card.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Plus } from 'lucide-react';
 
@@ -18,8 +11,6 @@ interface SortFormProps {
 }
 
 const EMPTY_RULE = { field: 'playlistNumber', order: 'ascending' } as const;
-
-type SortMode = 'none' | 'simple' | 'composite';
 
 export function SortForm({ index }: SortFormProps) {
   const { control, watch, setValue } = useFormContext<PatternConfig>();
@@ -32,29 +23,16 @@ export function SortForm({ index }: SortFormProps) {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    // useFieldArray requires the path to the array; it is only active in composite mode
     name: `playlists.${index}.customSort.rules` as `playlists.${number}.customSort.rules`,
   });
 
-  const currentMode: SortMode =
-    customSort == null
-      ? 'none'
-      : customSort.type === 'simple'
-        ? 'simple'
-        : 'composite';
+  const isEnabled = customSort != null;
 
-  function handleModeChange(mode: SortMode) {
-    if (mode === currentMode) {
-      // Deselect current mode
+  function handleToggle() {
+    if (isEnabled) {
       setValue(prefix, null, { shouldDirty: true });
-      return;
-    }
-    if (mode === 'simple') {
-      setValue(prefix, { type: 'simple', field: 'playlistNumber', order: 'ascending' }, { shouldDirty: true });
-    } else if (mode === 'composite') {
-      setValue(prefix, { type: 'composite', rules: [{ ...EMPTY_RULE }] }, { shouldDirty: true });
     } else {
-      setValue(prefix, null, { shouldDirty: true });
+      setValue(prefix, { rules: [{ ...EMPTY_RULE }] }, { shouldDirty: true });
     }
   }
 
@@ -67,92 +45,18 @@ export function SortForm({ index }: SortFormProps) {
       ) : (
         <>
           <div className="space-y-1.5">
-            <HintLabel hint="customSort">{t('sortType')}</HintLabel>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={currentMode === 'simple' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleModeChange('simple')}
-              >
-                {t('sortSimple')}
-              </Button>
-              <Button
-                type="button"
-                variant={currentMode === 'composite' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleModeChange('composite')}
-              >
-                {t('sortComposite')}
-              </Button>
-            </div>
+            <HintLabel hint="customSort">{t('sortToggle')}</HintLabel>
+            <Button
+              type="button"
+              variant={isEnabled ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleToggle}
+            >
+              {isEnabled ? t('sortEnabled') : t('sortDisabled')}
+            </Button>
           </div>
 
-          {currentMode === 'simple' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <HintLabel
-                  htmlFor={`playlist-${index}-sort-field`}
-                  hint="sortField"
-                >
-                  {t('sortField')}
-                </HintLabel>
-                <Controller
-                  control={control}
-                  name={`${prefix}.field` as `playlists.${number}.customSort.field`}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value as string | undefined}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger id={`playlist-${index}-sort-field`} className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SORT_FIELDS.map((f) => (
-                          <SelectItem key={f} value={f} disabled={f === 'progress'}>
-                            {t(`sortField_${f}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <HintLabel
-                  htmlFor={`playlist-${index}-sort-order`}
-                  hint="sortOrder"
-                >
-                  {t('sortOrder')}
-                </HintLabel>
-                <Controller
-                  control={control}
-                  name={`${prefix}.order` as `playlists.${number}.customSort.order`}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value as string | undefined}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger id={`playlist-${index}-sort-order`} className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SORT_ORDERS.map((o) => (
-                          <SelectItem key={o} value={o}>
-                            {t(`sortOrder_${o}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-            </div>
-          )}
-
-          {currentMode === 'composite' && (
+          {isEnabled && (
             <div className="space-y-3">
               {fields.map((field, ruleIndex) => (
                 <SortRuleCard
