@@ -33,12 +33,12 @@ export function PlaylistTabContent({
     <div className="pt-2">
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Config side */}
-        <div className="space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
           <PlaylistForm index={index} onRemove={onRemove} />
         </div>
 
         {/* Preview side */}
-        <div className="rounded-lg border bg-muted/30 p-4 space-y-3 lg:sticky lg:top-20 lg:self-start">
+        <div className="rounded-lg border bg-muted/30 p-4 space-y-3 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
           <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('previewSectionTitle')}
           </h4>
