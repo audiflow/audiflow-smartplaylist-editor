@@ -4,6 +4,7 @@ publish_to: none
 workspace:
   - packages/sp_shared
   - packages/sp_server
+  - packages/sp_cli
   - mcp_server
 
 environment:
