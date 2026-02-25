@@ -60,11 +60,38 @@ Future<Map<String, dynamic>> executeSubmitConfig(
     return {'success': false, 'errors': errors};
   }
 
-  // Parse and save each playlist
+  // Parse and save each playlist (model round-trip normalizes JSON)
   final patternConfig = SmartPlaylistPatternConfig.fromJson(config);
   for (final playlist in patternConfig.playlists) {
     await repo.savePlaylist(configId, playlist.id, playlist.toJson());
   }
+
+  // Sync pattern meta: preserve existing version, update other fields
+  final existingPatternMeta = await repo.getPatternMetaJson(configId);
+  final updatedPatternMeta = <String, dynamic>{
+    ...existingPatternMeta,
+    'id': configId,
+    'feedUrls': patternConfig.feedUrls ?? existingPatternMeta['feedUrls'],
+    'playlists': patternConfig.playlists.map((p) => p.id).toList(),
+    'yearGroupedEpisodes': patternConfig.yearGroupedEpisodes,
+  };
+  updatedPatternMeta['version'] = existingPatternMeta['version'];
+  await repo.savePatternMeta(configId, updatedPatternMeta);
+
+  // Sync root meta: update playlistCount, preserve all versions
+  final rootMeta = await repo.getRootMetaJson();
+  final patterns = rootMeta['patterns'] as List<dynamic>;
+  for (var i = 0; i < patterns.length; i++) {
+    final entry = patterns[i] as Map<String, dynamic>;
+    if (entry['id'] == configId) {
+      patterns[i] = <String, dynamic>{
+        ...entry,
+        'playlistCount': patternConfig.playlists.length,
+      };
+      break;
+    }
+  }
+  await repo.saveRootMeta(rootMeta);
 
   return {'success': true, 'patternId': configId};
 }

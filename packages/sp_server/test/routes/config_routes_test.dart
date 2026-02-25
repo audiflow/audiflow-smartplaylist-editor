@@ -1068,6 +1068,36 @@ void main() {
         expect(response.statusCode, equals(400));
       });
 
+      test('normalizes playlist JSON via model round-trip', () async {
+        // Send fields in non-canonical order to verify normalization
+        final playlistJson = {
+          'resolverType': 'rss',
+          'id': 'seasons',
+          'displayName': 'Normalized Test',
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(playlistJson),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(200));
+
+        // Verify file has canonical field order from model toJson()
+        final file = File('$dataDir/patterns/podcast-a/playlists/seasons.json');
+        final content =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        final keys = content.keys.toList();
+        // SmartPlaylistDefinition.toJson() outputs 'id' first
+        expect(keys.first, equals('id'));
+        expect(content['displayName'], equals('Normalized Test'));
+      });
+
       test('returns 400 for invalid resolverType', () async {
         final invalidJson = {
           'id': 'seasons',
@@ -1122,6 +1152,69 @@ void main() {
         final content =
             jsonDecode(await file.readAsString()) as Map<String, dynamic>;
         expect(content['podcastGuid'], equals('guid-a-updated'));
+      });
+
+      test('preserves existing version via read-modify-write', () async {
+        // First set version to 5 on disk to simulate sp_cli bump
+        final metaFile = File('$dataDir/patterns/podcast-a/meta.json');
+        final existing =
+            jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
+        existing['version'] = 5;
+        await metaFile.writeAsString(
+          const JsonEncoder.withIndent('  ').convert(existing),
+        );
+
+        // Client sends version: 1 (stale), should be ignored
+        final metaJson = {
+          'version': 1,
+          'id': 'podcast-a',
+          'feedUrls': ['https://example.com/a/updated-feed.xml'],
+          'playlists': ['seasons'],
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(metaJson),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(200));
+
+        // Verify version preserved from disk, other fields updated
+        final content =
+            jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
+        expect(content['version'], equals(5));
+        expect(
+          content['feedUrls'],
+          equals(['https://example.com/a/updated-feed.xml']),
+        );
+      });
+
+      test('preserves existing fields not sent by client', () async {
+        // Client sends only feedUrls and playlists (no podcastGuid)
+        final metaJson = {
+          'id': 'podcast-a',
+          'feedUrls': ['https://example.com/a/feed.xml'],
+          'playlists': ['seasons'],
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(metaJson),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(200));
+
+        final file = File('$dataDir/patterns/podcast-a/meta.json');
+        final content =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        // podcastGuid from disk should be preserved
+        expect(content['podcastGuid'], equals('guid-a'));
       });
 
       test('returns 400 for empty body', () async {

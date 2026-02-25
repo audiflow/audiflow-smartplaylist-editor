@@ -148,7 +148,12 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               <Input
                 id={`ep-ext-${index}-episodeGroup`}
                 type="number"
-                {...register(`${prefix}.episodeGroup`, { valueAsNumber: true })}
+                {...register(`${prefix}.episodeGroup`, {
+                  setValueAs: (v) =>
+                    v === '' || v === null || v === undefined
+                      ? null
+                      : Number(v),
+                })}
               />
             </div>
           </div>
@@ -205,7 +210,10 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
                   id={`ep-ext-${index}-fallbackEpisodeCaptureGroup`}
                   type="number"
                   {...register(`${prefix}.fallbackEpisodeCaptureGroup`, {
-                    valueAsNumber: true,
+                    setValueAs: (v) =>
+                      v === '' || v === null || v === undefined
+                        ? null
+                        : Number(v),
                   })}
                 />
               </div>

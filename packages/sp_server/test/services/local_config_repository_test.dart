@@ -219,6 +219,58 @@ void main() {
       });
     });
 
+    group('getRootMetaJson', () {
+      test('returns raw JSON map with all fields', () async {
+        tempDir = await _createTestDataDir(rootMeta: _rootMetaJson());
+        final repo = LocalConfigRepository(dataDir: tempDir.path);
+
+        final json = await repo.getRootMetaJson();
+
+        expect(json['version'], equals(1));
+        final patterns = json['patterns'] as List;
+        expect(patterns.length, equals(2));
+        final first = patterns[0] as Map<String, dynamic>;
+        expect(first['id'], equals('podcast-a'));
+        expect(first['version'], equals(1));
+        expect(first['playlistCount'], equals(2));
+      });
+    });
+
+    group('saveRootMeta', () {
+      test('writes atomically and preserves all fields', () async {
+        tempDir = await _createTestDataDir(rootMeta: _rootMetaJson());
+        final repo = LocalConfigRepository(dataDir: tempDir.path);
+
+        final json = await repo.getRootMetaJson();
+        (json['patterns'] as List<dynamic>)
+                .cast<Map<String, dynamic>>()
+                .first['playlistCount'] =
+            5;
+        await repo.saveRootMeta(json);
+
+        final reloaded = await repo.getRootMetaJson();
+        expect(reloaded['version'], equals(1));
+        final first =
+            (reloaded['patterns'] as List).first as Map<String, dynamic>;
+        expect(first['playlistCount'], equals(5));
+        expect(first['version'], equals(1));
+      });
+    });
+
+    group('getPatternMetaJson', () {
+      test('returns raw JSON map with version intact', () async {
+        tempDir = await _createTestDataDir(patternMeta: _patternMetaJson());
+        final repo = LocalConfigRepository(dataDir: tempDir.path);
+
+        final json = await repo.getPatternMetaJson('podcast-a');
+
+        expect(json['version'], equals(1));
+        expect(json['id'], equals('podcast-a'));
+        expect(json['podcastGuid'], equals('guid-a'));
+        expect(json['playlists'], equals(['seasons', 'by-year']));
+      });
+    });
+
     group('savePlaylist', () {
       test('writes JSON to disk with pretty-print', () async {
         tempDir = await _createTestDataDir(

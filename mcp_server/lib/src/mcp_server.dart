@@ -9,6 +9,7 @@ import 'tools/fetch_feed_tool.dart';
 import 'tools/get_config_tool.dart';
 import 'tools/get_schema_tool.dart';
 import 'tools/preview_config_tool.dart';
+import 'tools/preview_group_tool.dart';
 import 'tools/search_configs_tool.dart';
 import 'tools/submit_config_tool.dart';
 import 'tools/tool_definition.dart';
@@ -62,6 +63,7 @@ final class SpMcpServer {
     fetchFeedTool,
     validateConfigTool,
     previewConfigTool,
+    previewGroupTool,
     submitConfigTool,
   ];
 
@@ -234,6 +236,7 @@ final class SpMcpServer {
       'fetch_feed' => executeFetchFeed(_feedService, arguments),
       'validate_config' => executeValidateConfig(_validator, arguments),
       'preview_config' => executePreviewConfig(_feedService, arguments),
+      'preview_group' => executePreviewGroup(_feedService, arguments),
       'submit_config' => executeSubmitConfig(
         _configRepo,
         _validator,

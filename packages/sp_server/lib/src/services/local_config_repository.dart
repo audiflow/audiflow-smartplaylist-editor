@@ -57,6 +57,27 @@ class LocalConfigRepository {
     return ConfigAssembler.assemble(meta, playlists);
   }
 
+  // -- Raw JSON methods (for version-preserving read-modify-write) --
+
+  /// Returns the root meta.json as a raw JSON map, preserving all
+  /// fields (including `version`) for read-modify-write cycles.
+  Future<Map<String, dynamic>> getRootMetaJson() async {
+    final raw = await _readFile('$_patternsDir/meta.json');
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  /// Writes the root meta.json from a raw JSON map using atomic write.
+  Future<void> saveRootMeta(Map<String, dynamic> json) async {
+    await _atomicWrite('$_patternsDir/meta.json', json);
+  }
+
+  /// Returns a pattern's meta.json as a raw JSON map, preserving all
+  /// fields (including `version`) for read-modify-write cycles.
+  Future<Map<String, dynamic>> getPatternMetaJson(String patternId) async {
+    final raw = await _readFile('$_patternsDir/$patternId/meta.json');
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
   // -- Write methods --
 
   /// Writes playlist JSON to disk using atomic write.
