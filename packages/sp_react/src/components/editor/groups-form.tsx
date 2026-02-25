@@ -110,7 +110,12 @@ export function GroupsForm({ index }: GroupsFormProps) {
           <Input
             id={`playlist-${index}-nullSeasonGroupKey`}
             type="number"
-            {...register(`${prefix}.nullSeasonGroupKey`, { valueAsNumber: true })}
+            {...register(`${prefix}.nullSeasonGroupKey`, {
+              setValueAs: (v) =>
+                v === '' || v === null || v === undefined
+                  ? null
+                  : Number(v),
+            })}
           />
         </div>
       )}

@@ -117,19 +117,33 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     }
   }, [assembledConfigQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Pre-compute normalized reference for dirty comparison.
+  // Zod parse applies all defaults (priority: 0, episodeYearHeaders: false, etc.)
+  // so both sides have the same shape regardless of which tabs have been mounted.
+  const normalizedLastLoaded = useMemo(() => {
+    if (!lastLoadedConfig) return undefined;
+    const parsed = patternConfigSchema.safeParse(lastLoadedConfig);
+    if (!parsed.success) return undefined;
+    return JSON.stringify(sanitizeConfig(parsed.data));
+  }, [lastLoadedConfig]);
+
   // Dirty tracking via form.watch()
   useEffect(() => {
     const subscription = form.watch(() => {
-      if (!initialConfig) {
+      if (!initialConfig || normalizedLastLoaded === undefined) {
         setDirty(true);
         return;
       }
-      const current = form.getValues();
-      const changed = JSON.stringify(current) !== JSON.stringify(lastLoadedConfig);
-      setDirty(changed);
+      const parsed = patternConfigSchema.safeParse(form.getValues());
+      if (!parsed.success) {
+        setDirty(true);
+        return;
+      }
+      const current = JSON.stringify(sanitizeConfig(parsed.data));
+      setDirty(current !== normalizedLastLoaded);
     });
     return () => subscription.unsubscribe();
-  }, [form, lastLoadedConfig, setDirty, initialConfig]);
+  }, [form, normalizedLastLoaded, setDirty, initialConfig]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -214,7 +228,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       await savePatternMetaMutation.mutateAsync({
         patternId: configId,
         data: {
-          version: 1,
           id: configId,
           feedUrls: snapshot.feedUrls ?? [],
           yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,

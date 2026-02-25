@@ -225,7 +225,10 @@ Future<Response> _handleSavePlaylist(
   }
 
   try {
-    await configRepository.savePlaylist(id, pid, sanitized);
+    // Round-trip through the typed model to produce canonical field order,
+    // ensuring consistent JSON regardless of source (browser or MCP).
+    final normalized = SmartPlaylistDefinition.fromJson(sanitized).toJson();
+    await configRepository.savePlaylist(id, pid, normalized);
     return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(
@@ -259,7 +262,13 @@ Future<Response> _handleSavePatternMeta(
   }
 
   try {
-    await configRepository.savePatternMeta(id, parsed);
+    // Read-modify-write: preserve existing version field (managed by sp_cli).
+    final existing = await configRepository.getPatternMetaJson(id);
+    final merged = <String, dynamic>{...existing, ...parsed};
+    // Explicitly preserve version from disk, ignoring client value.
+    merged['version'] = existing['version'];
+
+    await configRepository.savePatternMeta(id, merged);
     return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(

@@ -79,12 +79,12 @@ void main() {
   });
 
   group('tools/list', () {
-    test('returns all 7 tools', () async {
+    test('returns all 8 tools', () async {
       final response = await sendRequest(id: 2, method: 'tools/list');
 
       expect(response, isNotNull);
       final tools = response!['result']['tools'] as List;
-      expect(tools.length, 7);
+      expect(tools.length, 8);
 
       final toolNames = tools.map((t) => (t as Map)['name']).toSet();
       expect(
@@ -96,6 +96,7 @@ void main() {
           'fetch_feed',
           'validate_config',
           'preview_config',
+          'preview_group',
           'submit_config',
         ]),
       );

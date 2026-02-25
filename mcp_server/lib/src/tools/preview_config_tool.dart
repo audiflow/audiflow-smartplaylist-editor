@@ -76,6 +76,16 @@ Future<Map<String, dynamic>> executePreviewConfig(
             'id': pr.playlist.id,
             'displayName': pr.playlist.displayName,
             'episodeCount': pr.playlist.episodeCount,
+            if (pr.playlist.groups != null)
+              'groups': pr.playlist.groups!
+                  .map(
+                    (g) => {
+                      'id': g.id,
+                      'displayName': g.displayName,
+                      'episodeCount': g.episodeCount,
+                    },
+                  )
+                  .toList(),
           },
         )
         .toList(),

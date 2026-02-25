@@ -76,6 +76,47 @@ void main() {
       expect(result.containsKey('ungrouped'), isTrue);
       expect(result.containsKey('resolverType'), isTrue);
     });
+
+    test('includes groups in response for category resolver', () async {
+      final config = {
+        'id': 'test',
+        'feedUrls': ['https://example.com/feed.xml'],
+        'playlists': [
+          {
+            'id': 'extras',
+            'displayName': 'Extras',
+            'resolverType': 'category',
+            'contentType': 'groups',
+            'groups': [
+              {
+                'id': 'season1',
+                'displayName': 'Season 1',
+                'pattern': 'Season 1',
+              },
+              {'id': 'other', 'displayName': 'Other', 'pattern': ''},
+            ],
+          },
+        ],
+      };
+      final result = await executePreviewConfig(feedService, {
+        'config': config,
+        'feedUrl': 'https://example.com/feed.xml',
+      });
+
+      final playlists = result['playlists'] as List;
+      expect(playlists, isNotEmpty);
+
+      final playlist = playlists[0] as Map<String, dynamic>;
+      expect(playlist.containsKey('groups'), isTrue);
+
+      final groups = playlist['groups'] as List;
+      expect(groups, isNotEmpty);
+
+      final group = groups[0] as Map<String, dynamic>;
+      expect(group.containsKey('id'), isTrue);
+      expect(group.containsKey('displayName'), isTrue);
+      expect(group.containsKey('episodeCount'), isTrue);
+    });
   });
 }
 
