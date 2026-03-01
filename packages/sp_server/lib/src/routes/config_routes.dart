@@ -203,7 +203,9 @@ Future<Response> _handleSavePlaylist(
 
   // Strip null values: JSON Schema "type": "integer" rejects null,
   // but absent keys pass optional field validation.
+  // Also strip schema-invalid defaults (e.g. customSort with empty rules).
   final sanitized = _stripNulls(parsed) as Map<String, dynamic>;
+  _stripEmptyCustomSort(sanitized);
 
   // Validate the playlist by wrapping in a full config envelope
   final envelope = {
@@ -309,7 +311,24 @@ Future<Response> _handleCreatePattern(
   }
 
   try {
-    await configRepository.createPattern(id, meta);
+    // Set initial version (managed by sp_cli, not by the client).
+    final metaWithVersion = <String, dynamic>{...meta, 'version': 1};
+    await configRepository.createPattern(id, metaWithVersion);
+
+    // Add the new pattern to root meta.json so it appears in listings.
+    final rootMeta = await configRepository.getRootMetaJson();
+    final patterns = (rootMeta['patterns'] as List<dynamic>?) ?? [];
+    final playlists = meta['playlists'] as List<dynamic>? ?? [];
+    patterns.add({
+      'id': id,
+      'version': 1,
+      'displayName': id,
+      'feedUrlHint': _feedUrlHint(meta),
+      'playlistCount': playlists.length,
+    });
+    rootMeta['patterns'] = patterns;
+    await configRepository.saveRootMeta(rootMeta);
+
     return Response(
       201,
       body: jsonEncode({'ok': true, 'id': id}),
@@ -680,6 +699,19 @@ Map<String, dynamic>? _serializeEpisode(
   };
 }
 
+/// Removes `customSort` when its `rules` array is empty.
+/// Schema requires `minItems: 1` on rules, but the form may send an
+/// empty array when sort is disabled or content type is not "groups".
+void _stripEmptyCustomSort(Map<String, dynamic> json) {
+  final sort = json['customSort'];
+  if (sort is Map<String, dynamic>) {
+    final rules = sort['rules'];
+    if (rules is List && rules.isEmpty) {
+      json.remove('customSort');
+    }
+  }
+}
+
 /// Recursively removes null-valued keys from JSON maps.
 ///
 /// Optional fields in JSON Schema pass when the key is absent but fail when
@@ -697,6 +729,12 @@ Object? _stripNulls(Object? value) {
     return value.map(_stripNulls).toList();
   }
   return value;
+}
+
+String _feedUrlHint(Map<String, dynamic> meta) {
+  final urls = meta['feedUrls'];
+  if (urls is List && urls.isNotEmpty) return urls.first as String;
+  return '';
 }
 
 Response _error(int status, String message) {

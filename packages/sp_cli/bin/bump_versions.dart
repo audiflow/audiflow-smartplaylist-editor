@@ -79,7 +79,7 @@ Future<Map<String, int>> _readPreviousVersions(
     );
     if (content != null) {
       final meta = jsonDecode(content) as Map<String, dynamic>;
-      versions[id] = meta['version'] as int;
+      versions[id] = (meta['version'] as int?) ?? 0;
     }
   }
   return versions;
@@ -89,7 +89,7 @@ Future<int> _readPreviousRootVersion(String repoDir, String previousRef) async {
   final content = await gitShowFile(repoDir, previousRef, 'patterns/meta.json');
   if (content == null) return 0;
   final meta = jsonDecode(content) as Map<String, dynamic>;
-  return meta['version'] as int;
+  return (meta['version'] as int?) ?? 0;
 }
 
 Map<String, int> _readPlaylistCounts(

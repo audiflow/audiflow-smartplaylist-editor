@@ -24,12 +24,10 @@ void main() {
       expect(result[0].playlists, hasLength(1));
     });
 
-    test('throws FormatException on unsupported version', () {
+    test('parses any version number without rejection', () {
       final json = jsonEncode({'version': 99, 'patterns': []});
-      expect(
-        () => SmartPlaylistPatternLoader.parse(json),
-        throwsA(isA<FormatException>()),
-      );
+      final result = SmartPlaylistPatternLoader.parse(json);
+      expect(result, isEmpty);
     });
 
     test('throws FormatException on missing version', () {

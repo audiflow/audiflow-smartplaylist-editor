@@ -40,7 +40,9 @@ final class SmartPlaylistValidator {
   List<String> validate(Object? parsed) {
     final result = _schema.validate(parsed);
     if (result.isValid) return const [];
-    return result.errors.map((e) => e.message).toList();
+    // toString() includes the instance path for context,
+    // e.g. "/patterns/0/playlists: minItems violated (0 vs 1)"
+    return result.errors.map((e) => e.toString()).toList();
   }
 
   /// Validates a JSON string against the schema.

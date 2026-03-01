@@ -15,7 +15,7 @@ final class PatternMeta {
 
   factory PatternMeta.fromJson(Map<String, dynamic> json) {
     return PatternMeta(
-      version: json['version'] as int,
+      version: (json['version'] as int?) ?? 1,
       id: json['id'] as String,
       podcastGuid: json['podcastGuid'] as String?,
       feedUrls: (json['feedUrls'] as List<dynamic>).cast<String>(),

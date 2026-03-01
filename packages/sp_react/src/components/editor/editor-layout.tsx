@@ -14,6 +14,7 @@ import {
   useAssembledConfig,
   useSavePlaylist,
   useSavePatternMeta,
+  useCreatePattern,
 } from '@/api/queries.ts';
 import { sanitizeConfig } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
@@ -94,6 +95,29 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const feedQuery = useFeed(feedUrl || null);
   const savePlaylistMutation = useSavePlaylist();
   const savePatternMetaMutation = useSavePatternMeta();
+  const createPatternMutation = useCreatePattern();
+
+  // Watch the form's id field so the save button can enable for new configs
+  const formId = useWatch({ control: form.control, name: 'id' });
+  const isNewConfig = configId === null;
+  const effectiveId = isNewConfig ? formId : configId;
+
+  // Auto-populate feed URL input from feedUrls when the input is empty.
+  // In form mode, watch the form field; in JSON mode, parse from jsonText.
+  const formFeedUrls = useWatch({ control: form.control, name: 'feedUrls' });
+  useEffect(() => {
+    if (feedUrl) return;
+    if (isJsonMode) {
+      try {
+        const parsed = JSON.parse(jsonText) as { feedUrls?: string[] };
+        const first = parsed.feedUrls?.[0];
+        if (first) setFeedUrl(first);
+      } catch { /* ignore parse errors */ }
+    } else {
+      const first = formFeedUrls?.[0];
+      if (first) setFeedUrl(first);
+    }
+  }, [formFeedUrls, jsonText, isJsonMode, feedUrl, setFeedUrl]);
 
   // Track the config snapshot that was last loaded/saved for conflict detection
   const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(initialConfig);
@@ -130,6 +154,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // Dirty tracking via form.watch()
   useEffect(() => {
     const subscription = form.watch(() => {
+      if (isNewConfig) {
+        // New configs are dirty once the user has entered a pattern id
+        const values = form.getValues();
+        setDirty(!!values.id);
+        return;
+      }
       if (!initialConfig || normalizedLastLoaded === undefined) {
         setDirty(true);
         return;
@@ -143,26 +173,33 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       setDirty(current !== normalizedLastLoaded);
     });
     return () => subscription.unsubscribe();
-  }, [form, normalizedLastLoaded, setDirty, initialConfig]);
+  }, [form, normalizedLastLoaded, setDirty, initialConfig, isNewConfig]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
       // Form -> JSON: serialize current form values
       setJsonText(JSON.stringify(form.getValues(), null, 2));
     } else {
-      // JSON -> Form: parse and validate
+      // JSON -> Form: require valid JSON syntax, but allow schema errors
+      // so the user can fix them inline via form validation.
+      let raw: unknown;
       try {
-        const parsed = patternConfigSchema.parse(JSON.parse(jsonText));
-        form.reset(parsed);
+        raw = JSON.parse(jsonText);
       } catch (e) {
         toast.error(
           t('toastInvalidJson', { error: e instanceof Error ? e.message : 'Parse error' }),
         );
         return;
       }
+      const result = patternConfigSchema.safeParse(raw);
+      form.reset(result.success ? result.data : (raw as PatternConfig), { keepDefaultValues: false });
+      if (!result.success) {
+        // Trigger validation so field errors show immediately
+        void form.trigger();
+      }
     }
     toggleJsonMode();
-  }, [isJsonMode, jsonText, form, toggleJsonMode]);
+  }, [isJsonMode, jsonText, form, toggleJsonMode, t]);
 
   const handleRunPreview = useCallback(() => {
     if (!feedUrl) {
@@ -207,7 +244,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   // Save handler: persist each playlist + pattern meta to disk
   const handleSave = useCallback(async () => {
-    if (!configId || isSaving) return;
+    if (!effectiveId || isSaving) return;
 
     // Snapshot immediately: form.getValues() returns mutable references to RHF
     // internal state, so clone before any awaits to avoid mid-save mutations.
@@ -217,28 +254,49 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
     setSaving(true);
     try {
-      for (const playlist of snapshot.playlists) {
-        await savePlaylistMutation.mutateAsync({
-          patternId: configId,
-          playlistId: playlist.id,
-          data: playlist,
+      if (isNewConfig) {
+        // Create the pattern directory first
+        await createPatternMutation.mutateAsync({
+          data: {
+            id: effectiveId,
+            meta: {
+              id: effectiveId,
+              feedUrls: snapshot.feedUrls ?? [],
+              yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
+              playlists: snapshot.playlists.map((p) => p.id),
+            },
+          },
         });
       }
 
-      await savePatternMetaMutation.mutateAsync({
-        patternId: configId,
-        data: {
-          id: configId,
-          feedUrls: snapshot.feedUrls ?? [],
-          yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
-          playlists: snapshot.playlists.map((p) => p.id),
-        },
-      });
+      for (const playlist of snapshot.playlists) {
+        await savePlaylistMutation.mutateAsync({
+          patternId: effectiveId,
+          playlistId: playlist.id,
+          data: sanitizeConfig(playlist),
+        });
+      }
+
+      if (!isNewConfig) {
+        await savePatternMetaMutation.mutateAsync({
+          patternId: effectiveId,
+          data: {
+            id: effectiveId,
+            feedUrls: snapshot.feedUrls ?? [],
+            yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
+            playlists: snapshot.playlists.map((p) => p.id),
+          },
+        });
+      }
 
       setLastSavedAt(new Date());
       setLastLoadedConfig(snapshot);
       setDirty(false);
       toast.success(t('toastSaved', 'Saved successfully'));
+
+      if (isNewConfig) {
+        void navigate({ to: '/editor/$id', params: { id: effectiveId } });
+      }
     } catch (error) {
       toast.error(
         t('toastSaveError', {
@@ -249,7 +307,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } finally {
       setSaving(false);
     }
-  }, [configId, isSaving, isJsonMode, parsedJsonConfig, form, savePlaylistMutation, savePatternMetaMutation, setSaving, setDirty, setLastSavedAt, t]);
+  }, [effectiveId, isSaving, isJsonMode, isNewConfig, parsedJsonConfig, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, navigate, setSaving, setDirty, setLastSavedAt, t]);
 
   // Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -325,7 +383,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           <div className="flex items-center gap-2">
             <Button
               onClick={() => void handleSave()}
-              disabled={!isDirty || isSaving || !configId}
+              disabled={!isDirty || isSaving || !effectiveId}
               variant={isDirty ? 'default' : 'outline'}
             >
               {isSaving ? (
