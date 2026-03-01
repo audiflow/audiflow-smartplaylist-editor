@@ -9,24 +9,15 @@ import '../models/smart_playlist_pattern_config.dart';
 final class SmartPlaylistPatternLoader {
   SmartPlaylistPatternLoader._();
 
-  static const _supportedVersion = 1;
-
   /// Parses a JSON string into a list of pattern configs.
   ///
-  /// Throws [FormatException] if the version is missing or
-  /// unsupported.
+  /// Throws [FormatException] if the version field is missing.
   static List<SmartPlaylistPatternConfig> parse(String jsonString) {
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
     final version = data['version'] as int?;
     if (version == null) {
       throw const FormatException(
         'Missing "version" field in smart playlist patterns JSON',
-      );
-    }
-    if (version != _supportedVersion) {
-      throw FormatException(
-        'Unsupported smart playlist patterns version: $version '
-        '(supported: $_supportedVersion)',
       );
     }
     final patterns = data['patterns'] as List<dynamic>;

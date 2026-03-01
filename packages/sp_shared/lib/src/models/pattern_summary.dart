@@ -13,7 +13,7 @@ final class PatternSummary {
   factory PatternSummary.fromJson(Map<String, dynamic> json) {
     return PatternSummary(
       id: json['id'] as String,
-      version: json['version'] as int,
+      version: (json['version'] as int?) ?? 1,
       displayName: json['displayName'] as String,
       feedUrlHint: json['feedUrlHint'] as String,
       playlistCount: json['playlistCount'] as int,

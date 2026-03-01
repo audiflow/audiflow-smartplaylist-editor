@@ -83,6 +83,51 @@ describe('sanitizeConfig', () => {
     expect(result.playlists[1]).not.toHaveProperty('requireFilter');
   });
 
+  it('strips customSort with empty rules array', () => {
+    const config = {
+      id: 'pl-1',
+      displayName: 'Main',
+      resolverType: 'year',
+      customSort: { rules: [] },
+    };
+
+    const result = sanitizeConfig(config) as Record<string, unknown>;
+
+    expect(result).not.toHaveProperty('customSort');
+  });
+
+  it('preserves customSort with non-empty rules', () => {
+    const config = {
+      id: 'pl-1',
+      customSort: { rules: [{ field: 'playlistNumber', order: 'ascending' }] },
+    };
+
+    const result = sanitizeConfig(config) as Record<string, unknown>;
+
+    expect(result.customSort).toEqual({
+      rules: [{ field: 'playlistNumber', order: 'ascending' }],
+    });
+  });
+
+  it('strips customSort inside nested playlists', () => {
+    const config = {
+      id: 'pattern-1',
+      playlists: [
+        { id: 'pl-1', customSort: { rules: [] } },
+        { id: 'pl-2', customSort: { rules: [{ field: 'progress', order: 'descending' }] } },
+      ],
+    };
+
+    const result = sanitizeConfig(config) as {
+      playlists: Record<string, unknown>[];
+    };
+
+    expect(result.playlists[0]).not.toHaveProperty('customSort');
+    expect(result.playlists[1].customSort).toEqual({
+      rules: [{ field: 'progress', order: 'descending' }],
+    });
+  });
+
   it('passes through non-string primitives unchanged', () => {
     const config = {
       priority: 0,

@@ -4,11 +4,11 @@ import 'pattern_summary.dart';
 
 /// Root meta.json from the split config repository.
 ///
-/// Contains schema version and pattern summaries for discovery.
+/// Contains data version and pattern summaries for discovery.
+/// The version field tracks the data format version managed by the data repo,
+/// not a schema version enforced by this editor.
 final class RootMeta {
   const RootMeta({required this.version, required this.patterns});
-
-  static const _supportedVersion = 1;
 
   factory RootMeta.fromJson(Map<String, dynamic> json) {
     return RootMeta(
@@ -21,14 +21,13 @@ final class RootMeta {
 
   /// Parses a JSON string into a RootMeta.
   ///
-  /// Throws [FormatException] if version is unsupported.
+  /// Throws [FormatException] if version field is missing.
   static RootMeta parseJson(String jsonString) {
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
     final version = data['version'] as int?;
-    if (version == null || version != _supportedVersion) {
-      throw FormatException(
-        'Unsupported root meta version: $version '
-        '(supported: $_supportedVersion)',
+    if (version == null) {
+      throw const FormatException(
+        'Missing required "version" field in root meta.json',
       );
     }
     return RootMeta.fromJson(data);

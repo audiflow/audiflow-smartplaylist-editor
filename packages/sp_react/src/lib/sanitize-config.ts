@@ -19,6 +19,13 @@ export function sanitizeConfig(config: unknown): unknown {
         result[key] = sanitized;
       }
     }
+    // Strip customSort when rules array is empty — schema requires minItems: 1
+    if ('customSort' in result) {
+      const sort = result.customSort as Record<string, unknown> | undefined;
+      if (sort && Array.isArray(sort.rules) && sort.rules.length === 0) {
+        delete result.customSort;
+      }
+    }
     return result;
   }
   return config;
