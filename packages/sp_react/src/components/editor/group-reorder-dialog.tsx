@@ -126,7 +126,7 @@ export function GroupReorderDialog({
             items={localOrder.map((item) => item.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="space-y-1">
+            <div className="max-h-[60vh] space-y-1 overflow-y-auto">
               {localOrder.map((item) => (
                 <SortableGroupItem
                   key={item.id}
