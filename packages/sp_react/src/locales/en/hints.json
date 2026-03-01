@@ -1,5 +1,6 @@
 {
   "patternId": "A unique slug identifying this pattern config (e.g., 'my-podcast'). Used as the folder name in the config repository.",
+  "patternDisplayName": "A human-friendly name shown in the browse list. Defaults to the config ID if left empty.",
   "podcastGuid": "The podcast's globally unique identifier from its RSS feed. When set, this takes priority over feed URL matching for more reliable identification.",
   "feedUrls": "One or more RSS feed URLs that identify this podcast. The app matches incoming feeds against these URLs to determine which pattern config to apply.",
   "yearGroupedEpisodes": "When enabled, the main episode list in the app groups episodes by their publication year with year headers.",

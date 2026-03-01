@@ -166,7 +166,22 @@ Future<Response> _handleAssembled(
 
   try {
     final config = await configRepository.assembleConfig(id);
-    return Response.ok(jsonEncode(config.toJson()), headers: _jsonHeaders);
+    final json = config.toJson();
+
+    // Enrich with displayName from root meta.json (not stored in pattern config).
+    final rootMeta = await configRepository.getRootMetaJson();
+    final patterns = rootMeta['patterns'] as List<dynamic>? ?? [];
+    for (final entry in patterns) {
+      if (entry is Map<String, dynamic> && entry['id'] == id) {
+        final name = entry['displayName'];
+        if (name is String && name.isNotEmpty) {
+          json['displayName'] = name;
+        }
+        break;
+      }
+    }
+
+    return Response.ok(jsonEncode(json), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(
       502,
@@ -263,6 +278,14 @@ Future<Response> _handleSavePatternMeta(
     return _error(400, 'Request body must be a JSON object');
   }
 
+  // Extract displayName before merging into pattern meta.json.
+  // displayName lives only in root meta.json, not in the pattern-level file.
+  final rawDisplayName = parsed.remove('displayName');
+  if (rawDisplayName != null && rawDisplayName is! String) {
+    return _error(400, '"displayName" must be a string');
+  }
+  final displayName = rawDisplayName as String?;
+
   try {
     // Read-modify-write: preserve existing version field (managed by sp_cli).
     final existing = await configRepository.getPatternMetaJson(id);
@@ -271,6 +294,15 @@ Future<Response> _handleSavePatternMeta(
     merged['version'] = existing['version'];
 
     await configRepository.savePatternMeta(id, merged);
+
+    // Sync root meta.json so browse listing stays up to date.
+    await _syncRootMeta(
+      configRepository,
+      id: id,
+      meta: merged,
+      displayName: displayName,
+    );
+
     return Response.ok(jsonEncode({'ok': true}), headers: _jsonHeaders);
   } on Object catch (e) {
     return Response(
@@ -301,6 +333,7 @@ Future<Response> _handleCreatePattern(
   }
 
   final id = parsed['id'];
+  final displayName = parsed['displayName'];
   final meta = parsed['meta'];
 
   if (id is! String || id.isEmpty) {
@@ -309,6 +342,10 @@ Future<Response> _handleCreatePattern(
   if (meta is! Map<String, dynamic>) {
     return _error(400, 'Missing or invalid "meta" field');
   }
+
+  final effectiveDisplayName = (displayName is String && displayName.isNotEmpty)
+      ? displayName
+      : id;
 
   try {
     // Set initial version (managed by sp_cli, not by the client).
@@ -322,7 +359,7 @@ Future<Response> _handleCreatePattern(
     patterns.add({
       'id': id,
       'version': 1,
-      'displayName': id,
+      'displayName': effectiveDisplayName,
       'feedUrlHint': _feedUrlHint(meta),
       'playlistCount': playlists.length,
     });
@@ -729,6 +766,38 @@ Object? _stripNulls(Object? value) {
     return value.map(_stripNulls).toList();
   }
   return value;
+}
+
+/// Updates the root meta.json entry for [id] so the browse listing reflects
+/// current playlistCount, feedUrlHint, and optionally displayName.
+Future<void> _syncRootMeta(
+  LocalConfigRepository configRepository, {
+  required String id,
+  required Map<String, dynamic> meta,
+  String? displayName,
+}) async {
+  final rootMeta = await configRepository.getRootMetaJson();
+  final patterns = (rootMeta['patterns'] as List<dynamic>?) ?? [];
+  var found = false;
+  for (final entry in patterns) {
+    if (entry is Map<String, dynamic> && entry['id'] == id) {
+      final playlists = meta['playlists'] as List<dynamic>? ?? [];
+      entry['playlistCount'] = playlists.length;
+      entry['feedUrlHint'] = _feedUrlHint(meta);
+      if (displayName != null) {
+        if (displayName.isEmpty) {
+          entry.remove('displayName');
+        } else {
+          entry['displayName'] = displayName;
+        }
+      }
+      found = true;
+      break;
+    }
+  }
+  if (!found) return;
+  rootMeta['patterns'] = patterns;
+  await configRepository.saveRootMeta(rootMeta);
 }
 
 String _feedUrlHint(Map<String, dynamic> meta) {

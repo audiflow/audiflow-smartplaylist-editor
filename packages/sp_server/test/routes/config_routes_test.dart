@@ -364,6 +364,7 @@ void main() {
         final body =
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         expect(body['id'], equals('podcast-a'));
+        expect(body['displayName'], equals('Podcast A'));
         expect(body['podcastGuid'], equals('guid-a'));
         final playlists = body['playlists'] as List;
         expect(playlists.length, equals(1));
@@ -1215,6 +1216,94 @@ void main() {
             jsonDecode(await file.readAsString()) as Map<String, dynamic>;
         // podcastGuid from disk should be preserved
         expect(content['podcastGuid'], equals('guid-a'));
+      });
+
+      test('syncs root meta.json with updated fields', () async {
+        final metaJson = {
+          'id': 'podcast-a',
+          'displayName': 'Renamed Podcast',
+          'feedUrls': ['https://example.com/a/new-feed.xml'],
+          'playlists': ['seasons', 'bonus'],
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(metaJson),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(200));
+
+        // Verify root meta.json was updated
+        final rootFile = File('$dataDir/patterns/meta.json');
+        final rootMeta =
+            jsonDecode(await rootFile.readAsString()) as Map<String, dynamic>;
+        final patterns = rootMeta['patterns'] as List<dynamic>;
+        final entry =
+            patterns.firstWhere(
+                  (p) => (p as Map<String, dynamic>)['id'] == 'podcast-a',
+                )
+                as Map<String, dynamic>;
+        expect(entry['displayName'], equals('Renamed Podcast'));
+        expect(
+          entry['feedUrlHint'],
+          equals('https://example.com/a/new-feed.xml'),
+        );
+        expect(entry['playlistCount'], equals(2));
+      });
+
+      test(
+        'clears displayName from root meta.json when empty string sent',
+        () async {
+          final metaJson = {
+            'id': 'podcast-a',
+            'displayName': '',
+            'feedUrls': ['https://example.com/a/feed.xml'],
+            'playlists': ['seasons'],
+          };
+
+          final request = Request(
+            'PUT',
+            Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(metaJson),
+          );
+
+          final response = await handler(request);
+          expect(response.statusCode, equals(200));
+
+          final rootFile = File('$dataDir/patterns/meta.json');
+          final rootMeta =
+              jsonDecode(await rootFile.readAsString()) as Map<String, dynamic>;
+          final patterns = rootMeta['patterns'] as List<dynamic>;
+          final entry =
+              patterns.firstWhere(
+                    (p) => (p as Map<String, dynamic>)['id'] == 'podcast-a',
+                  )
+                  as Map<String, dynamic>;
+          expect(entry.containsKey('displayName'), isFalse);
+        },
+      );
+
+      test('returns 400 for non-string displayName', () async {
+        final metaJson = {
+          'id': 'podcast-a',
+          'displayName': 42,
+          'feedUrls': ['https://example.com/a/feed.xml'],
+          'playlists': ['seasons'],
+        };
+
+        final request = Request(
+          'PUT',
+          Uri.parse('http://localhost/api/configs/patterns/podcast-a/meta'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(metaJson),
+        );
+
+        final response = await handler(request);
+        expect(response.statusCode, equals(400));
       });
 
       test('returns 400 for empty body', () async {
