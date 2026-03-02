@@ -32,13 +32,21 @@ export function PatternSettingsCard() {
             />
           </div>
           <div className="space-y-1.5">
-            <HintLabel htmlFor="config-podcastGuid" hint="podcastGuid">{t('podcastGuid')}</HintLabel>
+            <HintLabel htmlFor="config-displayName" hint="patternDisplayName">{t('patternDisplayName')}</HintLabel>
             <Input
-              id="config-podcastGuid"
-              {...register('podcastGuid')}
-              placeholder={t('placeholderGuid')}
+              id="config-displayName"
+              {...register('displayName')}
+              placeholder={t('placeholderPatternDisplayName')}
             />
           </div>
+        </div>
+        <div className="space-y-1.5">
+          <HintLabel htmlFor="config-podcastGuid" hint="podcastGuid">{t('podcastGuid')}</HintLabel>
+          <Input
+            id="config-podcastGuid"
+            {...register('podcastGuid')}
+            placeholder={t('placeholderGuid')}
+          />
         </div>
         <FeedUrlsField />
         <div className="flex items-center gap-2">

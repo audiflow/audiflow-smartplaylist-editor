@@ -150,6 +150,7 @@ export const playlistDefinitionSchema = z.object({
 
 export const patternConfigSchema = z.object({
   id: z.string(),
+  displayName: z.string().nullish().transform((v) => v ?? ''),
   podcastGuid: z.string().nullish(),
   feedUrls: z.array(z.string()).nullish(),
   yearGroupedEpisodes: z.boolean().nullish().transform((v) => v ?? false),

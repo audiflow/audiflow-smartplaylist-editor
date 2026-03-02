@@ -13,6 +13,8 @@
   "noPlaylists": "プレイリストがありません。「追加」をクリックして作成してください。",
   "patternSettings": "パターン設定",
   "configId": "設定 ID",
+  "patternDisplayName": "表示名",
+  "placeholderPatternDisplayName": "一覧に表示する名前",
   "podcastGuid": "ポッドキャスト GUID",
   "feedUrlsLabel": "フィード URL (カンマ区切り)",
   "yearGroupedEpisodes": "年別エピソードグループ",

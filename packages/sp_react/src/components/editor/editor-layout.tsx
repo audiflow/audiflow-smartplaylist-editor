@@ -48,6 +48,7 @@ import { toast } from 'sonner';
 
 const DEFAULT_CONFIG: PatternConfig = {
   id: '',
+  displayName: '',
   playlists: [],
   yearGroupedEpisodes: false,
 };
@@ -259,6 +260,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         await createPatternMutation.mutateAsync({
           data: {
             id: effectiveId,
+            displayName: snapshot.displayName ?? undefined,
             meta: {
               id: effectiveId,
               feedUrls: snapshot.feedUrls ?? [],
@@ -282,6 +284,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           patternId: effectiveId,
           data: {
             id: effectiveId,
+            displayName: snapshot.displayName ?? undefined,
             feedUrls: snapshot.feedUrls ?? [],
             yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
             playlists: snapshot.playlists.map((p) => p.id),

@@ -13,6 +13,8 @@
   "noPlaylists": "No playlists. Click \"Add\" to create one.",
   "patternSettings": "Pattern Settings",
   "configId": "Config ID",
+  "patternDisplayName": "Display Name",
+  "placeholderPatternDisplayName": "Friendly name for browse list",
   "podcastGuid": "Podcast GUID",
   "feedUrlsLabel": "Feed URLs (comma-separated)",
   "yearGroupedEpisodes": "Year Grouped Episodes",

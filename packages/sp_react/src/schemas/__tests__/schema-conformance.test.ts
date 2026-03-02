@@ -180,9 +180,12 @@ describe('Zod-parsed output validates against JSON Schema', () => {
         },
       ],
     });
+    // displayName is editor-only metadata not present in the config schema,
+    // so strip it before validating against the JSON Schema.
+    const { displayName: _, ...schemaReady } = parsed;
     const wrapped = {
       version: 1,
-      patterns: [parsed],
+      patterns: [schemaReady],
     };
     const valid = validate(wrapped);
     expect(validate.errors).toBeNull();
