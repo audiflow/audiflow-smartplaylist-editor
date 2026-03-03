@@ -1,8 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
+import type {
+  PreviewPlaylist,
+  PreviewEpisode,
+  PreviewDebug,
+} from '@/schemas/api-schema.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
-import { PlaylistDebugStats } from '@/components/preview/playlist-debug-stats.tsx';
+import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
+import { UngroupedEpisodesPanel } from '@/components/preview/ungrouped-episodes-panel.tsx';
 import { PlaylistTree } from '@/components/preview/playlist-tree.tsx';
 import { ExtractionPreview } from '@/components/preview/extraction-preview.tsx';
 import {
@@ -16,18 +21,29 @@ import { Badge } from '@/components/ui/badge.tsx';
 interface PlaylistTabContentProps {
   index: number;
   previewPlaylist: PreviewPlaylist | null;
+  ungroupedEpisodes: PreviewEpisode[];
+  excludedEpisodes: PreviewEpisode[];
+  globalDebug: PreviewDebug | undefined;
+  playlistCount: number;
   onRemove: () => void;
 }
 
 export function PlaylistTabContent({
   index,
   previewPlaylist,
+  ungroupedEpisodes,
+  excludedEpisodes,
+  globalDebug,
+  playlistCount,
   onRemove,
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
 
   const claimedCount = previewPlaylist?.claimedByOthers?.length ?? 0;
+  const ungroupedCount = ungroupedEpisodes.length;
+  const excludedCount = excludedEpisodes.length;
+  const showClaimedTab = 2 <= playlistCount;
 
   return (
     <div className="pt-2">
@@ -44,8 +60,10 @@ export function PlaylistTabContent({
           </h4>
           {previewPlaylist ? (
             <>
-              {previewPlaylist.debug && (
-                <PlaylistDebugStats debug={previewPlaylist.debug} />
+              {globalDebug && (
+                <div className="border rounded-md px-3 py-1.5">
+                  <DebugInfoStats debug={globalDebug} />
+                </div>
               )}
               <Tabs defaultValue="groups">
                 <TabsList>
@@ -55,29 +73,73 @@ export function PlaylistTabContent({
                       {previewPlaylist.episodeCount}
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value="extraction">
-                    {tp('tabExtraction')}
-                  </TabsTrigger>
-                  <TabsTrigger value="claimed">
-                    {tp('tabClaimed')}
-                    {0 < claimedCount && (
+                  <TabsTrigger value="ungrouped">
+                    {tp('tabUngrouped')}
+                    {0 < ungroupedCount && (
                       <Badge variant="secondary" className="ml-1.5">
-                        {claimedCount}
+                        {ungroupedCount}
                       </Badge>
                     )}
                   </TabsTrigger>
+                  <TabsTrigger value="excluded">
+                    {tp('tabExcluded')}
+                    {0 < excludedCount && (
+                      <Badge variant="secondary" className="ml-1.5">
+                        {excludedCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="extraction">
+                    {tp('tabExtraction')}
+                  </TabsTrigger>
+                  {showClaimedTab && (
+                    <TabsTrigger value="claimed">
+                      {tp('tabClaimed')}
+                      {0 < claimedCount && (
+                        <Badge variant="secondary" className="ml-1.5">
+                          {claimedCount}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                  )}
                 </TabsList>
                 <TabsContent value="groups">
                   <PlaylistTree playlists={[previewPlaylist]} />
                 </TabsContent>
+                <TabsContent value="ungrouped">
+                  {0 < ungroupedCount ? (
+                    <UngroupedEpisodesPanel episodes={ungroupedEpisodes} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      {tp('emptyUngrouped')}
+                    </p>
+                  )}
+                </TabsContent>
+                <TabsContent value="excluded">
+                  {0 < excludedCount ? (
+                    <UngroupedEpisodesPanel episodes={excludedEpisodes} />
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      {tp('emptyExcluded')}
+                    </p>
+                  )}
+                </TabsContent>
                 <TabsContent value="extraction">
                   <ExtractionPreview playlist={previewPlaylist} />
                 </TabsContent>
-                <TabsContent value="claimed">
-                  <ClaimedEpisodesSection
-                    episodes={previewPlaylist.claimedByOthers ?? []}
-                  />
-                </TabsContent>
+                {showClaimedTab && (
+                  <TabsContent value="claimed">
+                    {0 < claimedCount ? (
+                      <ClaimedEpisodesSection
+                        episodes={previewPlaylist.claimedByOthers ?? []}
+                      />
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-4 text-center">
+                        {tp('emptyClaimed')}
+                      </p>
+                    )}
+                  </TabsContent>
+                )}
               </Tabs>
             </>
           ) : (

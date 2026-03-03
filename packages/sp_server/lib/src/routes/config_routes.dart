@@ -581,6 +581,7 @@ Map<String, dynamic> _runPreview(
     return {
       'playlists': <Map<String, dynamic>>[],
       'ungrouped': <Map<String, dynamic>>[],
+      'excluded': <Map<String, dynamic>>[],
       'resolverType': null,
     };
   }
@@ -604,10 +605,17 @@ Map<String, dynamic> _runPreview(
     extractedDisplayNames[definition.id] = names;
   }
 
-  final groupedCount = result.playlistResults.fold<int>(
-    0,
-    (sum, pr) => sum + pr.playlist.episodeIds.length,
-  );
+  final groupedIds = <int>{};
+  for (final pr in result.playlistResults) {
+    groupedIds.addAll(pr.playlist.episodeIds);
+  }
+  final ungroupedIds = result.ungroupedEpisodeIds.toSet();
+
+  final excludedEpisodes = enriched
+      .where((e) => !groupedIds.contains(e.id) && !ungroupedIds.contains(e.id))
+      .map((e) => _serializeEpisode(e))
+      .whereType<Map<String, dynamic>>()
+      .toList();
 
   return {
     'playlists': result.playlistResults
@@ -624,11 +632,13 @@ Map<String, dynamic> _runPreview(
         .map((id) => _serializeEpisode(episodeById[id]))
         .whereType<Map<String, dynamic>>()
         .toList(),
+    'excluded': excludedEpisodes,
     'resolverType': result.resolverType,
     'debug': {
       'totalEpisodes': enriched.length,
-      'groupedEpisodes': groupedCount,
+      'groupedEpisodes': groupedIds.length,
       'ungroupedEpisodes': result.ungroupedEpisodeIds.length,
+      'excludedEpisodes': excludedEpisodes.length,
     },
   };
 }

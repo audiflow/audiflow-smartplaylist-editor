@@ -80,11 +80,13 @@ export const previewDebugSchema = z.object({
   totalEpisodes: z.number(),
   groupedEpisodes: z.number(),
   ungroupedEpisodes: z.number(),
+  excludedEpisodes: z.number().optional().default(0),
 });
 
 export const previewResultSchema = z.object({
   playlists: z.array(previewPlaylistSchema),
   ungrouped: z.array(previewEpisodeSchema),
+  excluded: z.array(previewEpisodeSchema).optional().default([]),
   resolverType: z.string().nullish(),
   debug: previewDebugSchema.optional(),
 });

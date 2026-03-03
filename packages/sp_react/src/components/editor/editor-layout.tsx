@@ -93,6 +93,11 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   });
 
   const previewMutation = usePreviewMutation();
+  // Ref avoids `handleRunPreview` changing every render (useMutation returns
+  // a new object each render), which would destabilise the auto-preview effect.
+  const previewMutationRef = useRef(previewMutation);
+  previewMutationRef.current = previewMutation;
+
   const feedQuery = useFeed(feedUrl || null);
   const savePlaylistMutation = useSavePlaylist();
   const savePatternMetaMutation = useSavePatternMeta();
@@ -218,8 +223,18 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } else {
       config = form.getValues();
     }
-    previewMutation.mutate({ config: sanitizeConfig(config), feedUrl });
-  }, [isJsonMode, jsonText, form, feedUrl, previewMutation]);
+    previewMutationRef.current.mutate(
+      { config: sanitizeConfig(config), feedUrl },
+      {
+        onError: (error) => {
+          toast.error(t('toastPreviewError', {
+            error: error instanceof Error ? error.message : 'Preview failed',
+            defaultValue: 'Preview failed: {{error}}',
+          }));
+        },
+      },
+    );
+  }, [isJsonMode, jsonText, form, feedUrl, t]);
 
   const findPreviewPlaylist = useCallback(
     (index: number): PreviewPlaylist | null => {
@@ -336,13 +351,35 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     return () => document.removeEventListener('keydown', handler);
   }, [handleRunPreview]);
 
-  // Auto-run preview when opening an existing config
+  // Auto-run preview when opening an existing config.
+  // Uses initialConfig.feedUrls directly (not the Zustand store's feedUrl) to
+  // avoid a stale-URL race: the store may still hold the previous config's URL
+  // when this effect first fires.
+  //
+  // The cleanup resets the ref so StrictMode's remount phase can re-fire.
+  // StrictMode detaches the mutation observer during cleanup, so the first
+  // fire's mutation becomes orphaned; the second fire attaches properly.
   const hasAutoPreviewedRef = useRef(false);
   useEffect(() => {
-    if (hasAutoPreviewedRef.current || !configId || !feedUrl || !initialConfig) return;
+    if (hasAutoPreviewedRef.current || !configId || !initialConfig) return;
+    const url = initialConfig.feedUrls?.[0];
+    if (!url) return;
     hasAutoPreviewedRef.current = true;
-    handleRunPreview();
-  }, [configId, feedUrl, initialConfig, handleRunPreview]);
+    previewMutationRef.current.mutate(
+      { config: sanitizeConfig(initialConfig), feedUrl: url },
+      {
+        onError: (error) => {
+          toast.error(t('toastPreviewError', {
+            error: error instanceof Error ? error.message : 'Preview failed',
+            defaultValue: 'Preview failed: {{error}}',
+          }));
+        },
+      },
+    );
+    return () => {
+      hasAutoPreviewedRef.current = false;
+    };
+  }, [configId, initialConfig, t]);
 
   // Conflict resolution: reload from disk
   const handleReload = useCallback(() => {
@@ -470,6 +507,10 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
                 <PlaylistTabContent
                   index={index}
                   previewPlaylist={findPreviewPlaylist(index)}
+                  ungroupedEpisodes={previewMutation.data?.ungrouped ?? []}
+                  excludedEpisodes={previewMutation.data?.excluded ?? []}
+                  globalDebug={previewMutation.data?.debug}
+                  playlistCount={fields.length}
                   onRemove={() => {
                     remove(index);
                     const lastIndex = fields.length - 2;
