@@ -22,6 +22,7 @@ describe('playlistDefinitionSchema', () => {
     expect(result.priority).toBe(0);
     expect(result.episodeYearHeaders).toBe(false);
     expect(result.showDateRange).toBe(false);
+    expect(result.showSeasonNumber).toBe(false);
   });
 
   it('parses full definition with all optional fields', () => {
@@ -34,6 +35,7 @@ describe('playlistDefinitionSchema', () => {
       yearHeaderMode: 'firstEpisode',
       episodeYearHeaders: true,
       showDateRange: true,
+      showSeasonNumber: true,
       titleFilter: 'Bonus.*',
       excludeFilter: 'Trailer',
       requireFilter: 'Episode',
@@ -64,6 +66,7 @@ describe('playlistDefinitionSchema', () => {
     expect(result.yearHeaderMode).toBe('firstEpisode');
     expect(result.episodeYearHeaders).toBe(true);
     expect(result.showDateRange).toBe(true);
+    expect(result.showSeasonNumber).toBe(true);
     expect(result.titleFilter).toBe('Bonus.*');
     expect(result.excludeFilter).toBe('Trailer');
     expect(result.requireFilter).toBe('Episode');

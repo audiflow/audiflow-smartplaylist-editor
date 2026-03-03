@@ -191,7 +191,8 @@ void _validateSchema(
 ) {
   final assembled = ConfigAssembler.assemble(meta, playlists);
   final envelope = {
-    'version': 1,
+    'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
+    'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
     'patterns': [assembled.toJson()],
   };
 

@@ -1,18 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://audiflow.app/schema/v1/smartplaylist.json",
   "title": "SmartPlaylist Pattern Config",
-  "description": "Top-level configuration file that maps podcasts to smart playlist definitions. Contains a version number and an array of pattern configs.",
+  "description": "Top-level configuration file that maps podcasts to smart playlist definitions. Contains a data version number, schema version, and an array of pattern configs.",
   "type": "object",
   "required": [
-    "version",
+    "dataVersion",
+    "schemaVersion",
     "patterns"
   ],
   "additionalProperties": false,
   "properties": {
-    "version": {
+    "dataVersion": {
       "type": "integer",
       "const": 1,
-      "description": "Schema version number. Must be 1."
+      "description": "Data format version. Must be 1."
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "description": "Schema definition version. Bumped when fields are added or changed."
     },
     "patterns": {
       "type": "array",
@@ -137,6 +143,11 @@
           "type": "boolean",
           "default": false,
           "description": "Explicitly show the sort order toggle regardless of yearHeaderMode. Initial order derives from the first customSort rule."
+        },
+        "showSeasonNumber": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to prepend a season number label (e.g. S13) to group titles."
         },
         "titleFilter": {
           "type": "string",

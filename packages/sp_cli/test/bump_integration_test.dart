@@ -48,7 +48,7 @@ void main() {
       );
       final previousRoot =
           jsonDecode(previousRootJson!) as Map<String, dynamic>;
-      final previousRootVersion = previousRoot['version'] as int;
+      final previousRootVersion = previousRoot['dataVersion'] as int;
 
       final previousVersions = _extractPatternVersions(previousRoot);
       final currentPlaylistCounts = _countPlaylists(patternsDir, changedIds);
@@ -68,18 +68,18 @@ void main() {
         currentRootMeta: currentRootMeta,
       );
 
-      // Verify pattern meta was bumped
+      // Verify pattern meta dataVersion was bumped
       final updatedPatternMeta = _readJson('$patternsDir/test/meta.json');
-      expect(updatedPatternMeta['version'], 2);
+      expect(updatedPatternMeta['dataVersion'], 2);
 
-      // Verify root meta was bumped
+      // Verify root meta dataVersion was bumped
       final updatedRootMeta = _readJson('$patternsDir/meta.json');
-      expect(updatedRootMeta['version'], 2);
+      expect(updatedRootMeta['dataVersion'], 2);
 
       final patterns = updatedRootMeta['patterns'] as List<dynamic>;
       final testEntry = patterns.first as Map<String, dynamic>;
       expect(testEntry['id'], 'test');
-      expect(testEntry['version'], 2);
+      expect(testEntry['dataVersion'], 2);
       expect(testEntry['playlistCount'], 1);
     });
   });
@@ -123,11 +123,12 @@ void _writeInitialConfig(String patternsDir) {
 
 void _writeRootMeta(String patternsDir) {
   final rootMeta = {
-    'version': 1,
+    'dataVersion': 1,
+    'schemaVersion': 1,
     'patterns': [
       {
         'id': 'test',
-        'version': 1,
+        'dataVersion': 1,
         'displayName': 'Test Pattern',
         'feedUrlHint': 'https://example.com/feed',
         'playlistCount': 1,
@@ -139,7 +140,7 @@ void _writeRootMeta(String patternsDir) {
 
 void _writePatternMeta(String patternsDir) {
   final patternMeta = {
-    'version': 1,
+    'dataVersion': 1,
     'id': 'test',
     'feedUrls': ['https://example.com/feed'],
     'playlists': ['main'],
@@ -175,7 +176,7 @@ Map<String, dynamic> _readJson(String path) {
 Map<String, int> _extractPatternVersions(Map<String, dynamic> rootMeta) {
   final patterns = (rootMeta['patterns'] as List<dynamic>)
       .cast<Map<String, dynamic>>();
-  return {for (final p in patterns) p['id'] as String: p['version'] as int};
+  return {for (final p in patterns) p['id'] as String: p['dataVersion'] as int};
 }
 
 Map<String, int> _countPlaylists(String patternsDir, List<String> ids) {

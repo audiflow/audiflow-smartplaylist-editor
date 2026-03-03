@@ -224,7 +224,8 @@ Future<Response> _handleSavePlaylist(
 
   // Validate the playlist by wrapping in a full config envelope
   final envelope = {
-    'version': 1,
+    'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
+    'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
     'patterns': [
       {
         'id': id,
@@ -290,8 +291,8 @@ Future<Response> _handleSavePatternMeta(
     // Read-modify-write: preserve existing version field (managed by sp_cli).
     final existing = await configRepository.getPatternMetaJson(id);
     final merged = <String, dynamic>{...existing, ...parsed};
-    // Explicitly preserve version from disk, ignoring client value.
-    merged['version'] = existing['version'];
+    // Explicitly preserve dataVersion from disk, ignoring client value.
+    merged['dataVersion'] = existing['dataVersion'];
 
     await configRepository.savePatternMeta(id, merged);
 
@@ -348,8 +349,8 @@ Future<Response> _handleCreatePattern(
       : id;
 
   try {
-    // Set initial version (managed by sp_cli, not by the client).
-    final metaWithVersion = <String, dynamic>{...meta, 'version': 1};
+    // Set initial dataVersion (managed by sp_cli, not by the client).
+    final metaWithVersion = <String, dynamic>{...meta, 'dataVersion': 1};
     await configRepository.createPattern(id, metaWithVersion);
 
     // Add the new pattern to root meta.json so it appears in listings.
@@ -358,7 +359,7 @@ Future<Response> _handleCreatePattern(
     final playlists = meta['playlists'] as List<dynamic>? ?? [];
     patterns.add({
       'id': id,
-      'version': 1,
+      'dataVersion': 1,
       'displayName': effectiveDisplayName,
       'feedUrlHint': _feedUrlHint(meta),
       'playlistCount': playlists.length,

@@ -6,18 +6,19 @@ import 'package:test/test.dart';
 
 /// Sample root meta.json content.
 Map<String, dynamic> _rootMetaJson() => {
-  'version': 1,
+  'dataVersion': 1,
+  'schemaVersion': 1,
   'patterns': [
     {
       'id': 'podcast-a',
-      'version': 1,
+      'dataVersion': 1,
       'displayName': 'Podcast A',
       'feedUrlHint': 'https://example.com/a/feed.xml',
       'playlistCount': 2,
     },
     {
       'id': 'podcast-b',
-      'version': 1,
+      'dataVersion': 1,
       'displayName': 'Podcast B',
       'feedUrlHint': 'https://example.com/b/feed.xml',
       'playlistCount': 1,
@@ -27,7 +28,7 @@ Map<String, dynamic> _rootMetaJson() => {
 
 /// Sample pattern meta.json for podcast-a.
 Map<String, dynamic> _patternMetaJson() => {
-  'version': 1,
+  'dataVersion': 1,
   'id': 'podcast-a',
   'podcastGuid': 'guid-a',
   'feedUrls': ['https://example.com/a/feed.xml'],
@@ -200,7 +201,7 @@ void main() {
 
       test('preserves playlist order from meta', () async {
         final reversedMeta = {
-          'version': 1,
+          'dataVersion': 1,
           'id': 'podcast-a',
           'feedUrls': ['https://example.com/a/feed.xml'],
           'playlists': ['by-year', 'seasons'],
@@ -226,12 +227,12 @@ void main() {
 
         final json = await repo.getRootMetaJson();
 
-        expect(json['version'], equals(1));
+        expect(json['dataVersion'], equals(1));
         final patterns = json['patterns'] as List;
         expect(patterns.length, equals(2));
         final first = patterns[0] as Map<String, dynamic>;
         expect(first['id'], equals('podcast-a'));
-        expect(first['version'], equals(1));
+        expect(first['dataVersion'], equals(1));
         expect(first['playlistCount'], equals(2));
       });
     });
@@ -249,22 +250,22 @@ void main() {
         await repo.saveRootMeta(json);
 
         final reloaded = await repo.getRootMetaJson();
-        expect(reloaded['version'], equals(1));
+        expect(reloaded['dataVersion'], equals(1));
         final first =
             (reloaded['patterns'] as List).first as Map<String, dynamic>;
         expect(first['playlistCount'], equals(5));
-        expect(first['version'], equals(1));
+        expect(first['dataVersion'], equals(1));
       });
     });
 
     group('getPatternMetaJson', () {
-      test('returns raw JSON map with version intact', () async {
+      test('returns raw JSON map with dataVersion intact', () async {
         tempDir = await _createTestDataDir(patternMeta: _patternMetaJson());
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         final json = await repo.getPatternMetaJson('podcast-a');
 
-        expect(json['version'], equals(1));
+        expect(json['dataVersion'], equals(1));
         expect(json['id'], equals('podcast-a'));
         expect(json['podcastGuid'], equals('guid-a'));
         expect(json['playlists'], equals(['seasons', 'by-year']));
@@ -321,7 +322,7 @@ void main() {
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         final updatedMeta = {
-          'version': 1,
+          'dataVersion': 1,
           'id': 'podcast-a',
           'feedUrls': ['https://example.com/a/new-feed.xml'],
           'playlists': ['seasons'],
@@ -340,7 +341,7 @@ void main() {
         final repo = LocalConfigRepository(dataDir: tempDir.path);
 
         final metaJson = {
-          'version': 1,
+          'dataVersion': 1,
           'id': 'new-pattern',
           'feedUrls': ['https://example.com/new/feed.xml'],
           'playlists': <String>[],

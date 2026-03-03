@@ -39,6 +39,7 @@
   "episodeYearHeaders": "Episode Year Headers",
   "showDateRange": "Show Date Range",
   "showSortOrderToggle": "Show Sort Order Toggle",
+  "showSeasonNumber": "Show Season Number",
   "advancedNote": "Advanced fields (groups, extractors, sort) can be edited in JSON mode.",
   "removePlaylist": "Remove Playlist",
   "feedUrl": "Feed URL",

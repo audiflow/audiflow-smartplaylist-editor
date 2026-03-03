@@ -6,8 +6,16 @@
 final class SmartPlaylistSchemaConstants {
   SmartPlaylistSchemaConstants._();
 
-  /// Current schema version.
-  static const int currentVersion = 1;
+  /// Canonical schema URI. The `v{N}` segment matches [currentSchemaVersion].
+  static const String schemaId =
+      'https://audiflow.app/schema/v$currentSchemaVersion/smartplaylist.json';
+
+  /// Current data format version.
+  static const int currentDataVersion = 1;
+
+  /// Current schema definition version.
+  /// Bumped when fields are added or changed.
+  static const int currentSchemaVersion = 1;
 
   /// Valid resolver types for playlist definitions.
   static const List<String> validResolverTypes = [

@@ -38,7 +38,8 @@ void main() {
 
     test('returns valid:true for a valid config', () async {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',

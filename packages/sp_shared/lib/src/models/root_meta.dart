@@ -4,15 +4,20 @@ import 'pattern_summary.dart';
 
 /// Root meta.json from the split config repository.
 ///
-/// Contains data version and pattern summaries for discovery.
-/// The version field tracks the data format version managed by the data repo,
-/// not a schema version enforced by this editor.
+/// Contains data version, schema version, and pattern summaries for discovery.
+/// The dataVersion field tracks the data format version managed by the data repo.
+/// The schemaVersion field tracks schema definition changes (field additions, etc.).
 final class RootMeta {
-  const RootMeta({required this.version, required this.patterns});
+  const RootMeta({
+    required this.dataVersion,
+    required this.schemaVersion,
+    required this.patterns,
+  });
 
   factory RootMeta.fromJson(Map<String, dynamic> json) {
     return RootMeta(
-      version: json['version'] as int,
+      dataVersion: json['dataVersion'] as int,
+      schemaVersion: json['schemaVersion'] as int,
       patterns: (json['patterns'] as List<dynamic>)
           .map((p) => PatternSummary.fromJson(p as Map<String, dynamic>))
           .toList(),
@@ -21,24 +26,32 @@ final class RootMeta {
 
   /// Parses a JSON string into a RootMeta.
   ///
-  /// Throws [FormatException] if version field is missing.
+  /// Throws [FormatException] if dataVersion field is missing.
   static RootMeta parseJson(String jsonString) {
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
-    final version = data['version'] as int?;
-    if (version == null) {
+    final dataVersion = data['dataVersion'] as int?;
+    if (dataVersion == null) {
       throw const FormatException(
-        'Missing required "version" field in root meta.json',
+        'Missing required "dataVersion" field in root meta.json',
+      );
+    }
+    final schemaVersion = data['schemaVersion'] as int?;
+    if (schemaVersion == null) {
+      throw const FormatException(
+        'Missing required "schemaVersion" field in root meta.json',
       );
     }
     return RootMeta.fromJson(data);
   }
 
-  final int version;
+  final int dataVersion;
+  final int schemaVersion;
   final List<PatternSummary> patterns;
 
   Map<String, dynamic> toJson() {
     return {
-      'version': version,
+      'dataVersion': dataVersion,
+      'schemaVersion': schemaVersion,
       'patterns': patterns.map((p) => p.toJson()).toList(),
     };
   }

@@ -26,14 +26,14 @@ void main() {
         patterns: [
           {
             'id': 'tech-podcast',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Tech Talk',
             'feedUrlHint': 'https://example.com/tech',
             'playlistCount': 1,
           },
           {
             'id': 'comedy-show',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Laugh Hour',
             'feedUrlHint': 'https://example.com/comedy',
             'playlistCount': 2,

@@ -14,13 +14,13 @@ describe('patternSummarySchema', () => {
   it('parses valid summary', () => {
     const result = patternSummarySchema.parse({
       id: 'podcast-abc',
-      version: 1,
+      dataVersion: 1,
       displayName: 'My Podcast',
       feedUrlHint: 'https://example.com/feed.xml',
       playlistCount: 3,
     });
     expect(result.id).toBe('podcast-abc');
-    expect(result.version).toBe(1);
+    expect(result.dataVersion).toBe(1);
     expect(result.playlistCount).toBe(3);
   });
 
@@ -34,7 +34,7 @@ describe('patternSummarySchema', () => {
 describe('patternMetaSchema', () => {
   it('parses minimal meta with defaults', () => {
     const result = patternMetaSchema.parse({
-      version: 1,
+      dataVersion: 1,
       id: 'podcast-abc',
       feedUrls: ['https://example.com/feed.xml'],
       playlists: ['main'],
@@ -45,7 +45,7 @@ describe('patternMetaSchema', () => {
 
   it('parses full meta', () => {
     const result = patternMetaSchema.parse({
-      version: 2,
+      dataVersion: 2,
       id: 'podcast-xyz',
       podcastGuid: 'guid-123',
       feedUrls: ['https://a.com', 'https://b.com'],

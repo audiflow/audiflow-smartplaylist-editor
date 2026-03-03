@@ -61,7 +61,7 @@ void migrate(String jsonInput, String outputDir) {
     }
 
     final patternMeta = <String, dynamic>{
-      'version': 1,
+      'dataVersion': 1,
       'id': patternId,
       if (podcastGuid != null) 'podcastGuid': podcastGuid,
       'feedUrls': feedUrls,
@@ -77,14 +77,18 @@ void migrate(String jsonInput, String outputDir) {
 
     patternSummaries.add({
       'id': patternId,
-      'version': 1,
+      'dataVersion': 1,
       'displayName': displayName,
       'feedUrlHint': feedUrlHint,
       'playlistCount': playlistIds.length,
     });
   }
 
-  final rootMeta = {'version': 1, 'patterns': patternSummaries};
+  final rootMeta = {
+    'dataVersion': 1,
+    'schemaVersion': 1,
+    'patterns': patternSummaries,
+  };
   File('$outputDir/meta.json').writeAsStringSync(_encoder.convert(rootMeta));
 
   // ignore: avoid_print

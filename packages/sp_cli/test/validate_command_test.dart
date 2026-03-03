@@ -36,11 +36,12 @@ void main() {
 
       // Root meta.json
       final rootMeta = {
-        'version': 2,
+        'dataVersion': 2,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': patternId,
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Test Pattern',
             'feedUrlHint': 'https://example.com/feed',
             'playlistCount': 1,
@@ -56,7 +57,7 @@ void main() {
       patternDir.createSync(recursive: true);
 
       final patternMeta = {
-        'version': 1,
+        'dataVersion': 1,
         'id': patternId,
         'feedUrls': ['https://example.com/feed'],
         'playlists': ['main'],
@@ -111,7 +112,7 @@ void main() {
       patternsDir.createSync(recursive: true);
       File(
         '${patternsDir.path}/meta.json',
-      ).writeAsStringSync(jsonEncode({'version': 2}));
+      ).writeAsStringSync(jsonEncode({'dataVersion': 2, 'schemaVersion': 1}));
 
       final errors = validatePatterns(patternsDir.path);
       expect(errors, hasLength(1));
@@ -122,9 +123,10 @@ void main() {
       final patternsDir = Directory('${tempDir.path}/patterns');
       patternsDir.createSync(recursive: true);
       final rootMeta = {
-        'version': 2,
+        'dataVersion': 2,
+        'schemaVersion': 1,
         'patterns': [
-          {'id': 'test', 'version': 1},
+          {'id': 'test', 'dataVersion': 1},
           // missing displayName, feedUrlHint, playlistCount
         ],
       };
@@ -142,11 +144,12 @@ void main() {
       patternsDir.createSync(recursive: true);
 
       final rootMeta = {
-        'version': 2,
+        'dataVersion': 2,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'missing_pattern',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Missing',
             'feedUrlHint': 'https://example.com/feed',
             'playlistCount': 1,
@@ -219,7 +222,7 @@ void main() {
       patternBDir.createSync(recursive: true);
 
       final patternBMeta = {
-        'version': 1,
+        'dataVersion': 1,
         'id': 'pattern_b',
         'feedUrls': ['https://example.com/feed_b'],
         'playlists': ['episodes'],
@@ -241,18 +244,19 @@ void main() {
 
       // Update root meta.json to include both patterns
       final rootMeta = {
-        'version': 2,
+        'dataVersion': 2,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'pattern_a',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Pattern A',
             'feedUrlHint': 'https://example.com/feed',
             'playlistCount': 1,
           },
           {
             'id': 'pattern_b',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Pattern B',
             'feedUrlHint': 'https://example.com/feed_b',
             'playlistCount': 1,
@@ -271,18 +275,19 @@ void main() {
 
       // Root meta lists two patterns but neither directory exists
       final rootMeta = {
-        'version': 2,
+        'dataVersion': 2,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'missing_a',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Missing A',
             'feedUrlHint': 'https://a.com/feed',
             'playlistCount': 0,
           },
           {
             'id': 'missing_b',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Missing B',
             'feedUrlHint': 'https://b.com/feed',
             'playlistCount': 0,

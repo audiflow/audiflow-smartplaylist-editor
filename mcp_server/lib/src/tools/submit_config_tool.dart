@@ -50,9 +50,10 @@ Future<Map<String, dynamic>> executeSubmitConfig(
   }
 
   // Wrap in root schema envelope for validation, since the
-  // validator expects {version, patterns} at the top level.
+  // validator expects {dataVersion, schemaVersion, patterns} at the top level.
   final envelope = {
-    'version': 1,
+    'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
+    'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
     'patterns': [config],
   };
   final errors = validator.validateString(jsonEncode(envelope));
@@ -75,7 +76,7 @@ Future<Map<String, dynamic>> executeSubmitConfig(
     'playlists': patternConfig.playlists.map((p) => p.id).toList(),
     'yearGroupedEpisodes': patternConfig.yearGroupedEpisodes,
   };
-  updatedPatternMeta['version'] = existingPatternMeta['version'];
+  updatedPatternMeta['dataVersion'] = existingPatternMeta['dataVersion'];
   await repo.savePatternMeta(configId, updatedPatternMeta);
 
   // Sync root meta: update playlistCount, preserve all versions

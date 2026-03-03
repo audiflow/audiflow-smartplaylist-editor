@@ -228,6 +228,16 @@ function BooleanSettings({
           />
           <HintLabel htmlFor={`playlist-${index}-showSortOrderToggle`} hint="showSortOrderToggle">{t('showSortOrderToggle')}</HintLabel>
         </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`playlist-${index}-showSeasonNumber`}
+            checked={watch(`${prefix}.showSeasonNumber`) ?? false}
+            onCheckedChange={(checked) =>
+              setValue(`${prefix}.showSeasonNumber`, !!checked, { shouldDirty: true })
+            }
+          />
+          <HintLabel htmlFor={`playlist-${index}-showSeasonNumber`} hint="showSeasonNumber">{t('showSeasonNumber')}</HintLabel>
+        </div>
       </div>
       <div className="space-y-2">
         <HintLabel htmlFor={`${prefix}.yearHeaderMode`} hint="yearHeaderMode">

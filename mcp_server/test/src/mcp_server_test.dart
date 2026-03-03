@@ -15,7 +15,7 @@ void main() {
       patterns: [
         {
           'id': 'test-podcast',
-          'version': 1,
+          'dataVersion': 1,
           'displayName': 'Test Podcast',
           'feedUrlHint': 'https://example.com/feed',
           'playlistCount': 1,
@@ -23,7 +23,7 @@ void main() {
       ],
       patternMetas: {
         'test-podcast': {
-          'version': 1,
+          'dataVersion': 1,
           'id': 'test-podcast',
           'feedUrls': ['https://example.com/feed'],
           'playlists': ['main'],
