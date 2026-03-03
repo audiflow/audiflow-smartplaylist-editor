@@ -415,12 +415,14 @@ class SmartPlaylistResolverService {
       return unclaimed;
     }
 
-    final titleRegex = hasTitleFilter ? RegExp(definition.titleFilter!) : null;
+    final titleRegex = hasTitleFilter
+        ? RegExp(definition.titleFilter!, caseSensitive: false)
+        : null;
     final excludeRegex = hasExcludeFilter
-        ? RegExp(definition.excludeFilter!)
+        ? RegExp(definition.excludeFilter!, caseSensitive: false)
         : null;
     final requireRegex = hasRequireFilter
-        ? RegExp(definition.requireFilter!)
+        ? RegExp(definition.requireFilter!, caseSensitive: false)
         : null;
 
     return unclaimed.where((episode) {
