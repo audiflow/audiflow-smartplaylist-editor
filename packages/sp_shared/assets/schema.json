@@ -18,6 +18,7 @@
     },
     "schemaVersion": {
       "type": "integer",
+      "const": 1,
       "description": "Schema definition version. Bumped when fields are added or changed."
     },
     "patterns": {
