@@ -946,6 +946,75 @@ void main() {
         },
       );
 
+      test('includes yearHeaderMode in playlist response', () async {
+        final previewBody = jsonEncode({
+          'config': {
+            'id': 'test',
+            'feedUrls': ['https://example.com/feed.xml'],
+            'playlists': [
+              {
+                'id': 'seasons',
+                'displayName': 'Seasons',
+                'resolverType': 'rss',
+                'yearHeaderMode': 'perEpisode',
+              },
+            ],
+          },
+          'feedUrl': 'https://example.com/feed.xml',
+        });
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/preview'),
+          headers: {'Content-Type': 'application/json'},
+          body: previewBody,
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        final playlists = body['playlists'] as List;
+        expect(playlists.length, equals(1));
+
+        final playlist = playlists[0] as Map<String, dynamic>;
+        expect(playlist['yearHeaderMode'], equals('perEpisode'));
+      });
+
+      test('defaults yearHeaderMode to none when not specified', () async {
+        final previewBody = jsonEncode({
+          'config': {
+            'id': 'test',
+            'feedUrls': ['https://example.com/feed.xml'],
+            'playlists': [
+              {
+                'id': 'seasons',
+                'displayName': 'Seasons',
+                'resolverType': 'rss',
+              },
+            ],
+          },
+          'feedUrl': 'https://example.com/feed.xml',
+        });
+
+        final request = Request(
+          'POST',
+          Uri.parse('http://localhost/api/configs/preview'),
+          headers: {'Content-Type': 'application/json'},
+          body: previewBody,
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        final playlists = body['playlists'] as List;
+        final playlist = playlists[0] as Map<String, dynamic>;
+        expect(playlist['yearHeaderMode'], equals('none'));
+      });
+
       test('includes per-playlist debug fields', () async {
         final previewBody = jsonEncode({
           'config': {

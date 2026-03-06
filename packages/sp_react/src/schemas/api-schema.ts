@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { yearHeaderModeSchema } from './config-schema.ts';
 
 // -- Pattern browsing --
 
@@ -71,6 +72,7 @@ export const previewPlaylistSchema = z.object({
   sortKey: z.union([z.string(), z.number()]),
   resolverType: z.string().nullish(),
   episodeCount: z.number(),
+  yearHeaderMode: yearHeaderModeSchema.default('none'),
   groups: z.array(previewGroupSchema).optional(),
   claimedByOthers: z.array(claimedEpisodeSchema).optional().default([]),
   debug: playlistDebugSchema.optional(),

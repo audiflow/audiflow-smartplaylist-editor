@@ -28,5 +28,7 @@
   "extractionResults": "抽出結果",
   "extractedName": "表示名",
   "season": "シーズン",
-  "episode": "エピソード"
+  "episode": "エピソード",
+  "yearHeader": "{{year}}",
+  "yearUnknown": "年不明"
 }

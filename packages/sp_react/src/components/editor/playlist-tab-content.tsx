@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { useFormContext } from 'react-hook-form';
 import type {
   PreviewPlaylist,
   PreviewEpisode,
   PreviewDebug,
 } from '@/schemas/api-schema.ts';
+import type { PatternConfig, YearHeaderMode } from '@/schemas/config-schema.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
@@ -39,6 +41,9 @@ export function PlaylistTabContent({
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
+  const { watch } = useFormContext<PatternConfig>();
+  const showSeasonNumber = watch(`playlists.${index}.showSeasonNumber`) ?? false;
+  const yearHeaderMode = (watch(`playlists.${index}.yearHeaderMode`) ?? 'none') as YearHeaderMode;
 
   const claimedCount = previewPlaylist?.claimedByOthers?.length ?? 0;
   const ungroupedCount = ungroupedEpisodes.length;
@@ -104,7 +109,7 @@ export function PlaylistTabContent({
                   )}
                 </TabsList>
                 <TabsContent value="groups">
-                  <PlaylistTree playlists={[previewPlaylist]} />
+                  <PlaylistTree playlists={[previewPlaylist]} showSeasonNumber={showSeasonNumber} yearHeaderMode={yearHeaderMode} />
                 </TabsContent>
                 <TabsContent value="ungrouped">
                   {0 < ungroupedCount ? (
