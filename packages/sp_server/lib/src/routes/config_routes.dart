@@ -656,6 +656,7 @@ Map<String, dynamic> _serializePlaylist(
     'sortKey': playlist.sortKey,
     'resolverType': resolverType,
     'episodeCount': playlist.episodeCount,
+    'yearHeaderMode': playlist.yearHeaderMode.name,
     if (playlist.groups != null)
       'groups': playlist.groups!
           .map(

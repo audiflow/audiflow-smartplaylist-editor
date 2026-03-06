@@ -28,5 +28,7 @@
   "extractionResults": "Extraction Results",
   "extractedName": "Display Name",
   "season": "Season",
-  "episode": "Episode"
+  "episode": "Episode",
+  "yearHeader": "{{year}}",
+  "yearUnknown": "Unknown Year"
 }
