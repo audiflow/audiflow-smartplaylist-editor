@@ -16,6 +16,10 @@ class LocalConfigRepository {
 
   static const _jsonEncoder = JsonEncoder.withIndent('  ');
 
+  /// Regex allowing only safe path segment characters: alphanumeric, hyphen,
+  /// underscore, and dot (but not sequences like `..`).
+  static final _safeSegment = RegExp(r'^[a-zA-Z0-9_-]+$');
+
   // -- Read methods --
 
   /// Lists all pattern summaries from root meta.json.
@@ -27,6 +31,7 @@ class LocalConfigRepository {
 
   /// Gets pattern metadata for a specific pattern.
   Future<PatternMeta> getPatternMeta(String patternId) async {
+    _validatePathSegment(patternId, 'patternId');
     final raw = await _readFile('$_patternsDir/$patternId/meta.json');
     return PatternMeta.parseJson(raw);
   }
@@ -36,6 +41,8 @@ class LocalConfigRepository {
     String patternId,
     String playlistId,
   ) async {
+    _validatePathSegment(patternId, 'patternId');
+    _validatePathSegment(playlistId, 'playlistId');
     final path = '$_patternsDir/$patternId/playlists/$playlistId.json';
     final raw = await _readFile(path);
     final json = jsonDecode(raw) as Map<String, dynamic>;
@@ -74,6 +81,7 @@ class LocalConfigRepository {
   /// Returns a pattern's meta.json as a raw JSON map, preserving all
   /// fields (including `version`) for read-modify-write cycles.
   Future<Map<String, dynamic>> getPatternMetaJson(String patternId) async {
+    _validatePathSegment(patternId, 'patternId');
     final raw = await _readFile('$_patternsDir/$patternId/meta.json');
     return jsonDecode(raw) as Map<String, dynamic>;
   }
@@ -86,6 +94,8 @@ class LocalConfigRepository {
     String playlistId,
     Map<String, dynamic> json,
   ) async {
+    _validatePathSegment(patternId, 'patternId');
+    _validatePathSegment(playlistId, 'playlistId');
     final path = '$_patternsDir/$patternId/playlists/$playlistId.json';
     await _atomicWrite(path, json);
   }
@@ -95,6 +105,7 @@ class LocalConfigRepository {
     String patternId,
     Map<String, dynamic> json,
   ) async {
+    _validatePathSegment(patternId, 'patternId');
     final path = '$_patternsDir/$patternId/meta.json';
     await _atomicWrite(path, json);
   }
@@ -105,6 +116,7 @@ class LocalConfigRepository {
     String patternId,
     Map<String, dynamic> metaJson,
   ) async {
+    _validatePathSegment(patternId, 'patternId');
     final patternDir = Directory('$_patternsDir/$patternId');
     await patternDir.create(recursive: true);
 
@@ -118,6 +130,8 @@ class LocalConfigRepository {
   ///
   /// Throws [FileSystemException] if the file does not exist.
   Future<void> deletePlaylist(String patternId, String playlistId) async {
+    _validatePathSegment(patternId, 'patternId');
+    _validatePathSegment(playlistId, 'playlistId');
     final file = File('$_patternsDir/$patternId/playlists/$playlistId.json');
     if (!await file.exists()) {
       throw FileSystemException('Playlist file not found', file.path);
@@ -129,6 +143,7 @@ class LocalConfigRepository {
   ///
   /// Throws [FileSystemException] if the directory does not exist.
   Future<void> deletePattern(String patternId) async {
+    _validatePathSegment(patternId, 'patternId');
     final dir = Directory('$_patternsDir/$patternId');
     if (!await dir.exists()) {
       throw FileSystemException('Pattern directory not found', dir.path);
@@ -144,6 +159,20 @@ class LocalConfigRepository {
   Future<String> _readFile(String path) async {
     final file = File(path);
     return file.readAsString();
+  }
+
+  /// Validates that [segment] is a safe path component with no
+  /// traversal characters (e.g. `..`, `/`, `\`).
+  ///
+  /// Throws [ArgumentError] if the segment is invalid.
+  static void _validatePathSegment(String segment, String label) {
+    if (!_safeSegment.hasMatch(segment)) {
+      throw ArgumentError.value(
+        segment,
+        label,
+        'must contain only alphanumeric characters, hyphens, or underscores',
+      );
+    }
   }
 
   /// Writes JSON to a file atomically: write to .tmp first, then
