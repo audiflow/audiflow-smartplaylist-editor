@@ -24,7 +24,7 @@ void main() {
       dataDir = await createTestDataDir(
         patternMetas: {
           'test-config': {
-            'version': 1,
+            'dataVersion': 1,
             'id': 'test-config',
             'feedUrls': ['https://example.com/feed'],
             'playlists': ['main'],

@@ -96,7 +96,8 @@ describe('Zod-parsed output validates against JSON Schema', () => {
       resolverType: 'rss',
     });
     const wrapped = {
-      version: 1,
+      dataVersion: 1,
+      schemaVersion: 1,
       patterns: [{ id: 'test', playlists: [parsed] }],
     };
     const valid = validate(wrapped);
@@ -115,6 +116,7 @@ describe('Zod-parsed output validates against JSON Schema', () => {
       episodeYearHeaders: true,
       showDateRange: true,
       showSortOrderToggle: true,
+      showSeasonNumber: true,
       titleFilter: 'S\\d+',
       excludeFilter: 'Trailer',
       requireFilter: '\\[.+\\]',
@@ -149,7 +151,8 @@ describe('Zod-parsed output validates against JSON Schema', () => {
       },
     });
     const wrapped = {
-      version: 1,
+      dataVersion: 1,
+      schemaVersion: 1,
       patterns: [
         {
           id: 'complex',
@@ -184,7 +187,8 @@ describe('Zod-parsed output validates against JSON Schema', () => {
     // so strip it before validating against the JSON Schema.
     const { displayName: _, ...schemaReady } = parsed;
     const wrapped = {
-      version: 1,
+      dataVersion: 1,
+      schemaVersion: 1,
       patterns: [schemaReady],
     };
     const valid = validate(wrapped);
@@ -197,7 +201,8 @@ describe('Zod-parsed output validates against JSON Schema', () => {
       rules: [{ field: 'alphabetical', order: 'ascending' }],
     });
     const wrapped = {
-      version: 1,
+      dataVersion: 1,
+      schemaVersion: 1,
       patterns: [
         {
           id: 'test',

@@ -7,14 +7,14 @@ void main() {
   group('PatternMeta', () {
     test('deserializes from JSON', () {
       final json = {
-        'version': 1,
+        'dataVersion': 1,
         'id': 'coten_radio',
         'feedUrls': ['https://anchor.fm/s/8c2088c/podcast/rss'],
         'yearGroupedEpisodes': true,
         'playlists': ['regular', 'short', 'extras'],
       };
       final meta = PatternMeta.fromJson(json);
-      expect(meta.version, 1);
+      expect(meta.dataVersion, 1);
       expect(meta.id, 'coten_radio');
       expect(meta.feedUrls, hasLength(1));
       expect(meta.yearGroupedEpisodes, isTrue);
@@ -23,7 +23,7 @@ void main() {
 
     test('defaults yearGroupedEpisodes to false', () {
       final json = {
-        'version': 1,
+        'dataVersion': 1,
         'id': 'test',
         'feedUrls': <String>[],
         'playlists': ['main'],
@@ -34,7 +34,7 @@ void main() {
 
     test('handles optional podcastGuid', () {
       final json = {
-        'version': 1,
+        'dataVersion': 1,
         'id': 'test',
         'podcastGuid': 'abc-123',
         'feedUrls': <String>[],
@@ -46,14 +46,14 @@ void main() {
 
     test('serializes to JSON', () {
       final meta = PatternMeta(
-        version: 1,
+        dataVersion: 1,
         id: 'test',
         feedUrls: ['https://example.com/feed1'],
         yearGroupedEpisodes: true,
         playlists: ['p1', 'p2'],
       );
       final json = meta.toJson();
-      expect(json['version'], 1);
+      expect(json['dataVersion'], 1);
       expect(json['id'], 'test');
       expect(json['yearGroupedEpisodes'], isTrue);
       expect(json['playlists'], ['p1', 'p2']);
@@ -61,7 +61,7 @@ void main() {
 
     test('parses from JSON string', () {
       final jsonString = jsonEncode({
-        'version': 1,
+        'dataVersion': 1,
         'id': 'test',
         'feedUrls': ['https://example.com/feed'],
         'playlists': ['main'],
@@ -72,7 +72,7 @@ void main() {
 
     test('roundtrips through JSON', () {
       final original = PatternMeta(
-        version: 2,
+        dataVersion: 2,
         id: 'test',
         podcastGuid: 'guid-1',
         feedUrls: ['https://example.com/feed1', 'https://example.com/feed2'],
@@ -80,7 +80,7 @@ void main() {
         playlists: ['a', 'b'],
       );
       final restored = PatternMeta.fromJson(original.toJson());
-      expect(restored.version, original.version);
+      expect(restored.dataVersion, original.dataVersion);
       expect(restored.id, original.id);
       expect(restored.podcastGuid, original.podcastGuid);
       expect(restored.feedUrls, original.feedUrls);

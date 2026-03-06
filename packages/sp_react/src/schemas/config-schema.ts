@@ -136,6 +136,7 @@ export const playlistDefinitionSchema = z.object({
   episodeYearHeaders: z.boolean().nullish().transform((v) => v ?? false),
   showDateRange: z.boolean().nullish().transform((v) => v ?? false),
   showSortOrderToggle: z.boolean().nullish().transform((v) => v ?? false),
+  showSeasonNumber: z.boolean().nullish().transform((v) => v ?? false),
   titleFilter: z.string().nullish(),
   excludeFilter: z.string().nullish(),
   requireFilter: z.string().nullish(),

@@ -5,7 +5,7 @@ import 'dart:convert';
 /// Contains feed matching rules and ordered playlist IDs.
 final class PatternMeta {
   const PatternMeta({
-    required this.version,
+    required this.dataVersion,
     required this.id,
     this.podcastGuid,
     required this.feedUrls,
@@ -15,7 +15,7 @@ final class PatternMeta {
 
   factory PatternMeta.fromJson(Map<String, dynamic> json) {
     return PatternMeta(
-      version: (json['version'] as int?) ?? 1,
+      dataVersion: (json['dataVersion'] as int?) ?? 1,
       id: json['id'] as String,
       podcastGuid: json['podcastGuid'] as String?,
       feedUrls: (json['feedUrls'] as List<dynamic>).cast<String>(),
@@ -30,7 +30,7 @@ final class PatternMeta {
     return PatternMeta.fromJson(data);
   }
 
-  final int version;
+  final int dataVersion;
   final String id;
   final String? podcastGuid;
   final List<String> feedUrls;
@@ -42,7 +42,7 @@ final class PatternMeta {
 
   Map<String, dynamic> toJson() {
     return {
-      'version': version,
+      'dataVersion': dataVersion,
       'id': id,
       if (podcastGuid != null) 'podcastGuid': podcastGuid,
       'feedUrls': feedUrls,

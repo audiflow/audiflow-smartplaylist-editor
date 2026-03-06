@@ -5,7 +5,7 @@ void main() {
   group('ConfigAssembler', () {
     test('assembles config from pattern meta and playlists', () {
       final meta = PatternMeta(
-        version: 1,
+        dataVersion: 1,
         id: 'coten_radio',
         feedUrls: ['https://anchor.fm/s/8c2088c/podcast/rss'],
         yearGroupedEpisodes: true,
@@ -36,7 +36,7 @@ void main() {
 
     test('preserves podcastGuid when present', () {
       final meta = PatternMeta(
-        version: 1,
+        dataVersion: 1,
         id: 'test',
         podcastGuid: 'guid-abc',
         feedUrls: [],
@@ -56,7 +56,7 @@ void main() {
 
     test('orders playlists by meta playlist list order', () {
       final meta = PatternMeta(
-        version: 1,
+        dataVersion: 1,
         id: 'test',
         feedUrls: [],
         playlists: ['b', 'a'],

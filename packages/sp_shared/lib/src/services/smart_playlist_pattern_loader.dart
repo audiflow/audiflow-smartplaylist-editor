@@ -14,10 +14,10 @@ final class SmartPlaylistPatternLoader {
   /// Throws [FormatException] if the version field is missing.
   static List<SmartPlaylistPatternConfig> parse(String jsonString) {
     final data = jsonDecode(jsonString) as Map<String, dynamic>;
-    final version = data['version'] as int?;
-    if (version == null) {
+    final dataVersion = data['dataVersion'] as int?;
+    if (dataVersion == null) {
       throw const FormatException(
-        'Missing "version" field in smart playlist patterns JSON',
+        'Missing "dataVersion" field in smart playlist patterns JSON',
       );
     }
     final patterns = data['patterns'] as List<dynamic>;

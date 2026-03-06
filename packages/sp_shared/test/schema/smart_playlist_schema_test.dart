@@ -21,8 +21,12 @@ String _loadSchemaJson() {
 
 void main() {
   group('SmartPlaylistSchemaConstants', () {
-    test('currentVersion is 1', () {
-      expect(SmartPlaylistSchemaConstants.currentVersion, 1);
+    test('currentDataVersion is 1', () {
+      expect(SmartPlaylistSchemaConstants.currentDataVersion, 1);
+    });
+
+    test('currentSchemaVersion is 1', () {
+      expect(SmartPlaylistSchemaConstants.currentSchemaVersion, 1);
     });
 
     test('validResolverTypes contains expected values', () {
@@ -85,7 +89,8 @@ void main() {
       final schema = validator.schemaMap;
       expect(schema[r'$schema'], contains('json-schema.org'));
       expect(schema['type'], 'object');
-      expect(schema['properties'], containsPair('version', isA<Map>()));
+      expect(schema['properties'], containsPair('dataVersion', isA<Map>()));
+      expect(schema['properties'], containsPair('schemaVersion', isA<Map>()));
       expect(schema['properties'], containsPair('patterns', isA<Map>()));
     });
 
@@ -97,7 +102,8 @@ void main() {
 
     test('validates a known-good minimal config', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -116,7 +122,7 @@ void main() {
       expect(validator.validate(config), isEmpty);
     });
 
-    test('returns errors for missing version', () {
+    test('returns errors for missing dataVersion', () {
       final config = {
         'patterns': [
           {
@@ -132,20 +138,25 @@ void main() {
     });
 
     test('returns errors for wrong version', () {
-      final config = {'version': 99, 'patterns': <dynamic>[]};
+      final config = {
+        'dataVersion': 99,
+        'schemaVersion': 1,
+        'patterns': <dynamic>[],
+      };
       final errors = validator.validate(config);
       expect(errors, isNotEmpty);
     });
 
     test('returns errors for missing patterns', () {
-      final config = {'version': 1};
+      final config = {'dataVersion': 1, 'schemaVersion': 1};
       final errors = validator.validate(config);
       expect(errors, isNotEmpty);
     });
 
     test('returns errors for invalid resolverType', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -170,7 +181,8 @@ void main() {
 
     test('validateString validates a good config string', () {
       final config = jsonEncode({
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -185,7 +197,8 @@ void main() {
 
     test('validates a full complex config successfully', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'complex-podcast',
@@ -205,6 +218,7 @@ void main() {
                 'yearHeaderMode': 'firstEpisode',
                 'episodeYearHeaders': true,
                 'showDateRange': true,
+                'showSeasonNumber': true,
                 'nullSeasonGroupKey': 0,
                 'customSort': {
                   'rules': [
@@ -286,13 +300,18 @@ void main() {
     });
 
     test('validates empty patterns array', () {
-      final config = {'version': 1, 'patterns': <dynamic>[]};
+      final config = {
+        'dataVersion': 1,
+        'schemaVersion': 1,
+        'patterns': <dynamic>[],
+      };
       expect(validator.validate(config), isEmpty);
     });
 
     test('returns errors for invalid contentType', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -313,7 +332,8 @@ void main() {
 
     test('returns errors for invalid sort spec type', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -334,7 +354,8 @@ void main() {
 
     test('returns errors for invalid sort field', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -359,7 +380,8 @@ void main() {
 
     test('accepts yearHeaderMode none', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -379,7 +401,8 @@ void main() {
 
     test('accepts yearHeaderMode perEpisode', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -400,7 +423,8 @@ void main() {
     test('rejects old yearHeaderMode values', () {
       for (final invalid in ['lastEpisode', 'publishYear']) {
         final config = {
-          'version': 1,
+          'dataVersion': 1,
+          'schemaVersion': 1,
           'patterns': [
             {
               'id': 'test',
@@ -425,7 +449,8 @@ void main() {
 
     test('accepts null seasonGroup in episode extractor', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -449,7 +474,8 @@ void main() {
 
     test('accepts fallbackToRss in episode extractor', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -473,7 +499,8 @@ void main() {
 
     test('accepts greaterThan sort condition type', () {
       final config = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'test',

@@ -35,7 +35,7 @@ void main() {
         patterns: [
           {
             'id': 'test-pattern',
-            'version': 3,
+            'dataVersion': 3,
             'displayName': 'Test Pattern',
             'feedUrlHint': 'https://example.com/feed',
             'playlistCount': 1,
@@ -43,7 +43,7 @@ void main() {
         ],
         patternMetas: {
           'test-pattern': {
-            'version': 2,
+            'dataVersion': 2,
             'id': 'test-pattern',
             'feedUrls': ['https://example.com/feed'],
             'playlists': ['main'],
@@ -151,7 +151,7 @@ void main() {
       expect(meta['playlists'], equals(['main', 'bonus']));
     });
 
-    test('preserves pattern meta version', () async {
+    test('preserves pattern meta dataVersion', () async {
       final config = {
         'id': 'test-pattern',
         'feedUrls': ['https://example.com/feed'],
@@ -168,7 +168,7 @@ void main() {
       final metaFile = File('$dataDir/patterns/test-pattern/meta.json');
       final meta =
           jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
-      expect(meta['version'], equals(2));
+      expect(meta['dataVersion'], equals(2));
     });
 
     test('updates root meta playlistCount', () async {
@@ -194,27 +194,30 @@ void main() {
       expect(entry['playlistCount'], equals(2));
     });
 
-    test('preserves root meta version and pattern summary version', () async {
-      final config = {
-        'id': 'test-pattern',
-        'feedUrls': ['https://example.com/feed'],
-        'playlists': [
-          {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
-        ],
-      };
+    test(
+      'preserves root meta dataVersion and pattern summary dataVersion',
+      () async {
+        final config = {
+          'id': 'test-pattern',
+          'feedUrls': ['https://example.com/feed'],
+          'playlists': [
+            {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
+          ],
+        };
 
-      await executeSubmitConfig(repo, validator, {
-        'config': config,
-        'configId': 'test-pattern',
-      });
+        await executeSubmitConfig(repo, validator, {
+          'config': config,
+          'configId': 'test-pattern',
+        });
 
-      final rootFile = File('$dataDir/patterns/meta.json');
-      final root =
-          jsonDecode(await rootFile.readAsString()) as Map<String, dynamic>;
-      expect(root['version'], equals(1));
-      final patterns = root['patterns'] as List;
-      final entry = patterns.first as Map<String, dynamic>;
-      expect(entry['version'], equals(3));
-    });
+        final rootFile = File('$dataDir/patterns/meta.json');
+        final root =
+            jsonDecode(await rootFile.readAsString()) as Map<String, dynamic>;
+        expect(root['dataVersion'], equals(1));
+        final patterns = root['patterns'] as List;
+        final entry = patterns.first as Map<String, dynamic>;
+        expect(entry['dataVersion'], equals(3));
+      },
+    );
   });
 }

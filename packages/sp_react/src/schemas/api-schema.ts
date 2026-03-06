@@ -4,14 +4,14 @@ import { z } from 'zod';
 
 export const patternSummarySchema = z.object({
   id: z.string(),
-  version: z.number(),
+  dataVersion: z.number(),
   displayName: z.string(),
   feedUrlHint: z.string(),
   playlistCount: z.number(),
 });
 
 export const patternMetaSchema = z.object({
-  version: z.number(),
+  dataVersion: z.number(),
   id: z.string(),
   podcastGuid: z.string().optional(),
   feedUrls: z.array(z.string()),

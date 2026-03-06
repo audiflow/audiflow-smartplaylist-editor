@@ -5,9 +5,9 @@ import 'package:test/test.dart';
 
 void main() {
   group('SmartPlaylistPatternLoader', () {
-    test('parses valid JSON with version 1', () {
+    test('parses valid JSON with dataVersion 1', () {
       final json = jsonEncode({
-        'version': 1,
+        'dataVersion': 1,
         'patterns': [
           {
             'id': 'test',
@@ -24,8 +24,8 @@ void main() {
       expect(result[0].playlists, hasLength(1));
     });
 
-    test('parses any version number without rejection', () {
-      final json = jsonEncode({'version': 99, 'patterns': []});
+    test('parses any dataVersion number without rejection', () {
+      final json = jsonEncode({'dataVersion': 99, 'patterns': []});
       final result = SmartPlaylistPatternLoader.parse(json);
       expect(result, isEmpty);
     });
@@ -39,7 +39,7 @@ void main() {
     });
 
     test('returns empty list for empty patterns', () {
-      final json = jsonEncode({'version': 1, 'patterns': []});
+      final json = jsonEncode({'dataVersion': 1, 'patterns': []});
       final result = SmartPlaylistPatternLoader.parse(json);
       expect(result, isEmpty);
     });

@@ -125,13 +125,25 @@ void main() {
       );
     });
 
-    test('currentVersion matches schema const', () {
+    test('currentDataVersion matches schema const', () {
       final props = schema['properties'] as Map<String, dynamic>;
-      final version = props['version'] as Map<String, dynamic>;
+      final dataVersion = props['dataVersion'] as Map<String, dynamic>;
       expect(
-        SmartPlaylistSchemaConstants.currentVersion,
-        equals(version['const']),
+        SmartPlaylistSchemaConstants.currentDataVersion,
+        equals(dataVersion['const']),
       );
+    });
+
+    test('currentSchemaVersion is in schema required fields', () {
+      final required = schema['required'] as List<dynamic>;
+      expect(required, contains('schemaVersion'));
+      final props = schema['properties'] as Map<String, dynamic>;
+      final schemaVersion = props['schemaVersion'] as Map<String, dynamic>;
+      expect(schemaVersion['type'], equals('integer'));
+    });
+
+    test('schemaId matches schema \$id', () {
+      expect(SmartPlaylistSchemaConstants.schemaId, equals(schema[r'$id']));
     });
   });
 
@@ -149,7 +161,8 @@ void main() {
         resolverType: 'rss',
       );
       final wrapped = {
-        'version': SmartPlaylistSchemaConstants.currentVersion,
+        'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
+        'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
         'patterns': [
           {
             'id': 'test',
@@ -209,7 +222,8 @@ void main() {
         ),
       );
       final wrapped = {
-        'version': SmartPlaylistSchemaConstants.currentVersion,
+        'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
+        'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
         'patterns': [
           {
             'id': 'complex',
@@ -245,7 +259,8 @@ void main() {
         ],
       );
       final wrapped = {
-        'version': SmartPlaylistSchemaConstants.currentVersion,
+        'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
+        'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
         'patterns': [config.toJson()],
       };
       expect(validator.validate(wrapped), isEmpty);

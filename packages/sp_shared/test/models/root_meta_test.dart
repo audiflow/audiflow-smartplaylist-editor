@@ -7,11 +7,12 @@ void main() {
   group('RootMeta', () {
     test('deserializes from JSON', () {
       final json = {
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'coten_radio',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'Coten Radio',
             'feedUrlHint': 'anchor.fm/s/8c2088c',
             'playlistCount': 3,
@@ -19,18 +20,19 @@ void main() {
         ],
       };
       final meta = RootMeta.fromJson(json);
-      expect(meta.version, 1);
+      expect(meta.dataVersion, 1);
       expect(meta.patterns, hasLength(1));
       expect(meta.patterns[0].id, 'coten_radio');
     });
 
     test('serializes to JSON', () {
       final meta = RootMeta(
-        version: 1,
+        dataVersion: 1,
+        schemaVersion: 1,
         patterns: [
           PatternSummary(
             id: 'test',
-            version: 1,
+            dataVersion: 1,
             displayName: 'Test',
             feedUrlHint: 'test.com',
             playlistCount: 2,
@@ -38,17 +40,18 @@ void main() {
         ],
       );
       final json = meta.toJson();
-      expect(json['version'], 1);
+      expect(json['dataVersion'], 1);
       expect((json['patterns'] as List), hasLength(1));
     });
 
     test('parses from JSON string', () {
       final jsonString = jsonEncode({
-        'version': 1,
+        'dataVersion': 1,
+        'schemaVersion': 1,
         'patterns': [
           {
             'id': 'p1',
-            'version': 1,
+            'dataVersion': 1,
             'displayName': 'P1',
             'feedUrlHint': 'example.com',
             'playlistCount': 1,
@@ -59,14 +62,26 @@ void main() {
       expect(meta.patterns, hasLength(1));
     });
 
-    test('parses any version number without rejection', () {
-      final jsonString = jsonEncode({'version': 99, 'patterns': []});
+    test('parses any dataVersion number without rejection', () {
+      final jsonString = jsonEncode({
+        'dataVersion': 99,
+        'schemaVersion': 1,
+        'patterns': [],
+      });
       final meta = RootMeta.parseJson(jsonString);
-      expect(meta.version, 99);
+      expect(meta.dataVersion, 99);
     });
 
-    test('throws FormatException for missing version', () {
-      final jsonString = jsonEncode({'patterns': []});
+    test('throws FormatException for missing dataVersion', () {
+      final jsonString = jsonEncode({'schemaVersion': 1, 'patterns': []});
+      expect(
+        () => RootMeta.parseJson(jsonString),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('throws FormatException for missing schemaVersion', () {
+      final jsonString = jsonEncode({'dataVersion': 1, 'patterns': []});
       expect(
         () => RootMeta.parseJson(jsonString),
         throwsA(isA<FormatException>()),

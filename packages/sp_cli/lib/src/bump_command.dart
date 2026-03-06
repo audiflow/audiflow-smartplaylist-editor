@@ -116,7 +116,7 @@ Future<void> applyBumps({
   _updateRootMeta(patternsDir, bumps, currentRootMeta, encoder);
 }
 
-/// Updates each changed pattern's meta.json with the new version.
+/// Updates each changed pattern's meta.json with the new dataVersion.
 Future<void> _updatePatternMetas(
   String patternsDir,
   BumpResult bumps,
@@ -126,12 +126,12 @@ Future<void> _updatePatternMetas(
     final metaPath = '$patternsDir/${entry.key}/meta.json';
     final file = File(metaPath);
     final content = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-    content['version'] = entry.value;
+    content['dataVersion'] = entry.value;
     file.writeAsStringSync('${encoder.convert(content)}\n');
   }
 }
 
-/// Updates root meta.json with new versions and playlist counts.
+/// Updates root meta.json with new dataVersions and playlist counts.
 void _updateRootMeta(
   String patternsDir,
   BumpResult bumps,
@@ -139,14 +139,14 @@ void _updateRootMeta(
   JsonEncoder encoder,
 ) {
   final meta = Map<String, dynamic>.of(currentRootMeta);
-  meta['version'] = bumps.newRootVersion;
+  meta['dataVersion'] = bumps.newRootVersion;
 
   final patterns = (meta['patterns'] as List<dynamic>)
       .cast<Map<String, dynamic>>();
   for (final pattern in patterns) {
     final id = pattern['id'] as String;
     if (bumps.patternBumps.containsKey(id)) {
-      pattern['version'] = bumps.patternBumps[id];
+      pattern['dataVersion'] = bumps.patternBumps[id];
       pattern['playlistCount'] = bumps.playlistCounts[id];
     }
   }

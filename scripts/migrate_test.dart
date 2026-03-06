@@ -60,7 +60,8 @@ void main() {
       final rootMeta =
           jsonDecode(File('${tempDir.path}/meta.json').readAsStringSync())
               as Map<String, dynamic>;
-      expectEquals(rootMeta['version'], 1, 'root version');
+      expectEquals(rootMeta['dataVersion'], 1, 'root dataVersion');
+      expectEquals(rootMeta['schemaVersion'], 1, 'root schemaVersion');
       expectEquals((rootMeta['patterns'] as List).length, 1, 'pattern count');
       expectEquals(
         rootMeta['patterns'][0]['id'],

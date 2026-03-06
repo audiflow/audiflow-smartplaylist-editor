@@ -10,18 +10,19 @@ import 'package:sp_server/src/services/local_config_repository.dart';
 
 /// Creates root meta.json content.
 String _rootMeta() => const JsonEncoder.withIndent('  ').convert({
-  'version': 1,
+  'dataVersion': 1,
+  'schemaVersion': 1,
   'patterns': [
     {
       'id': 'podcast-a',
-      'version': 1,
+      'dataVersion': 1,
       'displayName': 'Podcast A',
       'feedUrlHint': 'https://example.com/a/feed.xml',
       'playlistCount': 1,
     },
     {
       'id': 'podcast-b',
-      'version': 1,
+      'dataVersion': 1,
       'displayName': 'Podcast B',
       'feedUrlHint': 'https://example.com/b/feed.xml',
       'playlistCount': 2,
@@ -31,7 +32,7 @@ String _rootMeta() => const JsonEncoder.withIndent('  ').convert({
 
 /// Pattern meta for podcast-a.
 String _patternMetaA() => const JsonEncoder.withIndent('  ').convert({
-  'version': 1,
+  'dataVersion': 1,
   'id': 'podcast-a',
   'podcastGuid': 'guid-a',
   'feedUrls': ['https://example.com/a/feed.xml'],
@@ -40,7 +41,7 @@ String _patternMetaA() => const JsonEncoder.withIndent('  ').convert({
 
 /// Pattern meta for podcast-b.
 String _patternMetaB() => const JsonEncoder.withIndent('  ').convert({
-  'version': 1,
+  'dataVersion': 1,
   'id': 'podcast-b',
   'feedUrls': ['https://example.com/b/feed.xml'],
   'playlists': ['by-year', 'categories'],
@@ -397,7 +398,8 @@ void main() {
     group('POST /api/configs/validate', () {
       test('accepts valid config', () async {
         final validConfig = jsonEncode({
-          'version': 1,
+          'dataVersion': 1,
+          'schemaVersion': 1,
           'patterns': [
             {
               'id': 'test',
@@ -430,7 +432,7 @@ void main() {
 
       test('returns errors for invalid config', () async {
         final invalidJson = jsonEncode({
-          'version': 99,
+          'dataVersion': 99,
           'patterns': 'not-an-array',
         });
 
@@ -468,7 +470,8 @@ void main() {
 
       test('returns errors for missing fields', () async {
         final invalidJson = jsonEncode({
-          'version': 1,
+          'dataVersion': 1,
+          'schemaVersion': 1,
           'patterns': [
             {'playlists': []},
           ],
@@ -1127,7 +1130,7 @@ void main() {
     group('PUT /api/configs/patterns/<id>/meta', () {
       test('saves pattern meta and returns 200', () async {
         final metaJson = {
-          'version': 1,
+          'dataVersion': 1,
           'id': 'podcast-a',
           'podcastGuid': 'guid-a-updated',
           'feedUrls': ['https://example.com/a/feed.xml'],
@@ -1155,19 +1158,19 @@ void main() {
         expect(content['podcastGuid'], equals('guid-a-updated'));
       });
 
-      test('preserves existing version via read-modify-write', () async {
-        // First set version to 5 on disk to simulate sp_cli bump
+      test('preserves existing dataVersion via read-modify-write', () async {
+        // First set dataVersion to 5 on disk to simulate sp_cli bump
         final metaFile = File('$dataDir/patterns/podcast-a/meta.json');
         final existing =
             jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
-        existing['version'] = 5;
+        existing['dataVersion'] = 5;
         await metaFile.writeAsString(
           const JsonEncoder.withIndent('  ').convert(existing),
         );
 
-        // Client sends version: 1 (stale), should be ignored
+        // Client sends dataVersion: 1 (stale), should be ignored
         final metaJson = {
-          'version': 1,
+          'dataVersion': 1,
           'id': 'podcast-a',
           'feedUrls': ['https://example.com/a/updated-feed.xml'],
           'playlists': ['seasons'],
@@ -1183,10 +1186,10 @@ void main() {
         final response = await handler(request);
         expect(response.statusCode, equals(200));
 
-        // Verify version preserved from disk, other fields updated
+        // Verify dataVersion preserved from disk, other fields updated
         final content =
             jsonDecode(await metaFile.readAsString()) as Map<String, dynamic>;
-        expect(content['version'], equals(5));
+        expect(content['dataVersion'], equals(5));
         expect(
           content['feedUrls'],
           equals(['https://example.com/a/updated-feed.xml']),
@@ -1337,7 +1340,7 @@ void main() {
         final body = {
           'id': 'podcast-new',
           'meta': {
-            'version': 1,
+            'dataVersion': 1,
             'id': 'podcast-new',
             'feedUrls': ['https://example.com/new/feed.xml'],
             'playlists': [],
@@ -1379,7 +1382,7 @@ void main() {
 
       test('returns 400 for missing id', () async {
         final body = {
-          'meta': {'version': 1, 'id': 'x', 'playlists': []},
+          'meta': {'dataVersion': 1, 'id': 'x', 'playlists': []},
         };
 
         final request = Request(
