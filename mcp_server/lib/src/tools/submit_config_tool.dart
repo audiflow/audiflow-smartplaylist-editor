@@ -83,6 +83,10 @@ Future<Map<String, dynamic>> executeSubmitConfig(
     'yearGroupedEpisodes': patternConfig.yearGroupedEpisodes,
   };
   updatedPatternMeta['dataVersion'] = existingPatternMeta['dataVersion'];
+  final patternMetaErrors = validator.validatePatternMeta(updatedPatternMeta);
+  if (patternMetaErrors.isNotEmpty) {
+    return {'success': false, 'errors': patternMetaErrors};
+  }
   await repo.savePatternMeta(configId, updatedPatternMeta);
 
   // Sync root meta: update playlistCount, preserve all versions
@@ -97,6 +101,10 @@ Future<Map<String, dynamic>> executeSubmitConfig(
       };
       break;
     }
+  }
+  final rootMetaErrors = validator.validatePatternIndex(rootMeta);
+  if (rootMetaErrors.isNotEmpty) {
+    return {'success': false, 'errors': rootMetaErrors};
   }
   await repo.saveRootMeta(rootMeta);
 

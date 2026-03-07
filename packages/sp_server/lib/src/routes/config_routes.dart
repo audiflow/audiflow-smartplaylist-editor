@@ -282,6 +282,8 @@ Future<Response> _handleSavePatternMeta(
     // Read-modify-write: preserve existing version field (managed by sp_cli).
     final existing = await configRepository.getPatternMetaJson(id);
     final merged = <String, dynamic>{...existing, ...parsed};
+    // Force canonical ID from route parameter, ignoring client value.
+    merged['id'] = id;
     // Explicitly preserve dataVersion from disk, ignoring client value.
     merged['dataVersion'] = existing['dataVersion'];
 
