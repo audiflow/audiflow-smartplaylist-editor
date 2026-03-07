@@ -45,10 +45,7 @@ void main() {
       expect(result, contains('pattern-index'));
       expect(result, contains('pattern-meta'));
       expect(result, contains('playlist-definition'));
-      expect(
-        (result['pattern-index'] as Map)['title'],
-        'Pattern Index',
-      );
+      expect((result['pattern-index'] as Map)['title'], 'Pattern Index');
     });
   });
 }

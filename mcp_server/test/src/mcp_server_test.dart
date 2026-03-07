@@ -41,10 +41,7 @@ void main() {
       schemas: {
         'pattern-index.schema.json': {'type': 'object', 'properties': {}},
         'pattern-meta.schema.json': {'type': 'object', 'properties': {}},
-        'playlist-definition.schema.json': {
-          'type': 'object',
-          'properties': {},
-        },
+        'playlist-definition.schema.json': {'type': 'object', 'properties': {}},
       },
     );
     server = SpMcpServer(dataDir: dataDir);

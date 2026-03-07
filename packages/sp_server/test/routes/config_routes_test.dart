@@ -466,9 +466,7 @@ void main() {
 
         final request = Request(
           'POST',
-          Uri.parse(
-            'http://localhost/api/configs/validate?type=patternIndex',
-          ),
+          Uri.parse('http://localhost/api/configs/validate?type=patternIndex'),
           headers: {'Content-Type': 'application/json'},
           body: validIndex,
         );

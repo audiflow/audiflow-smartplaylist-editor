@@ -62,10 +62,10 @@ void main() {
         'schemaVersion': 1,
         'patterns': <dynamic>[],
       };
-      final result = await executeValidateConfig(
-        validator,
-        {'config': config, 'type': 'patternIndex'},
-      );
+      final result = await executeValidateConfig(validator, {
+        'config': config,
+        'type': 'patternIndex',
+      });
 
       expect(result['valid'], isTrue);
     });
@@ -77,10 +77,10 @@ void main() {
         'feedUrls': ['https://example.com'],
         'playlists': ['main'],
       };
-      final result = await executeValidateConfig(
-        validator,
-        {'config': config, 'type': 'patternMeta'},
-      );
+      final result = await executeValidateConfig(validator, {
+        'config': config,
+        'type': 'patternMeta',
+      });
 
       expect(result['valid'], isTrue);
     });

@@ -271,8 +271,9 @@ void main() {
       });
 
       test('validatePlaylistDefinitionString handles invalid JSON', () {
-        final errors =
-            validator.validatePlaylistDefinitionString('not valid json {{{');
+        final errors = validator.validatePlaylistDefinitionString(
+          'not valid json {{{',
+        );
         expect(errors, contains(contains('Invalid JSON')));
       });
 
@@ -324,10 +325,7 @@ void main() {
       });
 
       test('returns errors for missing dataVersion', () {
-        final index = {
-          'schemaVersion': 1,
-          'patterns': <dynamic>[],
-        };
+        final index = {'schemaVersion': 1, 'patterns': <dynamic>[]};
         expect(validator.validatePatternIndex(index), isNotEmpty);
       });
 

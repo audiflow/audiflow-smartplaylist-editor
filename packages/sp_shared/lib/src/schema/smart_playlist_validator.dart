@@ -13,9 +13,9 @@ final class SmartPlaylistValidator {
     required JsonSchema patternIndex,
     required JsonSchema patternMeta,
     required JsonSchema playlistDefinition,
-  })  : _patternIndex = patternIndex,
-        _patternMeta = patternMeta,
-        _playlistDefinition = playlistDefinition;
+  }) : _patternIndex = patternIndex,
+       _patternMeta = patternMeta,
+       _playlistDefinition = playlistDefinition;
 
   final JsonSchema _patternIndex;
   final JsonSchema _patternMeta;
@@ -45,10 +45,10 @@ final class SmartPlaylistValidator {
 
   /// Returns all three schemas as a map keyed by schema file name.
   Map<String, dynamic> get allSchemasMap => {
-        'pattern-index': patternIndexSchemaMap,
-        'pattern-meta': patternMetaSchemaMap,
-        'playlist-definition': playlistDefinitionSchemaMap,
-      };
+    'pattern-index': patternIndexSchemaMap,
+    'pattern-meta': patternMetaSchemaMap,
+    'playlist-definition': playlistDefinitionSchemaMap,
+  };
 
   /// Returns the pattern-index schema as a decoded map.
   Map<String, dynamic> get patternIndexSchemaMap =>

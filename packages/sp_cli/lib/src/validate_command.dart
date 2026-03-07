@@ -145,10 +145,7 @@ void _validatePattern(
     final playlistErrors = validator.validatePlaylistDefinition(playlistJson);
     for (final message in playlistErrors) {
       errors.add(
-        ValidationError(
-          filePath: playlistPath,
-          message: 'schema: $message',
-        ),
+        ValidationError(filePath: playlistPath, message: 'schema: $message'),
       );
     }
 
@@ -157,10 +154,7 @@ void _validatePattern(
       SmartPlaylistDefinition.fromJson(playlistJson);
     } on Object catch (e) {
       errors.add(
-        ValidationError(
-          filePath: playlistPath,
-          message: 'failed to parse: $e',
-        ),
+        ValidationError(filePath: playlistPath, message: 'failed to parse: $e'),
       );
     }
   }

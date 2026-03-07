@@ -289,10 +289,7 @@ Future<Response> _handleSavePatternMeta(
     if (metaErrors.isNotEmpty) {
       return Response(
         400,
-        body: jsonEncode({
-          'error': 'Validation failed',
-          'errors': metaErrors,
-        }),
+        body: jsonEncode({'error': 'Validation failed', 'errors': metaErrors}),
         headers: _jsonHeaders,
       );
     }
