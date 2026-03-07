@@ -347,38 +347,43 @@ void main() {
         expect(body['ok'], isTrue);
       });
 
-      test('returns 500 when save fails on read-only directory', () async {
-        // Make the playlists directory read-only to force a write failure
-        final playlistsDir = Directory('$dataDir/patterns/podcast-a/playlists');
-        await playlistsDir.delete(recursive: true);
-        // Create a file where the directory should be, blocking writes
-        await File(
-          '$dataDir/patterns/podcast-a/playlists',
-        ).writeAsString('blocker');
+      test(
+        'returns 500 when save fails due to file blocking directory',
+        () async {
+          // Replace the playlists directory with a file to force a write failure
+          final playlistsDir = Directory(
+            '$dataDir/patterns/podcast-a/playlists',
+          );
+          await playlistsDir.delete(recursive: true);
+          // Create a file where the directory should be, blocking writes
+          await File(
+            '$dataDir/patterns/podcast-a/playlists',
+          ).writeAsString('blocker');
 
-        final playlistJson = {
-          'id': 'seasons',
-          'displayName': 'Seasons',
-          'resolverType': 'rss',
-        };
+          final playlistJson = {
+            'id': 'seasons',
+            'displayName': 'Seasons',
+            'resolverType': 'rss',
+          };
 
-        final request = Request(
-          'PUT',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a'
-            '/playlists/seasons',
-          ),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(playlistJson),
-        );
+          final request = Request(
+            'PUT',
+            Uri.parse(
+              'http://localhost/api/configs/patterns/podcast-a'
+              '/playlists/seasons',
+            ),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(playlistJson),
+          );
 
-        final response = await handler(request);
+          final response = await handler(request);
 
-        expect(response.statusCode, equals(500));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['error'], contains('Failed to save playlist'));
-      });
+          expect(response.statusCode, equals(500));
+          final body =
+              jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+          expect(body['error'], contains('Failed to save playlist'));
+        },
+      );
 
       test('returns 400 for non-object body', () async {
         final request = Request(
