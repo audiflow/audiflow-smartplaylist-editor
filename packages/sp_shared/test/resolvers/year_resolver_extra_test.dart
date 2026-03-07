@@ -5,39 +5,41 @@ void main() {
   group('YearResolver with titleExtractor', () {
     final resolver = YearResolver();
 
-    test('uses titleExtractor result as displayName when extraction succeeds',
-        () {
-      const definition = SmartPlaylistDefinition(
-        id: 'test',
-        displayName: 'Test',
-        resolverType: 'year',
-        titleExtractor: SmartPlaylistTitleExtractor(
-          source: 'title',
-          pattern: r'Season (\d+)',
-          group: 1,
-        ),
-      );
+    test(
+      'uses titleExtractor result as displayName when extraction succeeds',
+      () {
+        const definition = SmartPlaylistDefinition(
+          id: 'test',
+          displayName: 'Test',
+          resolverType: 'year',
+          titleExtractor: SmartPlaylistTitleExtractor(
+            source: 'title',
+            pattern: r'Season (\d+)',
+            group: 1,
+          ),
+        );
 
-      final episodes = [
-        SimpleEpisodeData(
-          id: 1,
-          title: 'Season 5 Episode 1',
-          publishedAt: DateTime(2024, 3, 1),
-        ),
-        SimpleEpisodeData(
-          id: 2,
-          title: 'Season 5 Episode 2',
-          publishedAt: DateTime(2024, 6, 1),
-        ),
-      ];
+        final episodes = [
+          SimpleEpisodeData(
+            id: 1,
+            title: 'Season 5 Episode 1',
+            publishedAt: DateTime(2024, 3, 1),
+          ),
+          SimpleEpisodeData(
+            id: 2,
+            title: 'Season 5 Episode 2',
+            publishedAt: DateTime(2024, 6, 1),
+          ),
+        ];
 
-      final result = resolver.resolve(episodes, definition);
+        final result = resolver.resolve(episodes, definition);
 
-      expect(result, isNotNull);
-      expect(result!.playlists, hasLength(1));
-      // titleExtractor extracts "5" from "Season 5 Episode 1"
-      expect(result.playlists.first.displayName, '5');
-    });
+        expect(result, isNotNull);
+        expect(result!.playlists, hasLength(1));
+        // titleExtractor extracts "5" from "Season 5 Episode 1"
+        expect(result.playlists.first.displayName, '5');
+      },
+    );
 
     test('falls back to year string when titleExtractor returns null', () {
       const definition = SmartPlaylistDefinition(
@@ -87,7 +89,7 @@ void main() {
       expect(result!.playlists.first.displayName, '2022');
     });
 
-    test('uses year when episodes list is empty for a year group', () {
+    test('uses year as displayName when definition is null', () {
       // When no definition is provided, titleExtractor is null
       final episodes = [
         SimpleEpisodeData(
