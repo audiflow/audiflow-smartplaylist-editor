@@ -36,19 +36,11 @@ void main() {
       );
     });
 
-    test('returns valid:true for a valid config', () async {
+    test('returns valid:true for a valid playlist definition', () async {
       final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'feedUrls': ['https://example.com/feed'],
-            'playlists': [
-              {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
-            ],
-          },
-        ],
+        'id': 'main',
+        'displayName': 'Main',
+        'resolverType': 'rss',
       };
       final result = await executeValidateConfig(validator, {'config': config});
 
@@ -56,13 +48,41 @@ void main() {
       expect(result['errors'], isEmpty);
     });
 
-    test('returns valid:false with errors for invalid config', () async {
-      // Missing required fields
+    test('returns valid:false with errors for invalid playlist', () async {
       final config = <String, dynamic>{};
       final result = await executeValidateConfig(validator, {'config': config});
 
       expect(result['valid'], isFalse);
       expect(result['errors'], isNotEmpty);
+    });
+
+    test('validates patternIndex type', () async {
+      final config = {
+        'dataVersion': 1,
+        'schemaVersion': 1,
+        'patterns': <dynamic>[],
+      };
+      final result = await executeValidateConfig(
+        validator,
+        {'config': config, 'type': 'patternIndex'},
+      );
+
+      expect(result['valid'], isTrue);
+    });
+
+    test('validates patternMeta type', () async {
+      final config = {
+        'dataVersion': 1,
+        'id': 'test',
+        'feedUrls': ['https://example.com'],
+        'playlists': ['main'],
+      };
+      final result = await executeValidateConfig(
+        validator,
+        {'config': config, 'type': 'patternMeta'},
+      );
+
+      expect(result['valid'], isTrue);
     });
   });
 }

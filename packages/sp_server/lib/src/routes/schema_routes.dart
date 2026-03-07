@@ -7,7 +7,7 @@ Router schemaRouter({required SmartPlaylistValidator validator}) {
   final router = Router();
 
   // Cache the schema string since it never changes at runtime.
-  final schema = validator.schemaString;
+  final schema = validator.allSchemasString;
 
   router.get('/api/schema', (Request request) {
     return Response.ok(schema, headers: {'Content-Type': 'application/json'});

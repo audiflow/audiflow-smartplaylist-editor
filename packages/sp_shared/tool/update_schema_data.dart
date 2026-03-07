@@ -1,33 +1,37 @@
 import 'dart:convert';
 import 'dart:io';
 
-/// Reads assets/schema.json and writes the embedded schema string
+/// Reads the three split schema files and writes embedded schema strings
 /// to lib/src/schema/schema_data.dart.
 void main() {
-  final schemaFile = File('packages/sp_shared/assets/schema.json');
-  final schema = jsonDecode(schemaFile.readAsStringSync());
-  final minified = jsonEncode(schema);
+  final schemas = {
+    'patternIndexSchemaString': 'pattern-index.schema.json',
+    'patternMetaSchemaString': 'pattern-meta.schema.json',
+    'playlistDefinitionSchemaString': 'playlist-definition.schema.json',
+  };
 
-  // Escape for embedding in a Dart single-quoted string:
-  // - Replace \ with \\ (must be first)
-  // - Replace ' with \'
-  // - Replace $ with \$
-  final escaped = minified
-      .replaceAll(r'\', r'\\')
-      .replaceAll("'", r"\'")
-      .replaceAll(r'$', r'\$');
+  final buffer = StringBuffer(
+    '// Auto-generated from assets/*.schema.json. Do not edit manually.\n'
+    "// Run 'dart run packages/sp_shared/tool/update_schema_data.dart'"
+    ' to refresh.\n\n',
+  );
 
-  final output =
-      '''
-// Auto-generated from assets/schema.json. Do not edit manually.
-// Run 'dart run packages/sp_shared/tool/update_schema_data.dart' to refresh.
+  for (final entry in schemas.entries) {
+    final file = File('packages/sp_shared/assets/${entry.value}');
+    final schema = jsonDecode(file.readAsStringSync());
+    final minified = jsonEncode(schema);
+    final escaped = minified
+        .replaceAll(r'\', r'\\')
+        .replaceAll("'", r"\'")
+        .replaceAll(r'$', r'\$');
 
-/// Embedded JSON Schema string for SmartPlaylist config validation.
-const schemaJsonString =
-    '$escaped';
-''';
+    buffer.writeln('/// Embedded JSON Schema for ${entry.value}.');
+    buffer.writeln("const ${entry.key} =");
+    buffer.writeln("    '$escaped';");
+    buffer.writeln();
+  }
 
   final outFile = File('packages/sp_shared/lib/src/schema/schema_data.dart');
-  outFile.writeAsStringSync(output);
+  outFile.writeAsStringSync(buffer.toString());
   print('Updated ${outFile.path}');
 }

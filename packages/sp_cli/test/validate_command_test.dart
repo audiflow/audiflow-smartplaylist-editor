@@ -115,8 +115,8 @@ void main() {
       ).writeAsStringSync(jsonEncode({'dataVersion': 2, 'schemaVersion': 1}));
 
       final errors = validatePatterns(patternsDir.path);
-      expect(errors, hasLength(1));
-      expect(errors[0].message, contains('patterns'));
+      expect(1 <= errors.length, isTrue);
+      expect(errors.any((e) => e.message.contains('patterns')), isTrue);
     });
 
     test('detects invalid pattern summary in root meta.json', () {
@@ -135,8 +135,16 @@ void main() {
       ).writeAsStringSync(jsonEncode(rootMeta));
 
       final errors = validatePatterns(patternsDir.path);
-      expect(errors.length, 1);
-      expect(errors[0].message, contains('PatternSummary'));
+      expect(1 <= errors.length, isTrue);
+      // Schema or model parsing should catch the missing fields
+      expect(
+        errors.any(
+          (e) =>
+              e.message.contains('PatternSummary') ||
+              e.message.contains('schema'),
+        ),
+        isTrue,
+      );
     });
 
     test('detects missing pattern meta.json', () {
@@ -189,9 +197,15 @@ void main() {
       ).writeAsStringSync(jsonEncode({'id': 'main'}));
 
       final errors = validatePatterns('${tempDir.path}/patterns');
-      expect(errors.length, 1);
-      expect(errors[0].filePath, contains('main.json'));
-      expect(errors[0].message, contains('parse'));
+      expect(1 <= errors.length, isTrue);
+      expect(errors.any((e) => e.filePath.contains('main.json')), isTrue);
+      // Schema or model parsing should catch the missing fields
+      expect(
+        errors.any(
+          (e) => e.message.contains('parse') || e.message.contains('schema'),
+        ),
+        isTrue,
+      );
     });
 
     test('schema validation catches invalid resolverType', () {

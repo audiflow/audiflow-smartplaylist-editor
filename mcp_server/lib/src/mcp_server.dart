@@ -268,14 +268,23 @@ final class SpMcpServer {
   }
 
   Future<Map<String, dynamic>> _readSchemaResource() async {
-    final file = File('$_dataDir/schema/schema.json');
-    final raw = await file.readAsString();
+    final schemas = <String, dynamic>{};
+    const files = {
+      'pattern-index': 'pattern-index.schema.json',
+      'pattern-meta': 'pattern-meta.schema.json',
+      'playlist-definition': 'playlist-definition.schema.json',
+    };
+    for (final entry in files.entries) {
+      final file = File('$_dataDir/schema/${entry.value}');
+      final raw = await file.readAsString();
+      schemas[entry.key] = jsonDecode(raw);
+    }
     return {
       'contents': [
         {
           'uri': 'smartplaylist://schema',
           'mimeType': 'application/json',
-          'text': raw,
+          'text': jsonEncode(schemas),
         },
       ],
     };

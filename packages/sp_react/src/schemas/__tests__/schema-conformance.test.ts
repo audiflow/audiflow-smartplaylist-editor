@@ -4,7 +4,6 @@ import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
-  patternConfigSchema,
   smartPlaylistSortSpecSchema,
   contentTypeSchema,
   yearHeaderModeSchema,
@@ -14,13 +13,17 @@ import {
   sortConditionSchema,
 } from '../config-schema';
 
-// Load vendored schema.json from sp_shared
+// Load vendored playlist-definition.schema.json from sp_shared
 const schemaPath = resolve(
   __dirname,
-  '../../../../sp_shared/assets/schema.json',
+  '../../../../sp_shared/assets/playlist-definition.schema.json',
 );
 const schemaJson = JSON.parse(readFileSync(schemaPath, 'utf-8'));
 const defs = schemaJson.$defs as Record<string, Record<string, unknown>>;
+const topProps = schemaJson.properties as Record<
+  string,
+  Record<string, unknown>
+>;
 
 function extractEnum(property: Record<string, unknown>): string[] {
   if ('enum' in property) {
@@ -39,44 +42,49 @@ function createValidator() {
   return ajv.compile(schemaJson);
 }
 
-describe('Zod enums match vendored schema.json', () => {
+describe('Zod enums match vendored playlist-definition schema', () => {
   it('resolverTypes match schema', () => {
-    const defProps = (defs.SmartPlaylistDefinition.properties as Record<string, Record<string, unknown>>);
-    const schemaValues = extractEnum(defProps.resolverType);
+    const schemaValues = extractEnum(topProps.resolverType);
     expect(resolverTypeSchema.options).toEqual(schemaValues);
   });
 
   it('contentTypes match schema', () => {
-    const defProps = (defs.SmartPlaylistDefinition.properties as Record<string, Record<string, unknown>>);
-    const schemaValues = extractEnum(defProps.contentType);
+    const schemaValues = extractEnum(topProps.contentType);
     expect(contentTypeSchema.options).toEqual(schemaValues);
   });
 
   it('yearHeaderModes match schema', () => {
-    const defProps = (defs.SmartPlaylistDefinition.properties as Record<string, Record<string, unknown>>);
-    const schemaValues = extractEnum(defProps.yearHeaderMode);
+    const schemaValues = extractEnum(topProps.yearHeaderMode);
     expect(yearHeaderModeSchema.options).toEqual(schemaValues);
   });
 
   it('sortFields match schema', () => {
-    const sortRule = defs.SmartPlaylistSortRule as Record<string, unknown>;
-    const props = sortRule.properties as Record<string, Record<string, unknown>>;
+    const sortRule = defs.SortRule as Record<string, unknown>;
+    const props = sortRule.properties as Record<
+      string,
+      Record<string, unknown>
+    >;
     const field = props.field;
     const schemaValues = extractEnum(field);
     expect(sortFieldSchema.options).toEqual(schemaValues);
   });
 
   it('sortOrders match schema', () => {
-    const sortRule = defs.SmartPlaylistSortRule as Record<string, unknown>;
-    const props = sortRule.properties as Record<string, Record<string, unknown>>;
+    const sortRule = defs.SortRule as Record<string, unknown>;
+    const props = sortRule.properties as Record<
+      string,
+      Record<string, unknown>
+    >;
     const order = props.order;
     const schemaValues = extractEnum(order);
     expect(sortOrderSchema.options).toEqual(schemaValues);
   });
 
   it('sortConditionTypes match schema', () => {
-    const sortCondition = defs.SmartPlaylistSortCondition;
-    const typeField = (sortCondition.properties as Record<string, Record<string, unknown>>).type;
+    const sortCondition = defs.SortCondition;
+    const typeField = (
+      sortCondition.properties as Record<string, Record<string, unknown>>
+    ).type;
     const schemaValues = extractEnum(typeField);
     // Zod discriminated union options come from the literals
     const zodValues = sortConditionSchema.options.map(
@@ -86,26 +94,21 @@ describe('Zod enums match vendored schema.json', () => {
   });
 });
 
-describe('Zod-parsed output validates against JSON Schema', () => {
+describe('Zod-parsed output validates against playlist-definition schema', () => {
   const validate = createValidator();
 
-  it('minimal playlist definition validates', () => {
+  it('minimal playlist definition validates directly', () => {
     const parsed = playlistDefinitionSchema.parse({
       id: 'main',
       displayName: 'Main Episodes',
       resolverType: 'rss',
     });
-    const wrapped = {
-      dataVersion: 1,
-      schemaVersion: 1,
-      patterns: [{ id: 'test', playlists: [parsed] }],
-    };
-    const valid = validate(wrapped);
+    const valid = validate(parsed);
     expect(validate.errors).toBeNull();
     expect(valid).toBe(true);
   });
 
-  it('full playlist definition validates', () => {
+  it('full playlist definition validates directly', () => {
     const parsed = playlistDefinitionSchema.parse({
       id: 'seasons',
       displayName: 'Seasons',
@@ -150,74 +153,22 @@ describe('Zod-parsed output validates against JSON Schema', () => {
         fallbackToRss: true,
       },
     });
-    const wrapped = {
-      dataVersion: 1,
-      schemaVersion: 1,
-      patterns: [
-        {
-          id: 'complex',
-          podcastGuid: 'guid-123',
-          feedUrls: ['https://example.com/feed.xml'],
-          yearGroupedEpisodes: true,
-          playlists: [parsed],
-        },
-      ],
-    };
-    const valid = validate(wrapped);
+    const valid = validate(parsed);
     expect(validate.errors).toBeNull();
     expect(valid).toBe(true);
   });
 
-  it('pattern config round-trips through Zod and validates', () => {
-    const parsed = patternConfigSchema.parse({
-      id: 'test-podcast',
-      podcastGuid: 'guid-abc',
-      feedUrls: ['https://example.com/feed'],
-      yearGroupedEpisodes: true,
-      playlists: [
-        {
-          id: 'main',
-          displayName: 'Main',
-          resolverType: 'category',
-          groups: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
-        },
-      ],
-    });
-    // displayName is editor-only metadata not present in the config schema,
-    // so strip it before validating against the JSON Schema.
-    const { displayName: _, ...schemaReady } = parsed;
-    const wrapped = {
-      dataVersion: 1,
-      schemaVersion: 1,
-      patterns: [schemaReady],
-    };
-    const valid = validate(wrapped);
-    expect(validate.errors).toBeNull();
-    expect(valid).toBe(true);
-  });
-
-  it('sort spec validates', () => {
+  it('sort spec validates within playlist', () => {
     const sort = smartPlaylistSortSpecSchema.parse({
       rules: [{ field: 'alphabetical', order: 'ascending' }],
     });
-    const wrapped = {
-      dataVersion: 1,
-      schemaVersion: 1,
-      patterns: [
-        {
-          id: 'test',
-          playlists: [
-            {
-              id: 'p1',
-              displayName: 'P1',
-              resolverType: 'rss',
-              customSort: sort,
-            },
-          ],
-        },
-      ],
+    const playlist = {
+      id: 'p1',
+      displayName: 'P1',
+      resolverType: 'rss',
+      customSort: sort,
     };
-    const valid = validate(wrapped);
+    const valid = validate(playlist);
     expect(validate.errors).toBeNull();
     expect(valid).toBe(true);
   });

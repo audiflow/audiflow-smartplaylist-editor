@@ -396,29 +396,18 @@ void main() {
     });
 
     group('POST /api/configs/validate', () {
-      test('accepts valid config', () async {
-        final validConfig = jsonEncode({
-          'dataVersion': 1,
-          'schemaVersion': 1,
-          'patterns': [
-            {
-              'id': 'test',
-              'playlists': [
-                {
-                  'id': 'seasons',
-                  'displayName': 'Seasons',
-                  'resolverType': 'rss',
-                },
-              ],
-            },
-          ],
+      test('accepts valid playlist definition (default type)', () async {
+        final validPlaylist = jsonEncode({
+          'id': 'seasons',
+          'displayName': 'Seasons',
+          'resolverType': 'rss',
         });
 
         final request = Request(
           'POST',
           Uri.parse('http://localhost/api/configs/validate'),
           headers: {'Content-Type': 'application/json'},
-          body: validConfig,
+          body: validPlaylist,
         );
 
         final response = await handler(request);
@@ -430,10 +419,10 @@ void main() {
         expect(body['errors'], isEmpty);
       });
 
-      test('returns errors for invalid config', () async {
+      test('returns errors for invalid playlist definition', () async {
         final invalidJson = jsonEncode({
-          'dataVersion': 99,
-          'patterns': 'not-an-array',
+          'id': 'test',
+          'resolverType': 'nonexistent',
         });
 
         final request = Request(
@@ -468,14 +457,32 @@ void main() {
         expect(body['error'], contains('empty'));
       });
 
-      test('returns errors for missing fields', () async {
-        final invalidJson = jsonEncode({
+      test('validates patternIndex type', () async {
+        final validIndex = jsonEncode({
           'dataVersion': 1,
           'schemaVersion': 1,
-          'patterns': [
-            {'playlists': []},
-          ],
+          'patterns': [],
         });
+
+        final request = Request(
+          'POST',
+          Uri.parse(
+            'http://localhost/api/configs/validate?type=patternIndex',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: validIndex,
+        );
+
+        final response = await handler(request);
+
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['valid'], isTrue);
+      });
+
+      test('returns errors for missing playlist fields', () async {
+        final invalidJson = jsonEncode({'displayName': 'Test'});
 
         final request = Request(
           'POST',

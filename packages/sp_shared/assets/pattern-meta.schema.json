@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://audiflow.app/schema/v1/pattern-meta.json",
+  "title": "Pattern Meta",
+  "description": "Per-pattern meta.json with feed URLs, flags, and playlist ID list.",
+  "type": "object",
+  "required": [
+    "dataVersion",
+    "id",
+    "feedUrls",
+    "playlists"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "dataVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Data format version."
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this pattern config."
+    },
+    "podcastGuid": {
+      "type": "string",
+      "description": "Podcast GUID for exact matching. Checked before feedUrls."
+    },
+    "feedUrls": {
+      "type": "array",
+      "description": "Exact feed URLs for matching.",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "yearGroupedEpisodes": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the all-episodes view groups by year."
+    },
+    "playlists": {
+      "type": "array",
+      "description": "Ordered list of playlist definition IDs.",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  }
+}

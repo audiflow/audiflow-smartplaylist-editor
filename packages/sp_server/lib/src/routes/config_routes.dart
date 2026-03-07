@@ -44,7 +44,7 @@ Router configRouter({
   // PUT /api/configs/patterns/<id>/meta
   router.put(
     '/api/configs/patterns/<id>/meta',
-    (Request r) => _handleSavePatternMeta(r, configRepository),
+    (Request r) => _handleSavePatternMeta(r, configRepository, validator),
   );
 
   // DELETE /api/configs/patterns/<id>
@@ -222,18 +222,8 @@ Future<Response> _handleSavePlaylist(
   final sanitized = _stripNulls(parsed) as Map<String, dynamic>;
   _stripEmptyCustomSort(sanitized);
 
-  // Validate the playlist by wrapping in a full config envelope
-  final envelope = {
-    'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
-    'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
-    'patterns': [
-      {
-        'id': id,
-        'playlists': [sanitized],
-      },
-    ],
-  };
-  final errors = validator.validate(envelope);
+  // Validate the playlist directly against the playlist-definition schema
+  final errors = validator.validatePlaylistDefinition(sanitized);
   if (errors.isNotEmpty) {
     return Response(
       400,
@@ -261,6 +251,7 @@ Future<Response> _handleSavePlaylist(
 Future<Response> _handleSavePatternMeta(
   Request request,
   LocalConfigRepository configRepository,
+  SmartPlaylistValidator validator,
 ) async {
   final id = request.params['id'];
   if (id == null || id.isEmpty) return _error(400, 'Missing pattern ID');
@@ -293,6 +284,18 @@ Future<Response> _handleSavePatternMeta(
     final merged = <String, dynamic>{...existing, ...parsed};
     // Explicitly preserve dataVersion from disk, ignoring client value.
     merged['dataVersion'] = existing['dataVersion'];
+
+    final metaErrors = validator.validatePatternMeta(merged);
+    if (metaErrors.isNotEmpty) {
+      return Response(
+        400,
+        body: jsonEncode({
+          'error': 'Validation failed',
+          'errors': metaErrors,
+        }),
+        headers: _jsonHeaders,
+      );
+    }
 
     await configRepository.savePatternMeta(id, merged);
 
@@ -440,7 +443,18 @@ Future<Response> _handleValidate(
     );
   }
 
-  final errors = validator.validateString(body);
+  final type = request.url.queryParameters['type'] ?? 'playlistDefinition';
+  final List<String> errors;
+  switch (type) {
+    case 'playlistDefinition':
+      errors = validator.validatePlaylistDefinitionString(body);
+    case 'patternMeta':
+      errors = validator.validatePatternMetaString(body);
+    case 'patternIndex':
+      errors = validator.validatePatternIndexString(body);
+    default:
+      return _error(400, 'Invalid type: $type');
+  }
   return Response.ok(
     jsonEncode({'valid': errors.isEmpty, 'errors': errors}),
     headers: _jsonHeaders,
