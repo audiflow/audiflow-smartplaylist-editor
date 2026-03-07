@@ -67,7 +67,10 @@ void main() {
           config: {},
         );
 
-        expect(pattern.matchesPodcast('guid-abc', 'https://unrelated.com'), true);
+        expect(
+          pattern.matchesPodcast('guid-abc', 'https://unrelated.com'),
+          true,
+        );
       });
 
       test('does not match when guid differs', () {
@@ -78,7 +81,10 @@ void main() {
           config: {},
         );
 
-        expect(pattern.matchesPodcast('guid-xyz', 'https://example.com'), false);
+        expect(
+          pattern.matchesPodcast('guid-xyz', 'https://example.com'),
+          false,
+        );
       });
 
       test('matches by feedUrl when guid is null', () {

@@ -4,9 +4,7 @@ import 'package:test/test.dart';
 void main() {
   group('SmartPlaylistTitleExtractor unknown source', () {
     test('returns null when source is unrecognized and no fallback', () {
-      const extractor = SmartPlaylistTitleExtractor(
-        source: 'unknown_source',
-      );
+      const extractor = SmartPlaylistTitleExtractor(source: 'unknown_source');
 
       const episode = SimpleEpisodeData(
         id: 1,
@@ -38,22 +36,19 @@ void main() {
       expect(result, 'Season 7');
     });
 
-    test('returns null when source is unrecognized and fallback also fails',
-        () {
-      const extractor = SmartPlaylistTitleExtractor(
-        source: 'invalid',
-        fallback: SmartPlaylistTitleExtractor(
-          source: 'also_invalid',
-        ),
-      );
+    test(
+      'returns null when source is unrecognized and fallback also fails',
+      () {
+        const extractor = SmartPlaylistTitleExtractor(
+          source: 'invalid',
+          fallback: SmartPlaylistTitleExtractor(source: 'also_invalid'),
+        );
 
-      const episode = SimpleEpisodeData(
-        id: 1,
-        title: 'Test',
-      );
+        const episode = SimpleEpisodeData(id: 1, title: 'Test');
 
-      final result = extractor.extract(episode);
-      expect(result, isNull);
-    });
+        final result = extractor.extract(episode);
+        expect(result, isNull);
+      },
+    );
   });
 }

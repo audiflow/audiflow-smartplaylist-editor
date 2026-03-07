@@ -20,7 +20,10 @@ void main() {
       expect(validator, isNotNull);
       expect(validator.patternIndexSchemaMap, isA<Map<String, dynamic>>());
       expect(validator.patternMetaSchemaMap, isA<Map<String, dynamic>>());
-      expect(validator.playlistDefinitionSchemaMap, isA<Map<String, dynamic>>());
+      expect(
+        validator.playlistDefinitionSchemaMap,
+        isA<Map<String, dynamic>>(),
+      );
     });
 
     test('validates pattern index the same as default constructor', () {

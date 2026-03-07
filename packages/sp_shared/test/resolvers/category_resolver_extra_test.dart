@@ -60,17 +60,11 @@ void main() {
     });
 
     test('returns none for "none"', () {
-      expect(
-        CategoryResolver.parseYearHeaderMode('none'),
-        YearHeaderMode.none,
-      );
+      expect(CategoryResolver.parseYearHeaderMode('none'), YearHeaderMode.none);
     });
 
     test('returns none for null', () {
-      expect(
-        CategoryResolver.parseYearHeaderMode(null),
-        YearHeaderMode.none,
-      );
+      expect(CategoryResolver.parseYearHeaderMode(null), YearHeaderMode.none);
     });
 
     test('returns none for unknown value', () {

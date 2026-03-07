@@ -43,44 +43,46 @@ void main() {
     });
   });
 
-  group('SmartPlaylistEpisodeExtractor.toJson with fallbackEpisodeCaptureGroup',
-      () {
-    test('omits fallbackEpisodeCaptureGroup when it equals 1 (default)', () {
-      const extractor = SmartPlaylistEpisodeExtractor(
-        source: 'title',
-        pattern: r'\[(\d+)-(\d+)\]',
-        fallbackEpisodePattern: r'#(\d+)',
-        fallbackEpisodeCaptureGroup: 1,
-      );
+  group(
+    'SmartPlaylistEpisodeExtractor.toJson with fallbackEpisodeCaptureGroup',
+    () {
+      test('omits fallbackEpisodeCaptureGroup when it equals 1 (default)', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'\[(\d+)-(\d+)\]',
+          fallbackEpisodePattern: r'#(\d+)',
+          fallbackEpisodeCaptureGroup: 1,
+        );
 
-      final json = extractor.toJson();
-      expect(json.containsKey('fallbackEpisodeCaptureGroup'), false);
-    });
+        final json = extractor.toJson();
+        expect(json.containsKey('fallbackEpisodeCaptureGroup'), false);
+      });
 
-    test('includes fallbackEpisodeCaptureGroup when it differs from 1', () {
-      const extractor = SmartPlaylistEpisodeExtractor(
-        source: 'title',
-        pattern: r'\[(\d+)-(\d+)\]',
-        fallbackEpisodePattern: r'special-(\w+)-(\d+)',
-        fallbackEpisodeCaptureGroup: 2,
-      );
+      test('includes fallbackEpisodeCaptureGroup when it differs from 1', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'\[(\d+)-(\d+)\]',
+          fallbackEpisodePattern: r'special-(\w+)-(\d+)',
+          fallbackEpisodeCaptureGroup: 2,
+        );
 
-      final json = extractor.toJson();
-      expect(json.containsKey('fallbackEpisodeCaptureGroup'), true);
-      expect(json['fallbackEpisodeCaptureGroup'], 2);
-    });
+        final json = extractor.toJson();
+        expect(json.containsKey('fallbackEpisodeCaptureGroup'), true);
+        expect(json['fallbackEpisodeCaptureGroup'], 2);
+      });
 
-    test('includes fallbackEpisodeCaptureGroup when it is 0', () {
-      const extractor = SmartPlaylistEpisodeExtractor(
-        source: 'title',
-        pattern: r'\[(\d+)-(\d+)\]',
-        fallbackEpisodePattern: r'ep(\d+)',
-        fallbackEpisodeCaptureGroup: 0,
-      );
+      test('includes fallbackEpisodeCaptureGroup when it is 0', () {
+        const extractor = SmartPlaylistEpisodeExtractor(
+          source: 'title',
+          pattern: r'\[(\d+)-(\d+)\]',
+          fallbackEpisodePattern: r'ep(\d+)',
+          fallbackEpisodeCaptureGroup: 0,
+        );
 
-      final json = extractor.toJson();
-      expect(json.containsKey('fallbackEpisodeCaptureGroup'), true);
-      expect(json['fallbackEpisodeCaptureGroup'], 0);
-    });
-  });
+        final json = extractor.toJson();
+        expect(json.containsKey('fallbackEpisodeCaptureGroup'), true);
+        expect(json['fallbackEpisodeCaptureGroup'], 0);
+      });
+    },
+  );
 }
