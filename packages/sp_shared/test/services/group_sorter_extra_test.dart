@@ -97,7 +97,7 @@ void main() {
       expect(sorted[1].id, 'no-date');
     });
 
-    test('both groups without dates remain in original order', () {
+    test('both groups without dates are present (order not guaranteed)', () {
       final groupA = const SmartPlaylistGroup(
         id: 'a',
         displayName: 'A',
