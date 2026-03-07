@@ -10,6 +10,7 @@ pubspec.lock
 .envrc
 
 .cache/
+.worktrees/
 
 deploy/terraform/.terraform/
 
