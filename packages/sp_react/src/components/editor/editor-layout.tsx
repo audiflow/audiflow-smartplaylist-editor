@@ -103,8 +103,9 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const savePatternMetaMutation = useSavePatternMeta();
   const createPatternMutation = useCreatePattern();
 
-  // Watch the form's id field so the save button can enable for new configs
+  // Watch form fields for header display and save button
   const formId = useWatch({ control: form.control, name: 'id' });
+  const formDisplayName = useWatch({ control: form.control, name: 'displayName' });
   const isNewConfig = configId === null;
   const effectiveId = isNewConfig ? formId : configId;
 
@@ -406,6 +407,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       <div className="sticky top-0 z-10 bg-background pb-4 border-b">
         <EditorHeader
           configId={configId}
+          displayName={formDisplayName || null}
           feedUrl={feedUrl || null}
           isJsonMode={isJsonMode}
           onBack={() => {
@@ -545,6 +547,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
 interface EditorHeaderProps {
   configId: string | null;
+  displayName: string | null;
   feedUrl: string | null;
   isJsonMode: boolean;
   onBack: () => void;
@@ -553,6 +556,7 @@ interface EditorHeaderProps {
 
 function EditorHeader({
   configId,
+  displayName,
   feedUrl,
   isJsonMode,
   onBack,
@@ -574,7 +578,7 @@ function EditorHeader({
         </Button>
         <div>
           <h1 className="text-2xl font-bold">
-            {configId ? t('editConfig', { configId }) : t('newConfig')}
+            {configId ? t('editConfig', { name: displayName || configId }) : t('newConfig')}
           </h1>
         </div>
       </div>

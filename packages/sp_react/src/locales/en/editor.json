@@ -1,6 +1,6 @@
 {
   "newConfig": "New Config",
-  "editConfig": "Edit: {{configId}}",
+  "editConfig": "Edit: {{name}}",
   "autoSavedAt": "Auto-saved at {{time}}",
   "schemaDocs": "Schema Docs",
   "formMode": "Form Mode",
