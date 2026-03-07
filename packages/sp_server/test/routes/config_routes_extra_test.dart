@@ -33,11 +33,9 @@ String _patternMetaA() => const JsonEncoder.withIndent('  ').convert({
 });
 
 /// Sample playlist.
-String _playlistSeasons() => const JsonEncoder.withIndent('  ').convert({
-  'id': 'seasons',
-  'displayName': 'Seasons',
-  'resolverType': 'rss',
-});
+String _playlistSeasons() => const JsonEncoder.withIndent(
+  '  ',
+).convert({'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'});
 
 /// RSS feed with episodes that produce claimedByOthers when two definitions
 /// overlap. Two episodes, both matching `.` title filter.
@@ -80,21 +78,21 @@ Future<void> _writeFile(String path, String content) async {
 }
 
 /// Creates a DiskFeedCacheService backed by a temp directory.
-Future<DiskFeedCacheService> _createFeedCacheService() async {
+/// Returns both the service and the cache directory path for cleanup.
+Future<(DiskFeedCacheService, String)> _createFeedCacheService() async {
   final cacheDir = await Directory.systemTemp.createTemp(
     'feed_cache_extra_test_',
   );
-  return DiskFeedCacheService(
+  final service = DiskFeedCacheService(
     cacheDir: cacheDir.path,
     httpGet: (Uri url) async {
-      final responses = {
-        'https://example.com/claiming.xml': _claimingRss(),
-      };
+      final responses = {'https://example.com/claiming.xml': _claimingRss()};
       final body = responses[url.toString()];
       if (body != null) return body;
       throw Exception('Unknown feed: $url');
     },
   );
+  return (service, cacheDir.path);
 }
 
 void main() {
@@ -104,11 +102,14 @@ void main() {
     late SmartPlaylistValidator validator;
     late Handler handler;
     late String dataDir;
+    late String cacheDir;
 
     setUp(() async {
       dataDir = await _createTestDataDir();
       configRepository = LocalConfigRepository(dataDir: dataDir);
-      feedCacheService = await _createFeedCacheService();
+      final (service, cachePath) = await _createFeedCacheService();
+      feedCacheService = service;
+      cacheDir = cachePath;
       validator = SmartPlaylistValidator();
 
       final router = configRouter(
@@ -121,6 +122,7 @@ void main() {
 
     tearDown(() async {
       await Directory(dataDir).delete(recursive: true);
+      await Directory(cacheDir).delete(recursive: true);
     });
 
     group('POST /api/configs/validate type variants', () {
@@ -134,9 +136,7 @@ void main() {
 
         final request = Request(
           'POST',
-          Uri.parse(
-            'http://localhost/api/configs/validate?type=patternMeta',
-          ),
+          Uri.parse('http://localhost/api/configs/validate?type=patternMeta'),
           headers: {'Content-Type': 'application/json'},
           body: validMeta,
         );
@@ -159,9 +159,7 @@ void main() {
 
         final request = Request(
           'POST',
-          Uri.parse(
-            'http://localhost/api/configs/validate?type=patternIndex',
-          ),
+          Uri.parse('http://localhost/api/configs/validate?type=patternIndex'),
           headers: {'Content-Type': 'application/json'},
           body: validIndex,
         );
@@ -178,9 +176,7 @@ void main() {
       test('returns 400 for invalid type parameter', () async {
         final request = Request(
           'POST',
-          Uri.parse(
-            'http://localhost/api/configs/validate?type=invalid',
-          ),
+          Uri.parse('http://localhost/api/configs/validate?type=invalid'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'id': 'test'}),
         );
@@ -254,13 +250,15 @@ void main() {
           final body =
               jsonDecode(await response.readAsString()) as Map<String, dynamic>;
           final playlists = body['playlists'] as List;
-          expect(2, equals(playlists.length));
+          expect(playlists.length, equals(2));
 
           // Find the lower-priority definition (priority-a) which should
           // have claimedByOthers populated.
-          final priorityA = playlists.firstWhere(
-            (p) => (p as Map<String, dynamic>)['id'] == 'priority-a',
-          ) as Map<String, dynamic>;
+          final priorityA =
+              playlists.firstWhere(
+                    (p) => (p as Map<String, dynamic>)['id'] == 'priority-a',
+                  )
+                  as Map<String, dynamic>;
           expect(priorityA.containsKey('claimedByOthers'), isTrue);
           final claimed = priorityA['claimedByOthers'] as List;
           expect(claimed, isNotEmpty);
@@ -279,135 +277,128 @@ void main() {
       );
     });
 
-    group(
-      'PUT /api/configs/patterns/<id>/playlists/<pid> sanitization',
-      () {
-        test('strips empty customSort rules before validation', () async {
-          final playlistJson = {
-            'id': 'seasons',
-            'displayName': 'Seasons',
-            'resolverType': 'rss',
-            'customSort': {'rules': []},
-          };
+    group('PUT /api/configs/patterns/<id>/playlists/<pid> sanitization', () {
+      test('strips empty customSort rules before validation', () async {
+        final playlistJson = {
+          'id': 'seasons',
+          'displayName': 'Seasons',
+          'resolverType': 'rss',
+          'customSort': {'rules': []},
+        };
 
-          final request = Request(
-            'PUT',
-            Uri.parse(
-              'http://localhost/api/configs/patterns/podcast-a'
-              '/playlists/seasons',
-            ),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(playlistJson),
-          );
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a'
+            '/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(playlistJson),
+        );
 
-          final response = await handler(request);
+        final response = await handler(request);
 
-          expect(response.statusCode, equals(200));
-          final body =
-              jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-          expect(body['ok'], isTrue);
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
 
-          // Verify customSort was stripped from the saved file
-          final file = File(
-            '$dataDir/patterns/podcast-a/playlists/seasons.json',
-          );
-          final content =
-              jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-          expect(content.containsKey('customSort'), isFalse);
-        });
+        // Verify customSort was stripped from the saved file
+        final file = File('$dataDir/patterns/podcast-a/playlists/seasons.json');
+        final content =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        expect(content.containsKey('customSort'), isFalse);
+      });
 
-        test('strips null values in nested structures with lists', () async {
-          // Groups with null values should be stripped so schema validation
-          // passes (JSON Schema rejects null for typed fields).
-          final playlistJson = {
-            'id': 'seasons',
-            'displayName': 'Seasons',
-            'resolverType': 'category',
-            'contentType': 'groups',
-            'groups': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'pattern': '^Main',
-                'sortKey': null,
-              },
-              {'id': 'bonus', 'displayName': 'Bonus'},
-            ],
-          };
+      test('strips null values in nested structures with lists', () async {
+        // Groups with null values should be stripped so schema validation
+        // passes (JSON Schema rejects null for typed fields).
+        final playlistJson = {
+          'id': 'seasons',
+          'displayName': 'Seasons',
+          'resolverType': 'category',
+          'contentType': 'groups',
+          'groups': [
+            {
+              'id': 'main',
+              'displayName': 'Main',
+              'pattern': '^Main',
+              'sortKey': null,
+            },
+            {'id': 'bonus', 'displayName': 'Bonus'},
+          ],
+        };
 
-          final request = Request(
-            'PUT',
-            Uri.parse(
-              'http://localhost/api/configs/patterns/podcast-a'
-              '/playlists/seasons',
-            ),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(playlistJson),
-          );
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a'
+            '/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(playlistJson),
+        );
 
-          final response = await handler(request);
+        final response = await handler(request);
 
-          expect(response.statusCode, equals(200));
-          final body =
-              jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-          expect(body['ok'], isTrue);
-        });
+        expect(response.statusCode, equals(200));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['ok'], isTrue);
+      });
 
-        test('returns 500 when save fails on read-only directory', () async {
-          // Make the playlists directory read-only to force a write failure
-          final playlistsDir = Directory(
-            '$dataDir/patterns/podcast-a/playlists',
-          );
-          await playlistsDir.delete(recursive: true);
-          // Create a file where the directory should be, blocking writes
-          await File(
-            '$dataDir/patterns/podcast-a/playlists',
-          ).writeAsString('blocker');
+      test('returns 500 when save fails on read-only directory', () async {
+        // Make the playlists directory read-only to force a write failure
+        final playlistsDir = Directory('$dataDir/patterns/podcast-a/playlists');
+        await playlistsDir.delete(recursive: true);
+        // Create a file where the directory should be, blocking writes
+        await File(
+          '$dataDir/patterns/podcast-a/playlists',
+        ).writeAsString('blocker');
 
-          final playlistJson = {
-            'id': 'seasons',
-            'displayName': 'Seasons',
-            'resolverType': 'rss',
-          };
+        final playlistJson = {
+          'id': 'seasons',
+          'displayName': 'Seasons',
+          'resolverType': 'rss',
+        };
 
-          final request = Request(
-            'PUT',
-            Uri.parse(
-              'http://localhost/api/configs/patterns/podcast-a'
-              '/playlists/seasons',
-            ),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(playlistJson),
-          );
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a'
+            '/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(playlistJson),
+        );
 
-          final response = await handler(request);
+        final response = await handler(request);
 
-          expect(response.statusCode, equals(500));
-          final body =
-              jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-          expect(body['error'], contains('Failed to save playlist'));
-        });
+        expect(response.statusCode, equals(500));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('Failed to save playlist'));
+      });
 
-        test('returns 400 for non-object body', () async {
-          final request = Request(
-            'PUT',
-            Uri.parse(
-              'http://localhost/api/configs/patterns/podcast-a'
-              '/playlists/seasons',
-            ),
-            headers: {'Content-Type': 'application/json'},
-            body: '"just a string"',
-          );
+      test('returns 400 for non-object body', () async {
+        final request = Request(
+          'PUT',
+          Uri.parse(
+            'http://localhost/api/configs/patterns/podcast-a'
+            '/playlists/seasons',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: '"just a string"',
+        );
 
-          final response = await handler(request);
+        final response = await handler(request);
 
-          expect(response.statusCode, equals(400));
-          final body =
-              jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-          expect(body['error'], contains('JSON object'));
-        });
-      },
-    );
+        expect(response.statusCode, equals(400));
+        final body =
+            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
+        expect(body['error'], contains('JSON object'));
+      });
+    });
 
     group('PUT /api/configs/patterns/<id>/meta edge cases', () {
       test('removes displayName from root meta when empty string', () async {
@@ -617,9 +608,9 @@ void main() {
       test('returns 500 when create fails on broken directory', () async {
         // Create a file where the pattern directory should be created,
         // blocking directory creation.
-        await File('$dataDir/patterns/podcast-blocked').writeAsString(
-          'blocker',
-        );
+        await File(
+          '$dataDir/patterns/podcast-blocked',
+        ).writeAsString('blocker');
 
         final body = {
           'id': 'podcast-blocked',
@@ -678,8 +669,7 @@ void main() {
         expect(body['error'], contains('not found'));
       });
 
-      test('DELETE playlist returns 500 on unexpected error', () async {
-        // Point to a repo with a broken data dir to force non-FileSystem error
+      test('DELETE playlist returns 404 on non-existent directory', () async {
         final failRepo = LocalConfigRepository(
           dataDir:
               '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
@@ -704,7 +694,7 @@ void main() {
         expect(response.statusCode, equals(404));
       });
 
-      test('DELETE pattern returns 500 on unexpected error', () async {
+      test('DELETE pattern returns 404 on non-existent directory', () async {
         final failRepo = LocalConfigRepository(
           dataDir:
               '/tmp/nonexistent-dir-${DateTime.now().millisecondsSinceEpoch}',
