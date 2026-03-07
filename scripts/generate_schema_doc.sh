@@ -2,17 +2,16 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SCHEMA_SRC="$REPO_ROOT/packages/sp_shared/assets/playlist-definition.schema.json"
 DOCS_DIR="$REPO_ROOT/packages/sp_react/public/docs"
 
 mkdir -p "$DOCS_DIR"
 
-# 1. Export JSON Schema from Dart
-echo "Exporting JSON Schema..."
-cd "$REPO_ROOT/packages/sp_shared"
-dart run bin/export_schema.dart "$DOCS_DIR/schema.json"
-cd "$REPO_ROOT"
+# 1. Copy playlist-definition schema (the only one relevant to editor users)
+echo "Copying schema file..."
+cp "$SCHEMA_SRC" "$DOCS_DIR/schema.json"
 
-# 2. Generate human-readable HTML from JSON Schema
+# 2. Generate human-readable HTML
 echo "Generating HTML documentation..."
 uv run --with json-schema-for-humans \
   generate-schema-doc \
@@ -22,5 +21,5 @@ uv run --with json-schema-for-humans \
   "$DOCS_DIR/schema.html"
 
 echo "Done. Files written to $DOCS_DIR/"
-echo "  - schema.json  (for AI / machine consumption)"
+echo "  - schema.json  (playlist-definition schema)"
 echo "  - schema.html  (for human reading)"
