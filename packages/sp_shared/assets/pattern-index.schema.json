@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://audiflow.app/schema/v1/pattern-index.json",
+  "title": "SmartPlaylist Pattern Index",
+  "description": "Root meta.json at the top level of the config data repository. Lists all available pattern configs with summary information for efficient discovery. The mobile app fetches this file first and uses feedUrlHint for fast pre-filtering before loading individual pattern files. Deployed to static hosting (GitHub Pages for production, GCS for dev/staging).",
+  "type": "object",
+  "required": [
+    "dataVersion",
+    "schemaVersion",
+    "patterns"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "dataVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonically increasing version for the root index. Bumped by CI when any pattern is added, removed, or has its data modified. The mobile app fetches this file periodically and compares dataVersion against its cached value to detect changes across the entire config repository."
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Schema structure version. Incremented when the JSON structure itself changes (fields added, removed, or renamed) in a way that requires updated parsing logic. The mobile app uses this to detect incompatible format changes that may require an app update to handle correctly. Not bumped for data-only changes."
+    },
+    "patterns": {
+      "type": "array",
+      "description": "Summary entries for all available patterns, used for discovery and pre-filtering. The mobile app iterates this array to find candidates whose feedUrlHint matches the current podcast's feed URL before loading full pattern configs.",
+      "items": {
+        "$ref": "#/$defs/PatternIndexEntry"
+      }
+    }
+  },
+  "$defs": {
+    "PatternIndexEntry": {
+      "type": "object",
+      "description": "Summary entry for a single pattern in the root index. Contains just enough information for discovery (feedUrlHint) and cache validation (dataVersion) without requiring a fetch of the full pattern config.",
+      "required": [
+        "id",
+        "dataVersion",
+        "displayName",
+        "feedUrlHint",
+        "playlistCount"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Pattern directory name. Used to construct paths to pattern files: {id}/meta.json for the pattern metadata and {id}/playlists/{playlistId}.json for individual playlist definitions."
+        },
+        "dataVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Pattern data version, mirroring the value in {id}/meta.json. Allows the mobile app to detect stale cache entries by comparing against locally cached versions without fetching individual pattern files."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable podcast name for display in admin and editor interfaces. Not used for matching logic in the mobile app."
+        },
+        "feedUrlHint": {
+          "type": "string",
+          "description": "A substring of the podcast's feed URL used for fast pre-filtering at the root index level. The mobile app performs a substring match (feedUrl.contains(feedUrlHint)) to quickly narrow down candidates before loading the full pattern config for exact URL or GUID matching. Should be a distinctive portion of the feed URL (e.g., 'anchor.fm/s/8c2088c') that minimizes false positives."
+        },
+        "playlistCount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of playlist definitions in this pattern. Used for summary display in admin interfaces. Does not affect matching or loading logic."
+        }
+      }
+    }
+  }
+}

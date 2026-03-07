@@ -1,14 +1,22 @@
 /// Constants for SmartPlaylist config schema values.
 ///
 /// Provides enum value lists and version info used by both
-/// validation and runtime code. The authoritative schema is
-/// the vendored `assets/schema.json`.
+/// validation and runtime code. The authoritative schemas are
+/// the vendored `assets/*.schema.json` files.
 final class SmartPlaylistSchemaConstants {
   SmartPlaylistSchemaConstants._();
 
-  /// Canonical schema URI. The `v{N}` segment matches [currentSchemaVersion].
-  static const String schemaId =
-      'https://audiflow.app/schema/v$currentSchemaVersion/smartplaylist.json';
+  /// Schema URI for pattern-index.schema.json.
+  static const String patternIndexSchemaId =
+      'https://audiflow.app/schema/v$currentSchemaVersion/pattern-index.json';
+
+  /// Schema URI for pattern-meta.schema.json.
+  static const String patternMetaSchemaId =
+      'https://audiflow.app/schema/v$currentSchemaVersion/pattern-meta.json';
+
+  /// Schema URI for playlist-definition.schema.json.
+  static const String playlistDefinitionSchemaId =
+      'https://audiflow.app/schema/v$currentSchemaVersion/playlist-definition.json';
 
   /// Current data format version.
   static const int currentDataVersion = 1;

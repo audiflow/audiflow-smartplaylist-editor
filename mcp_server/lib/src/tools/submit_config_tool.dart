@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:sp_server/src/services/local_config_repository.dart';
 import 'package:sp_shared/sp_shared.dart';
 
@@ -49,16 +47,24 @@ Future<Map<String, dynamic>> executeSubmitConfig(
     throw ArgumentError('Missing required parameter: configId');
   }
 
-  // Wrap in root schema envelope for validation, since the
-  // validator expects {dataVersion, schemaVersion, patterns} at the top level.
-  final envelope = {
-    'dataVersion': SmartPlaylistSchemaConstants.currentDataVersion,
-    'schemaVersion': SmartPlaylistSchemaConstants.currentSchemaVersion,
-    'patterns': [config],
-  };
-  final errors = validator.validateString(jsonEncode(envelope));
-  if (errors.isNotEmpty) {
-    return {'success': false, 'errors': errors};
+  // Validate each playlist from raw JSON before model parsing
+  final rawPlaylists = config['playlists'];
+  if (rawPlaylists is! List || rawPlaylists.isEmpty) {
+    return {
+      'success': false,
+      'errors': ['Missing or empty "playlists" array'],
+    };
+  }
+  final allErrors = <String>[];
+  for (final playlist in rawPlaylists) {
+    if (playlist is! Map<String, dynamic>) {
+      allErrors.add('Playlist entry is not a JSON object');
+      continue;
+    }
+    allErrors.addAll(validator.validatePlaylistDefinition(playlist));
+  }
+  if (allErrors.isNotEmpty) {
+    return {'success': false, 'errors': allErrors};
   }
 
   // Parse and save each playlist (model round-trip normalizes JSON)
@@ -77,6 +83,10 @@ Future<Map<String, dynamic>> executeSubmitConfig(
     'yearGroupedEpisodes': patternConfig.yearGroupedEpisodes,
   };
   updatedPatternMeta['dataVersion'] = existingPatternMeta['dataVersion'];
+  final patternMetaErrors = validator.validatePatternMeta(updatedPatternMeta);
+  if (patternMetaErrors.isNotEmpty) {
+    return {'success': false, 'errors': patternMetaErrors};
+  }
   await repo.savePatternMeta(configId, updatedPatternMeta);
 
   // Sync root meta: update playlistCount, preserve all versions
@@ -91,6 +101,10 @@ Future<Map<String, dynamic>> executeSubmitConfig(
       };
       break;
     }
+  }
+  final rootMetaErrors = validator.validatePatternIndex(rootMeta);
+  if (rootMetaErrors.isNotEmpty) {
+    return {'success': false, 'errors': rootMetaErrors};
   }
   await repo.saveRootMeta(rootMeta);
 

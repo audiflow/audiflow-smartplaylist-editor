@@ -38,15 +38,20 @@ mcp_server            <───────────────>
 
 ## JSON Schema as Single Source of Truth
 
-`packages/sp_shared/assets/schema.json` is the **canonical JSON Schema** for all smart playlist configs. When you modify the schema (add fields, change enums, rename properties), all consumers must be updated.
+`packages/sp_shared/assets/` contains three **canonical JSON Schema** files matching the split file structure:
 
-### What the schema defines
+- `pattern-index.schema.json` -- validates root `meta.json` (dataVersion, schemaVersion, pattern summaries)
+- `pattern-meta.schema.json` -- validates per-pattern `meta.json` (feedUrls, flags, playlist IDs)
+- `playlist-definition.schema.json` -- validates individual playlist files
 
-- `SmartPlaylistPatternConfig` structure (id, feedUrls, playlists)
-- `SmartPlaylistDefinition` fields and their types
-- `resolverType` enum values: `rss`, `category`, `year`, `titleAppearanceOrder`
-- `contentType`, `yearHeaderMode`, sort fields/orders, extractor sources
-- `SmartPlaylistGroupDef`, `SmartPlaylistSortSpec`, `SmartPlaylistTitleExtractor`, `SmartPlaylistEpisodeExtractor`
+When you modify the schema (add fields, change enums, rename properties), all consumers must be updated.
+
+### What the schemas define
+
+- Root pattern index: `dataVersion`, `schemaVersion`, pattern summaries
+- Pattern metadata: `id`, `feedUrls`, `playlists`, `podcastGuid`, `yearGroupedEpisodes`
+- Playlist definitions: `resolverType`, filters, groups, sort, extractors, display options
+- Shared `$defs`: `GroupDef`, `SortSpec`, `SortRule`, `SortCondition`, `TitleExtractor`, `EpisodeExtractor`
 
 ### Where the schema is consumed
 
@@ -60,10 +65,10 @@ mcp_server            <───────────────>
 
 When a consumer repo has its own hand-written models (like `audiflow_domain`), it should:
 
-1. **Vendor `schema.json`** into `test/fixtures/schema.json` (copy from `sp_shared/assets/schema.json`)
+1. **Vendor schema files** into `test/fixtures/` (copy from `sp_shared/assets/*.schema.json`)
 2. **Add `json_schema: ^5.2.2`** as a dev dependency for schema validation
 3. **Write conformance tests** that:
-   - Construct models with `toJson()`, wrap in a valid config envelope, validate against the schema
+   - Construct models with `toJson()`, validate directly against the appropriate schema (no envelope wrapping)
    - Extract enum values from the vendored schema and compare against the constants/enums used in production code
 4. **Use schema-valid values in all test data** (e.g., `'rss'` not `'rssSeason'`, `'category'` not `'categoryGroup'`)
 

@@ -1,23 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:sp_shared/sp_shared.dart';
 import 'package:test/test.dart';
-
-/// Loads the vendored schema.json from assets.
-///
-/// Supports running from either the package directory or the repo root.
-String _loadSchemaJson() {
-  final candidates = [
-    'assets/schema.json',
-    'packages/sp_shared/assets/schema.json',
-  ];
-  for (final path in candidates) {
-    final file = File(path);
-    if (file.existsSync()) return file.readAsStringSync();
-  }
-  throw StateError('schema.json not found in any candidate path');
-}
 
 void main() {
   group('SmartPlaylistSchemaConstants', () {
@@ -37,7 +21,6 @@ void main() {
     });
 
     test('validYearHeaderModes matches runtime enum', () {
-      // Must match YearHeaderMode enum values
       expect(
         SmartPlaylistSchemaConstants.validYearHeaderModes,
         equals(['none', 'firstEpisode', 'perEpisode']),
@@ -82,448 +65,340 @@ void main() {
     late SmartPlaylistValidator validator;
 
     setUpAll(() {
-      validator = SmartPlaylistValidator.fromSchemaJson(_loadSchemaJson());
+      validator = SmartPlaylistValidator();
     });
 
-    test('schemaMap contains expected top-level fields', () {
-      final schema = validator.schemaMap;
-      expect(schema[r'$schema'], contains('json-schema.org'));
-      expect(schema['type'], 'object');
-      expect(schema['properties'], containsPair('dataVersion', isA<Map>()));
-      expect(schema['properties'], containsPair('schemaVersion', isA<Map>()));
-      expect(schema['properties'], containsPair('patterns', isA<Map>()));
-    });
-
-    test('schemaString returns formatted JSON', () {
-      final str = validator.schemaString;
-      final decoded = jsonDecode(str) as Map<String, dynamic>;
-      expect(decoded, contains(r'$schema'));
-    });
-
-    test('validates a known-good minimal config', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'feedUrls': ['test.com'],
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'priority': 100,
-              },
-            ],
-          },
-        ],
-      };
-      expect(validator.validate(config), isEmpty);
-    });
-
-    test('returns errors for missing dataVersion', () {
-      final config = {
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
-            ],
-          },
-        ],
-      };
-      final errors = validator.validate(config);
-      expect(errors, isNotEmpty);
-    });
-
-    test('returns errors for wrong version', () {
-      final config = {
-        'dataVersion': 99,
-        'schemaVersion': 1,
-        'patterns': <dynamic>[],
-      };
-      final errors = validator.validate(config);
-      expect(errors, isNotEmpty);
-    });
-
-    test('returns errors for missing patterns', () {
-      final config = {'dataVersion': 1, 'schemaVersion': 1};
-      final errors = validator.validate(config);
-      expect(errors, isNotEmpty);
-    });
-
-    test('returns errors for invalid resolverType', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'nonexistent',
-              },
-            ],
-          },
-        ],
-      };
-      final errors = validator.validate(config);
-      expect(errors, isNotEmpty);
-    });
-
-    test('validateString handles invalid JSON', () {
-      final errors = validator.validateString('not valid json {{{');
-      expect(errors, contains(contains('Invalid JSON')));
-    });
-
-    test('validateString validates a good config string', () {
-      final config = jsonEncode({
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss'},
-            ],
-          },
-        ],
+    group('playlist-definition schema', () {
+      test('allSchemasMap contains all three schemas', () {
+        final schemas = validator.allSchemasMap;
+        expect(schemas, contains('pattern-index'));
+        expect(schemas, contains('pattern-meta'));
+        expect(schemas, contains('playlist-definition'));
       });
-      expect(validator.validateString(config), isEmpty);
-    });
 
-    test('validates a full complex config successfully', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'complex-podcast',
-            'podcastGuid': 'abc-123-def',
-            'feedUrls': [
-              'https://example.com/feed',
-              'https://mirror.example.com/rss',
+      test('allSchemasString returns formatted JSON', () {
+        final str = validator.allSchemasString;
+        final decoded = jsonDecode(str) as Map<String, dynamic>;
+        expect(decoded, contains('pattern-index'));
+        expect(decoded, contains('playlist-definition'));
+      });
+
+      test('validates a known-good minimal playlist', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'priority': 100,
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isEmpty);
+      });
+
+      test('returns errors for missing required fields', () {
+        final playlist = {'id': 'main'};
+        final errors = validator.validatePlaylistDefinition(playlist);
+        expect(errors, isNotEmpty);
+      });
+
+      test('returns errors for invalid resolverType', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'nonexistent',
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
+      });
+
+      test('returns errors for invalid contentType', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'contentType': 'invalid',
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
+      });
+
+      test('returns errors for invalid sort spec', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'customSort': {'type': 'unknown'},
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
+      });
+
+      test('returns errors for invalid sort field', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'customSort': {
+            'rules': [
+              {'field': 'invalid', 'order': 'ascending'},
             ],
-            'yearGroupedEpisodes': true,
-            'playlists': [
+          },
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
+      });
+
+      test('accepts yearHeaderMode none', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'yearHeaderMode': 'none',
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isEmpty);
+      });
+
+      test('accepts yearHeaderMode perEpisode', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'yearHeaderMode': 'perEpisode',
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isEmpty);
+      });
+
+      test('rejects old yearHeaderMode values', () {
+        for (final invalid in ['lastEpisode', 'publishYear']) {
+          final playlist = {
+            'id': 'main',
+            'displayName': 'Main',
+            'resolverType': 'rss',
+            'yearHeaderMode': invalid,
+          };
+          expect(
+            validator.validatePlaylistDefinition(playlist),
+            isNotEmpty,
+            reason: 'Should reject yearHeaderMode "$invalid"',
+          );
+        }
+      });
+
+      test('accepts null seasonGroup in episode extractor', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'smartPlaylistEpisodeExtractor': {
+            'source': 'title',
+            'pattern': r'E(\d+)',
+            'seasonGroup': null,
+          },
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isEmpty);
+      });
+
+      test('accepts fallbackToRss in episode extractor', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'smartPlaylistEpisodeExtractor': {
+            'source': 'title',
+            'pattern': r'E(\d+)',
+            'fallbackToRss': true,
+          },
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isEmpty);
+      });
+
+      test('accepts greaterThan sort condition type', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'customSort': {
+            'rules': [
               {
-                'id': 'seasons',
-                'displayName': 'Seasons',
-                'resolverType': 'rss',
-                'priority': 100,
-                'contentType': 'groups',
-                'yearHeaderMode': 'firstEpisode',
-                'episodeYearHeaders': true,
-                'showDateRange': true,
-                'showSeasonNumber': true,
-                'nullSeasonGroupKey': 0,
-                'customSort': {
-                  'rules': [
-                    {
-                      'field': 'playlistNumber',
-                      'order': 'descending',
-                      'condition': {'type': 'sortKeyGreaterThan', 'value': 0},
-                    },
-                    {'field': 'newestEpisodeDate', 'order': 'descending'},
-                  ],
-                },
-                'titleExtractor': {
-                  'source': 'title',
-                  'pattern': r'\[(.+?)\s+\d+\]',
-                  'group': 1,
-                  'template': 'Season {value}',
-                  'fallback': {
-                    'source': 'seasonNumber',
-                    'template': 'Season {value}',
-                    'fallbackValue': 'Specials',
-                  },
-                },
-                'smartPlaylistEpisodeExtractor': {
-                  'source': 'title',
-                  'pattern': r'\[(\d+)-(\d+)\]',
-                  'seasonGroup': 1,
-                  'episodeGroup': 2,
-                  'fallbackSeasonNumber': 0,
-                  'fallbackEpisodePattern': r'\[bangai-hen\s*#(\d+)\]',
-                  'fallbackEpisodeCaptureGroup': 1,
-                },
-              },
-              {
-                'id': 'categories',
-                'displayName': 'Categories',
-                'resolverType': 'category',
-                'priority': 50,
-                'titleFilter': r'(?:Main|Bonus)',
-                'excludeFilter': r'(?:Trailer|Preview)',
-                'requireFilter': r'\[.+\]',
-                'groups': [
-                  {
-                    'id': 'main',
-                    'displayName': 'Main Episodes',
-                    'pattern': r'^Main\b',
-                    'episodeYearHeaders': true,
-                    'showDateRange': true,
-                  },
-                  {
-                    'id': 'bonus',
-                    'displayName': 'Bonus Content',
-                    'pattern': r'^Bonus\b',
-                  },
-                  {'id': 'other', 'displayName': 'Other'},
-                ],
-              },
-              {
-                'id': 'by-year',
-                'displayName': 'By Year',
-                'resolverType': 'year',
-                'yearHeaderMode': 'perEpisode',
-                'customSort': {
-                  'rules': [
-                    {'field': 'alphabetical', 'order': 'ascending'},
-                  ],
-                },
-              },
-              {
-                'id': 'appearance',
-                'displayName': 'In Order',
-                'resolverType': 'titleAppearanceOrder',
-                'contentType': 'episodes',
+                'field': 'playlistNumber',
+                'order': 'ascending',
+                'condition': {'type': 'greaterThan', 'value': 5},
               },
             ],
           },
-        ],
-      };
-      expect(validator.validate(config), isEmpty);
-    });
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isEmpty);
+      });
 
-    test('validates empty patterns array', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': <dynamic>[],
-      };
-      expect(validator.validate(config), isEmpty);
-    });
-
-    test('returns errors for invalid contentType', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
+      test('validates full complex playlist', () {
+        final playlist = {
+          'id': 'seasons',
+          'displayName': 'Seasons',
+          'resolverType': 'rss',
+          'priority': 100,
+          'contentType': 'groups',
+          'yearHeaderMode': 'firstEpisode',
+          'episodeYearHeaders': true,
+          'showDateRange': true,
+          'showSeasonNumber': true,
+          'nullSeasonGroupKey': 0,
+          'customSort': {
+            'rules': [
               {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'contentType': 'invalid',
+                'field': 'playlistNumber',
+                'order': 'descending',
+                'condition': {'type': 'sortKeyGreaterThan', 'value': 0},
               },
+              {'field': 'newestEpisodeDate', 'order': 'descending'},
             ],
           },
-        ],
-      };
-      final errors = validator.validate(config);
-      expect(errors, isNotEmpty);
-    });
-
-    test('returns errors for invalid sort spec type', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'customSort': {'type': 'unknown'},
-              },
-            ],
+          'titleExtractor': {
+            'source': 'title',
+            'pattern': r'\[(.+?)\s+\d+\]',
+            'group': 1,
+            'template': 'Season {value}',
+            'fallback': {
+              'source': 'seasonNumber',
+              'template': 'Season {value}',
+              'fallbackValue': 'Specials',
+            },
           },
-        ],
-      };
-      final errors = validator.validate(config);
-      expect(errors, isNotEmpty);
-    });
-
-    test('returns errors for invalid sort field', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'customSort': {
-                  'rules': [
-                    {'field': 'invalid', 'order': 'ascending'},
-                  ],
-                },
-              },
-            ],
+          'smartPlaylistEpisodeExtractor': {
+            'source': 'title',
+            'pattern': r'\[(\d+)-(\d+)\]',
+            'seasonGroup': 1,
+            'episodeGroup': 2,
+            'fallbackSeasonNumber': 0,
+            'fallbackEpisodePattern': r'\[bangai-hen\s*#(\d+)\]',
+            'fallbackEpisodeCaptureGroup': 1,
           },
-        ],
-      };
-      final errors = validator.validate(config);
-      expect(errors, isNotEmpty);
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isEmpty);
+      });
+
+      test('validatePlaylistDefinitionString handles invalid JSON', () {
+        final errors = validator.validatePlaylistDefinitionString(
+          'not valid json {{{',
+        );
+        expect(errors, contains(contains('Invalid JSON')));
+      });
+
+      test('validatePlaylistDefinitionString validates good JSON', () {
+        final json = jsonEncode({
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+        });
+        expect(validator.validatePlaylistDefinitionString(json), isEmpty);
+      });
+
+      test('rejects negative priority', () {
+        final playlist = {
+          'id': 'main',
+          'displayName': 'Main',
+          'resolverType': 'rss',
+          'priority': -1,
+        };
+        expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
+      });
     });
 
-    test('accepts yearHeaderMode none', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'yearHeaderMode': 'none',
-              },
-            ],
-          },
-        ],
-      };
-      expect(validator.validate(config), isEmpty);
-    });
-
-    test('accepts yearHeaderMode perEpisode', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'yearHeaderMode': 'perEpisode',
-              },
-            ],
-          },
-        ],
-      };
-      expect(validator.validate(config), isEmpty);
-    });
-
-    test('rejects old yearHeaderMode values', () {
-      for (final invalid in ['lastEpisode', 'publishYear']) {
-        final config = {
+    group('pattern-index schema', () {
+      test('validates a known-good pattern index', () {
+        final index = {
           'dataVersion': 1,
           'schemaVersion': 1,
           'patterns': [
             {
               'id': 'test',
-              'playlists': [
-                {
-                  'id': 'main',
-                  'displayName': 'Main',
-                  'resolverType': 'rss',
-                  'yearHeaderMode': invalid,
-                },
-              ],
+              'dataVersion': 1,
+              'displayName': 'Test',
+              'feedUrlHint': 'https://example.com',
+              'playlistCount': 2,
             },
           ],
         };
-        expect(
-          validator.validate(config),
-          isNotEmpty,
-          reason: 'Should reject yearHeaderMode "$invalid"',
-        );
-      }
+        expect(validator.validatePatternIndex(index), isEmpty);
+      });
+
+      test('validates empty patterns array', () {
+        final index = {
+          'dataVersion': 1,
+          'schemaVersion': 1,
+          'patterns': <dynamic>[],
+        };
+        expect(validator.validatePatternIndex(index), isEmpty);
+      });
+
+      test('returns errors for missing dataVersion', () {
+        final index = {'schemaVersion': 1, 'patterns': <dynamic>[]};
+        expect(validator.validatePatternIndex(index), isNotEmpty);
+      });
+
+      test('accepts dataVersion values above 1', () {
+        final index = {
+          'dataVersion': 2,
+          'schemaVersion': 1,
+          'patterns': <dynamic>[],
+        };
+        expect(validator.validatePatternIndex(index), isEmpty);
+      });
+
+      test('rejects dataVersion below 1', () {
+        final index = {
+          'dataVersion': 0,
+          'schemaVersion': 1,
+          'patterns': <dynamic>[],
+        };
+        expect(validator.validatePatternIndex(index), isNotEmpty);
+      });
     });
 
-    test('accepts null seasonGroup in episode extractor', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'smartPlaylistEpisodeExtractor': {
-                  'source': 'title',
-                  'pattern': r'E(\d+)',
-                  'seasonGroup': null,
-                },
-              },
-            ],
-          },
-        ],
-      };
-      expect(validator.validate(config), isEmpty);
-    });
+    group('pattern-meta schema', () {
+      test('validates a known-good pattern meta', () {
+        final meta = {
+          'dataVersion': 1,
+          'id': 'test',
+          'feedUrls': ['https://example.com/feed'],
+          'playlists': ['main'],
+        };
+        expect(validator.validatePatternMeta(meta), isEmpty);
+      });
 
-    test('accepts fallbackToRss in episode extractor', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'smartPlaylistEpisodeExtractor': {
-                  'source': 'title',
-                  'pattern': r'E(\d+)',
-                  'fallbackToRss': true,
-                },
-              },
-            ],
-          },
-        ],
-      };
-      expect(validator.validate(config), isEmpty);
-    });
+      test('validates with optional fields', () {
+        final meta = {
+          'dataVersion': 1,
+          'id': 'test',
+          'podcastGuid': 'guid-123',
+          'feedUrls': ['https://example.com/feed'],
+          'yearGroupedEpisodes': true,
+          'playlists': ['main', 'seasons'],
+        };
+        expect(validator.validatePatternMeta(meta), isEmpty);
+      });
 
-    test('accepts greaterThan sort condition type', () {
-      final config = {
-        'dataVersion': 1,
-        'schemaVersion': 1,
-        'patterns': [
-          {
-            'id': 'test',
-            'playlists': [
-              {
-                'id': 'main',
-                'displayName': 'Main',
-                'resolverType': 'rss',
-                'customSort': {
-                  'rules': [
-                    {
-                      'field': 'playlistNumber',
-                      'order': 'ascending',
-                      'condition': {'type': 'greaterThan', 'value': 5},
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        ],
-      };
-      expect(validator.validate(config), isEmpty);
+      test('returns errors for empty feedUrls', () {
+        final meta = {
+          'dataVersion': 1,
+          'id': 'test',
+          'feedUrls': <dynamic>[],
+          'playlists': ['main'],
+        };
+        expect(validator.validatePatternMeta(meta), isNotEmpty);
+      });
+
+      test('returns errors for empty playlists', () {
+        final meta = {
+          'dataVersion': 1,
+          'id': 'test',
+          'feedUrls': ['https://example.com/feed'],
+          'playlists': <dynamic>[],
+        };
+        expect(validator.validatePatternMeta(meta), isNotEmpty);
+      });
+
+      test('returns errors for missing id', () {
+        final meta = {
+          'dataVersion': 1,
+          'feedUrls': ['https://example.com/feed'],
+          'playlists': ['main'],
+        };
+        expect(validator.validatePatternMeta(meta), isNotEmpty);
+      });
     });
   });
 }

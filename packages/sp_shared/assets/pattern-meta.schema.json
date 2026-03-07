@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://audiflow.app/schema/v1/pattern-meta.json",
+  "title": "SmartPlaylist Pattern Meta",
+  "description": "Per-pattern metadata file at {patternId}/meta.json. Contains feed matching rules to identify which podcast this pattern applies to, and an ordered list of playlist definition IDs. The mobile app fetches this file after a feedUrlHint match in the root index, then performs exact matching using podcastGuid and feedUrls.",
+  "type": "object",
+  "required": [
+    "dataVersion",
+    "id",
+    "feedUrls",
+    "playlists"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "dataVersion": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonically increasing version for this pattern's data. Bumped by CI whenever any file in this pattern directory changes (meta.json or any playlist definition). The mobile app compares this against its cached version; a mismatch triggers re-fetching all files for this pattern."
+    },
+    "id": {
+      "type": "string",
+      "description": "Pattern identifier that must exactly match the parent directory name. Used as the cache storage key and for constructing file paths (e.g., {id}/playlists/{playlistId}.json)."
+    },
+    "podcastGuid": {
+      "type": "string",
+      "description": "Podcast GUID for exact matching, checked before feedUrls. Typically the Apple Podcasts GUID or podcast:guid from the RSS feed. If set and matches the podcast's GUID, the pattern is considered a match and feedUrls are not checked. Omit when a reliable GUID is not available."
+    },
+    "feedUrls": {
+      "type": "array",
+      "description": "List of exact feed URLs for podcast matching. Used as a fallback when podcastGuid is absent or doesn't match the podcast. A podcast matches if its feed URL equals any entry in this list (exact string comparison). Multiple URLs support podcasts that have migrated hosting providers or have alternate feed URLs.",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "yearGroupedEpisodes": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, the podcast detail screen's all-episodes view groups episodes by publication year with sticky year headers. This is independent of smart playlist grouping and affects the default episode browsing experience (i.e., when the user views all episodes, not a specific playlist). Useful for long-running podcasts where chronological year navigation improves discoverability."
+    },
+    "playlists": {
+      "type": "array",
+      "description": "Ordered list of playlist definition IDs. Each ID maps to a file at playlists/{id}.json within this pattern directory. The array order determines the display order in the app's playlist tab. Must contain at least one entry.",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    }
+  }
+}

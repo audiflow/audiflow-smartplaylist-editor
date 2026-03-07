@@ -23,27 +23,30 @@ void main() {
       expect(response.statusCode, equals(200));
     });
 
-    test('returns valid JSON body', () async {
+    test('returns valid JSON body with all three schemas', () async {
       final request = Request('GET', Uri.parse('http://localhost/api/schema'));
 
       final response = await handler(request);
       final body = await response.readAsString();
 
-      // Must not throw.
-      final parsed = jsonDecode(body);
-      expect(parsed, isA<Map<String, dynamic>>());
+      final parsed = jsonDecode(body) as Map<String, dynamic>;
+      expect(parsed, contains('pattern-index'));
+      expect(parsed, contains('pattern-meta'));
+      expect(parsed, contains('playlist-definition'));
     });
 
-    test('contains schema metadata fields', () async {
+    test('each schema contains expected metadata fields', () async {
       final request = Request('GET', Uri.parse('http://localhost/api/schema'));
 
       final response = await handler(request);
       final body =
           jsonDecode(await response.readAsString()) as Map<String, dynamic>;
 
-      expect(body, contains(r'$schema'));
-      expect(body, contains('type'));
-      expect(body, contains('properties'));
+      final playlistSchema =
+          body['playlist-definition'] as Map<String, dynamic>;
+      expect(playlistSchema, contains(r'$schema'));
+      expect(playlistSchema, contains('type'));
+      expect(playlistSchema, contains('properties'));
     });
 
     test('returns application/json content type', () async {

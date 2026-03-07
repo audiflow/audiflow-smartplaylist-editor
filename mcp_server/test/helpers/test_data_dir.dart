@@ -10,7 +10,8 @@ Future<String> createTestDataDir({
   List<Map<String, dynamic>> patterns = const [],
   Map<String, Map<String, dynamic>> patternMetas = const {},
   Map<String, Map<String, Map<String, dynamic>>> playlists = const {},
-  Map<String, dynamic>? schema,
+  Map<String, Map<String, dynamic>>? schemas,
+  @Deprecated('Use schemas instead') Map<String, dynamic>? schema,
 }) async {
   final dir = await Directory.systemTemp.createTemp('mcp_test_');
   final dataDir = dir.path;
@@ -49,8 +50,18 @@ Future<String> createTestDataDir({
     }
   }
 
-  // Write schema if provided
-  if (schema != null) {
+  // Write split schema files
+  if (schemas != null) {
+    final schemaDir = Directory('$dataDir/schema');
+    await schemaDir.create(recursive: true);
+    for (final entry in schemas.entries) {
+      await _writeJson('$dataDir/schema/${entry.key}', entry.value);
+    }
+  }
+
+  // Legacy: write single schema.json
+  // ignore: deprecated_member_use_from_same_package
+  if (schema != null && schemas == null) {
     final schemaDir = Directory('$dataDir/schema');
     await schemaDir.create(recursive: true);
     await _writeJson('$dataDir/schema/schema.json', schema);

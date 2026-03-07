@@ -20,16 +20,32 @@ void main() {
 
     setUp(() async {
       dataDir = await createTestDataDir(
-        schema: {'type': 'object', 'properties': {}},
+        schemas: {
+          'pattern-index.schema.json': {
+            'type': 'object',
+            'title': 'Pattern Index',
+          },
+          'pattern-meta.schema.json': {
+            'type': 'object',
+            'title': 'Pattern Meta',
+          },
+          'playlist-definition.schema.json': {
+            'type': 'object',
+            'title': 'Playlist Definition',
+          },
+        },
       );
     });
 
     tearDown(() => cleanupDataDir(dataDir));
 
-    test('reads schema from disk', () async {
+    test('reads all three schemas from disk', () async {
       final result = await executeGetSchema(dataDir, {});
 
-      expect(result, {'type': 'object', 'properties': {}});
+      expect(result, contains('pattern-index'));
+      expect(result, contains('pattern-meta'));
+      expect(result, contains('playlist-definition'));
+      expect((result['pattern-index'] as Map)['title'], 'Pattern Index');
     });
   });
 }
