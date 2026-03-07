@@ -1,6 +1,6 @@
 {
   "newConfig": "新規設定",
-  "editConfig": "編集: {{configId}}",
+  "editConfig": "編集: {{name}}",
   "autoSavedAt": "自動保存: {{time}}",
   "schemaDocs": "スキーマドキュメント",
   "formMode": "フォームモード",
