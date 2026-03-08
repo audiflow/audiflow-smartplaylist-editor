@@ -93,8 +93,6 @@
   "sortField_alphabetical": "Alphabetical",
   "sortOrder_ascending": "Ascending",
   "sortOrder_descending": "Descending",
-  "addSortRule": "Add Rule",
-  "removeSortRule": "Remove",
   "titleExtractor": "Title Extractor",
   "titleExtractorSource": "Source",
   "titleExtractorPattern": "Pattern (regex)",

@@ -352,7 +352,7 @@ function DisplayOptions({
           <div className="flex items-center gap-2">
             <Checkbox
               id={`playlist-${index}-userSortable`}
-              checked={watch(`${prefix}.groupList.userSortable`) ?? false}
+              checked={watch(`${prefix}.groupList.userSortable`) ?? true}
               onCheckedChange={(checked) =>
                 setValue(`${prefix}.groupList.userSortable`, !!checked, { shouldDirty: true })
               }

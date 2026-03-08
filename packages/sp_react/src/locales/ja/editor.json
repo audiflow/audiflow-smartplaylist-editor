@@ -93,8 +93,6 @@
   "sortField_alphabetical": "アルファベット順",
   "sortOrder_ascending": "昇順",
   "sortOrder_descending": "降順",
-  "addSortRule": "ルールを追加",
-  "removeSortRule": "削除",
   "titleExtractor": "タイトル抽出器",
   "titleExtractorSource": "ソース",
   "titleExtractorPattern": "パターン（正規表現）",
