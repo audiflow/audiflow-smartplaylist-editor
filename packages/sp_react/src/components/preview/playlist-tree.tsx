@@ -165,7 +165,7 @@ function EpisodeList({ episodes }: { episodes: PreviewEpisode[] }) {
     <ul className="ml-4 space-y-0.5 text-sm text-muted-foreground">
       {episodes.map((ep) => (
         <li key={ep.id} className="flex items-center gap-2">
-          <span className="truncate">{ep.title}</span>
+          <span className="truncate" title={ep.title}>{ep.title}</span>
           {ep.publishedAt && (
             <span className="text-xs text-muted-foreground/60 shrink-0">
               {new Date(ep.publishedAt).toLocaleDateString()}
