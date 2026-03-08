@@ -38,13 +38,13 @@ describe('groupByYear', () => {
     });
   });
 
-  describe('firstEpisode mode', () => {
+  describe('pinToYear mode', () => {
     it('places group under year of its first episode', () => {
       const groups = [
         makeGroup('g1', [ep2024a, ep2024b, ep2025a]),
         makeGroup('g2', [ep2025a, ep2025b]),
       ];
-      const result = groupByYear(groups, 'firstEpisode')!;
+      const result = groupByYear(groups, 'pinToYear')!;
       const years = result.map((y) => y.year);
       expect(years).toEqual([2025, 2024]);
 
@@ -62,16 +62,16 @@ describe('groupByYear', () => {
     it('uses year 0 for episodes without publishedAt', () => {
       const epNoDate = makeEpisode({ id: 10, publishedAt: null });
       const groups = [makeGroup('g1', [epNoDate])];
-      const result = groupByYear(groups, 'firstEpisode')!;
+      const result = groupByYear(groups, 'pinToYear')!;
       expect(result).toHaveLength(1);
       expect(result[0].year).toBe(0);
     });
   });
 
-  describe('perEpisode mode', () => {
+  describe('splitByYear mode', () => {
     it('duplicates group across years with filtered counts and episodes', () => {
       const groups = [makeGroup('g1', [ep2024a, ep2024b, ep2025a])];
-      const result = groupByYear(groups, 'perEpisode')!;
+      const result = groupByYear(groups, 'splitByYear')!;
       const years = result.map((y) => y.year);
       expect(years).toEqual([2025, 2024]);
 
@@ -93,7 +93,7 @@ describe('groupByYear', () => {
         makeGroup('g1', [ep2024a, ep2025a]),
         makeGroup('g2', [ep2025a, ep2025b]),
       ];
-      const result = groupByYear(groups, 'perEpisode')!;
+      const result = groupByYear(groups, 'splitByYear')!;
 
       const y2025 = result.find((y) => y.year === 2025)!;
       expect(y2025.entries).toHaveLength(2);
@@ -109,7 +109,7 @@ describe('groupByYear', () => {
       makeGroup('g1', [ep2024a]),
       makeGroup('g2', [ep2025a]),
     ];
-    const result = groupByYear(groups, 'firstEpisode')!;
+    const result = groupByYear(groups, 'pinToYear')!;
     expect(result[0].year).toBe(2025);
     expect(result[1].year).toBe(2024);
   });

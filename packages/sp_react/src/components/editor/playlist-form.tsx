@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
@@ -19,7 +19,7 @@ import { RegexTester } from '@/components/editor/regex-tester.tsx';
 import { GroupsForm } from '@/components/editor/groups-form.tsx';
 import { SortForm } from '@/components/editor/sort-form.tsx';
 import { ExtractorsForm } from '@/components/editor/extractors-form.tsx';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 const RESOLVER_TYPES = [
   'rss',
@@ -28,7 +28,7 @@ const RESOLVER_TYPES = [
   'titleAppearanceOrder',
 ] as const;
 
-const CONTENT_TYPES = ['episodes', 'groups'] as const;
+const PLAYLIST_STRUCTURES = ['split', 'grouped'] as const;
 
 interface PlaylistFormProps {
   index: number;
@@ -38,12 +38,7 @@ interface PlaylistFormProps {
 const EMPTY_TITLES: readonly string[] = [];
 
 export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
-  const { watch } = useFormContext<PatternConfig>();
   const prefix = `playlists.${index}` as const;
-
-  const titleFilter = watch(`${prefix}.titleFilter`) ?? '';
-  const excludeFilter = watch(`${prefix}.excludeFilter`) ?? '';
-  const requireFilter = watch(`${prefix}.requireFilter`) ?? '';
 
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
@@ -58,10 +53,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
       <StructureSettings index={index} prefix={prefix} />
 
       <FilterSettings
-        prefix={prefix}
-        titleFilter={titleFilter}
-        excludeFilter={excludeFilter}
-        requireFilter={requireFilter}
+        index={index}
         episodeTitles={episodeTitles}
       />
 
@@ -127,38 +119,107 @@ function BasicSettings({
 }
 
 function FilterSettings({
-  prefix,
-  titleFilter,
-  excludeFilter,
-  requireFilter,
+  index,
   episodeTitles,
 }: {
-  prefix: `playlists.${number}`;
-  titleFilter: string;
-  excludeFilter: string;
-  requireFilter: string;
+  index: number;
   episodeTitles: readonly string[];
 }) {
-  const { register } = useFormContext<PatternConfig>();
+  const { register, watch, control } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
+
+  const { fields: requireFields, append: appendRequire, remove: removeRequire } = useFieldArray({
+    control,
+    name: `playlists.${index}.episodeFilters.require` as `playlists.${number}.episodeFilters.require`,
+  });
+
+  const { fields: excludeFields, append: appendExclude, remove: removeExclude } = useFieldArray({
+    control,
+    name: `playlists.${index}.episodeFilters.exclude` as `playlists.${number}.episodeFilters.exclude`,
+  });
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-medium">{t('filters')}</h4>
-      <div className="space-y-1.5">
-        <HintLabel hint="titleFilter">{t('titleFilter')}</HintLabel>
-        <Input {...register(`${prefix}.titleFilter`)} placeholder={t('placeholderRegex')} />
-        {titleFilter && <RegexTester pattern={titleFilter} variant="include" titles={episodeTitles} />}
+      <h4 className="text-sm font-medium">{t('episodeFilters')}</h4>
+
+      <div className="space-y-3">
+        <h5 className="text-xs font-medium text-muted-foreground">{t('requireFilters')}</h5>
+        {requireFields.map((field, filterIndex) => {
+          const titleValue = watch(`playlists.${index}.episodeFilters.require.${filterIndex}.title`) ?? '';
+          return (
+            <div key={field.id} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 space-y-1.5">
+                  <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
+                  <Input
+                    {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.title`)}
+                    placeholder={t('placeholderRegex')}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-5"
+                  onClick={() => removeRequire(filterIndex)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">{t('removeFilter')}</span>
+                </Button>
+              </div>
+              {titleValue && <RegexTester pattern={titleValue} variant="include" titles={episodeTitles} />}
+            </div>
+          );
+        })}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => appendRequire({ title: '' })}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {t('addFilter')}
+        </Button>
       </div>
-      <div className="space-y-1.5">
-        <HintLabel hint="excludeFilter">{t('excludeFilter')}</HintLabel>
-        <Input {...register(`${prefix}.excludeFilter`)} placeholder={t('placeholderRegex')} />
-        {excludeFilter && <RegexTester pattern={excludeFilter} variant="exclude" titles={episodeTitles} />}
-      </div>
-      <div className="space-y-1.5">
-        <HintLabel hint="requireFilter">{t('requireFilter')}</HintLabel>
-        <Input {...register(`${prefix}.requireFilter`)} placeholder={t('placeholderRegex')} />
-        {requireFilter && <RegexTester pattern={requireFilter} variant="include" titles={episodeTitles} />}
+
+      <div className="space-y-3">
+        <h5 className="text-xs font-medium text-muted-foreground">{t('excludeFilters')}</h5>
+        {excludeFields.map((field, filterIndex) => {
+          const titleValue = watch(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`) ?? '';
+          return (
+            <div key={field.id} className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 space-y-1.5">
+                  <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
+                  <Input
+                    {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`)}
+                    placeholder={t('placeholderRegex')}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-5"
+                  onClick={() => removeExclude(filterIndex)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">{t('removeFilter')}</span>
+                </Button>
+              </div>
+              {titleValue && <RegexTester pattern={titleValue} variant="exclude" titles={episodeTitles} />}
+            </div>
+          );
+        })}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => appendExclude({ title: '' })}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {t('addFilter')}
+        </Button>
       </div>
     </div>
   );
@@ -171,7 +232,7 @@ function StructureSettings({
   index: number;
   prefix: `playlists.${number}`;
 }) {
-  const { register, watch, setValue, control } = useFormContext<PatternConfig>();
+  const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
   const resolverType = watch(`${prefix}.resolverType`);
@@ -206,32 +267,24 @@ function StructureSettings({
         </div>
 
         <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-contentType`} hint="contentType">
-            {t('contentType')}
+          <HintLabel htmlFor={`playlist-${index}-playlistStructure`} hint="playlistStructure">
+            {t('playlistStructure')}
           </HintLabel>
-          <Controller
-            control={control}
-            name={`${prefix}.contentType`}
-            render={({ field }) => (
-              <Select
-                value={field.value ?? 'episodes'}
-                onValueChange={(val) => {
-                  field.onChange(val === 'episodes' ? null : val);
-                }}
-              >
-                <SelectTrigger id={`playlist-${index}-contentType`} className="w-full">
-                  <SelectValue placeholder={t('contentType_episodes')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONTENT_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {t(`contentType_${type}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <Select
+            value={watch(`${prefix}.playlistStructure`) ?? 'grouped'}
+            onValueChange={(val) => setValue(`${prefix}.playlistStructure`, val, { shouldDirty: true })}
+          >
+            <SelectTrigger id={`playlist-${index}-playlistStructure`} className="w-full">
+              <SelectValue placeholder={t('playlistStructure_grouped')} />
+            </SelectTrigger>
+            <SelectContent>
+              {PLAYLIST_STRUCTURES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {t(`playlistStructure_${type}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {resolverType === 'rss' && (
@@ -266,7 +319,7 @@ function DisplayOptions({
   index: number;
   prefix: `playlists.${number}`;
 }) {
-  const { watch, setValue, control } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
   return (
@@ -276,70 +329,64 @@ function DisplayOptions({
         <div className="flex gap-6">
           <div className="flex items-center gap-2">
             <Checkbox
-              id={`playlist-${index}-episodeYearHeaders`}
-              checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
+              id={`playlist-${index}-showYearHeaders`}
+              checked={watch(`${prefix}.episodeList.showYearHeaders`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.episodeYearHeaders`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.episodeList.showYearHeaders`, !!checked, { shouldDirty: true })
               }
             />
-            <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint="episodeYearHeaders">
-              {t('episodeYearHeaders')}
+            <HintLabel htmlFor={`playlist-${index}-showYearHeaders`} hint="showYearHeaders">
+              {t('showYearHeaders')}
             </HintLabel>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
               id={`playlist-${index}-showDateRange`}
-              checked={watch(`${prefix}.showDateRange`) ?? false}
+              checked={watch(`${prefix}.groupList.showDateRange`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.showDateRange`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.groupList.showDateRange`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
-              id={`playlist-${index}-showSortOrderToggle`}
-              checked={watch(`${prefix}.showSortOrderToggle`) ?? false}
+              id={`playlist-${index}-userSortable`}
+              checked={watch(`${prefix}.groupList.userSortable`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.showSortOrderToggle`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.groupList.userSortable`, !!checked, { shouldDirty: true })
               }
             />
-            <HintLabel htmlFor={`playlist-${index}-showSortOrderToggle`} hint="showSortOrderToggle">{t('showSortOrderToggle')}</HintLabel>
+            <HintLabel htmlFor={`playlist-${index}-userSortable`} hint="userSortable">{t('userSortable')}</HintLabel>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
-              id={`playlist-${index}-showSeasonNumber`}
-              checked={watch(`${prefix}.showSeasonNumber`) ?? false}
+              id={`playlist-${index}-prependSeasonNumber`}
+              checked={watch(`${prefix}.prependSeasonNumber`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.showSeasonNumber`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.prependSeasonNumber`, !!checked, { shouldDirty: true })
               }
             />
-            <HintLabel htmlFor={`playlist-${index}-showSeasonNumber`} hint="showSeasonNumber">{t('showSeasonNumber')}</HintLabel>
+            <HintLabel htmlFor={`playlist-${index}-prependSeasonNumber`} hint="prependSeasonNumber">{t('prependSeasonNumber')}</HintLabel>
           </div>
         </div>
         <div className="space-y-2">
-          <HintLabel htmlFor={`${prefix}.yearHeaderMode`} hint="yearHeaderMode">
-            {t('yearHeaderMode')}
+          <HintLabel htmlFor={`${prefix}.groupList.yearBinding`} hint="yearBinding">
+            {t('yearBinding')}
           </HintLabel>
-          <Controller
-            name={`${prefix}.yearHeaderMode`}
-            control={control}
-            render={({ field }) => (
-              <Select
-                value={field.value ?? 'none'}
-                onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">{t('yearHeaderMode_none')}</SelectItem>
-                  <SelectItem value="firstEpisode">{t('yearHeaderMode_firstEpisode')}</SelectItem>
-                  <SelectItem value="perEpisode">{t('yearHeaderMode_perEpisode')}</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <Select
+            value={watch(`${prefix}.groupList.yearBinding`) ?? 'none'}
+            onValueChange={(v) => setValue(`${prefix}.groupList.yearBinding`, v === 'none' ? undefined : v as YearBinding, { shouldDirty: true })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t('yearBinding_none')}</SelectItem>
+              <SelectItem value="pinToYear">{t('yearBinding_pinToYear')}</SelectItem>
+              <SelectItem value="splitByYear">{t('yearBinding_splitByYear')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

@@ -112,26 +112,26 @@ export function GroupDefCard({
         <div className="flex gap-6">
           <div className="flex items-center gap-2">
             <Checkbox
-              id={`group-${playlistIndex}-${groupIndex}-episodeYearHeaders`}
-              checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
+              id={`group-${playlistIndex}-${groupIndex}-showYearHeaders`}
+              checked={watch(`${prefix}.episodeList.showYearHeaders`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.episodeYearHeaders`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.episodeList.showYearHeaders`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel
-              htmlFor={`group-${playlistIndex}-${groupIndex}-episodeYearHeaders`}
-              hint="episodeYearHeaders"
+              htmlFor={`group-${playlistIndex}-${groupIndex}-showYearHeaders`}
+              hint="showYearHeaders"
             >
-              {t('episodeYearHeaders')}
+              {t('showYearHeaders')}
             </HintLabel>
           </div>
 
           <div className="flex items-center gap-2">
             <Checkbox
               id={`group-${playlistIndex}-${groupIndex}-showDateRange`}
-              checked={watch(`${prefix}.showDateRange`) ?? false}
+              checked={watch(`${prefix}.display.showDateRange`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.showDateRange`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.display.showDateRange`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel
