@@ -28,6 +28,8 @@ const RESOLVER_TYPES = [
   'titleAppearanceOrder',
 ] as const;
 
+const CONTENT_TYPES = ['episodes', 'groups'] as const;
+
 interface PlaylistFormProps {
   index: number;
   onRemove: () => void;
@@ -53,6 +55,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   return (
     <div className="space-y-4">
       <BasicSettings index={index} prefix={prefix} />
+      <StructureSettings index={index} prefix={prefix} />
 
       <FilterSettings
         prefix={prefix}
@@ -62,7 +65,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
         episodeTitles={episodeTitles}
       />
 
-      <BooleanSettings index={index} prefix={prefix} />
+      <DisplayOptions index={index} prefix={prefix} />
 
       <SortForm index={index} />
       <GroupsForm index={index} />
@@ -82,7 +85,7 @@ function BasicSettings({
   index: number;
   prefix: `playlists.${number}`;
 }) {
-  const { register, watch, setValue } = useFormContext<PatternConfig>();
+  const { register } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
   return (
@@ -104,28 +107,6 @@ function BasicSettings({
             {...register(`${prefix}.displayName`)}
             placeholder={t('placeholderDisplayName')}
           />
-        </div>
-        <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-resolverType`} hint="resolverType">{t('resolverType')}</HintLabel>
-          <Select
-            value={watch(`${prefix}.resolverType`) ?? ''}
-            onValueChange={(val) => setValue(`${prefix}.resolverType`, val, { shouldDirty: true })}
-          >
-            <SelectTrigger id={`playlist-${index}-resolverType`}>
-              <SelectValue placeholder={t('selectResolver')} />
-            </SelectTrigger>
-            <SelectContent className="min-w-[280px]">
-              {RESOLVER_TYPES.map((type) => (
-                <SelectItem
-                  key={type}
-                  value={type}
-                  description={t(`resolverDesc_${type}`)}
-                >
-                  {t(`resolverLabel_${type}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
         <div className="space-y-1.5">
           <HintLabel htmlFor={`playlist-${index}-priority`} hint="priority">{t('priority')}</HintLabel>
@@ -183,7 +164,102 @@ function FilterSettings({
   );
 }
 
-function BooleanSettings({
+function StructureSettings({
+  index,
+  prefix,
+}: {
+  index: number;
+  prefix: `playlists.${number}`;
+}) {
+  const { register, watch, setValue, control } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
+
+  const resolverType = watch(`${prefix}.resolverType`);
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-medium">{t('structureSettings')}</h4>
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <HintLabel htmlFor={`playlist-${index}-resolverType`} hint="resolverType">
+            {t('resolverType')}
+          </HintLabel>
+          <Select
+            value={resolverType ?? ''}
+            onValueChange={(val) => setValue(`${prefix}.resolverType`, val, { shouldDirty: true })}
+          >
+            <SelectTrigger id={`playlist-${index}-resolverType`}>
+              <SelectValue placeholder={t('selectResolver')} />
+            </SelectTrigger>
+            <SelectContent className="min-w-[280px]">
+              {RESOLVER_TYPES.map((type) => (
+                <SelectItem
+                  key={type}
+                  value={type}
+                  description={t(`resolverDesc_${type}`)}
+                >
+                  {t(`resolverLabel_${type}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <HintLabel htmlFor={`playlist-${index}-contentType`} hint="contentType">
+            {t('contentType')}
+          </HintLabel>
+          <Controller
+            control={control}
+            name={`${prefix}.contentType`}
+            render={({ field }) => (
+              <Select
+                value={field.value ?? 'episodes'}
+                onValueChange={(val) => {
+                  field.onChange(val === 'episodes' ? null : val);
+                }}
+              >
+                <SelectTrigger id={`playlist-${index}-contentType`} className="w-full">
+                  <SelectValue placeholder={t('contentType_episodes')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {CONTENT_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {t(`contentType_${type}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+
+        {resolverType === 'rss' && (
+          <div className="space-y-1.5">
+            <HintLabel
+              htmlFor={`playlist-${index}-nullSeasonGroupKey`}
+              hint="nullSeasonGroupKey"
+            >
+              {t('nullSeasonGroupKey')}
+            </HintLabel>
+            <Input
+              id={`playlist-${index}-nullSeasonGroupKey`}
+              type="number"
+              {...register(`${prefix}.nullSeasonGroupKey`, {
+                setValueAs: (v) =>
+                  v === '' || v === null || v === undefined
+                    ? null
+                    : Number(v),
+              })}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DisplayOptions({
   index,
   prefix,
 }: {
@@ -194,74 +270,77 @@ function BooleanSettings({
   const { t } = useTranslation('editor');
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-6">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`playlist-${index}-episodeYearHeaders`}
-            checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
-            onCheckedChange={(checked) =>
-              setValue(`${prefix}.episodeYearHeaders`, !!checked, { shouldDirty: true })
-            }
-          />
-          <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint="episodeYearHeaders">
-            {t('episodeYearHeaders')}
+    <div className="space-y-3">
+      <h4 className="text-sm font-medium">{t('displayOptions')}</h4>
+      <div className="space-y-4">
+        <div className="flex gap-6">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`playlist-${index}-episodeYearHeaders`}
+              checked={watch(`${prefix}.episodeYearHeaders`) ?? false}
+              onCheckedChange={(checked) =>
+                setValue(`${prefix}.episodeYearHeaders`, !!checked, { shouldDirty: true })
+              }
+            />
+            <HintLabel htmlFor={`playlist-${index}-episodeYearHeaders`} hint="episodeYearHeaders">
+              {t('episodeYearHeaders')}
+            </HintLabel>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`playlist-${index}-showDateRange`}
+              checked={watch(`${prefix}.showDateRange`) ?? false}
+              onCheckedChange={(checked) =>
+                setValue(`${prefix}.showDateRange`, !!checked, { shouldDirty: true })
+              }
+            />
+            <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`playlist-${index}-showSortOrderToggle`}
+              checked={watch(`${prefix}.showSortOrderToggle`) ?? false}
+              onCheckedChange={(checked) =>
+                setValue(`${prefix}.showSortOrderToggle`, !!checked, { shouldDirty: true })
+              }
+            />
+            <HintLabel htmlFor={`playlist-${index}-showSortOrderToggle`} hint="showSortOrderToggle">{t('showSortOrderToggle')}</HintLabel>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`playlist-${index}-showSeasonNumber`}
+              checked={watch(`${prefix}.showSeasonNumber`) ?? false}
+              onCheckedChange={(checked) =>
+                setValue(`${prefix}.showSeasonNumber`, !!checked, { shouldDirty: true })
+              }
+            />
+            <HintLabel htmlFor={`playlist-${index}-showSeasonNumber`} hint="showSeasonNumber">{t('showSeasonNumber')}</HintLabel>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <HintLabel htmlFor={`${prefix}.yearHeaderMode`} hint="yearHeaderMode">
+            {t('yearHeaderMode')}
           </HintLabel>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`playlist-${index}-showDateRange`}
-            checked={watch(`${prefix}.showDateRange`) ?? false}
-            onCheckedChange={(checked) =>
-              setValue(`${prefix}.showDateRange`, !!checked, { shouldDirty: true })
-            }
+          <Controller
+            name={`${prefix}.yearHeaderMode`}
+            control={control}
+            render={({ field }) => (
+              <Select
+                value={field.value ?? 'none'}
+                onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('yearHeaderMode_none')}</SelectItem>
+                  <SelectItem value="firstEpisode">{t('yearHeaderMode_firstEpisode')}</SelectItem>
+                  <SelectItem value="perEpisode">{t('yearHeaderMode_perEpisode')}</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           />
-          <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>
         </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`playlist-${index}-showSortOrderToggle`}
-            checked={watch(`${prefix}.showSortOrderToggle`) ?? false}
-            onCheckedChange={(checked) =>
-              setValue(`${prefix}.showSortOrderToggle`, !!checked, { shouldDirty: true })
-            }
-          />
-          <HintLabel htmlFor={`playlist-${index}-showSortOrderToggle`} hint="showSortOrderToggle">{t('showSortOrderToggle')}</HintLabel>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`playlist-${index}-showSeasonNumber`}
-            checked={watch(`${prefix}.showSeasonNumber`) ?? false}
-            onCheckedChange={(checked) =>
-              setValue(`${prefix}.showSeasonNumber`, !!checked, { shouldDirty: true })
-            }
-          />
-          <HintLabel htmlFor={`playlist-${index}-showSeasonNumber`} hint="showSeasonNumber">{t('showSeasonNumber')}</HintLabel>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <HintLabel htmlFor={`${prefix}.yearHeaderMode`} hint="yearHeaderMode">
-          {t('yearHeaderMode')}
-        </HintLabel>
-        <Controller
-          name={`${prefix}.yearHeaderMode`}
-          control={control}
-          render={({ field }) => (
-            <Select
-              value={field.value ?? 'none'}
-              onValueChange={(v) => field.onChange(v === 'none' ? null : v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t('yearHeaderMode_none')}</SelectItem>
-                <SelectItem value="firstEpisode">{t('yearHeaderMode_firstEpisode')}</SelectItem>
-                <SelectItem value="perEpisode">{t('yearHeaderMode_perEpisode')}</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
       </div>
     </div>
   );

@@ -136,5 +136,8 @@
   "reorderGroupsTitle": "Reorder Groups",
   "reorderGroupsDescription": "Drag groups to change their order. Group order determines matching priority.",
   "moveGroupUp": "Move group up",
-  "moveGroupDown": "Move group down"
+  "moveGroupDown": "Move group down",
+  "structureSettings": "Structure",
+  "displayOptions": "Display Options",
+  "displayOverrides": "Display Overrides"
 }

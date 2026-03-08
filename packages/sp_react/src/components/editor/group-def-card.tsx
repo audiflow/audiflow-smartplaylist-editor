@@ -105,6 +105,10 @@ export function GroupDefCard({
           />
         </div>
 
+        <h5 className="text-xs font-medium text-muted-foreground">
+          {t('displayOverrides')}
+        </h5>
+
         <div className="flex gap-6">
           <div className="flex items-center gap-2">
             <Checkbox
