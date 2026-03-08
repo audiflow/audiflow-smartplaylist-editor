@@ -1,23 +1,23 @@
 /// Whether a smart playlist directly contains episodes or groups.
-enum SmartPlaylistContentType {
+enum PlaylistStructure {
   /// Playlist directly contains an episode list.
-  episodes,
+  split,
 
   /// Playlist contains groups; tapping a group opens its episode list.
-  groups,
+  grouped,
 }
 
 /// How year headers are applied to groups or episodes.
-enum YearHeaderMode {
+enum YearBinding {
   /// No year headers.
   none,
 
-  /// Group's year = first episode's publishedAt year. Group appears once.
-  firstEpisode,
+  /// Group is pinned to its first episode's year. Group appears once.
+  pinToYear,
 
   /// Group appears under each year it has episodes in.
   /// Tapping shows only that year's episodes.
-  perEpisode,
+  splitByYear,
 }
 
 /// A group within a smart playlist containing episodes.
@@ -29,7 +29,7 @@ final class SmartPlaylistGroup {
     this.sortKey = 0,
     this.thumbnailUrl,
     this.yearOverride,
-    this.episodeYearHeaders,
+    this.showYearHeaders,
     this.showDateRange = false,
     this.earliestDate,
     this.latestDate,
@@ -51,13 +51,13 @@ final class SmartPlaylistGroup {
   /// Thumbnail URL from the latest episode in this group.
   final String? thumbnailUrl;
 
-  /// Per-group override of the parent playlist's yearHeaderMode.
-  final YearHeaderMode? yearOverride;
+  /// Per-group override of the parent playlist's yearBinding.
+  final YearBinding? yearOverride;
 
-  /// Per-group override of the parent playlist's episodeYearHeaders.
+  /// Per-group override of the parent playlist's showYearHeaders.
   ///
   /// When null, inherits the playlist-level setting.
-  final bool? episodeYearHeaders;
+  final bool? showYearHeaders;
 
   /// Whether this group shows date range and duration metadata.
   final bool showDateRange;
@@ -81,8 +81,8 @@ final class SmartPlaylistGroup {
     List<int>? episodeIds,
     int? sortKey,
     String? thumbnailUrl,
-    YearHeaderMode? yearOverride,
-    bool? episodeYearHeaders,
+    YearBinding? yearOverride,
+    bool? showYearHeaders,
     bool? showDateRange,
     DateTime? earliestDate,
     DateTime? latestDate,
@@ -95,7 +95,7 @@ final class SmartPlaylistGroup {
       sortKey: sortKey ?? this.sortKey,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
       yearOverride: yearOverride ?? this.yearOverride,
-      episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
+      showYearHeaders: showYearHeaders ?? this.showYearHeaders,
       showDateRange: showDateRange ?? this.showDateRange,
       earliestDate: earliestDate ?? this.earliestDate,
       latestDate: latestDate ?? this.latestDate,
@@ -112,9 +112,9 @@ final class SmartPlaylist {
     required this.sortKey,
     required this.episodeIds,
     this.thumbnailUrl,
-    this.contentType = SmartPlaylistContentType.episodes,
-    this.yearHeaderMode = YearHeaderMode.none,
-    this.episodeYearHeaders = false,
+    this.playlistStructure = PlaylistStructure.split,
+    this.yearBinding = YearBinding.none,
+    this.showYearHeaders = false,
     this.showDateRange = false,
     this.groups,
   });
@@ -135,18 +135,18 @@ final class SmartPlaylist {
   final String? thumbnailUrl;
 
   /// Whether this playlist contains episodes directly or groups.
-  final SmartPlaylistContentType contentType;
+  final PlaylistStructure playlistStructure;
 
   /// How year headers are applied in the group list view.
-  final YearHeaderMode yearHeaderMode;
+  final YearBinding yearBinding;
 
   /// Whether episodes within groups show year headers.
-  final bool episodeYearHeaders;
+  final bool showYearHeaders;
 
   /// Whether group cards should display a date range.
   final bool showDateRange;
 
-  /// Groups within this playlist (when contentType == groups).
+  /// Groups within this playlist (when playlistStructure == grouped).
   final List<SmartPlaylistGroup>? groups;
 
   /// Number of episodes in this smart playlist.
@@ -159,9 +159,9 @@ final class SmartPlaylist {
     int? sortKey,
     List<int>? episodeIds,
     String? thumbnailUrl,
-    SmartPlaylistContentType? contentType,
-    YearHeaderMode? yearHeaderMode,
-    bool? episodeYearHeaders,
+    PlaylistStructure? playlistStructure,
+    YearBinding? yearBinding,
+    bool? showYearHeaders,
     bool? showDateRange,
     List<SmartPlaylistGroup>? groups,
   }) {
@@ -171,9 +171,9 @@ final class SmartPlaylist {
       sortKey: sortKey ?? this.sortKey,
       episodeIds: episodeIds ?? this.episodeIds,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
-      contentType: contentType ?? this.contentType,
-      yearHeaderMode: yearHeaderMode ?? this.yearHeaderMode,
-      episodeYearHeaders: episodeYearHeaders ?? this.episodeYearHeaders,
+      playlistStructure: playlistStructure ?? this.playlistStructure,
+      yearBinding: yearBinding ?? this.yearBinding,
+      showYearHeaders: showYearHeaders ?? this.showYearHeaders,
       showDateRange: showDateRange ?? this.showDateRange,
       groups: groups ?? this.groups,
     );
