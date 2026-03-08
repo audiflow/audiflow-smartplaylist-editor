@@ -185,7 +185,7 @@ function StructureSettings({
             {t('resolverType')}
           </HintLabel>
           <Select
-            value={watch(`${prefix}.resolverType`) ?? ''}
+            value={resolverType ?? ''}
             onValueChange={(val) => setValue(`${prefix}.resolverType`, val, { shouldDirty: true })}
           >
             <SelectTrigger id={`playlist-${index}-resolverType`}>
