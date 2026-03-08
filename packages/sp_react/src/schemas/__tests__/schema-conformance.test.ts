@@ -4,13 +4,12 @@ import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
-  smartPlaylistSortSpecSchema,
-  contentTypeSchema,
-  yearHeaderModeSchema,
+  playlistStructureSchema,
+  yearBindingSchema,
   resolverTypeSchema,
   sortFieldSchema,
   sortOrderSchema,
-  sortConditionSchema,
+  episodeSortFieldSchema,
 } from '../config-schema';
 
 // Load vendored playlist-definition.schema.json from sp_shared
@@ -48,14 +47,15 @@ describe('Zod enums match vendored playlist-definition schema', () => {
     expect(resolverTypeSchema.options).toEqual(schemaValues);
   });
 
-  it('contentTypes match schema', () => {
-    const schemaValues = extractEnum(topProps.contentType);
-    expect(contentTypeSchema.options).toEqual(schemaValues);
+  it('playlistStructure values match schema', () => {
+    const schemaValues = extractEnum(topProps.playlistStructure);
+    expect(playlistStructureSchema.options).toEqual(schemaValues);
   });
 
-  it('yearHeaderModes match schema', () => {
-    const schemaValues = extractEnum(topProps.yearHeaderMode);
-    expect(yearHeaderModeSchema.options).toEqual(schemaValues);
+  it('yearBinding values match schema', () => {
+    const yearBinding = defs.YearBinding as Record<string, unknown>;
+    const schemaValues = extractEnum(yearBinding);
+    expect(yearBindingSchema.options).toEqual(schemaValues);
   });
 
   it('sortFields match schema', () => {
@@ -70,27 +70,20 @@ describe('Zod enums match vendored playlist-definition schema', () => {
   });
 
   it('sortOrders match schema', () => {
-    const sortRule = defs.SortRule as Record<string, unknown>;
-    const props = sortRule.properties as Record<
-      string,
-      Record<string, unknown>
-    >;
-    const order = props.order;
-    const schemaValues = extractEnum(order);
+    const sortOrder = defs.SortOrder as Record<string, unknown>;
+    const schemaValues = extractEnum(sortOrder);
     expect(sortOrderSchema.options).toEqual(schemaValues);
   });
 
-  it('sortConditionTypes match schema', () => {
-    const sortCondition = defs.SortCondition;
-    const typeField = (
-      sortCondition.properties as Record<string, Record<string, unknown>>
-    ).type;
-    const schemaValues = extractEnum(typeField);
-    // Zod discriminated union options come from the literals
-    const zodValues = sortConditionSchema.options.map(
-      (opt) => (opt.shape.type as { value: string }).value,
-    );
-    expect(zodValues).toEqual(schemaValues);
+  it('episodeSortFields match schema', () => {
+    const episodeSortRule = defs.EpisodeSortRule as Record<string, unknown>;
+    const props = episodeSortRule.properties as Record<
+      string,
+      Record<string, unknown>
+    >;
+    const field = props.field;
+    const schemaValues = extractEnum(field);
+    expect(episodeSortFieldSchema.options).toEqual(schemaValues);
   });
 });
 
@@ -102,6 +95,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
       id: 'main',
       displayName: 'Main Episodes',
       resolverType: 'rss',
+      playlistStructure: 'grouped',
     });
     const valid = validate(parsed);
     expect(validate.errors).toBeNull();
@@ -113,31 +107,27 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
       id: 'seasons',
       displayName: 'Seasons',
       resolverType: 'rss',
+      playlistStructure: 'grouped',
       priority: 100,
-      contentType: 'groups',
-      yearHeaderMode: 'firstEpisode',
-      episodeYearHeaders: true,
-      showDateRange: true,
-      showSortOrderToggle: true,
-      showSeasonNumber: true,
-      titleFilter: 'S\\d+',
-      excludeFilter: 'Trailer',
-      requireFilter: '\\[.+\\]',
+      prependSeasonNumber: true,
+      episodeFilters: {
+        require: [{ title: 'S\\d+' }],
+        exclude: [{ title: 'Trailer' }],
+      },
       nullSeasonGroupKey: 0,
       groups: [
         { id: 'main', displayName: 'Main', pattern: '^Main\\b' },
         { id: 'other', displayName: 'Other' },
       ],
-      customSort: {
-        type: 'composite',
-        rules: [
-          {
-            field: 'playlistNumber',
-            order: 'descending',
-            condition: { type: 'sortKeyGreaterThan', value: 0 },
-          },
-          { field: 'newestEpisodeDate', order: 'descending' },
-        ],
+      groupList: {
+        yearBinding: 'pinToYear',
+        userSortable: true,
+        showDateRange: true,
+        sort: { field: 'playlistNumber', order: 'descending' },
+      },
+      episodeList: {
+        showYearHeaders: true,
+        sort: { field: 'publishedAt', order: 'ascending' },
       },
       titleExtractor: {
         source: 'title',
@@ -145,7 +135,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
         group: 1,
         template: 'Season {value}',
       },
-      smartPlaylistEpisodeExtractor: {
+      episodeExtractor: {
         source: 'title',
         pattern: '\\[(\\d+)-(\\d+)\\]',
         seasonGroup: 1,
@@ -154,21 +144,6 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
       },
     });
     const valid = validate(parsed);
-    expect(validate.errors).toBeNull();
-    expect(valid).toBe(true);
-  });
-
-  it('sort spec validates within playlist', () => {
-    const sort = smartPlaylistSortSpecSchema.parse({
-      rules: [{ field: 'alphabetical', order: 'ascending' }],
-    });
-    const playlist = {
-      id: 'p1',
-      displayName: 'P1',
-      resolverType: 'rss',
-      customSort: sort,
-    };
-    const valid = validate(playlist);
     expect(validate.errors).toBeNull();
     expect(valid).toBe(true);
   });

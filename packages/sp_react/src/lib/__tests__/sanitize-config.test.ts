@@ -7,9 +7,10 @@ describe('sanitizeConfig', () => {
       id: 'test',
       displayName: 'Test',
       resolverType: 'year',
-      titleFilter: '',
-      excludeFilter: '',
-      requireFilter: '',
+      playlistStructure: 'grouped',
+      episodeFilters: {
+        require: [{ title: '' }],
+      },
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
@@ -17,40 +18,37 @@ describe('sanitizeConfig', () => {
     expect(result.id).toBe('test');
     expect(result.displayName).toBe('Test');
     expect(result.resolverType).toBe('year');
-    expect(result).not.toHaveProperty('titleFilter');
-    expect(result).not.toHaveProperty('excludeFilter');
-    expect(result).not.toHaveProperty('requireFilter');
+    expect(result.playlistStructure).toBe('grouped');
   });
 
   it('removes keys with null values', () => {
     const config = {
       id: 'test',
-      titleFilter: null,
-      customSort: null,
+      groupList: null,
+      episodeList: null,
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
     expect(result.id).toBe('test');
-    expect(result).not.toHaveProperty('titleFilter');
-    expect(result).not.toHaveProperty('customSort');
+    expect(result).not.toHaveProperty('groupList');
+    expect(result).not.toHaveProperty('episodeList');
   });
 
   it('preserves non-empty strings', () => {
     const config = {
       id: 'test',
-      titleFilter: '^\\d+',
-      excludeFilter: 'bonus',
-      requireFilter: 'main',
-      contentType: 'groups',
+      playlistStructure: 'grouped',
+      episodeFilters: {
+        require: [{ title: '^\\d+' }],
+        exclude: [{ title: 'bonus' }],
+      },
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    expect(result.titleFilter).toBe('^\\d+');
-    expect(result.excludeFilter).toBe('bonus');
-    expect(result.requireFilter).toBe('main');
-    expect(result.contentType).toBe('groups');
+    expect(result.playlistStructure).toBe('grouped');
+    expect(result.episodeFilters).toBeDefined();
   });
 
   it('handles nested playlists array', () => {
@@ -61,14 +59,13 @@ describe('sanitizeConfig', () => {
           id: 'pl-1',
           displayName: 'Main',
           resolverType: 'year',
-          titleFilter: '',
-          excludeFilter: 'bonus',
+          playlistStructure: 'grouped',
         },
         {
           id: 'pl-2',
           displayName: 'Bonus',
           resolverType: 'year',
-          requireFilter: '',
+          playlistStructure: 'split',
         },
       ],
     };
@@ -78,67 +75,56 @@ describe('sanitizeConfig', () => {
     };
 
     expect(result.playlists).toHaveLength(2);
-    expect(result.playlists[0]).not.toHaveProperty('titleFilter');
-    expect(result.playlists[0].excludeFilter).toBe('bonus');
-    expect(result.playlists[1]).not.toHaveProperty('requireFilter');
+    expect(result.playlists[0].playlistStructure).toBe('grouped');
+    expect(result.playlists[1].playlistStructure).toBe('split');
   });
 
-  it('strips customSort with empty rules array', () => {
+  it('strips nested objects with only empty values', () => {
     const config = {
       id: 'pl-1',
-      displayName: 'Main',
-      resolverType: 'year',
-      customSort: { rules: [] },
+      groupList: {
+        sort: null,
+        yearBinding: '',
+      },
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    expect(result).not.toHaveProperty('customSort');
+    // groupList becomes an empty object after stripping, which is still a valid object
+    expect(result.groupList).toEqual({});
   });
 
-  it('preserves customSort with non-empty rules', () => {
+  it('preserves groupList with non-empty sort', () => {
     const config = {
       id: 'pl-1',
-      customSort: { rules: [{ field: 'playlistNumber', order: 'ascending' }] },
+      groupList: {
+        sort: { field: 'playlistNumber', order: 'ascending' },
+      },
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    expect(result.customSort).toEqual({
-      rules: [{ field: 'playlistNumber', order: 'ascending' }],
-    });
-  });
-
-  it('strips customSort inside nested playlists', () => {
-    const config = {
-      id: 'pattern-1',
-      playlists: [
-        { id: 'pl-1', customSort: { rules: [] } },
-        { id: 'pl-2', customSort: { rules: [{ field: 'progress', order: 'descending' }] } },
-      ],
-    };
-
-    const result = sanitizeConfig(config) as {
-      playlists: Record<string, unknown>[];
-    };
-
-    expect(result.playlists[0]).not.toHaveProperty('customSort');
-    expect(result.playlists[1].customSort).toEqual({
-      rules: [{ field: 'progress', order: 'descending' }],
+    expect(result.groupList).toEqual({
+      sort: { field: 'playlistNumber', order: 'ascending' },
     });
   });
 
   it('passes through non-string primitives unchanged', () => {
     const config = {
       priority: 0,
-      episodeYearHeaders: false,
-      showDateRange: true,
+      prependSeasonNumber: false,
+      groupList: {
+        showDateRange: true,
+        userSortable: false,
+      },
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
     expect(result.priority).toBe(0);
-    expect(result.episodeYearHeaders).toBe(false);
-    expect(result.showDateRange).toBe(true);
+    expect(result.prependSeasonNumber).toBe(false);
+    const groupList = result.groupList as Record<string, unknown>;
+    expect(groupList.showDateRange).toBe(true);
+    expect(groupList.userSortable).toBe(false);
   });
 });
