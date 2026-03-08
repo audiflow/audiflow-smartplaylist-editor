@@ -29,18 +29,19 @@ List<String> _extractEnum(Map<String, dynamic> property) {
 void main() {
   late Map<String, dynamic> playlistSchema;
   late Map<String, dynamic> defs;
+  late Map<String, dynamic> topProps;
   late Map<String, dynamic> indexSchema;
 
   setUpAll(() {
     playlistSchema = _loadPlaylistDefinitionSchema();
     defs = playlistSchema[r'$defs'] as Map<String, dynamic>;
+    topProps = playlistSchema['properties'] as Map<String, dynamic>;
     indexSchema = _loadPatternIndexSchema();
   });
 
   group('constants match vendored playlist-definition schema', () {
     test('resolverTypes match schema oneOf', () {
-      final props = playlistSchema['properties'] as Map<String, dynamic>;
-      final resolverType = props['resolverType'] as Map<String, dynamic>;
+      final resolverType = topProps['resolverType'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(resolverType);
       expect(
         SmartPlaylistSchemaConstants.validResolverTypes,
@@ -48,27 +49,26 @@ void main() {
       );
     });
 
-    test('contentTypes match schema enum', () {
-      final props = playlistSchema['properties'] as Map<String, dynamic>;
-      final contentType = props['contentType'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(contentType);
+    test('playlistStructures match schema oneOf', () {
+      final playlistStructure =
+          topProps['playlistStructure'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(playlistStructure);
       expect(
-        SmartPlaylistSchemaConstants.validContentTypes,
+        SmartPlaylistSchemaConstants.validPlaylistStructures,
         equals(schemaValues),
       );
     });
 
-    test('yearHeaderModes match schema enum', () {
-      final props = playlistSchema['properties'] as Map<String, dynamic>;
-      final yearHeaderMode = props['yearHeaderMode'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(yearHeaderMode);
+    test('yearBindings match schema \$defs/YearBinding oneOf', () {
+      final yearBinding = defs['YearBinding'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(yearBinding);
       expect(
-        SmartPlaylistSchemaConstants.validYearHeaderModes,
+        SmartPlaylistSchemaConstants.validYearBindings,
         equals(schemaValues),
       );
     });
 
-    test('sortFields match schema oneOf', () {
+    test('sortFields match schema SortRule field oneOf', () {
       final sortRule = defs['SortRule'] as Map<String, dynamic>;
       final props = sortRule['properties'] as Map<String, dynamic>;
       final field = props['field'] as Map<String, dynamic>;
@@ -79,24 +79,22 @@ void main() {
       );
     });
 
-    test('sortOrders match schema enum', () {
-      final sortRule = defs['SortRule'] as Map<String, dynamic>;
-      final props = sortRule['properties'] as Map<String, dynamic>;
-      final order = props['order'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(order);
+    test('episodeSortFields match schema EpisodeSortRule field oneOf', () {
+      final episodeSortRule = defs['EpisodeSortRule'] as Map<String, dynamic>;
+      final props = episodeSortRule['properties'] as Map<String, dynamic>;
+      final field = props['field'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(field);
       expect(
-        SmartPlaylistSchemaConstants.validSortOrders,
+        SmartPlaylistSchemaConstants.validEpisodeSortFields,
         equals(schemaValues),
       );
     });
 
-    test('sortConditionTypes match schema enum', () {
-      final sortCondition = defs['SortCondition'] as Map<String, dynamic>;
-      final props = sortCondition['properties'] as Map<String, dynamic>;
-      final type = props['type'] as Map<String, dynamic>;
-      final schemaValues = _extractEnum(type);
+    test('sortOrders match schema \$defs/SortOrder enum', () {
+      final sortOrder = defs['SortOrder'] as Map<String, dynamic>;
+      final schemaValues = _extractEnum(sortOrder);
       expect(
-        SmartPlaylistSchemaConstants.validSortConditionTypes,
+        SmartPlaylistSchemaConstants.validSortOrders,
         equals(schemaValues),
       );
     });
@@ -175,6 +173,7 @@ void main() {
         id: 'main',
         displayName: 'Main Episodes',
         resolverType: 'rss',
+        playlistStructure: 'split',
       );
       expect(validator.validatePlaylistDefinition(def.toJson()), isEmpty);
     });
@@ -184,42 +183,47 @@ void main() {
         id: 'seasons',
         displayName: 'Seasons',
         resolverType: 'rss',
+        playlistStructure: 'grouped',
         priority: 100,
-        contentType: 'groups',
-        yearHeaderMode: 'firstEpisode',
-        episodeYearHeaders: true,
-        showDateRange: true,
-        showSortOrderToggle: true,
-        titleFilter: r'S\d+',
-        excludeFilter: r'Trailer',
-        requireFilter: r'\[.+\]',
+        episodeFilters: const EpisodeFilters(
+          require: [EpisodeFilterEntry(title: r'S\d+')],
+          exclude: [EpisodeFilterEntry(title: r'Trailer')],
+        ),
         nullSeasonGroupKey: 0,
+        prependSeasonNumber: true,
+        groupList: const GroupListSettings(
+          yearBinding: 'pinToYear',
+          userSortable: true,
+          showDateRange: true,
+          sort: SmartPlaylistSortRule(
+            field: SmartPlaylistSortField.playlistNumber,
+            order: SortOrder.descending,
+          ),
+        ),
+        episodeList: const EpisodeListSettings(
+          showYearHeaders: true,
+          sort: EpisodeSortRule(
+            field: EpisodeSortField.publishedAt,
+            order: SortOrder.ascending,
+          ),
+        ),
         groups: [
           SmartPlaylistGroupDef(
             id: 'main',
             displayName: 'Main',
             pattern: r'^Main\b',
+            display: const GroupDefDisplay(showDateRange: true),
+            episodeList: const GroupDefEpisodeList(showYearHeaders: true),
           ),
           SmartPlaylistGroupDef(id: 'other', displayName: 'Other'),
         ],
-        customSort: SmartPlaylistSortSpec([
-          SmartPlaylistSortRule(
-            field: SmartPlaylistSortField.playlistNumber,
-            order: SortOrder.descending,
-            condition: SortKeyGreaterThan(0),
-          ),
-          SmartPlaylistSortRule(
-            field: SmartPlaylistSortField.newestEpisodeDate,
-            order: SortOrder.descending,
-          ),
-        ]),
         titleExtractor: SmartPlaylistTitleExtractor(
           source: 'title',
           pattern: r'\[(.+?)\]',
           group: 1,
           template: 'Season {value}',
         ),
-        smartPlaylistEpisodeExtractor: SmartPlaylistEpisodeExtractor(
+        episodeExtractor: SmartPlaylistEpisodeExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
           seasonGroup: 1,

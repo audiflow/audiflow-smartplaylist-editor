@@ -218,9 +218,7 @@ Future<Response> _handleSavePlaylist(
 
   // Strip null values: JSON Schema "type": "integer" rejects null,
   // but absent keys pass optional field validation.
-  // Also strip schema-invalid defaults (e.g. customSort with empty rules).
   final sanitized = _stripNulls(parsed) as Map<String, dynamic>;
-  _stripEmptyCustomSort(sanitized);
 
   // Validate the playlist directly against the playlist-definition schema
   final errors = validator.validatePlaylistDefinition(sanitized);
@@ -547,7 +545,7 @@ List<SimpleEpisodeData> _enrichEpisodes(
   List<SimpleEpisodeData> episodes,
 ) {
   final extractor = config.playlists
-      .map((d) => d.smartPlaylistEpisodeExtractor)
+      .map((d) => d.episodeExtractor)
       .nonNulls
       .firstOrNull;
   if (extractor == null) return episodes;
@@ -669,7 +667,7 @@ Map<String, dynamic> _serializePlaylist(
     'sortKey': playlist.sortKey,
     'resolverType': resolverType,
     'episodeCount': playlist.episodeCount,
-    'yearHeaderMode': playlist.yearHeaderMode.name,
+    'yearBinding': playlist.yearBinding.name,
     if (playlist.groups != null)
       'groups': playlist.groups!
           .map(
@@ -759,19 +757,6 @@ Map<String, dynamic>? _serializeEpisode(
     if (extractedDisplayName != null)
       'extractedDisplayName': extractedDisplayName,
   };
-}
-
-/// Removes `customSort` when its `rules` array is empty.
-/// Schema requires `minItems: 1` on rules, but the form may send an
-/// empty array when sort is disabled or content type is not "groups".
-void _stripEmptyCustomSort(Map<String, dynamic> json) {
-  final sort = json['customSort'];
-  if (sort is Map<String, dynamic>) {
-    final rules = sort['rules'];
-    if (rules is List && rules.isEmpty) {
-      json.remove('customSort');
-    }
-  }
 }
 
 /// Recursively removes null-valued keys from JSON maps.

@@ -25,8 +25,8 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const extractor = watch(`playlists.${index}.smartPlaylistEpisodeExtractor`);
-  const prefix = `playlists.${index}.smartPlaylistEpisodeExtractor` as const;
+  const extractor = watch(`playlists.${index}.episodeExtractor`);
+  const prefix = `playlists.${index}.episodeExtractor` as const;
 
   if (!extractor) {
     return (
@@ -37,7 +37,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
           variant="outline"
           size="sm"
           onClick={() =>
-            setValue(`playlists.${index}.smartPlaylistEpisodeExtractor`, {
+            setValue(`playlists.${index}.episodeExtractor`, {
               source: 'title',
               pattern: '',
               seasonGroup: 1,
@@ -69,7 +69,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               size="sm"
               onClick={() =>
                 setValue(
-                  `playlists.${index}.smartPlaylistEpisodeExtractor`,
+                  `playlists.${index}.episodeExtractor`,
                   null,
                   { shouldDirty: true },
                 )

@@ -9,146 +9,244 @@ final class SmartPlaylistDefinition {
     required this.id,
     required this.displayName,
     required this.resolverType,
+    required this.playlistStructure,
     this.priority = 0,
-    this.contentType,
-    this.yearHeaderMode,
-    this.episodeYearHeaders = false,
-    this.titleFilter,
-    this.excludeFilter,
-    this.requireFilter,
+    this.episodeFilters,
     this.nullSeasonGroupKey,
-    this.groups,
-    this.customSort,
     this.titleExtractor,
-    this.showDateRange = false,
-    this.showSortOrderToggle = false,
-    this.showSeasonNumber = false,
-    this.smartPlaylistEpisodeExtractor,
+    this.prependSeasonNumber = false,
+    this.groupList,
+    this.episodeList,
+    this.episodeExtractor,
+    this.groups,
   });
 
-  static String? _nullIfEmpty(Object? value) {
-    if (value is! String) return null;
-    return value.isEmpty ? null : value;
-  }
-
-  /// Creates a definition from JSON configuration.
   factory SmartPlaylistDefinition.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistDefinition(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
       resolverType: json['resolverType'] as String,
+      playlistStructure: json['playlistStructure'] as String,
       priority: (json['priority'] as int?) ?? 0,
-      contentType: _nullIfEmpty(json['contentType']),
-      yearHeaderMode: _nullIfEmpty(json['yearHeaderMode']),
-      episodeYearHeaders: (json['episodeYearHeaders'] as bool?) ?? false,
-      showDateRange: (json['showDateRange'] as bool?) ?? false,
-      showSortOrderToggle: (json['showSortOrderToggle'] as bool?) ?? false,
-      showSeasonNumber: (json['showSeasonNumber'] as bool?) ?? false,
-      titleFilter: _nullIfEmpty(json['titleFilter']),
-      excludeFilter: _nullIfEmpty(json['excludeFilter']),
-      requireFilter: _nullIfEmpty(json['requireFilter']),
+      episodeFilters: json['episodeFilters'] != null
+          ? EpisodeFilters.fromJson(
+              json['episodeFilters'] as Map<String, dynamic>,
+            )
+          : null,
       nullSeasonGroupKey: json['nullSeasonGroupKey'] as int?,
+      titleExtractor: json['titleExtractor'] != null
+          ? SmartPlaylistTitleExtractor.fromJson(
+              json['titleExtractor'] as Map<String, dynamic>,
+            )
+          : null,
+      prependSeasonNumber: (json['prependSeasonNumber'] as bool?) ?? false,
+      groupList: json['groupList'] != null
+          ? GroupListSettings.fromJson(
+              json['groupList'] as Map<String, dynamic>,
+            )
+          : null,
+      episodeList: json['episodeList'] != null
+          ? EpisodeListSettings.fromJson(
+              json['episodeList'] as Map<String, dynamic>,
+            )
+          : null,
+      episodeExtractor: json['episodeExtractor'] != null
+          ? SmartPlaylistEpisodeExtractor.fromJson(
+              json['episodeExtractor'] as Map<String, dynamic>,
+            )
+          : null,
       groups: (json['groups'] as List<dynamic>?)
           ?.map(
             (g) => SmartPlaylistGroupDef.fromJson(g as Map<String, dynamic>),
           )
           .toList(),
-      customSort: json['customSort'] != null
-          ? SmartPlaylistSortSpec.fromJson(
-              json['customSort'] as Map<String, dynamic>,
-            )
+    );
+  }
+
+  final String id;
+  final String displayName;
+  final String resolverType;
+
+  /// How resolver results are organized: 'split' or 'grouped'.
+  final String playlistStructure;
+
+  /// Episode claiming order among siblings (lower = first, default: 0).
+  final int priority;
+
+  /// Episode filters applied before resolver processing.
+  final EpisodeFilters? episodeFilters;
+
+  /// Group key to assign to episodes with null season number.
+  final int? nullSeasonGroupKey;
+
+  /// Configuration for extracting playlist/group display names.
+  final SmartPlaylistTitleExtractor? titleExtractor;
+
+  /// Whether to prepend "S{n}" to resolver result names.
+  final bool prependSeasonNumber;
+
+  /// Settings for the group list view (grouped mode only).
+  final GroupListSettings? groupList;
+
+  /// Default episode list display and ordering settings.
+  final EpisodeListSettings? episodeList;
+
+  /// Configuration for extracting season and episode numbers.
+  final SmartPlaylistEpisodeExtractor? episodeExtractor;
+
+  /// Static group definitions for category-based grouping.
+  final List<SmartPlaylistGroupDef>? groups;
+
+  /// Whether this definition has any effective episode filters.
+  bool get hasFilters {
+    if (episodeFilters == null) return false;
+    final f = episodeFilters!;
+    final hasRequire = f.require != null && f.require!.isNotEmpty;
+    final hasExclude = f.exclude != null && f.exclude!.isNotEmpty;
+    return hasRequire || hasExclude;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'displayName': displayName,
+      'resolverType': resolverType,
+      'playlistStructure': playlistStructure,
+      if (priority != 0) 'priority': priority,
+      if (episodeFilters != null) 'episodeFilters': episodeFilters!.toJson(),
+      if (nullSeasonGroupKey != null) 'nullSeasonGroupKey': nullSeasonGroupKey,
+      if (titleExtractor != null) 'titleExtractor': titleExtractor!.toJson(),
+      if (prependSeasonNumber) 'prependSeasonNumber': prependSeasonNumber,
+      if (groupList != null) 'groupList': groupList!.toJson(),
+      if (episodeList != null) 'episodeList': episodeList!.toJson(),
+      if (episodeExtractor != null)
+        'episodeExtractor': episodeExtractor!.toJson(),
+      if (groups != null) 'groups': groups!.map((g) => g.toJson()).toList(),
+    };
+  }
+}
+
+/// Episode filters applied before resolver processing.
+final class EpisodeFilters {
+  const EpisodeFilters({this.require, this.exclude});
+
+  factory EpisodeFilters.fromJson(Map<String, dynamic> json) {
+    return EpisodeFilters(
+      require: (json['require'] as List<dynamic>?)
+          ?.map((e) => EpisodeFilterEntry.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      exclude: (json['exclude'] as List<dynamic>?)
+          ?.map((e) => EpisodeFilterEntry.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  final List<EpisodeFilterEntry>? require;
+  final List<EpisodeFilterEntry>? exclude;
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (require != null) 'require': require!.map((e) => e.toJson()).toList(),
+      if (exclude != null) 'exclude': exclude!.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+
+/// A single filter condition matched against episode fields.
+final class EpisodeFilterEntry {
+  const EpisodeFilterEntry({this.title, this.description});
+
+  factory EpisodeFilterEntry.fromJson(Map<String, dynamic> json) {
+    return EpisodeFilterEntry(
+      title: json['title'] as String?,
+      description: json['description'] as String?,
+    );
+  }
+
+  final String? title;
+  final String? description;
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+    };
+  }
+}
+
+/// Settings for the group list view (grouped mode only).
+final class GroupListSettings {
+  const GroupListSettings({
+    this.yearBinding,
+    this.userSortable,
+    this.showDateRange,
+    this.sort,
+  });
+
+  factory GroupListSettings.fromJson(Map<String, dynamic> json) {
+    return GroupListSettings(
+      yearBinding: json['yearBinding'] as String?,
+      userSortable: json['userSortable'] as bool?,
+      showDateRange: json['showDateRange'] as bool?,
+      sort: json['sort'] != null
+          ? SmartPlaylistSortRule.fromJson(json['sort'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+
+  /// How groups relate to year headers. Default: 'none'.
+  final String? yearBinding;
+
+  /// Allow users to change sort order at runtime. Default: true.
+  final bool? userSortable;
+
+  /// Show date range on group cards. Default: false.
+  final bool? showDateRange;
+
+  /// Sort rule for ordering groups.
+  final SmartPlaylistSortRule? sort;
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (yearBinding != null) 'yearBinding': yearBinding,
+      if (userSortable != null) 'userSortable': userSortable,
+      if (showDateRange != null) 'showDateRange': showDateRange,
+      if (sort != null) 'sort': sort!.toJson(),
+    };
+  }
+}
+
+/// Default episode list display and ordering settings.
+final class EpisodeListSettings {
+  const EpisodeListSettings({
+    this.showYearHeaders,
+    this.sort,
+    this.titleExtractor,
+  });
+
+  factory EpisodeListSettings.fromJson(Map<String, dynamic> json) {
+    return EpisodeListSettings(
+      showYearHeaders: json['showYearHeaders'] as bool?,
+      sort: json['sort'] != null
+          ? EpisodeSortRule.fromJson(json['sort'] as Map<String, dynamic>)
           : null,
       titleExtractor: json['titleExtractor'] != null
           ? SmartPlaylistTitleExtractor.fromJson(
               json['titleExtractor'] as Map<String, dynamic>,
             )
           : null,
-      smartPlaylistEpisodeExtractor:
-          json['smartPlaylistEpisodeExtractor'] != null
-          ? SmartPlaylistEpisodeExtractor.fromJson(
-              json['smartPlaylistEpisodeExtractor'] as Map<String, dynamic>,
-            )
-          : null,
     );
   }
 
-  /// Unique identifier for this playlist definition.
-  final String id;
-
-  /// Human-readable name for display.
-  final String displayName;
-
-  /// Type of resolver to use for episode grouping.
-  final String resolverType;
-
-  /// Episode claiming order among siblings (lower = first, default: 0).
-  final int priority;
-
-  /// Content type hint (e.g., "bonus", "main").
-  final String? contentType;
-
-  /// How to group episodes by year ("publish", "season", etc.).
-  final String? yearHeaderMode;
-
-  /// Whether to show year headers within episode lists.
-  final bool episodeYearHeaders;
-
-  /// Regex pattern to filter episode titles (include match).
-  final String? titleFilter;
-
-  /// Regex pattern to exclude episodes by title.
-  final String? excludeFilter;
-
-  /// Regex pattern that episodes must match to be included.
-  final String? requireFilter;
-
-  /// Group key to assign to episodes with null season number.
-  final int? nullSeasonGroupKey;
-
-  /// Static group definitions for category-based grouping.
-  final List<SmartPlaylistGroupDef>? groups;
-
-  /// Custom sort specification.
-  final SmartPlaylistSortSpec? customSort;
-
-  /// Configuration for extracting playlist display names.
+  final bool? showYearHeaders;
+  final EpisodeSortRule? sort;
   final SmartPlaylistTitleExtractor? titleExtractor;
 
-  /// Whether group cards should display a date range.
-  final bool showDateRange;
-
-  /// Explicitly show the sort order toggle regardless of yearHeaderMode.
-  final bool showSortOrderToggle;
-
-  /// Whether to prepend a season number label (e.g. S13) to group titles.
-  final bool showSeasonNumber;
-
-  /// Configuration for extracting both season and episode numbers.
-  final SmartPlaylistEpisodeExtractor? smartPlaylistEpisodeExtractor;
-
-  /// Converts to JSON representation.
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'displayName': displayName,
-      'resolverType': resolverType,
-      if (priority != 0) 'priority': priority,
-      if (contentType != null) 'contentType': contentType,
-      if (yearHeaderMode != null) 'yearHeaderMode': yearHeaderMode,
-      if (episodeYearHeaders) 'episodeYearHeaders': episodeYearHeaders,
-      if (showDateRange) 'showDateRange': showDateRange,
-      if (showSortOrderToggle) 'showSortOrderToggle': showSortOrderToggle,
-      if (showSeasonNumber) 'showSeasonNumber': showSeasonNumber,
-      if (titleFilter != null) 'titleFilter': titleFilter,
-      if (excludeFilter != null) 'excludeFilter': excludeFilter,
-      if (requireFilter != null) 'requireFilter': requireFilter,
-      if (nullSeasonGroupKey != null) 'nullSeasonGroupKey': nullSeasonGroupKey,
-      if (groups != null) 'groups': groups!.map((g) => g.toJson()).toList(),
-      if (customSort != null) 'customSort': customSort!.toJson(),
+      if (showYearHeaders != null) 'showYearHeaders': showYearHeaders,
+      if (sort != null) 'sort': sort!.toJson(),
       if (titleExtractor != null) 'titleExtractor': titleExtractor!.toJson(),
-      if (smartPlaylistEpisodeExtractor != null)
-        'smartPlaylistEpisodeExtractor': smartPlaylistEpisodeExtractor!
-            .toJson(),
     };
   }
 }

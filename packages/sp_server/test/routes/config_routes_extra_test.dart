@@ -33,9 +33,12 @@ String _patternMetaA() => const JsonEncoder.withIndent('  ').convert({
 });
 
 /// Sample playlist.
-String _playlistSeasons() => const JsonEncoder.withIndent(
-  '  ',
-).convert({'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'});
+String _playlistSeasons() => const JsonEncoder.withIndent('  ').convert({
+  'id': 'seasons',
+  'displayName': 'Seasons',
+  'resolverType': 'rss',
+  'playlistStructure': 'split',
+});
 
 /// RSS feed with episodes that produce claimedByOthers when two definitions
 /// overlap. Two episodes, both matching `.` title filter.
@@ -210,7 +213,7 @@ void main() {
       test(
         'includes claimedByOthers in preview when definitions overlap',
         () async {
-          // Two year-resolver definitions with overlapping titleFilter.
+          // Two year-resolver definitions with overlapping episodeFilters.
           // Lower priority number wins, so priority-b claims episodes first.
           // priority-a sees them as claimedByOthers.
           final previewBody = jsonEncode({
@@ -222,15 +225,25 @@ void main() {
                   'id': 'priority-a',
                   'displayName': 'Priority A',
                   'resolverType': 'year',
+                  'playlistStructure': 'split',
                   'priority': 10,
-                  'titleFilter': '.',
+                  'episodeFilters': {
+                    'require': [
+                      {'title': '.'},
+                    ],
+                  },
                 },
                 {
                   'id': 'priority-b',
                   'displayName': 'Priority B',
                   'resolverType': 'year',
+                  'playlistStructure': 'split',
                   'priority': 5,
-                  'titleFilter': '.',
+                  'episodeFilters': {
+                    'require': [
+                      {'title': '.'},
+                    ],
+                  },
                 },
               ],
             },
@@ -278,38 +291,6 @@ void main() {
     });
 
     group('PUT /api/configs/patterns/<id>/playlists/<pid> sanitization', () {
-      test('strips empty customSort rules before validation', () async {
-        final playlistJson = {
-          'id': 'seasons',
-          'displayName': 'Seasons',
-          'resolverType': 'rss',
-          'customSort': {'rules': []},
-        };
-
-        final request = Request(
-          'PUT',
-          Uri.parse(
-            'http://localhost/api/configs/patterns/podcast-a'
-            '/playlists/seasons',
-          ),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode(playlistJson),
-        );
-
-        final response = await handler(request);
-
-        expect(response.statusCode, equals(200));
-        final body =
-            jsonDecode(await response.readAsString()) as Map<String, dynamic>;
-        expect(body['ok'], isTrue);
-
-        // Verify customSort was stripped from the saved file
-        final file = File('$dataDir/patterns/podcast-a/playlists/seasons.json');
-        final content =
-            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-        expect(content.containsKey('customSort'), isFalse);
-      });
-
       test('strips null values in nested structures with lists', () async {
         // Groups with null values should be stripped so schema validation
         // passes (JSON Schema rejects null for typed fields).
@@ -317,7 +298,7 @@ void main() {
           'id': 'seasons',
           'displayName': 'Seasons',
           'resolverType': 'category',
-          'contentType': 'groups',
+          'playlistStructure': 'grouped',
           'groups': [
             {
               'id': 'main',
@@ -364,6 +345,7 @@ void main() {
             'id': 'seasons',
             'displayName': 'Seasons',
             'resolverType': 'rss',
+            'playlistStructure': 'split',
           };
 
           final request = Request(

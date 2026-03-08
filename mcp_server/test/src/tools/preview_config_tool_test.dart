@@ -64,7 +64,12 @@ void main() {
         'id': 'test',
         'feedUrls': ['https://example.com/feed.xml'],
         'playlists': [
-          {'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'},
+          {
+            'id': 'seasons',
+            'displayName': 'Seasons',
+            'resolverType': 'rss',
+            'playlistStructure': 'split',
+          },
         ],
       };
       final result = await executePreviewConfig(feedService, {
@@ -86,7 +91,7 @@ void main() {
             'id': 'extras',
             'displayName': 'Extras',
             'resolverType': 'category',
-            'contentType': 'groups',
+            'playlistStructure': 'grouped',
             'groups': [
               {
                 'id': 'season1',

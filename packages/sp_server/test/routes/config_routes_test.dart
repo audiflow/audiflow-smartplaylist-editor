@@ -48,18 +48,25 @@ String _patternMetaB() => const JsonEncoder.withIndent('  ').convert({
 });
 
 /// Sample playlists.
-String _playlistSeasons() => const JsonEncoder.withIndent(
-  '  ',
-).convert({'id': 'seasons', 'displayName': 'Seasons', 'resolverType': 'rss'});
+String _playlistSeasons() => const JsonEncoder.withIndent('  ').convert({
+  'id': 'seasons',
+  'displayName': 'Seasons',
+  'resolverType': 'rss',
+  'playlistStructure': 'split',
+});
 
-String _playlistByYear() => const JsonEncoder.withIndent(
-  '  ',
-).convert({'id': 'by-year', 'displayName': 'By Year', 'resolverType': 'year'});
+String _playlistByYear() => const JsonEncoder.withIndent('  ').convert({
+  'id': 'by-year',
+  'displayName': 'By Year',
+  'resolverType': 'year',
+  'playlistStructure': 'split',
+});
 
 String _playlistCategories() => const JsonEncoder.withIndent('  ').convert({
   'id': 'categories',
   'displayName': 'Categories',
   'resolverType': 'category',
+  'playlistStructure': 'grouped',
   'groups': [
     {'id': 'main', 'displayName': 'Main', 'pattern': '^Main'},
     {'id': 'bonus', 'displayName': 'Bonus'},
@@ -401,6 +408,7 @@ void main() {
           'id': 'seasons',
           'displayName': 'Seasons',
           'resolverType': 'rss',
+          'playlistStructure': 'split',
         });
 
         final request = Request(
@@ -511,6 +519,7 @@ void main() {
                 'id': 'seasons',
                 'displayName': 'Seasons',
                 'resolverType': 'rss',
+                'playlistStructure': 'split',
               },
             ],
           },
@@ -573,6 +582,7 @@ void main() {
                 'id': 'seasons',
                 'displayName': 'Seasons',
                 'resolverType': 'rss',
+                'playlistStructure': 'split',
               },
             ],
           },
@@ -633,7 +643,12 @@ void main() {
             'config': {
               'id': 'test',
               'playlists': [
-                {'id': 's', 'displayName': 'S', 'resolverType': 'rss'},
+                {
+                  'id': 's',
+                  'displayName': 'S',
+                  'resolverType': 'rss',
+                  'playlistStructure': 'split',
+                },
               ],
             },
           }),
@@ -669,7 +684,12 @@ void main() {
             'config': {
               'id': 'test',
               'playlists': [
-                {'id': 's', 'displayName': 'S', 'resolverType': 'rss'},
+                {
+                  'id': 's',
+                  'displayName': 'S',
+                  'resolverType': 'rss',
+                  'playlistStructure': 'split',
+                },
               ],
             },
             'feedUrl': 'https://example.com/unknown-feed.xml',
@@ -694,6 +714,7 @@ void main() {
                 'id': 'seasons',
                 'displayName': 'Seasons',
                 'resolverType': 'rss',
+                'playlistStructure': 'split',
               },
             ],
           },
@@ -726,7 +747,12 @@ void main() {
           'config': {
             'id': 'test',
             'playlists': [
-              {'id': 's', 'displayName': 'S', 'resolverType': 'rss'},
+              {
+                'id': 's',
+                'displayName': 'S',
+                'resolverType': 'rss',
+                'playlistStructure': 'split',
+              },
             ],
           },
           'feedUrl': 'https://example.com/empty.xml',
@@ -754,6 +780,7 @@ void main() {
                 'id': 'regular',
                 'displayName': 'Regular',
                 'resolverType': 'rss',
+                'playlistStructure': 'split',
                 'nullSeasonGroupKey': 0,
                 'titleExtractor': {
                   'source': 'title',
@@ -761,7 +788,7 @@ void main() {
                   'group': 1,
                   'fallbackValue': 'Extras',
                 },
-                'smartPlaylistEpisodeExtractor': {
+                'episodeExtractor': {
                   'source': 'title',
                   'pattern': r'\[(\d+)-(\d+)\]',
                   'seasonGroup': 1,
@@ -819,6 +846,7 @@ void main() {
                 'id': 'seasons',
                 'displayName': 'Seasons',
                 'resolverType': 'rss',
+                'playlistStructure': 'split',
               },
             ],
           },
@@ -882,6 +910,7 @@ void main() {
                   'id': 'regular',
                   'displayName': 'Regular',
                   'resolverType': 'rss',
+                  'playlistStructure': 'split',
                   'nullSeasonGroupKey': 0,
                   'titleExtractor': {
                     'source': 'title',
@@ -889,7 +918,7 @@ void main() {
                     'group': 1,
                     'fallbackValue': 'Extras',
                   },
-                  'smartPlaylistEpisodeExtractor': {
+                  'episodeExtractor': {
                     'source': 'title',
                     'pattern': r'\[(\d+)-(\d+)\]',
                     'seasonGroup': 1,
@@ -951,7 +980,7 @@ void main() {
         },
       );
 
-      test('includes yearHeaderMode in playlist response', () async {
+      test('includes yearBinding in playlist response', () async {
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
@@ -961,7 +990,8 @@ void main() {
                 'id': 'seasons',
                 'displayName': 'Seasons',
                 'resolverType': 'rss',
-                'yearHeaderMode': 'perEpisode',
+                'playlistStructure': 'grouped',
+                'groupList': {'yearBinding': 'splitByYear'},
               },
             ],
           },
@@ -984,10 +1014,10 @@ void main() {
         expect(playlists.length, equals(1));
 
         final playlist = playlists[0] as Map<String, dynamic>;
-        expect(playlist['yearHeaderMode'], equals('perEpisode'));
+        expect(playlist['yearBinding'], equals('splitByYear'));
       });
 
-      test('defaults yearHeaderMode to none when not specified', () async {
+      test('defaults yearBinding to none when not specified', () async {
         final previewBody = jsonEncode({
           'config': {
             'id': 'test',
@@ -997,6 +1027,7 @@ void main() {
                 'id': 'seasons',
                 'displayName': 'Seasons',
                 'resolverType': 'rss',
+                'playlistStructure': 'split',
               },
             ],
           },
@@ -1017,7 +1048,7 @@ void main() {
             jsonDecode(await response.readAsString()) as Map<String, dynamic>;
         final playlists = body['playlists'] as List;
         final playlist = playlists[0] as Map<String, dynamic>;
-        expect(playlist['yearHeaderMode'], equals('none'));
+        expect(playlist['yearBinding'], equals('none'));
       });
 
       test('includes per-playlist debug fields', () async {
@@ -1030,6 +1061,7 @@ void main() {
                 'id': 'seasons',
                 'displayName': 'Seasons',
                 'resolverType': 'rss',
+                'playlistStructure': 'split',
               },
             ],
           },
@@ -1068,6 +1100,7 @@ void main() {
           'id': 'seasons',
           'displayName': 'Updated Seasons',
           'resolverType': 'rss',
+          'playlistStructure': 'split',
         };
 
         final request = Request(
@@ -1150,6 +1183,7 @@ void main() {
         // Send fields in non-canonical order to verify normalization
         final playlistJson = {
           'resolverType': 'rss',
+          'playlistStructure': 'split',
           'id': 'seasons',
           'displayName': 'Normalized Test',
         };
@@ -1181,6 +1215,7 @@ void main() {
           'id': 'seasons',
           'displayName': 'Seasons',
           'resolverType': 'invalidType',
+          'playlistStructure': 'split',
         };
 
         final request = Request(

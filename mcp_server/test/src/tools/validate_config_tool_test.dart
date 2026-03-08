@@ -41,6 +41,7 @@ void main() {
         'id': 'main',
         'displayName': 'Main',
         'resolverType': 'rss',
+        'playlistStructure': 'split',
       };
       final result = await executeValidateConfig(validator, {'config': config});
 

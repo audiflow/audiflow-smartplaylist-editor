@@ -5,7 +5,7 @@ import type {
   PreviewEpisode,
   PreviewDebug,
 } from '@/schemas/api-schema.ts';
-import type { PatternConfig, YearHeaderMode } from '@/schemas/config-schema.ts';
+import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
@@ -42,8 +42,8 @@ export function PlaylistTabContent({
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
   const { watch } = useFormContext<PatternConfig>();
-  const showSeasonNumber = watch(`playlists.${index}.showSeasonNumber`) ?? false;
-  const yearHeaderMode = (watch(`playlists.${index}.yearHeaderMode`) ?? 'none') as YearHeaderMode;
+  const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
+  const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
 
   const claimedCount = previewPlaylist?.claimedByOthers?.length ?? 0;
   const ungroupedCount = ungroupedEpisodes.length;
@@ -109,7 +109,7 @@ export function PlaylistTabContent({
                   )}
                 </TabsList>
                 <TabsContent value="groups">
-                  <PlaylistTree playlists={[previewPlaylist]} showSeasonNumber={showSeasonNumber} yearHeaderMode={yearHeaderMode} />
+                  <PlaylistTree playlists={[previewPlaylist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} />
                 </TabsContent>
                 <TabsContent value="ungrouped">
                   {0 < ungroupedCount ? (

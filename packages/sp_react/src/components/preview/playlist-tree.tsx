@@ -4,7 +4,7 @@ import type {
   PreviewGroup,
   PreviewEpisode,
 } from '@/schemas/api-schema.ts';
-import type { YearHeaderMode } from '@/schemas/config-schema.ts';
+import type { YearBinding } from '@/schemas/config-schema.ts';
 import {
   Accordion,
   AccordionItem,
@@ -17,14 +17,14 @@ import type { YearGroupEntry } from '@/components/preview/year-group-utils.ts';
 
 interface PlaylistTreeProps {
   playlists: PreviewPlaylist[];
-  showSeasonNumber?: boolean;
-  yearHeaderMode?: YearHeaderMode;
+  prependSeasonNumber?: boolean;
+  yearBinding?: YearBinding;
 }
 
 export function PlaylistTree({
   playlists,
-  showSeasonNumber = false,
-  yearHeaderMode = 'none',
+  prependSeasonNumber = false,
+  yearBinding = 'none',
 }: PlaylistTreeProps) {
   const { t } = useTranslation('preview');
 
@@ -35,8 +35,8 @@ export function PlaylistTree({
           {playlist.groups && 0 < playlist.groups.length ? (
             <YearAwareGroupList
               groups={playlist.groups}
-              showSeasonNumber={showSeasonNumber}
-              yearHeaderMode={yearHeaderMode}
+              prependSeasonNumber={prependSeasonNumber}
+              yearBinding={yearBinding}
             />
           ) : (
             <p className="text-sm text-muted-foreground py-2">{t('noGroups')}</p>
@@ -49,17 +49,17 @@ export function PlaylistTree({
 
 function YearAwareGroupList({
   groups,
-  showSeasonNumber,
-  yearHeaderMode,
+  prependSeasonNumber,
+  yearBinding,
 }: {
   groups: PreviewGroup[];
-  showSeasonNumber: boolean;
-  yearHeaderMode: YearHeaderMode;
+  prependSeasonNumber: boolean;
+  yearBinding: YearBinding;
 }) {
-  const yearSections = groupByYear(groups, yearHeaderMode);
+  const yearSections = groupByYear(groups, yearBinding);
 
   if (!yearSections) {
-    return <GroupList groups={groups} showSeasonNumber={showSeasonNumber} />;
+    return <GroupList groups={groups} prependSeasonNumber={prependSeasonNumber} />;
   }
 
   return (
@@ -69,7 +69,7 @@ function YearAwareGroupList({
           key={section.year}
           year={section.year}
           entries={section.entries}
-          showSeasonNumber={showSeasonNumber}
+          prependSeasonNumber={prependSeasonNumber}
         />
       ))}
     </div>
@@ -79,11 +79,11 @@ function YearAwareGroupList({
 function YearSection({
   year,
   entries,
-  showSeasonNumber,
+  prependSeasonNumber,
 }: {
   year: number;
   entries: YearGroupEntry[];
-  showSeasonNumber: boolean;
+  prependSeasonNumber: boolean;
 }) {
   const { t } = useTranslation('preview');
 
@@ -94,17 +94,17 @@ function YearSection({
           {year === 0 ? t('yearUnknown') : t('yearHeader', { year })}
         </span>
       </div>
-      <YearGroupEntryList entries={entries} showSeasonNumber={showSeasonNumber} />
+      <YearGroupEntryList entries={entries} prependSeasonNumber={prependSeasonNumber} />
     </div>
   );
 }
 
 function YearGroupEntryList({
   entries,
-  showSeasonNumber,
+  prependSeasonNumber,
 }: {
   entries: YearGroupEntry[];
-  showSeasonNumber: boolean;
+  prependSeasonNumber: boolean;
 }) {
   const { t } = useTranslation('preview');
 
@@ -114,7 +114,7 @@ function YearGroupEntryList({
         <AccordionItem key={`${entry.group.id}-${idx}`} value={`${entry.group.id}-${idx}`}>
           <AccordionTrigger>
             <div className="flex items-center gap-2">
-              <span>{formatGroupName(entry.group, showSeasonNumber)}</span>
+              <span>{formatGroupName(entry.group, prependSeasonNumber)}</span>
               <Badge variant="secondary">
                 {t('episodes', { count: entry.episodeCount })}
               </Badge>
@@ -129,14 +129,14 @@ function YearGroupEntryList({
   );
 }
 
-function formatGroupName(group: PreviewGroup, showSeasonNumber: boolean): string {
-  if (showSeasonNumber && typeof group.sortKey === 'number' && group.id.startsWith('season_')) {
+function formatGroupName(group: PreviewGroup, prependSeasonNumber: boolean): string {
+  if (prependSeasonNumber && typeof group.sortKey === 'number' && group.id.startsWith('season_')) {
     return `S${group.sortKey} ${group.displayName}`;
   }
   return group.displayName;
 }
 
-function GroupList({ groups, showSeasonNumber }: { groups: PreviewGroup[]; showSeasonNumber: boolean }) {
+function GroupList({ groups, prependSeasonNumber }: { groups: PreviewGroup[]; prependSeasonNumber: boolean }) {
   const { t } = useTranslation('preview');
 
   return (
@@ -145,7 +145,7 @@ function GroupList({ groups, showSeasonNumber }: { groups: PreviewGroup[]; showS
         <AccordionItem key={group.id} value={group.id}>
           <AccordionTrigger>
             <div className="flex items-center gap-2">
-              <span>{formatGroupName(group, showSeasonNumber)}</span>
+              <span>{formatGroupName(group, prependSeasonNumber)}</span>
               <Badge variant="secondary">
                 {t('episodes', { count: group.episodeCount })}
               </Badge>

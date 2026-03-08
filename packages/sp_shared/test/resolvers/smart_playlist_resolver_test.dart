@@ -7,12 +7,10 @@ class TestSmartPlaylistResolver implements SmartPlaylistResolver {
   String get type => 'test';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
-    SmartPlaylistSortRule(
-      field: SmartPlaylistSortField.playlistNumber,
-      order: SortOrder.ascending,
-    ),
-  ]);
+  SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
+    field: SmartPlaylistSortField.playlistNumber,
+    order: SortOrder.ascending,
+  );
 
   @override
   SmartPlaylistGrouping? resolve(
@@ -44,7 +42,7 @@ void main() {
 
     test('resolver has default sort', () {
       final resolver = TestSmartPlaylistResolver();
-      expect(resolver.defaultSort, isA<SmartPlaylistSortSpec>());
+      expect(resolver.defaultSort, isA<SmartPlaylistSortRule>());
     });
 
     test('resolver can return null when no grouping possible', () {

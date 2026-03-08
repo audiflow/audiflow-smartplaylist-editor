@@ -22,8 +22,7 @@ final class SmartPlaylistSchemaConstants {
   static const int currentDataVersion = 1;
 
   /// Current schema definition version.
-  /// Bumped when fields are added or changed.
-  static const int currentSchemaVersion = 1;
+  static const int currentSchemaVersion = 2;
 
   /// Valid resolver types for playlist definitions.
   static const List<String> validResolverTypes = [
@@ -33,22 +32,28 @@ final class SmartPlaylistSchemaConstants {
     'titleAppearanceOrder',
   ];
 
-  /// Valid content types for playlist definitions.
-  static const List<String> validContentTypes = ['episodes', 'groups'];
+  /// Valid playlist structure types.
+  static const List<String> validPlaylistStructures = ['split', 'grouped'];
 
-  /// Valid year header modes.
-  static const List<String> validYearHeaderModes = [
+  /// Valid year binding modes.
+  static const List<String> validYearBindings = [
     'none',
-    'firstEpisode',
-    'perEpisode',
+    'pinToYear',
+    'splitByYear',
   ];
 
-  /// Valid sort fields.
+  /// Valid group sort fields.
   static const List<String> validSortFields = [
     'playlistNumber',
     'newestEpisodeDate',
-    'progress',
     'alphabetical',
+  ];
+
+  /// Valid episode sort fields.
+  static const List<String> validEpisodeSortFields = [
+    'publishedAt',
+    'episodeNumber',
+    'title',
   ];
 
   /// Valid sort orders.
@@ -66,11 +71,5 @@ final class SmartPlaylistSchemaConstants {
   static const List<String> validEpisodeExtractorSources = [
     'title',
     'description',
-  ];
-
-  /// Valid sort condition types.
-  static const List<String> validSortConditionTypes = [
-    'sortKeyGreaterThan',
-    'greaterThan',
   ];
 }

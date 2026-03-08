@@ -5,19 +5,20 @@ import { z } from 'zod';
 export const sortFieldSchema = z.enum([
   'playlistNumber',
   'newestEpisodeDate',
-  'progress',
   'alphabetical',
+]);
+
+export const episodeSortFieldSchema = z.enum([
+  'publishedAt',
+  'episodeNumber',
+  'title',
 ]);
 
 export const sortOrderSchema = z.enum(['ascending', 'descending']);
 
-export const contentTypeSchema = z.enum(['episodes', 'groups']);
+export const playlistStructureSchema = z.enum(['split', 'grouped']);
 
-export const yearHeaderModeSchema = z.enum([
-  'none',
-  'firstEpisode',
-  'perEpisode',
-]);
+export const yearBindingSchema = z.enum(['none', 'pinToYear', 'splitByYear']);
 
 export const resolverTypeSchema = z.enum([
   'rss',
@@ -28,59 +29,41 @@ export const resolverTypeSchema = z.enum([
 
 // -- Sort types --
 
-export const sortConditionSchema = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('sortKeyGreaterThan'),
-    value: z.number(),
-  }),
-  z.object({
-    type: z.literal('greaterThan'),
-    value: z.number(),
-  }),
-]);
-
 export const sortRuleSchema = z.object({
   field: sortFieldSchema,
   order: sortOrderSchema,
-  condition: sortConditionSchema.optional(),
 });
 
-export const smartPlaylistSortSpecSchema = z
-  .unknown()
-  .transform((v) => {
-    if (v == null || typeof v !== 'object') return null;
-    const obj = v as Record<string, unknown>;
+export const episodeSortRuleSchema = z.object({
+  field: episodeSortFieldSchema,
+  order: sortOrderSchema,
+});
 
-    // Legacy simple format: convert to rules array
-    if (obj.type === 'simple' && 'field' in obj && 'order' in obj) {
-      return { rules: [{ field: obj.field, order: obj.order }] };
-    }
+// -- Episode filters --
 
-    // Legacy composite or new format: must have rules array
-    if ('rules' in obj && Array.isArray(obj.rules)) {
-      // Strip the legacy type field if present
-      const { type: _, ...rest } = obj;
-      return rest;
-    }
+export const episodeFilterEntrySchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+});
 
-    return null;
-  })
-  .pipe(
-    z
-      .object({
-        rules: z.array(sortRuleSchema).min(1),
-      })
-      .nullable(),
-  );
+export const episodeFiltersSchema = z.object({
+  require: z.array(episodeFilterEntrySchema).optional(),
+  exclude: z.array(episodeFilterEntrySchema).optional(),
+});
 
-// -- Group definition --
+// -- Settings --
 
-export const groupDefSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  pattern: z.string().optional(),
-  episodeYearHeaders: z.boolean().optional(),
-  showDateRange: z.boolean().optional(),
+export const groupListSettingsSchema = z.object({
+  yearBinding: yearBindingSchema.optional(),
+  userSortable: z.boolean().default(true).optional(),
+  showDateRange: z.boolean().default(false).optional(),
+  sort: sortRuleSchema.optional(),
+});
+
+export const episodeListSettingsSchema = z.object({
+  showYearHeaders: z.boolean().default(false).optional(),
+  sort: episodeSortRuleSchema.optional(),
+  titleExtractor: z.lazy(() => titleExtractorSchema).optional(),
 });
 
 // -- Extractors --
@@ -118,33 +101,47 @@ export const episodeExtractorSchema = z.object({
   fallbackToRss: z.boolean().nullish().transform((v) => v ?? false),
 });
 
+// -- Group definition --
+
+export const groupDefSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  pattern: z.string().optional(),
+  display: z
+    .object({
+      showDateRange: z.boolean().optional(),
+      yearBinding: yearBindingSchema.optional(),
+    })
+    .optional(),
+  episodeList: z
+    .object({
+      showYearHeaders: z.boolean().optional(),
+      sort: episodeSortRuleSchema.optional(),
+      titleExtractor: titleExtractorSchema.optional(),
+    })
+    .optional(),
+  episodeExtractor: episodeExtractorSchema.optional(),
+});
+
 // -- Playlist definition --
 
 export const playlistDefinitionSchema = z.object({
   id: z.string(),
   displayName: z.string(),
-  resolverType: z.string(),
+  resolverType: resolverTypeSchema,
+  playlistStructure: playlistStructureSchema,
   priority: z
     .number()
     .nullish()
     .transform((v) => v ?? 0),
-  contentType: z.string().nullish(),
-  yearHeaderMode: z
-    .string()
-    .nullish()
-    .transform((v) => (v === 'none' ? null : v)),
-  episodeYearHeaders: z.boolean().nullish().transform((v) => v ?? false),
-  showDateRange: z.boolean().nullish().transform((v) => v ?? false),
-  showSortOrderToggle: z.boolean().nullish().transform((v) => v ?? false),
-  showSeasonNumber: z.boolean().nullish().transform((v) => v ?? false),
-  titleFilter: z.string().nullish(),
-  excludeFilter: z.string().nullish(),
-  requireFilter: z.string().nullish(),
+  episodeFilters: episodeFiltersSchema.nullish(),
+  prependSeasonNumber: z.boolean().default(false),
   nullSeasonGroupKey: z.number().nullish(),
   groups: z.array(groupDefSchema).nullish(),
-  customSort: smartPlaylistSortSpecSchema.nullish(),
+  groupList: groupListSettingsSchema.nullish(),
+  episodeList: episodeListSettingsSchema.nullish(),
   titleExtractor: titleExtractorSchema.nullish(),
-  smartPlaylistEpisodeExtractor: episodeExtractorSchema.nullish(),
+  episodeExtractor: episodeExtractorSchema.nullish(),
 });
 
 // -- Pattern config --
@@ -161,13 +158,17 @@ export const patternConfigSchema = z.object({
 // -- Inferred types --
 
 export type SortField = z.infer<typeof sortFieldSchema>;
+export type EpisodeSortField = z.infer<typeof episodeSortFieldSchema>;
 export type SortOrder = z.infer<typeof sortOrderSchema>;
-export type ContentType = z.infer<typeof contentTypeSchema>;
-export type YearHeaderMode = z.infer<typeof yearHeaderModeSchema>;
+export type PlaylistStructure = z.infer<typeof playlistStructureSchema>;
+export type YearBinding = z.infer<typeof yearBindingSchema>;
 export type ResolverType = z.infer<typeof resolverTypeSchema>;
-export type SortCondition = z.infer<typeof sortConditionSchema>;
 export type SortRule = z.infer<typeof sortRuleSchema>;
-export type SmartPlaylistSortSpec = z.infer<typeof smartPlaylistSortSpecSchema>;
+export type EpisodeSortRule = z.infer<typeof episodeSortRuleSchema>;
+export type EpisodeFilterEntry = z.infer<typeof episodeFilterEntrySchema>;
+export type EpisodeFilters = z.infer<typeof episodeFiltersSchema>;
+export type GroupListSettings = z.infer<typeof groupListSettingsSchema>;
+export type EpisodeListSettings = z.infer<typeof episodeListSettingsSchema>;
 export type GroupDef = z.infer<typeof groupDefSchema>;
 export type TitleExtractor = z.infer<typeof titleExtractorSchema>;
 export type EpisodeExtractor = z.infer<typeof episodeExtractorSchema>;

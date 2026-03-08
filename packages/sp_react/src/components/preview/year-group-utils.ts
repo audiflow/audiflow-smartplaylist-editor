@@ -1,10 +1,10 @@
 import type { PreviewGroup, PreviewEpisode } from '@/schemas/api-schema.ts';
-import type { YearHeaderMode } from '@/schemas/config-schema.ts';
+import type { YearBinding } from '@/schemas/config-schema.ts';
 
 export interface YearGroupEntry {
   group: PreviewGroup;
   episodeCount: number;
-  /** Year-filtered episodes. Present only in perEpisode mode. */
+  /** Year-filtered episodes. Present only in splitByYear mode. */
   filteredEpisodes?: PreviewEpisode[];
 }
 
@@ -18,7 +18,7 @@ function getEpisodeYear(publishedAt: string | null | undefined): number {
   return new Date(publishedAt).getFullYear();
 }
 
-function groupByFirstEpisode(groups: PreviewGroup[]): YearSection[] {
+function groupByPinToYear(groups: PreviewGroup[]): YearSection[] {
   const byYear = new Map<number, YearGroupEntry[]>();
 
   for (const group of groups) {
@@ -33,7 +33,7 @@ function groupByFirstEpisode(groups: PreviewGroup[]): YearSection[] {
     .map(([year, entries]) => ({ year, entries }));
 }
 
-function groupByPerEpisode(groups: PreviewGroup[]): YearSection[] {
+function groupBySplitByYear(groups: PreviewGroup[]): YearSection[] {
   const byYear = new Map<number, YearGroupEntry[]>();
 
   for (const group of groups) {
@@ -59,9 +59,9 @@ function groupByPerEpisode(groups: PreviewGroup[]): YearSection[] {
 
 export function groupByYear(
   groups: PreviewGroup[],
-  mode: YearHeaderMode,
+  mode: YearBinding,
 ): YearSection[] | null {
   if (mode === 'none') return null;
-  if (mode === 'firstEpisode') return groupByFirstEpisode(groups);
-  return groupByPerEpisode(groups);
+  if (mode === 'pinToYear') return groupByPinToYear(groups);
+  return groupBySplitByYear(groups);
 }
