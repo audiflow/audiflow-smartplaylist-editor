@@ -37,11 +37,7 @@ void main() {
     test('validSortFields contains expected values', () {
       expect(
         SmartPlaylistSchemaConstants.validSortFields,
-        containsAll([
-          'playlistNumber',
-          'newestEpisodeDate',
-          'alphabetical',
-        ]),
+        containsAll(['playlistNumber', 'newestEpisodeDate', 'alphabetical']),
       );
     });
 
@@ -208,10 +204,7 @@ void main() {
           'resolverType': 'rss',
           'playlistStructure': 'grouped',
           'groupList': {
-            'sort': {
-              'field': 'playlistNumber',
-              'order': 'ascending',
-            },
+            'sort': {'field': 'playlistNumber', 'order': 'ascending'},
           },
         };
         expect(validator.validatePlaylistDefinition(playlist), isEmpty);
@@ -238,17 +231,11 @@ void main() {
             'yearBinding': 'pinToYear',
             'userSortable': true,
             'showDateRange': true,
-            'sort': {
-              'field': 'playlistNumber',
-              'order': 'descending',
-            },
+            'sort': {'field': 'playlistNumber', 'order': 'descending'},
           },
           'episodeList': {
             'showYearHeaders': true,
-            'sort': {
-              'field': 'publishedAt',
-              'order': 'ascending',
-            },
+            'sort': {'field': 'publishedAt', 'order': 'ascending'},
           },
           'titleExtractor': {
             'source': 'title',

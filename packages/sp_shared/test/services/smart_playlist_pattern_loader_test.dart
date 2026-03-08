@@ -13,7 +13,12 @@ void main() {
             'id': 'test',
             'feedUrls': ['https://example.com/feed'],
             'playlists': [
-              {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss', 'playlistStructure': 'split'},
+              {
+                'id': 'main',
+                'displayName': 'Main',
+                'resolverType': 'rss',
+                'playlistStructure': 'split',
+              },
             ],
           },
         ],

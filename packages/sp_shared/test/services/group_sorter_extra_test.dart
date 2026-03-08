@@ -58,10 +58,7 @@ void main() {
 
       final episodeById = <int, EpisodeData>{
         1: SimpleEpisodeData(id: 1, title: 'Ep with date', publishedAt: now),
-        2: const SimpleEpisodeData(
-          id: 2,
-          title: 'Ep without date',
-        ),
+        2: const SimpleEpisodeData(id: 2, title: 'Ep without date'),
       };
 
       const sortRule = SmartPlaylistSortRule(

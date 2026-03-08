@@ -99,11 +99,7 @@ class SmartPlaylistResolverService {
       final filtered = _filterEpisodes(episodes, definition, claimedIds);
 
       if (filtered.isEmpty) {
-        _addEmptyPreviewResult(
-          playlistResults,
-          definition,
-          claimedByOthers,
-        );
+        _addEmptyPreviewResult(playlistResults, definition, claimedByOthers);
         continue;
       }
 

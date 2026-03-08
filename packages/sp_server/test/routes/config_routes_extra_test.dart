@@ -33,9 +33,7 @@ String _patternMetaA() => const JsonEncoder.withIndent('  ').convert({
 });
 
 /// Sample playlist.
-String _playlistSeasons() => const JsonEncoder.withIndent(
-  '  ',
-).convert({
+String _playlistSeasons() => const JsonEncoder.withIndent('  ').convert({
   'id': 'seasons',
   'displayName': 'Seasons',
   'resolverType': 'rss',

@@ -58,24 +58,15 @@ void main() {
     });
 
     test('returns none for "none"', () {
-      expect(
-        CategoryResolver.parseYearBinding('none'),
-        YearBinding.none,
-      );
+      expect(CategoryResolver.parseYearBinding('none'), YearBinding.none);
     });
 
     test('returns none for null', () {
-      expect(
-        CategoryResolver.parseYearBinding(null),
-        YearBinding.none,
-      );
+      expect(CategoryResolver.parseYearBinding(null), YearBinding.none);
     });
 
     test('returns none for unknown value', () {
-      expect(
-        CategoryResolver.parseYearBinding('weekly'),
-        YearBinding.none,
-      );
+      expect(CategoryResolver.parseYearBinding('weekly'), YearBinding.none);
     });
   });
 }

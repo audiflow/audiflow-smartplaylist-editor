@@ -65,10 +65,7 @@ final class SmartPlaylistGroupDef {
 
 /// Per-group display overrides for the group card.
 final class GroupDefDisplay {
-  const GroupDefDisplay({
-    this.showDateRange,
-    this.yearBinding,
-  });
+  const GroupDefDisplay({this.showDateRange, this.yearBinding});
 
   factory GroupDefDisplay.fromJson(Map<String, dynamic> json) {
     return GroupDefDisplay(

@@ -127,14 +127,10 @@ final class EpisodeFilters {
   factory EpisodeFilters.fromJson(Map<String, dynamic> json) {
     return EpisodeFilters(
       require: (json['require'] as List<dynamic>?)
-          ?.map(
-            (e) => EpisodeFilterEntry.fromJson(e as Map<String, dynamic>),
-          )
+          ?.map((e) => EpisodeFilterEntry.fromJson(e as Map<String, dynamic>))
           .toList(),
       exclude: (json['exclude'] as List<dynamic>?)
-          ?.map(
-            (e) => EpisodeFilterEntry.fromJson(e as Map<String, dynamic>),
-          )
+          ?.map((e) => EpisodeFilterEntry.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -144,10 +140,8 @@ final class EpisodeFilters {
 
   Map<String, dynamic> toJson() {
     return {
-      if (require != null)
-        'require': require!.map((e) => e.toJson()).toList(),
-      if (exclude != null)
-        'exclude': exclude!.map((e) => e.toJson()).toList(),
+      if (require != null) 'require': require!.map((e) => e.toJson()).toList(),
+      if (exclude != null) 'exclude': exclude!.map((e) => e.toJson()).toList(),
     };
   }
 }
@@ -189,9 +183,7 @@ final class GroupListSettings {
       userSortable: json['userSortable'] as bool?,
       showDateRange: json['showDateRange'] as bool?,
       sort: json['sort'] != null
-          ? SmartPlaylistSortRule.fromJson(
-              json['sort'] as Map<String, dynamic>,
-            )
+          ? SmartPlaylistSortRule.fromJson(json['sort'] as Map<String, dynamic>)
           : null,
     );
   }

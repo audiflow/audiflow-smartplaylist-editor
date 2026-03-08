@@ -107,7 +107,12 @@ void main() {
         'id': 'test-pattern',
         'feedUrls': ['https://example.com/feed'],
         'playlists': [
-          {'id': 'main', 'displayName': 'Main Episodes', 'resolverType': 'rss', 'playlistStructure': 'split'},
+          {
+            'id': 'main',
+            'displayName': 'Main Episodes',
+            'resolverType': 'rss',
+            'playlistStructure': 'split',
+          },
         ],
       };
 
@@ -135,8 +140,18 @@ void main() {
         'id': 'test-pattern',
         'feedUrls': ['https://example.com/new-feed'],
         'playlists': [
-          {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss', 'playlistStructure': 'split'},
-          {'id': 'bonus', 'displayName': 'Bonus', 'resolverType': 'year', 'playlistStructure': 'split'},
+          {
+            'id': 'main',
+            'displayName': 'Main',
+            'resolverType': 'rss',
+            'playlistStructure': 'split',
+          },
+          {
+            'id': 'bonus',
+            'displayName': 'Bonus',
+            'resolverType': 'year',
+            'playlistStructure': 'split',
+          },
         ],
       };
 
@@ -157,7 +172,12 @@ void main() {
         'id': 'test-pattern',
         'feedUrls': ['https://example.com/feed'],
         'playlists': [
-          {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss', 'playlistStructure': 'split'},
+          {
+            'id': 'main',
+            'displayName': 'Main',
+            'resolverType': 'rss',
+            'playlistStructure': 'split',
+          },
         ],
       };
 
@@ -177,8 +197,18 @@ void main() {
         'id': 'test-pattern',
         'feedUrls': ['https://example.com/feed'],
         'playlists': [
-          {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss', 'playlistStructure': 'split'},
-          {'id': 'bonus', 'displayName': 'Bonus', 'resolverType': 'year', 'playlistStructure': 'split'},
+          {
+            'id': 'main',
+            'displayName': 'Main',
+            'resolverType': 'rss',
+            'playlistStructure': 'split',
+          },
+          {
+            'id': 'bonus',
+            'displayName': 'Bonus',
+            'resolverType': 'year',
+            'playlistStructure': 'split',
+          },
         ],
       };
 
@@ -202,7 +232,12 @@ void main() {
           'id': 'test-pattern',
           'feedUrls': ['https://example.com/feed'],
           'playlists': [
-            {'id': 'main', 'displayName': 'Main', 'resolverType': 'rss', 'playlistStructure': 'split'},
+            {
+              'id': 'main',
+              'displayName': 'Main',
+              'resolverType': 'rss',
+              'playlistStructure': 'split',
+            },
           ],
         };
 

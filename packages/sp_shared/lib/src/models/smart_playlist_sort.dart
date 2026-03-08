@@ -27,10 +27,7 @@ enum SortOrder { ascending, descending }
 
 /// A single sort rule for ordering groups.
 final class SmartPlaylistSortRule {
-  const SmartPlaylistSortRule({
-    required this.field,
-    required this.order,
-  });
+  const SmartPlaylistSortRule({required this.field, required this.order});
 
   factory SmartPlaylistSortRule.fromJson(Map<String, dynamic> json) {
     return SmartPlaylistSortRule(
@@ -42,18 +39,12 @@ final class SmartPlaylistSortRule {
   final SmartPlaylistSortField field;
   final SortOrder order;
 
-  Map<String, dynamic> toJson() => {
-    'field': field.name,
-    'order': order.name,
-  };
+  Map<String, dynamic> toJson() => {'field': field.name, 'order': order.name};
 }
 
 /// A sort rule for ordering episodes within a group or playlist.
 final class EpisodeSortRule {
-  const EpisodeSortRule({
-    required this.field,
-    required this.order,
-  });
+  const EpisodeSortRule({required this.field, required this.order});
 
   factory EpisodeSortRule.fromJson(Map<String, dynamic> json) {
     return EpisodeSortRule(
@@ -65,8 +56,5 @@ final class EpisodeSortRule {
   final EpisodeSortField field;
   final SortOrder order;
 
-  Map<String, dynamic> toJson() => {
-    'field': field.name,
-    'order': order.name,
-  };
+  Map<String, dynamic> toJson() => {'field': field.name, 'order': order.name};
 }

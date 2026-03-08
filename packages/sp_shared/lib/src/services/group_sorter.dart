@@ -15,7 +15,8 @@ List<SmartPlaylistGroup> sortGroups(
 
   final sorted = List.of(groups);
   sorted.sort(
-    (a, b) => _compareByField(sortRule.field, a, b, episodeById, sortRule.order),
+    (a, b) =>
+        _compareByField(sortRule.field, a, b, episodeById, sortRule.order),
   );
   return sorted;
 }

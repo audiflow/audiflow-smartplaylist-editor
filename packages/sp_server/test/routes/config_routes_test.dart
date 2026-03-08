@@ -48,18 +48,14 @@ String _patternMetaB() => const JsonEncoder.withIndent('  ').convert({
 });
 
 /// Sample playlists.
-String _playlistSeasons() => const JsonEncoder.withIndent(
-  '  ',
-).convert({
+String _playlistSeasons() => const JsonEncoder.withIndent('  ').convert({
   'id': 'seasons',
   'displayName': 'Seasons',
   'resolverType': 'rss',
   'playlistStructure': 'split',
 });
 
-String _playlistByYear() => const JsonEncoder.withIndent(
-  '  ',
-).convert({
+String _playlistByYear() => const JsonEncoder.withIndent('  ').convert({
   'id': 'by-year',
   'displayName': 'By Year',
   'resolverType': 'year',
@@ -647,7 +643,12 @@ void main() {
             'config': {
               'id': 'test',
               'playlists': [
-                {'id': 's', 'displayName': 'S', 'resolverType': 'rss', 'playlistStructure': 'split'},
+                {
+                  'id': 's',
+                  'displayName': 'S',
+                  'resolverType': 'rss',
+                  'playlistStructure': 'split',
+                },
               ],
             },
           }),
@@ -683,7 +684,12 @@ void main() {
             'config': {
               'id': 'test',
               'playlists': [
-                {'id': 's', 'displayName': 'S', 'resolverType': 'rss', 'playlistStructure': 'split'},
+                {
+                  'id': 's',
+                  'displayName': 'S',
+                  'resolverType': 'rss',
+                  'playlistStructure': 'split',
+                },
               ],
             },
             'feedUrl': 'https://example.com/unknown-feed.xml',
@@ -741,7 +747,12 @@ void main() {
           'config': {
             'id': 'test',
             'playlists': [
-              {'id': 's', 'displayName': 'S', 'resolverType': 'rss', 'playlistStructure': 'split'},
+              {
+                'id': 's',
+                'displayName': 'S',
+                'resolverType': 'rss',
+                'playlistStructure': 'split',
+              },
             ],
           },
           'feedUrl': 'https://example.com/empty.xml',

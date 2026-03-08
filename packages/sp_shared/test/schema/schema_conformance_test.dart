@@ -111,8 +111,7 @@ void main() {
     });
 
     test('episodeExtractorSources match schema enum', () {
-      final episodeExtractor =
-          defs['EpisodeExtractor'] as Map<String, dynamic>;
+      final episodeExtractor = defs['EpisodeExtractor'] as Map<String, dynamic>;
       final props = episodeExtractor['properties'] as Map<String, dynamic>;
       final source = props['source'] as Map<String, dynamic>;
       final schemaValues = _extractEnum(source);
