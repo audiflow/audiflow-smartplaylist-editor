@@ -1,7 +1,7 @@
 export const DEFAULT_PLAYLIST = {
   id: '',
   displayName: '',
-  resolverType: '',
+  resolverType: 'rss',
   playlistStructure: 'grouped',
   priority: 0,
   prependSeasonNumber: false,

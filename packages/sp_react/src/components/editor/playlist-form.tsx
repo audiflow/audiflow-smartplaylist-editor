@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
+import type { PatternConfig, PlaylistStructure, ResolverType, YearBinding } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
@@ -247,7 +247,7 @@ function StructureSettings({
           </HintLabel>
           <Select
             value={resolverType ?? ''}
-            onValueChange={(val) => setValue(`${prefix}.resolverType`, val, { shouldDirty: true })}
+            onValueChange={(val) => setValue(`${prefix}.resolverType`, val as ResolverType, { shouldDirty: true })}
           >
             <SelectTrigger id={`playlist-${index}-resolverType`}>
               <SelectValue placeholder={t('selectResolver')} />
@@ -272,7 +272,7 @@ function StructureSettings({
           </HintLabel>
           <Select
             value={watch(`${prefix}.playlistStructure`) ?? 'grouped'}
-            onValueChange={(val) => setValue(`${prefix}.playlistStructure`, val, { shouldDirty: true })}
+            onValueChange={(val) => setValue(`${prefix}.playlistStructure`, val as PlaylistStructure, { shouldDirty: true })}
           >
             <SelectTrigger id={`playlist-${index}-playlistStructure`} className="w-full">
               <SelectValue placeholder={t('playlistStructure_grouped')} />
