@@ -40,6 +40,7 @@ Map<String, dynamic> _playlistSeasonsJson() => {
   'id': 'seasons',
   'displayName': 'Seasons',
   'resolverType': 'rss',
+  'playlistStructure': 'split',
 };
 
 /// Sample playlist JSON for by-year.
@@ -47,6 +48,7 @@ Map<String, dynamic> _playlistByYearJson() => {
   'id': 'by-year',
   'displayName': 'By Year',
   'resolverType': 'year',
+  'playlistStructure': 'split',
 };
 
 /// Pretty-prints JSON with 2-space indent and trailing newline.
@@ -284,6 +286,7 @@ void main() {
           'id': 'seasons',
           'displayName': 'Updated Seasons',
           'resolverType': 'rss',
+          'playlistStructure': 'split',
         };
         await repo.savePlaylist('podcast-a', 'seasons', updatedJson);
 
@@ -304,6 +307,7 @@ void main() {
           'id': 'new-pl',
           'displayName': 'New Playlist',
           'resolverType': 'year',
+          'playlistStructure': 'split',
         };
         await repo.savePlaylist('podcast-a', 'new-pl', newPlaylist);
 

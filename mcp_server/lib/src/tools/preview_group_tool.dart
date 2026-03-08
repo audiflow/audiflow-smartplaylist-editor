@@ -102,7 +102,7 @@ Future<Map<String, dynamic>> executePreviewGroup(
   final groups = playlistResult.playlist.groups;
   if (groups == null || groups.isEmpty) {
     throw ArgumentError(
-      'Playlist "$playlistId" has no groups (contentType may be "episodes")',
+      'Playlist "$playlistId" has no groups (playlistStructure may be "split")',
     );
   }
 

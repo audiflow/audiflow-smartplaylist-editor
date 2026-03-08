@@ -165,7 +165,7 @@ Map<String, dynamic> _categoryConfig() {
         'id': 'extras',
         'displayName': 'Extras',
         'resolverType': 'category',
-        'contentType': 'groups',
+        'playlistStructure': 'grouped',
         'groups': [
           {'id': 'extra', 'displayName': 'Extra', 'pattern': 'Extra'},
           {'id': 'other', 'displayName': 'Other', 'pattern': ''},

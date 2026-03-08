@@ -35,6 +35,7 @@ void main() {
             'id': 'main',
             'displayName': 'Main Episodes',
             'resolverType': 'rss',
+            'playlistStructure': 'split',
           },
         },
       },
