@@ -12,6 +12,7 @@ void main() {
           id: 'test',
           displayName: 'Test',
           resolverType: 'year',
+          playlistStructure: 'split',
           titleExtractor: SmartPlaylistTitleExtractor(
             source: 'title',
             pattern: r'Season (\d+)',
@@ -46,6 +47,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'year',
+        playlistStructure: 'split',
         titleExtractor: SmartPlaylistTitleExtractor(
           source: 'title',
           pattern: r'NoMatch (\d+)',
@@ -73,6 +75,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'year',
+        playlistStructure: 'split',
       );
 
       final episodes = [

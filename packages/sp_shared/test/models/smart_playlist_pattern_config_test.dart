@@ -14,6 +14,7 @@ void main() {
             id: 'main',
             displayName: 'Main',
             resolverType: 'rssSeason',
+            playlistStructure: 'split',
           ),
         ],
       );
@@ -39,6 +40,7 @@ void main() {
             id: 'p1',
             displayName: 'P1',
             resolverType: 'flat',
+            playlistStructure: 'split',
           ),
         ],
       );
@@ -58,6 +60,7 @@ void main() {
             id: 'p1',
             displayName: 'P1',
             resolverType: 'flat',
+            playlistStructure: 'split',
           ),
         ],
       );
@@ -74,6 +77,7 @@ void main() {
             id: 'p1',
             displayName: 'P1',
             resolverType: 'flat',
+            playlistStructure: 'split',
           ),
         ],
       );
@@ -90,6 +94,7 @@ void main() {
             id: 'p1',
             displayName: 'P1',
             resolverType: 'flat',
+            playlistStructure: 'split',
           ),
         ],
       );

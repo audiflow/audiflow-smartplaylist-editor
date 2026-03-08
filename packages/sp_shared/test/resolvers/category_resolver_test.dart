@@ -28,6 +28,7 @@ void main() {
         id: 'empty',
         displayName: 'Empty',
         resolverType: 'category',
+        playlistStructure: 'grouped',
       );
       final episodes = [_makeEpisode(1, 'Episode 1')];
       final result = resolver.resolve(episodes, definition);
@@ -39,6 +40,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'category',
+        playlistStructure: 'grouped',
         groups: [
           SmartPlaylistGroupDef(
             id: 'saturday',
@@ -78,6 +80,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'category',
+        playlistStructure: 'grouped',
         groups: [
           SmartPlaylistGroupDef(
             id: 'saturday',
@@ -103,6 +106,7 @@ void main() {
         id: 'overlap',
         displayName: 'Overlap',
         resolverType: 'category',
+        playlistStructure: 'grouped',
         groups: [
           SmartPlaylistGroupDef(
             id: 'first',
@@ -130,6 +134,7 @@ void main() {
         id: 'empty',
         displayName: 'Empty',
         resolverType: 'category',
+        playlistStructure: 'grouped',
         groups: [],
       );
 
@@ -144,6 +149,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'category',
+        playlistStructure: 'grouped',
         groups: [
           SmartPlaylistGroupDef(
             id: 'alpha',
@@ -179,6 +185,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'category',
+        playlistStructure: 'grouped',
         groups: [
           SmartPlaylistGroupDef(
             id: 'matched',

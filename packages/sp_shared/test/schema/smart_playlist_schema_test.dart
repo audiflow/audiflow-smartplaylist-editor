@@ -9,8 +9,8 @@ void main() {
       expect(SmartPlaylistSchemaConstants.currentDataVersion, 1);
     });
 
-    test('currentSchemaVersion is 1', () {
-      expect(SmartPlaylistSchemaConstants.currentSchemaVersion, 1);
+    test('currentSchemaVersion is 2', () {
+      expect(SmartPlaylistSchemaConstants.currentSchemaVersion, 2);
     });
 
     test('validResolverTypes contains expected values', () {
@@ -20,17 +20,17 @@ void main() {
       );
     });
 
-    test('validYearHeaderModes matches runtime enum', () {
+    test('validYearBindings matches runtime enum', () {
       expect(
-        SmartPlaylistSchemaConstants.validYearHeaderModes,
-        equals(['none', 'firstEpisode', 'perEpisode']),
+        SmartPlaylistSchemaConstants.validYearBindings,
+        equals(['none', 'pinToYear', 'splitByYear']),
       );
     });
 
-    test('validContentTypes contains expected values', () {
+    test('validPlaylistStructures contains expected values', () {
       expect(
-        SmartPlaylistSchemaConstants.validContentTypes,
-        equals(['episodes', 'groups']),
+        SmartPlaylistSchemaConstants.validPlaylistStructures,
+        equals(['split', 'grouped']),
       );
     });
 
@@ -40,9 +40,15 @@ void main() {
         containsAll([
           'playlistNumber',
           'newestEpisodeDate',
-          'progress',
           'alphabetical',
         ]),
+      );
+    });
+
+    test('validEpisodeSortFields contains expected values', () {
+      expect(
+        SmartPlaylistSchemaConstants.validEpisodeSortFields,
+        containsAll(['publishedAt', 'episodeNumber', 'title']),
       );
     });
 
@@ -50,13 +56,6 @@ void main() {
       expect(
         SmartPlaylistSchemaConstants.validSortOrders,
         equals(['ascending', 'descending']),
-      );
-    });
-
-    test('validSortConditionTypes contains both types', () {
-      expect(
-        SmartPlaylistSchemaConstants.validSortConditionTypes,
-        containsAll(['sortKeyGreaterThan', 'greaterThan']),
       );
     });
   });
@@ -88,6 +87,7 @@ void main() {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
+          'playlistStructure': 'split',
           'priority': 100,
         };
         expect(validator.validatePlaylistDefinition(playlist), isEmpty);
@@ -104,76 +104,69 @@ void main() {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'nonexistent',
+          'playlistStructure': 'split',
         };
         expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
       });
 
-      test('returns errors for invalid contentType', () {
+      test('returns errors for invalid playlistStructure', () {
         final playlist = {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
-          'contentType': 'invalid',
+          'playlistStructure': 'invalid',
         };
         expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
       });
 
-      test('returns errors for invalid sort spec', () {
+      test('returns errors for invalid sort field in groupList', () {
         final playlist = {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
-          'customSort': {'type': 'unknown'},
-        };
-        expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
-      });
-
-      test('returns errors for invalid sort field', () {
-        final playlist = {
-          'id': 'main',
-          'displayName': 'Main',
-          'resolverType': 'rss',
-          'customSort': {
-            'rules': [
-              {'field': 'invalid', 'order': 'ascending'},
-            ],
+          'playlistStructure': 'grouped',
+          'groupList': {
+            'sort': {'field': 'invalid', 'order': 'ascending'},
           },
         };
         expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);
       });
 
-      test('accepts yearHeaderMode none', () {
+      test('accepts groupList with yearBinding none', () {
         final playlist = {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
-          'yearHeaderMode': 'none',
+          'playlistStructure': 'grouped',
+          'groupList': {'yearBinding': 'none'},
         };
         expect(validator.validatePlaylistDefinition(playlist), isEmpty);
       });
 
-      test('accepts yearHeaderMode perEpisode', () {
+      test('accepts groupList with yearBinding splitByYear', () {
         final playlist = {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
-          'yearHeaderMode': 'perEpisode',
+          'playlistStructure': 'grouped',
+          'groupList': {'yearBinding': 'splitByYear'},
         };
         expect(validator.validatePlaylistDefinition(playlist), isEmpty);
       });
 
-      test('rejects old yearHeaderMode values', () {
-        for (final invalid in ['lastEpisode', 'publishYear']) {
+      test('rejects invalid yearBinding values', () {
+        for (final invalid in ['firstEpisode', 'perEpisode', 'lastEpisode']) {
           final playlist = {
             'id': 'main',
             'displayName': 'Main',
             'resolverType': 'rss',
-            'yearHeaderMode': invalid,
+            'playlistStructure': 'grouped',
+            'groupList': {'yearBinding': invalid},
           };
           expect(
             validator.validatePlaylistDefinition(playlist),
             isNotEmpty,
-            reason: 'Should reject yearHeaderMode "$invalid"',
+            reason: 'Should reject yearBinding "$invalid"',
           );
         }
       });
@@ -183,7 +176,8 @@ void main() {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
-          'smartPlaylistEpisodeExtractor': {
+          'playlistStructure': 'split',
+          'episodeExtractor': {
             'source': 'title',
             'pattern': r'E(\d+)',
             'seasonGroup': null,
@@ -197,7 +191,8 @@ void main() {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
-          'smartPlaylistEpisodeExtractor': {
+          'playlistStructure': 'split',
+          'episodeExtractor': {
             'source': 'title',
             'pattern': r'E(\d+)',
             'fallbackToRss': true,
@@ -206,19 +201,17 @@ void main() {
         expect(validator.validatePlaylistDefinition(playlist), isEmpty);
       });
 
-      test('accepts greaterThan sort condition type', () {
+      test('accepts groupList with sort rule', () {
         final playlist = {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
-          'customSort': {
-            'rules': [
-              {
-                'field': 'playlistNumber',
-                'order': 'ascending',
-                'condition': {'type': 'greaterThan', 'value': 5},
-              },
-            ],
+          'playlistStructure': 'grouped',
+          'groupList': {
+            'sort': {
+              'field': 'playlistNumber',
+              'order': 'ascending',
+            },
           },
         };
         expect(validator.validatePlaylistDefinition(playlist), isEmpty);
@@ -229,22 +222,33 @@ void main() {
           'id': 'seasons',
           'displayName': 'Seasons',
           'resolverType': 'rss',
+          'playlistStructure': 'grouped',
           'priority': 100,
-          'contentType': 'groups',
-          'yearHeaderMode': 'firstEpisode',
-          'episodeYearHeaders': true,
-          'showDateRange': true,
-          'showSeasonNumber': true,
+          'prependSeasonNumber': true,
           'nullSeasonGroupKey': 0,
-          'customSort': {
-            'rules': [
-              {
-                'field': 'playlistNumber',
-                'order': 'descending',
-                'condition': {'type': 'sortKeyGreaterThan', 'value': 0},
-              },
-              {'field': 'newestEpisodeDate', 'order': 'descending'},
+          'episodeFilters': {
+            'require': [
+              {'title': r'S\d+'},
             ],
+            'exclude': [
+              {'title': r'Trailer'},
+            ],
+          },
+          'groupList': {
+            'yearBinding': 'pinToYear',
+            'userSortable': true,
+            'showDateRange': true,
+            'sort': {
+              'field': 'playlistNumber',
+              'order': 'descending',
+            },
+          },
+          'episodeList': {
+            'showYearHeaders': true,
+            'sort': {
+              'field': 'publishedAt',
+              'order': 'ascending',
+            },
           },
           'titleExtractor': {
             'source': 'title',
@@ -257,7 +261,7 @@ void main() {
               'fallbackValue': 'Specials',
             },
           },
-          'smartPlaylistEpisodeExtractor': {
+          'episodeExtractor': {
             'source': 'title',
             'pattern': r'\[(\d+)-(\d+)\]',
             'seasonGroup': 1,
@@ -266,6 +270,16 @@ void main() {
             'fallbackEpisodePattern': r'\[bangai-hen\s*#(\d+)\]',
             'fallbackEpisodeCaptureGroup': 1,
           },
+          'groups': [
+            {
+              'id': 'main',
+              'displayName': 'Main',
+              'pattern': r'^Main\b',
+              'display': {'showDateRange': true},
+              'episodeList': {'showYearHeaders': true},
+            },
+            {'id': 'other', 'displayName': 'Other'},
+          ],
         };
         expect(validator.validatePlaylistDefinition(playlist), isEmpty);
       });
@@ -282,6 +296,7 @@ void main() {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
+          'playlistStructure': 'split',
         });
         expect(validator.validatePlaylistDefinitionString(json), isEmpty);
       });
@@ -291,6 +306,7 @@ void main() {
           'id': 'main',
           'displayName': 'Main',
           'resolverType': 'rss',
+          'playlistStructure': 'split',
           'priority': -1,
         };
         expect(validator.validatePlaylistDefinition(playlist), isNotEmpty);

@@ -23,12 +23,10 @@ void main() {
     });
 
     test('constructor creates instance with all fields', () {
-      const sort = SmartPlaylistSortSpec([
-        SmartPlaylistSortRule(
-          field: SmartPlaylistSortField.playlistNumber,
-          order: SortOrder.ascending,
-        ),
-      ]);
+      const sort = SmartPlaylistSortRule(
+        field: SmartPlaylistSortField.playlistNumber,
+        order: SortOrder.ascending,
+      );
       const extractor = SmartPlaylistTitleExtractor(source: 'title');
       const episodeExtractor = SmartPlaylistEpisodeExtractor(
         source: 'title',

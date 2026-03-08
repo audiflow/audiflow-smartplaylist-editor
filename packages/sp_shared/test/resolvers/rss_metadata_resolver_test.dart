@@ -83,6 +83,7 @@ void main() {
           id: 'test',
           displayName: 'Test',
           resolverType: 'rss',
+          playlistStructure: 'split',
           nullSeasonGroupKey: 0,
         );
         final episodes = [
@@ -132,11 +133,10 @@ void main() {
     });
 
     test('default sort is season number ascending', () {
-      expect(resolver.defaultSort, isA<SmartPlaylistSortSpec>());
+      expect(resolver.defaultSort, isA<SmartPlaylistSortRule>());
       final sort = resolver.defaultSort;
-      expect(sort.rules, hasLength(1));
-      expect(sort.rules[0].field, SmartPlaylistSortField.playlistNumber);
-      expect(sort.rules[0].order, SortOrder.ascending);
+      expect(sort.field, SmartPlaylistSortField.playlistNumber);
+      expect(sort.order, SortOrder.ascending);
     });
 
     test('sortKey is season number regardless of episodeNumber', () {
@@ -185,6 +185,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'rss',
+        playlistStructure: 'split',
         titleExtractor: const SmartPlaylistTitleExtractor(
           source: 'title',
           pattern: r'(.+?) \d+$',

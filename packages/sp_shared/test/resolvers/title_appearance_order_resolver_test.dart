@@ -31,6 +31,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'title_appearance',
+        playlistStructure: 'split',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',
@@ -74,6 +75,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'title_appearance',
+        playlistStructure: 'split',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',
@@ -99,6 +101,7 @@ void main() {
         id: 'test',
         displayName: 'Test',
         resolverType: 'title_appearance',
+        playlistStructure: 'split',
         groups: [
           SmartPlaylistGroupDef(
             id: 'extract',

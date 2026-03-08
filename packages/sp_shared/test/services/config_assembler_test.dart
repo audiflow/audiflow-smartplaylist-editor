@@ -16,11 +16,13 @@ void main() {
           id: 'regular',
           displayName: 'Regular',
           resolverType: 'rss',
+          playlistStructure: 'split',
         ),
         SmartPlaylistDefinition(
           id: 'short',
           displayName: 'Short',
           resolverType: 'rss',
+          playlistStructure: 'split',
         ),
       ];
 
@@ -47,6 +49,7 @@ void main() {
           id: 'main',
           displayName: 'Main',
           resolverType: 'rss',
+          playlistStructure: 'split',
         ),
       ];
 
@@ -62,8 +65,18 @@ void main() {
         playlists: ['b', 'a'],
       );
       final playlists = [
-        SmartPlaylistDefinition(id: 'a', displayName: 'A', resolverType: 'rss'),
-        SmartPlaylistDefinition(id: 'b', displayName: 'B', resolverType: 'rss'),
+        SmartPlaylistDefinition(
+          id: 'a',
+          displayName: 'A',
+          resolverType: 'rss',
+          playlistStructure: 'split',
+        ),
+        SmartPlaylistDefinition(
+          id: 'b',
+          displayName: 'B',
+          resolverType: 'rss',
+          playlistStructure: 'split',
+        ),
       ];
 
       final config = ConfigAssembler.assemble(meta, playlists);

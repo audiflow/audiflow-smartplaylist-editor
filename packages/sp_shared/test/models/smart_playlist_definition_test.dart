@@ -10,21 +10,24 @@ void main() {
         id: 'main',
         displayName: 'Main Episodes',
         resolverType: 'rssSeason',
+        playlistStructure: 'grouped',
         priority: 1,
-        titleFilter: r'^\[\d+',
-        excludeFilter: r'bonus',
+        episodeFilters: const EpisodeFilters(
+          require: [EpisodeFilterEntry(title: r'^\[\d+')],
+          exclude: [EpisodeFilterEntry(title: r'bonus')],
+        ),
         nullSeasonGroupKey: 0,
-        customSort: const SmartPlaylistSortSpec([
-          SmartPlaylistSortRule(
+        groupList: const GroupListSettings(
+          sort: SmartPlaylistSortRule(
             field: SmartPlaylistSortField.playlistNumber,
             order: SortOrder.ascending,
           ),
-        ]),
+        ),
         titleExtractor: const SmartPlaylistTitleExtractor(
           source: 'seasonNumber',
           template: 'Season {value}',
         ),
-        smartPlaylistEpisodeExtractor: const SmartPlaylistEpisodeExtractor(
+        episodeExtractor: const SmartPlaylistEpisodeExtractor(
           source: 'title',
           pattern: r'\[(\d+)-(\d+)\]',
         ),
@@ -39,13 +42,14 @@ void main() {
       expect(decoded.id, 'main');
       expect(decoded.displayName, 'Main Episodes');
       expect(decoded.resolverType, 'rssSeason');
+      expect(decoded.playlistStructure, 'grouped');
       expect(decoded.priority, 1);
-      expect(decoded.titleFilter, r'^\[\d+');
-      expect(decoded.excludeFilter, r'bonus');
+      expect(decoded.episodeFilters, isNotNull);
       expect(decoded.nullSeasonGroupKey, 0);
-      expect(decoded.customSort, isA<SmartPlaylistSortSpec>());
+      expect(decoded.groupList, isNotNull);
+      expect(decoded.groupList!.sort, isA<SmartPlaylistSortRule>());
       expect(decoded.titleExtractor, isNotNull);
-      expect(decoded.smartPlaylistEpisodeExtractor, isNotNull);
+      expect(decoded.episodeExtractor, isNotNull);
     });
 
     test('round-trip with category groups', () {
@@ -53,6 +57,7 @@ void main() {
         id: 'categories',
         displayName: 'Categories',
         resolverType: 'categoryGroup',
+        playlistStructure: 'grouped',
         groups: [
           SmartPlaylistGroupDef(
             id: 'tech',
@@ -76,46 +81,27 @@ void main() {
       expect(decoded.groups![1].pattern, isNull);
     });
 
-    test('fromJson converts empty string filters to null', () {
-      final json = {
-        'id': 'test',
-        'displayName': 'Test',
-        'resolverType': 'year',
-        'titleFilter': '',
-        'excludeFilter': '',
-        'requireFilter': '',
-        'contentType': '',
-        'yearHeaderMode': '',
-      };
-
-      final def = SmartPlaylistDefinition.fromJson(json);
-
-      expect(def.titleFilter, isNull);
-      expect(def.excludeFilter, isNull);
-      expect(def.requireFilter, isNull);
-      expect(def.contentType, isNull);
-      expect(def.yearHeaderMode, isNull);
+    test('hasFilters returns true when episodeFilters is present', () {
+      const def = SmartPlaylistDefinition(
+        id: 'test',
+        displayName: 'Test',
+        resolverType: 'year',
+        playlistStructure: 'split',
+        episodeFilters: EpisodeFilters(
+          require: [EpisodeFilterEntry(title: r'main')],
+        ),
+      );
+      expect(def.hasFilters, isTrue);
     });
 
-    test('fromJson preserves non-empty filter strings', () {
-      final json = {
-        'id': 'test',
-        'displayName': 'Test',
-        'resolverType': 'year',
-        'titleFilter': r'^\d+',
-        'excludeFilter': r'bonus',
-        'requireFilter': r'main',
-        'contentType': 'groups',
-        'yearHeaderMode': 'firstEpisode',
-      };
-
-      final def = SmartPlaylistDefinition.fromJson(json);
-
-      expect(def.titleFilter, r'^\d+');
-      expect(def.excludeFilter, r'bonus');
-      expect(def.requireFilter, r'main');
-      expect(def.contentType, 'groups');
-      expect(def.yearHeaderMode, 'firstEpisode');
+    test('hasFilters returns false when episodeFilters is null', () {
+      const def = SmartPlaylistDefinition(
+        id: 'test',
+        displayName: 'Test',
+        resolverType: 'year',
+        playlistStructure: 'split',
+      );
+      expect(def.hasFilters, isFalse);
     });
 
     test('minimal definition with required fields only', () {
@@ -123,25 +109,30 @@ void main() {
         id: 'simple',
         displayName: 'Simple',
         resolverType: 'flat',
+        playlistStructure: 'split',
       );
 
       final json = def.toJson();
 
-      // Only required keys present
-      expect(json.keys, containsAll(['id', 'displayName', 'resolverType']));
+      // Required keys present
+      expect(
+        json.keys,
+        containsAll(['id', 'displayName', 'resolverType', 'playlistStructure']),
+      );
       expect(json.containsKey('priority'), isFalse);
       expect(json.containsKey('groups'), isFalse);
-      expect(json.containsKey('customSort'), isFalse);
+      expect(json.containsKey('groupList'), isFalse);
 
       final decoded = SmartPlaylistDefinition.fromJson(json);
 
       expect(decoded.id, 'simple');
       expect(decoded.priority, 0);
-      expect(decoded.episodeYearHeaders, isFalse);
+      expect(decoded.episodeFilters, isNull);
       expect(decoded.groups, isNull);
-      expect(decoded.customSort, isNull);
+      expect(decoded.groupList, isNull);
+      expect(decoded.episodeList, isNull);
       expect(decoded.titleExtractor, isNull);
-      expect(decoded.smartPlaylistEpisodeExtractor, isNull);
+      expect(decoded.episodeExtractor, isNull);
     });
   });
 }

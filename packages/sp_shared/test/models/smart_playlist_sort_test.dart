@@ -9,8 +9,20 @@ void main() {
         containsAll([
           SmartPlaylistSortField.playlistNumber,
           SmartPlaylistSortField.newestEpisodeDate,
-          SmartPlaylistSortField.progress,
           SmartPlaylistSortField.alphabetical,
+        ]),
+      );
+    });
+  });
+
+  group('EpisodeSortField', () {
+    test('all enum values exist', () {
+      expect(
+        EpisodeSortField.values,
+        containsAll([
+          EpisodeSortField.publishedAt,
+          EpisodeSortField.episodeNumber,
+          EpisodeSortField.title,
         ]),
       );
     });
@@ -25,33 +37,27 @@ void main() {
     });
   });
 
-  group('SmartPlaylistSortSpec', () {
-    test('single-rule sort spec holds one rule', () {
-      final spec = SmartPlaylistSortSpec([
-        SmartPlaylistSortRule(
-          field: SmartPlaylistSortField.playlistNumber,
-          order: SortOrder.ascending,
-        ),
-      ]);
+  group('SmartPlaylistSortRule', () {
+    test('holds field and order', () {
+      const rule = SmartPlaylistSortRule(
+        field: SmartPlaylistSortField.playlistNumber,
+        order: SortOrder.ascending,
+      );
 
-      expect(spec.rules, hasLength(1));
-      expect(spec.rules[0].field, SmartPlaylistSortField.playlistNumber);
-      expect(spec.rules[0].order, SortOrder.ascending);
+      expect(rule.field, SmartPlaylistSortField.playlistNumber);
+      expect(rule.order, SortOrder.ascending);
     });
+  });
 
-    test('multi-rule sort spec holds multiple rules', () {
-      final spec = SmartPlaylistSortSpec([
-        SmartPlaylistSortRule(
-          field: SmartPlaylistSortField.playlistNumber,
-          order: SortOrder.ascending,
-        ),
-        SmartPlaylistSortRule(
-          field: SmartPlaylistSortField.newestEpisodeDate,
-          order: SortOrder.descending,
-        ),
-      ]);
+  group('EpisodeSortRule', () {
+    test('holds field and order', () {
+      const rule = EpisodeSortRule(
+        field: EpisodeSortField.publishedAt,
+        order: SortOrder.descending,
+      );
 
-      expect(spec.rules.length, 2);
+      expect(rule.field, EpisodeSortField.publishedAt);
+      expect(rule.order, SortOrder.descending);
     });
   });
 }

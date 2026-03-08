@@ -7,70 +7,74 @@ void main() {
       final resolver = CategoryResolver();
       final sort = resolver.defaultSort;
 
-      expect(sort.rules, hasLength(1));
-      expect(sort.rules.first.field, SmartPlaylistSortField.playlistNumber);
-      expect(sort.rules.first.order, SortOrder.ascending);
-      expect(sort.rules.first.condition, isNull);
+      expect(sort.field, SmartPlaylistSortField.playlistNumber);
+      expect(sort.order, SortOrder.ascending);
     });
   });
 
-  group('CategoryResolver.parseContentType', () {
-    test('returns groups for "groups"', () {
+  group('CategoryResolver.parsePlaylistStructure', () {
+    test('returns grouped for "grouped"', () {
       expect(
-        CategoryResolver.parseContentType('groups'),
-        SmartPlaylistContentType.groups,
+        CategoryResolver.parsePlaylistStructure('grouped'),
+        PlaylistStructure.grouped,
       );
     });
 
-    test('returns episodes for "episodes"', () {
+    test('returns split for "split"', () {
       expect(
-        CategoryResolver.parseContentType('episodes'),
-        SmartPlaylistContentType.episodes,
+        CategoryResolver.parsePlaylistStructure('split'),
+        PlaylistStructure.split,
       );
     });
 
-    test('returns episodes for null', () {
+    test('returns split for null', () {
       expect(
-        CategoryResolver.parseContentType(null),
-        SmartPlaylistContentType.episodes,
+        CategoryResolver.parsePlaylistStructure(null),
+        PlaylistStructure.split,
       );
     });
 
-    test('returns episodes for unknown value', () {
+    test('returns split for unknown value', () {
       expect(
-        CategoryResolver.parseContentType('unknown'),
-        SmartPlaylistContentType.episodes,
+        CategoryResolver.parsePlaylistStructure('unknown'),
+        PlaylistStructure.split,
       );
     });
   });
 
-  group('CategoryResolver.parseYearHeaderMode', () {
-    test('returns firstEpisode for "firstEpisode"', () {
+  group('CategoryResolver.parseYearBinding', () {
+    test('returns pinToYear for "pinToYear"', () {
       expect(
-        CategoryResolver.parseYearHeaderMode('firstEpisode'),
-        YearHeaderMode.firstEpisode,
+        CategoryResolver.parseYearBinding('pinToYear'),
+        YearBinding.pinToYear,
       );
     });
 
-    test('returns perEpisode for "perEpisode"', () {
+    test('returns splitByYear for "splitByYear"', () {
       expect(
-        CategoryResolver.parseYearHeaderMode('perEpisode'),
-        YearHeaderMode.perEpisode,
+        CategoryResolver.parseYearBinding('splitByYear'),
+        YearBinding.splitByYear,
       );
     });
 
     test('returns none for "none"', () {
-      expect(CategoryResolver.parseYearHeaderMode('none'), YearHeaderMode.none);
+      expect(
+        CategoryResolver.parseYearBinding('none'),
+        YearBinding.none,
+      );
     });
 
     test('returns none for null', () {
-      expect(CategoryResolver.parseYearHeaderMode(null), YearHeaderMode.none);
+      expect(
+        CategoryResolver.parseYearBinding(null),
+        YearBinding.none,
+      );
     });
 
     test('returns none for unknown value', () {
       expect(
-        CategoryResolver.parseYearHeaderMode('weekly'),
-        YearHeaderMode.none,
+        CategoryResolver.parseYearBinding('weekly'),
+        YearBinding.none,
       );
     });
   });
