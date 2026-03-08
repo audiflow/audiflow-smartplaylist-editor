@@ -16,7 +16,7 @@ export function UngroupedEpisodesPanel({
           key={ep.id}
           className="flex items-center gap-2 text-sm text-muted-foreground"
         >
-          <span className="truncate">{ep.title}</span>
+          <span className="truncate" title={ep.title}>{ep.title}</span>
           {ep.publishedAt && (
             <span className="text-xs text-muted-foreground/60 shrink-0">
               {new Date(ep.publishedAt).toLocaleDateString()}

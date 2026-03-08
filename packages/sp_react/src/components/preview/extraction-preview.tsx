@@ -51,7 +51,7 @@ export function ExtractionPreview({ playlist }: ExtractionPreviewProps) {
             {enrichedEpisodes.map((ep) => (
               <tr key={ep.id} className="border-b last:border-0">
                 <td className="py-1.5 pr-4 text-muted-foreground">
-                  {truncate(ep.title, 40)}
+                  <span title={ep.title}>{truncate(ep.title, 40)}</span>
                 </td>
                 <td className="py-1.5 pr-4">{ep.extractedDisplayName ?? '—'}</td>
                 <td className="py-1.5 pr-4">{ep.seasonNumber ?? '—'}</td>
