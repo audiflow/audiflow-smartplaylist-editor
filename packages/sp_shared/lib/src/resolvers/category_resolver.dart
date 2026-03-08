@@ -17,12 +17,10 @@ class CategoryResolver implements SmartPlaylistResolver {
   String get type => 'category';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
-    SmartPlaylistSortRule(
-      field: SmartPlaylistSortField.playlistNumber,
-      order: SortOrder.ascending,
-    ),
-  ]);
+  SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
+    field: SmartPlaylistSortField.playlistNumber,
+    order: SortOrder.ascending,
+  );
 
   @override
   SmartPlaylistGrouping? resolve(
@@ -41,32 +39,17 @@ class CategoryResolver implements SmartPlaylistResolver {
     List<EpisodeData> episodes,
     List<SmartPlaylistGroupDef> groupDefs,
   ) {
-    // Separate pattern groups from fallback
-    final patternGroups =
-        <
-          ({
-            RegExp regex,
-            String id,
-            String displayName,
-            bool? episodeYearHeaders,
-          })
-        >[];
+    final patternGroups = _buildPatternGroups(groupDefs);
     String? fallbackId;
     String? fallbackDisplayName;
-    bool? fallbackEpisodeYearHeaders;
+    bool? fallbackShowYearHeaders;
 
     for (final g in groupDefs) {
-      if (g.pattern != null) {
-        patternGroups.add((
-          regex: RegExp(g.pattern!),
-          id: g.id,
-          displayName: g.displayName,
-          episodeYearHeaders: g.episodeYearHeaders,
-        ));
-      } else {
+      if (g.pattern == null) {
         fallbackId = g.id;
         fallbackDisplayName = g.displayName;
-        fallbackEpisodeYearHeaders = g.episodeYearHeaders;
+        fallbackShowYearHeaders = g.episodeList?.showYearHeaders;
+        break;
       }
     }
 
@@ -92,41 +75,21 @@ class CategoryResolver implements SmartPlaylistResolver {
       }
     }
 
-    final groups = <SmartPlaylistGroup>[];
-    var sortKey = 1;
-    for (final pg in patternGroups) {
-      final ids = grouped[pg.id];
-      if (ids != null && ids.isNotEmpty) {
-        groups.add(
-          SmartPlaylistGroup(
-            id: pg.id,
-            displayName: pg.displayName,
-            sortKey: sortKey,
-            episodeIds: ids,
-            episodeYearHeaders: pg.episodeYearHeaders,
-          ),
-        );
-        sortKey++;
-      }
-    }
-
+    final groups = _buildGroups(patternGroups, grouped);
     if (fallbackIds.isNotEmpty) {
       groups.add(
         SmartPlaylistGroup(
           id: fallbackId!,
           displayName: fallbackDisplayName!,
-          sortKey: sortKey,
+          sortKey: groups.length + 1,
           episodeIds: fallbackIds,
-          episodeYearHeaders: fallbackEpisodeYearHeaders,
+          showYearHeaders: fallbackShowYearHeaders,
         ),
       );
     }
 
     if (groups.isEmpty && ungrouped.isEmpty) return null;
 
-    // Return each category group as a separate SmartPlaylist.
-    // The service wraps these into a parent playlist when
-    // contentType == "groups".
     final playlists = groups
         .map(
           (g) => SmartPlaylist(
@@ -145,18 +108,72 @@ class CategoryResolver implements SmartPlaylistResolver {
     );
   }
 
-  static SmartPlaylistContentType parseContentType(String? value) {
+  List<_PatternGroup> _buildPatternGroups(
+    List<SmartPlaylistGroupDef> groupDefs,
+  ) {
+    return groupDefs
+        .where((g) => g.pattern != null)
+        .map(
+          (g) => _PatternGroup(
+            regex: RegExp(g.pattern!),
+            id: g.id,
+            displayName: g.displayName,
+            showYearHeaders: g.episodeList?.showYearHeaders,
+          ),
+        )
+        .toList();
+  }
+
+  List<SmartPlaylistGroup> _buildGroups(
+    List<_PatternGroup> patternGroups,
+    Map<String, List<int>> grouped,
+  ) {
+    final groups = <SmartPlaylistGroup>[];
+    var sortKey = 1;
+    for (final pg in patternGroups) {
+      final ids = grouped[pg.id];
+      if (ids != null && ids.isNotEmpty) {
+        groups.add(
+          SmartPlaylistGroup(
+            id: pg.id,
+            displayName: pg.displayName,
+            sortKey: sortKey,
+            episodeIds: ids,
+            showYearHeaders: pg.showYearHeaders,
+          ),
+        );
+        sortKey++;
+      }
+    }
+    return groups;
+  }
+
+  static PlaylistStructure parsePlaylistStructure(String? value) {
     return switch (value) {
-      'groups' => SmartPlaylistContentType.groups,
-      _ => SmartPlaylistContentType.episodes,
+      'grouped' => PlaylistStructure.grouped,
+      _ => PlaylistStructure.split,
     };
   }
 
-  static YearHeaderMode parseYearHeaderMode(String? value) {
+  static YearBinding parseYearBinding(String? value) {
     return switch (value) {
-      'firstEpisode' => YearHeaderMode.firstEpisode,
-      'perEpisode' => YearHeaderMode.perEpisode,
-      _ => YearHeaderMode.none,
+      'pinToYear' => YearBinding.pinToYear,
+      'splitByYear' => YearBinding.splitByYear,
+      _ => YearBinding.none,
     };
   }
+}
+
+class _PatternGroup {
+  const _PatternGroup({
+    required this.regex,
+    required this.id,
+    required this.displayName,
+    this.showYearHeaders,
+  });
+
+  final RegExp regex;
+  final String id;
+  final String displayName;
+  final bool? showYearHeaders;
 }

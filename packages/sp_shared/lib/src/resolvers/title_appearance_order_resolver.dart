@@ -24,12 +24,10 @@ class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
   String get type => 'title_appearance';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
-    SmartPlaylistSortRule(
-      field: SmartPlaylistSortField.playlistNumber,
-      order: SortOrder.ascending,
-    ),
-  ]);
+  SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
+    field: SmartPlaylistSortField.playlistNumber,
+    order: SortOrder.ascending,
+  );
 
   @override
   SmartPlaylistGrouping? resolve(
@@ -46,6 +44,14 @@ class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
       return null;
     }
 
+    return _resolveByAppearance(episodes, titleExtractor, patternStr);
+  }
+
+  SmartPlaylistGrouping? _resolveByAppearance(
+    List<EpisodeData> episodes,
+    SmartPlaylistTitleExtractor? titleExtractor,
+    String? patternStr,
+  ) {
     // Sort episodes by publish date (oldest first) to determine
     // appearance order
     final sorted = episodes.where((e) => e.publishedAt != null).toList()
@@ -78,10 +84,7 @@ class TitleAppearanceOrderResolver implements SmartPlaylistResolver {
       }
     }
 
-    // Return null if no matches
-    if (grouped.isEmpty) {
-      return null;
-    }
+    if (grouped.isEmpty) return null;
 
     final playlists = <SmartPlaylist>[];
     for (var i = 0; playlistOrder.length - i != 0; i++) {

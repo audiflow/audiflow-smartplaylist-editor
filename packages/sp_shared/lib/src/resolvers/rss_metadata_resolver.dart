@@ -11,12 +11,10 @@ class RssMetadataResolver implements SmartPlaylistResolver {
   String get type => 'rss';
 
   @override
-  SmartPlaylistSortSpec get defaultSort => const SmartPlaylistSortSpec([
-    SmartPlaylistSortRule(
-      field: SmartPlaylistSortField.playlistNumber,
-      order: SortOrder.ascending,
-    ),
-  ]);
+  SmartPlaylistSortRule get defaultSort => const SmartPlaylistSortRule(
+    field: SmartPlaylistSortField.playlistNumber,
+    order: SortOrder.ascending,
+  );
 
   @override
   SmartPlaylistGrouping? resolve(
@@ -72,18 +70,18 @@ class RssMetadataResolver implements SmartPlaylistResolver {
     );
   }
 
-  static SmartPlaylistContentType parseContentType(String? value) {
+  static PlaylistStructure parsePlaylistStructure(String? value) {
     return switch (value) {
-      'groups' => SmartPlaylistContentType.groups,
-      _ => SmartPlaylistContentType.episodes,
+      'grouped' => PlaylistStructure.grouped,
+      _ => PlaylistStructure.split,
     };
   }
 
-  static YearHeaderMode parseYearHeaderMode(String? value) {
+  static YearBinding parseYearBinding(String? value) {
     return switch (value) {
-      'firstEpisode' => YearHeaderMode.firstEpisode,
-      'perEpisode' => YearHeaderMode.perEpisode,
-      _ => YearHeaderMode.none,
+      'pinToYear' => YearBinding.pinToYear,
+      'splitByYear' => YearBinding.splitByYear,
+      _ => YearBinding.none,
     };
   }
 

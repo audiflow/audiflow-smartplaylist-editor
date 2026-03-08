@@ -37,7 +37,7 @@ final class SmartPlaylistPattern {
   final int priority;
 
   /// Custom default sort for smart playlists from this pattern.
-  final SmartPlaylistSortSpec? customSort;
+  final SmartPlaylistSortRule? customSort;
 
   /// Custom title extractor for generating smart playlist display
   /// names.

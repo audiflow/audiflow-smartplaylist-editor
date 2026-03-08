@@ -547,7 +547,7 @@ List<SimpleEpisodeData> _enrichEpisodes(
   List<SimpleEpisodeData> episodes,
 ) {
   final extractor = config.playlists
-      .map((d) => d.smartPlaylistEpisodeExtractor)
+      .map((d) => d.episodeExtractor)
       .nonNulls
       .firstOrNull;
   if (extractor == null) return episodes;
@@ -669,7 +669,7 @@ Map<String, dynamic> _serializePlaylist(
     'sortKey': playlist.sortKey,
     'resolverType': resolverType,
     'episodeCount': playlist.episodeCount,
-    'yearHeaderMode': playlist.yearHeaderMode.name,
+    'yearBinding': playlist.yearBinding.name,
     if (playlist.groups != null)
       'groups': playlist.groups!
           .map(

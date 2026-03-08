@@ -89,37 +89,20 @@ class SmartPlaylistResolverService {
     final sorted = _sortByProcessingOrder(config.playlists);
 
     for (final definition in sorted) {
-      final hasFilters =
-          definition.titleFilter != null ||
-          definition.excludeFilter != null ||
-          definition.requireFilter != null;
-
-      // Compute claimedByOthers for definitions with filters
-      final claimedByOthers = <int, String>{};
-      if (hasFilters) {
-        final allCandidates = _filterEpisodes(episodes, definition, {});
-        for (final ep in allCandidates) {
-          if (claimedIds.contains(ep.id)) {
-            claimedByOthers[ep.id] = claimedByMap[ep.id]!;
-          }
-        }
-      }
+      final claimedByOthers = _computeClaimedByOthers(
+        definition,
+        episodes,
+        claimedIds,
+        claimedByMap,
+      );
 
       final filtered = _filterEpisodes(episodes, definition, claimedIds);
 
       if (filtered.isEmpty) {
-        // Still emit a result entry so the UI knows about claimed episodes
-        playlistResults.add(
-          PlaylistPreviewResult(
-            definitionId: definition.id,
-            playlist: SmartPlaylist(
-              id: definition.id,
-              displayName: definition.displayName,
-              sortKey: playlistResults.length,
-              episodeIds: const [],
-            ),
-            claimedByOthers: claimedByOthers,
-          ),
+        _addEmptyPreviewResult(
+          playlistResults,
+          definition,
+          claimedByOthers,
         );
         continue;
       }
@@ -132,43 +115,11 @@ class SmartPlaylistResolverService {
 
       resolverType ??= result.resolverType;
 
-      final contentType = RssMetadataResolver.parseContentType(
-        definition.contentType,
-      );
-      final yearHeaderMode = RssMetadataResolver.parseYearHeaderMode(
-        definition.yearHeaderMode,
-      );
-
-      // Build one SmartPlaylist per definition for the preview result.
-      // Groups mode: resolver playlists become groups inside one playlist.
-      // Episodes mode: resolver playlists become groups to maintain
-      // the 1:1 mapping of definition -> PlaylistPreviewResult.
-      final unsortedGroups = result.playlists.map((p) {
-        return SmartPlaylistGroup(
-          id: p.id,
-          displayName: p.displayName,
-          sortKey: p.sortKey,
-          episodeIds: p.episodeIds,
-          thumbnailUrl: p.thumbnailUrl,
-        );
-      }).toList();
-      final groups = sortGroups(
-        unsortedGroups,
-        definition.customSort,
+      final playlist = _buildPreviewPlaylist(
+        definition,
+        result,
+        playlistResults.length,
         episodeById,
-      );
-      final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
-
-      final playlist = SmartPlaylist(
-        id: definition.id,
-        displayName: definition.displayName,
-        sortKey: playlistResults.length,
-        episodeIds: allEpisodeIds,
-        contentType: contentType,
-        yearHeaderMode: yearHeaderMode,
-        episodeYearHeaders: definition.episodeYearHeaders,
-        showDateRange: definition.showDateRange,
-        groups: groups,
       );
 
       playlistResults.add(
@@ -181,13 +132,8 @@ class SmartPlaylistResolverService {
 
       allUngroupedIds.addAll(result.ungroupedEpisodeIds);
 
-      if (hasFilters) {
-        for (final p in result.playlists) {
-          for (final id in p.episodeIds) {
-            claimedIds.add(id);
-            claimedByMap[id] = definition.id;
-          }
-        }
+      if (definition.hasFilters) {
+        _claimEpisodes(result, definition.id, claimedIds, claimedByMap);
       }
     }
 
@@ -200,6 +146,99 @@ class SmartPlaylistResolverService {
       ungroupedEpisodeIds: allUngroupedIds.toList(),
       resolverType: resolverType ?? 'config',
     );
+  }
+
+  Map<int, String> _computeClaimedByOthers(
+    SmartPlaylistDefinition definition,
+    List<EpisodeData> episodes,
+    Set<int> claimedIds,
+    Map<int, String> claimedByMap,
+  ) {
+    final claimedByOthers = <int, String>{};
+    if (!definition.hasFilters) return claimedByOthers;
+
+    final allCandidates = _filterEpisodes(episodes, definition, {});
+    for (final ep in allCandidates) {
+      if (claimedIds.contains(ep.id)) {
+        claimedByOthers[ep.id] = claimedByMap[ep.id]!;
+      }
+    }
+    return claimedByOthers;
+  }
+
+  void _addEmptyPreviewResult(
+    List<PlaylistPreviewResult> results,
+    SmartPlaylistDefinition definition,
+    Map<int, String> claimedByOthers,
+  ) {
+    results.add(
+      PlaylistPreviewResult(
+        definitionId: definition.id,
+        playlist: SmartPlaylist(
+          id: definition.id,
+          displayName: definition.displayName,
+          sortKey: results.length,
+          episodeIds: const [],
+        ),
+        claimedByOthers: claimedByOthers,
+      ),
+    );
+  }
+
+  SmartPlaylist _buildPreviewPlaylist(
+    SmartPlaylistDefinition definition,
+    SmartPlaylistGrouping result,
+    int sortKey,
+    Map<int, EpisodeData> episodeById,
+  ) {
+    final structure = RssMetadataResolver.parsePlaylistStructure(
+      definition.playlistStructure,
+    );
+    final yearBinding = RssMetadataResolver.parseYearBinding(
+      definition.groupList?.yearBinding,
+    );
+
+    final unsortedGroups = result.playlists.map((p) {
+      return SmartPlaylistGroup(
+        id: p.id,
+        displayName: p.displayName,
+        sortKey: p.sortKey,
+        episodeIds: p.episodeIds,
+        thumbnailUrl: p.thumbnailUrl,
+      );
+    }).toList();
+    final groups = sortGroups(
+      unsortedGroups,
+      definition.groupList?.sort,
+      episodeById,
+    );
+    final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
+
+    return SmartPlaylist(
+      id: definition.id,
+      displayName: definition.displayName,
+      sortKey: sortKey,
+      episodeIds: allEpisodeIds,
+      playlistStructure: structure,
+      yearBinding: yearBinding,
+      showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
+      showDateRange: definition.groupList?.showDateRange ?? false,
+      groups: groups,
+    );
+  }
+
+  void _claimEpisodes(
+    SmartPlaylistGrouping result,
+    String definitionId,
+    Set<int> claimedIds,
+    Map<int, String> claimedByMap,
+  ) {
+    for (final p in result.playlists) {
+      for (final id in p.episodeIds) {
+        claimedIds.add(id);
+        claimedByMap[id] = definitionId;
+      }
+    }
   }
 
   /// Sorts episode IDs in every playlist and group within a
@@ -267,78 +306,35 @@ class SmartPlaylistResolverService {
 
       resolverType ??= result.resolverType;
 
-      final contentType = RssMetadataResolver.parseContentType(
-        definition.contentType,
+      final structure = RssMetadataResolver.parsePlaylistStructure(
+        definition.playlistStructure,
       );
-      final yearHeaderMode = RssMetadataResolver.parseYearHeaderMode(
-        definition.yearHeaderMode,
+      final yearBinding = RssMetadataResolver.parseYearBinding(
+        definition.groupList?.yearBinding,
       );
 
-      // When contentType is "groups", the resolver's playlists
-      // become groups inside a single parent playlist named after
-      // the definition.
-      if (contentType == SmartPlaylistContentType.groups) {
-        final groupDefMap = {
-          for (final g in definition.groups ?? <SmartPlaylistGroupDef>[])
-            g.id: g,
-        };
-        final unsortedGroups = result.playlists.map((p) {
-          final gDef = groupDefMap[p.id];
-          return SmartPlaylistGroup(
-            id: p.id,
-            displayName: p.displayName,
-            sortKey: p.sortKey,
-            episodeIds: p.episodeIds,
-            thumbnailUrl: p.thumbnailUrl,
-            episodeYearHeaders: gDef?.episodeYearHeaders,
-            showDateRange: gDef?.showDateRange ?? definition.showDateRange,
-          );
-        }).toList();
-        final groups = sortGroups(
-          unsortedGroups,
-          definition.customSort,
+      if (structure == PlaylistStructure.grouped) {
+        _addGroupedPlaylist(
+          allPlaylists,
+          definition,
+          result,
+          structure,
+          yearBinding,
           episodeById,
         );
-        final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
-
-        allPlaylists.add(
-          SmartPlaylist(
-            id: definition.id,
-            displayName: definition.displayName,
-            sortKey: allPlaylists.length,
-            episodeIds: allEpisodeIds,
-            contentType: contentType,
-            yearHeaderMode: yearHeaderMode,
-            episodeYearHeaders: definition.episodeYearHeaders,
-            showDateRange: definition.showDateRange,
-            groups: groups,
-          ),
-        );
       } else {
-        // Episodes mode: each resolver playlist is a top-level
-        // smart playlist.
-        final decorated = result.playlists.map((playlist) {
-          return playlist.copyWith(
-            contentType: contentType,
-            yearHeaderMode: yearHeaderMode,
-            episodeYearHeaders: definition.episodeYearHeaders,
-            showDateRange: definition.showDateRange,
-          );
-        }).toList();
-        allPlaylists.addAll(decorated);
+        _addSplitPlaylists(
+          allPlaylists,
+          definition,
+          result,
+          structure,
+          yearBinding,
+        );
       }
 
       allUngroupedIds.addAll(result.ungroupedEpisodeIds);
 
-      // Only claim episode IDs when the definition has explicit
-      // filters. Fallback definitions (no filters) receive all
-      // unclaimed episodes without preventing other fallbacks
-      // from also receiving them.
-      final hasFilters =
-          definition.titleFilter != null ||
-          definition.excludeFilter != null ||
-          definition.requireFilter != null;
-      if (hasFilters) {
+      if (definition.hasFilters) {
         for (final p in result.playlists) {
           claimedIds.addAll(p.episodeIds);
         }
@@ -347,7 +343,6 @@ class SmartPlaylistResolverService {
 
     if (allPlaylists.isEmpty) return null;
 
-    // Remove from ungrouped any IDs that ended up in a playlist
     allUngroupedIds.removeAll(claimedIds);
 
     return SmartPlaylistGrouping(
@@ -355,6 +350,72 @@ class SmartPlaylistResolverService {
       ungroupedEpisodeIds: allUngroupedIds.toList(),
       resolverType: resolverType ?? 'config',
     );
+  }
+
+  void _addGroupedPlaylist(
+    List<SmartPlaylist> allPlaylists,
+    SmartPlaylistDefinition definition,
+    SmartPlaylistGrouping result,
+    PlaylistStructure structure,
+    YearBinding yearBinding,
+    Map<int, EpisodeData> episodeById,
+  ) {
+    final groupDefMap = {
+      for (final g in definition.groups ?? <SmartPlaylistGroupDef>[]) g.id: g,
+    };
+    final unsortedGroups = result.playlists.map((p) {
+      final gDef = groupDefMap[p.id];
+      return SmartPlaylistGroup(
+        id: p.id,
+        displayName: p.displayName,
+        sortKey: p.sortKey,
+        episodeIds: p.episodeIds,
+        thumbnailUrl: p.thumbnailUrl,
+        showYearHeaders: gDef?.episodeList?.showYearHeaders,
+        showDateRange:
+            gDef?.display?.showDateRange ??
+            definition.groupList?.showDateRange ??
+            false,
+      );
+    }).toList();
+    final groups = sortGroups(
+      unsortedGroups,
+      definition.groupList?.sort,
+      episodeById,
+    );
+    final allEpisodeIds = groups.expand((g) => g.episodeIds).toList();
+
+    allPlaylists.add(
+      SmartPlaylist(
+        id: definition.id,
+        displayName: definition.displayName,
+        sortKey: allPlaylists.length,
+        episodeIds: allEpisodeIds,
+        playlistStructure: structure,
+        yearBinding: yearBinding,
+        showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
+        showDateRange: definition.groupList?.showDateRange ?? false,
+        groups: groups,
+      ),
+    );
+  }
+
+  void _addSplitPlaylists(
+    List<SmartPlaylist> allPlaylists,
+    SmartPlaylistDefinition definition,
+    SmartPlaylistGrouping result,
+    PlaylistStructure structure,
+    YearBinding yearBinding,
+  ) {
+    final decorated = result.playlists.map((playlist) {
+      return playlist.copyWith(
+        playlistStructure: structure,
+        yearBinding: yearBinding,
+        showYearHeaders: definition.episodeList?.showYearHeaders ?? false,
+        showDateRange: definition.groupList?.showDateRange ?? false,
+      );
+    }).toList();
+    allPlaylists.addAll(decorated);
   }
 
   /// Sorts episode IDs in every playlist, group, and ungrouped list
@@ -405,39 +466,42 @@ class SmartPlaylistResolverService {
     final unclaimed = episodes
         .where((e) => !claimedIds.contains(e.id))
         .toList();
-
-    final hasTitleFilter = definition.titleFilter != null;
-    final hasExcludeFilter = definition.excludeFilter != null;
-    final hasRequireFilter = definition.requireFilter != null;
-
-    // No filters means fallback: gets all unclaimed episodes
-    if (!hasTitleFilter && !hasExcludeFilter && !hasRequireFilter) {
-      return unclaimed;
-    }
-
-    final titleRegex = hasTitleFilter
-        ? RegExp(definition.titleFilter!, caseSensitive: false)
-        : null;
-    final excludeRegex = hasExcludeFilter
-        ? RegExp(definition.excludeFilter!, caseSensitive: false)
-        : null;
-    final requireRegex = hasRequireFilter
-        ? RegExp(definition.requireFilter!, caseSensitive: false)
-        : null;
+    final filters = definition.episodeFilters;
+    if (filters == null) return unclaimed;
 
     return unclaimed.where((episode) {
-      final title = episode.title;
-      if (titleRegex != null && !titleRegex.hasMatch(title)) {
-        return false;
-      }
-      if (excludeRegex != null && excludeRegex.hasMatch(title)) {
-        return false;
-      }
-      if (requireRegex != null && !requireRegex.hasMatch(title)) {
-        return false;
-      }
+      if (!_matchesRequireFilters(episode, filters.require)) return false;
+      if (_matchesAnyExcludeFilter(episode, filters.exclude)) return false;
       return true;
     }).toList();
+  }
+
+  bool _matchesRequireFilters(
+    EpisodeData episode,
+    List<EpisodeFilterEntry>? entries,
+  ) {
+    if (entries == null) return true;
+    return entries.every((entry) => _matchesFilterEntry(episode, entry));
+  }
+
+  bool _matchesAnyExcludeFilter(
+    EpisodeData episode,
+    List<EpisodeFilterEntry>? entries,
+  ) {
+    if (entries == null) return false;
+    return entries.any((entry) => _matchesFilterEntry(episode, entry));
+  }
+
+  bool _matchesFilterEntry(EpisodeData episode, EpisodeFilterEntry entry) {
+    if (entry.title != null) {
+      final regex = RegExp(entry.title!, caseSensitive: false);
+      if (!regex.hasMatch(episode.title)) return false;
+    }
+    if (entry.description != null) {
+      final regex = RegExp(entry.description!, caseSensitive: false);
+      if (!regex.hasMatch(episode.description ?? '')) return false;
+    }
+    return true;
   }
 
   SmartPlaylistPatternConfig? _findMatchingConfig(
@@ -470,7 +534,7 @@ class SmartPlaylistResolverService {
     final fallbacks = <SmartPlaylistDefinition>[];
 
     for (final def in definitions) {
-      if (_hasFilters(def)) {
+      if (def.hasFilters) {
         filtered.add(def);
       } else {
         fallbacks.add(def);
@@ -481,11 +545,5 @@ class SmartPlaylistResolverService {
     fallbacks.sort((a, b) => a.priority.compareTo(b.priority));
 
     return [...filtered, ...fallbacks];
-  }
-
-  static bool _hasFilters(SmartPlaylistDefinition definition) {
-    return definition.titleFilter != null ||
-        definition.excludeFilter != null ||
-        definition.requireFilter != null;
   }
 }
