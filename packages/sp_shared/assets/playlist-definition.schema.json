@@ -62,7 +62,7 @@
     },
     "episodeFilters": {
       "type": "object",
-      "description": "Episode filters applied before resolver processing. Having any filter makes this a 'filtered' definition, which is processed before filter-less fallback definitions. Matched episodes are claimed and unavailable to later definitions. All require conditions are ANDed (episode must match every entry); all exclude conditions are ANDed (episode must match none). Order does not matter.",
+      "description": "Episode filters applied before resolver processing. Having any filter makes this a 'filtered' definition, which is processed before filter-less fallback definitions. Matched episodes are claimed and unavailable to later definitions. All require conditions are ANDed (episode must match every entry); all exclude conditions are ORed (episode is excluded if it matches any entry). Order does not matter.",
       "additionalProperties": false,
       "properties": {
         "require": {

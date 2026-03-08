@@ -128,8 +128,8 @@ export const groupDefSchema = z.object({
 export const playlistDefinitionSchema = z.object({
   id: z.string(),
   displayName: z.string(),
-  resolverType: z.string(),
-  playlistStructure: z.string(),
+  resolverType: resolverTypeSchema,
+  playlistStructure: playlistStructureSchema,
   priority: z
     .number()
     .nullish()

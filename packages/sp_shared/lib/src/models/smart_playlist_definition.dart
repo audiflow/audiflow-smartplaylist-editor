@@ -97,8 +97,14 @@ final class SmartPlaylistDefinition {
   /// Static group definitions for category-based grouping.
   final List<SmartPlaylistGroupDef>? groups;
 
-  /// Whether this definition has any episode filters.
-  bool get hasFilters => episodeFilters != null;
+  /// Whether this definition has any effective episode filters.
+  bool get hasFilters {
+    if (episodeFilters == null) return false;
+    final f = episodeFilters!;
+    final hasRequire = f.require != null && f.require!.isNotEmpty;
+    final hasExclude = f.exclude != null && f.exclude!.isNotEmpty;
+    return hasRequire || hasExclude;
+  }
 
   Map<String, dynamic> toJson() {
     return {

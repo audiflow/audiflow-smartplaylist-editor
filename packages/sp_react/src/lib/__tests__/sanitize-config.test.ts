@@ -90,8 +90,9 @@ describe('sanitizeConfig', () => {
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    // groupList becomes an empty object after stripping, which is still a valid object
-    expect(result.groupList).toEqual({});
+    // groupList becomes empty after stripping all values, so the key is removed entirely
+    expect(result.groupList).toBeUndefined();
+    expect('groupList' in result).toBe(false);
   });
 
   it('preserves groupList with non-empty sort', () => {
