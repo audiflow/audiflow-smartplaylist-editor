@@ -9,9 +9,8 @@ abstract class SmartPlaylistResolver {
   /// Unique identifier for this resolver type.
   String get type;
 
-  /// Default sort specification for smart playlists produced by
-  /// this resolver.
-  SmartPlaylistSortSpec get defaultSort;
+  /// Default sort rule for smart playlists produced by this resolver.
+  SmartPlaylistSortRule get defaultSort;
 
   /// Attempts to group episodes into smart playlists.
   ///
