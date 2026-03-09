@@ -9,6 +9,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
 tower-http = { version = "0.6", features = ["cors", "fs"] }
 notify = "7"
 rust-embed = "8"
@@ -18,6 +19,7 @@ reqwest = { version = "0.12", features = ["json"] }
 sha2 = "0.10"
 chrono = { version = "0.4", features = ["serde"] }
 regex = "1"
+url = "2"
 
 [dev-dependencies]
 tempfile = "3"
