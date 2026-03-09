@@ -18,15 +18,15 @@ import {
 const SOURCE_OPTIONS = ['title', 'description'] as const;
 
 interface EpisodeExtractorFormProps {
-  index: number;
+  fieldPath: string;
+  idPrefix: string;
 }
 
-export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
+export function EpisodeExtractorForm({ fieldPath, idPrefix }: EpisodeExtractorFormProps) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const extractor = watch(`playlists.${index}.episodeExtractor`);
-  const prefix = `playlists.${index}.episodeExtractor` as const;
+  const extractor = watch(fieldPath as any);
 
   if (!extractor) {
     return (
@@ -37,7 +37,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
           variant="outline"
           size="sm"
           onClick={() =>
-            setValue(`playlists.${index}.episodeExtractor`, {
+            setValue(fieldPath as any, {
               source: 'title',
               pattern: '',
               seasonGroup: 1,
@@ -69,7 +69,7 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
               size="sm"
               onClick={() =>
                 setValue(
-                  `playlists.${index}.episodeExtractor`,
+                  fieldPath as any,
                   null,
                   { shouldDirty: true },
                 )
@@ -83,16 +83,16 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <HintLabel
-                htmlFor={`ep-ext-${index}-source`}
+                htmlFor={`${idPrefix}-source`}
                 hint="episodeExtractorSource"
               >
                 {t('episodeExtractorSource')}
               </HintLabel>
               <Select
-                value={watch(`${prefix}.source`) ?? 'title'}
-                onValueChange={(val) => setValue(`${prefix}.source`, val, { shouldDirty: true })}
+                value={watch(`${fieldPath}.source` as any) ?? 'title'}
+                onValueChange={(val) => setValue(`${fieldPath}.source` as any, val, { shouldDirty: true })}
               >
-                <SelectTrigger id={`ep-ext-${index}-source`}>
+                <SelectTrigger id={`${idPrefix}-source`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -107,29 +107,29 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
 
             <div className="space-y-1.5">
               <HintLabel
-                htmlFor={`ep-ext-${index}-pattern`}
+                htmlFor={`${idPrefix}-pattern`}
                 hint="episodeExtractorPattern"
               >
                 {t('episodeExtractorPattern')}
               </HintLabel>
               <Input
-                id={`ep-ext-${index}-pattern`}
-                {...register(`${prefix}.pattern`)}
+                id={`${idPrefix}-pattern`}
+                {...register(`${fieldPath}.pattern` as any)}
                 placeholder={t('placeholderRegex')}
               />
             </div>
 
             <div className="space-y-1.5">
               <HintLabel
-                htmlFor={`ep-ext-${index}-seasonGroup`}
+                htmlFor={`${idPrefix}-seasonGroup`}
                 hint="episodeExtractorSeasonGroup"
               >
                 {t('episodeExtractorSeasonGroup')}
               </HintLabel>
               <Input
-                id={`ep-ext-${index}-seasonGroup`}
+                id={`${idPrefix}-seasonGroup`}
                 type="number"
-                {...register(`${prefix}.seasonGroup`, {
+                {...register(`${fieldPath}.seasonGroup` as any, {
                   setValueAs: (v) =>
                     v === '' || v === null || v === undefined
                       ? null
@@ -140,15 +140,15 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
 
             <div className="space-y-1.5">
               <HintLabel
-                htmlFor={`ep-ext-${index}-episodeGroup`}
+                htmlFor={`${idPrefix}-episodeGroup`}
                 hint="episodeExtractorEpisodeGroup"
               >
                 {t('episodeExtractorEpisodeGroup')}
               </HintLabel>
               <Input
-                id={`ep-ext-${index}-episodeGroup`}
+                id={`${idPrefix}-episodeGroup`}
                 type="number"
-                {...register(`${prefix}.episodeGroup`, {
+                {...register(`${fieldPath}.episodeGroup` as any, {
                   setValueAs: (v) =>
                     v === '' || v === null || v === undefined
                       ? null
@@ -160,14 +160,14 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
 
           <div className="flex items-center gap-2">
             <Checkbox
-              id={`ep-ext-${index}-fallbackToRss`}
-              checked={watch(`${prefix}.fallbackToRss`) ?? false}
+              id={`${idPrefix}-fallbackToRss`}
+              checked={watch(`${fieldPath}.fallbackToRss` as any) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.fallbackToRss`, !!checked, { shouldDirty: true })
+                setValue(`${fieldPath}.fallbackToRss` as any, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel
-              htmlFor={`ep-ext-${index}-fallbackToRss`}
+              htmlFor={`${idPrefix}-fallbackToRss`}
               hint="episodeExtractorFallbackToRss"
             >
               {t('episodeExtractorFallbackToRss')}
@@ -182,15 +182,15 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <HintLabel
-                  htmlFor={`ep-ext-${index}-fallbackSeasonNumber`}
+                  htmlFor={`${idPrefix}-fallbackSeasonNumber`}
                   hint="episodeExtractorFallbackSeason"
                 >
                   {t('episodeExtractorFallbackSeason')}
                 </HintLabel>
                 <Input
-                  id={`ep-ext-${index}-fallbackSeasonNumber`}
+                  id={`${idPrefix}-fallbackSeasonNumber`}
                   type="number"
-                  {...register(`${prefix}.fallbackSeasonNumber`, {
+                  {...register(`${fieldPath}.fallbackSeasonNumber` as any, {
                     setValueAs: (v) =>
                       v === '' || v === null || v === undefined
                         ? null
@@ -201,15 +201,15 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
 
               <div className="space-y-1.5">
                 <HintLabel
-                  htmlFor={`ep-ext-${index}-fallbackEpisodeCaptureGroup`}
+                  htmlFor={`${idPrefix}-fallbackEpisodeCaptureGroup`}
                   hint="episodeExtractorFallbackCaptureGroup"
                 >
                   {t('episodeExtractorFallbackCaptureGroup')}
                 </HintLabel>
                 <Input
-                  id={`ep-ext-${index}-fallbackEpisodeCaptureGroup`}
+                  id={`${idPrefix}-fallbackEpisodeCaptureGroup`}
                   type="number"
-                  {...register(`${prefix}.fallbackEpisodeCaptureGroup`, {
+                  {...register(`${fieldPath}.fallbackEpisodeCaptureGroup` as any, {
                     setValueAs: (v) =>
                       v === '' || v === null || v === undefined
                         ? null
@@ -221,14 +221,14 @@ export function EpisodeExtractorForm({ index }: EpisodeExtractorFormProps) {
 
             <div className="space-y-1.5">
               <HintLabel
-                htmlFor={`ep-ext-${index}-fallbackEpisodePattern`}
+                htmlFor={`${idPrefix}-fallbackEpisodePattern`}
                 hint="episodeExtractorFallbackPattern"
               >
                 {t('episodeExtractorFallbackPattern')}
               </HintLabel>
               <Input
-                id={`ep-ext-${index}-fallbackEpisodePattern`}
-                {...register(`${prefix}.fallbackEpisodePattern`)}
+                id={`${idPrefix}-fallbackEpisodePattern`}
+                {...register(`${fieldPath}.fallbackEpisodePattern` as any)}
                 placeholder={t('placeholderRegex')}
               />
             </div>
