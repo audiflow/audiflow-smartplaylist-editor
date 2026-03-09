@@ -1878,7 +1878,6 @@ dependencies = [
  "feed-rs",
  "notify",
  "quick-xml",
- "regex",
  "reqwest",
  "rust-embed",
  "serde",

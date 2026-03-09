@@ -117,20 +117,12 @@ impl ResolverService {
             }
 
             let structure = parse_playlist_structure(&definition.playlist_structure);
-            let year_binding = parse_year_binding(
-                definition
-                    .group_list
-                    .as_ref()
-                    .and_then(|gl| gl.year_binding.as_deref()),
-            );
 
             if structure == PlaylistStructure::Grouped {
                 self.add_grouped_playlist(
                     &mut all_playlists,
                     definition,
                     &result,
-                    &structure,
-                    &year_binding,
                     episode_by_id,
                 );
             } else {
@@ -138,8 +130,6 @@ impl ResolverService {
                     &mut all_playlists,
                     definition,
                     &result,
-                    &structure,
-                    &year_binding,
                 );
             }
 
@@ -283,18 +273,12 @@ impl ResolverService {
     ) {
         results.push(PlaylistPreviewResult {
             definition_id: definition.id.clone(),
-            playlist: Playlist {
-                id: definition.id.clone(),
-                display_name: definition.display_name.clone(),
-                sort_key: results.len() as i32,
-                episode_ids: Vec::new(),
-                thumbnail_url: None,
-                playlist_structure: PlaylistStructure::default(),
-                year_binding: crate::models::YearBinding::default(),
-                show_year_headers: false,
-                show_date_range: false,
-                groups: None,
-            },
+            playlist: Playlist::new(
+                definition.id.clone(),
+                definition.display_name.clone(),
+                results.len() as i32,
+                Vec::new(),
+            ),
             claimed_by_others,
         });
     }
@@ -381,10 +365,15 @@ impl ResolverService {
         all_playlists: &mut Vec<Playlist>,
         definition: &PlaylistDefinition,
         result: &Grouping,
-        structure: &PlaylistStructure,
-        year_binding: &crate::models::YearBinding,
         episode_by_id: &HashMap<i64, &dyn EpisodeData>,
     ) {
+        let structure = parse_playlist_structure(&definition.playlist_structure);
+        let year_binding = parse_year_binding(
+            definition
+                .group_list
+                .as_ref()
+                .and_then(|gl| gl.year_binding.as_deref()),
+        );
         let group_def_map: HashMap<&str, &crate::models::GroupDef> = definition
             .groups
             .as_ref()
@@ -455,9 +444,15 @@ impl ResolverService {
         all_playlists: &mut Vec<Playlist>,
         definition: &PlaylistDefinition,
         result: &Grouping,
-        structure: &PlaylistStructure,
-        year_binding: &crate::models::YearBinding,
     ) {
+        let structure = parse_playlist_structure(&definition.playlist_structure);
+        let year_binding = parse_year_binding(
+            definition
+                .group_list
+                .as_ref()
+                .and_then(|gl| gl.year_binding.as_deref()),
+        );
+
         let decorated: Vec<Playlist> = result
             .playlists
             .iter()

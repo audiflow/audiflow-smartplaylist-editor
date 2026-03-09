@@ -1,8 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::models::{
-    EpisodeData, Grouping, Playlist, PlaylistDefinition, PlaylistStructure, SortField, SortOrder,
-    SortRule, YearBinding,
+    EpisodeData, Grouping, Playlist, PlaylistDefinition, SortField, SortOrder, SortRule,
 };
 
 use super::resolver::Resolver;
@@ -56,19 +55,18 @@ impl Resolver for RssResolver {
         let mut playlists: Vec<Playlist> = grouped
             .iter()
             .map(|(&season_number, eps)| {
-                let display_name = extract_display_name(season_number, eps, title_extractor);
-                Playlist {
-                    id: format!("season_{}", season_number),
+                let display_name =
+                    super::extract_display_name_with_fallback(
+                        format!("Season {}", season_number),
+                        eps,
+                        title_extractor,
+                    );
+                Playlist::new(
+                    format!("season_{}", season_number),
                     display_name,
-                    sort_key: season_number,
-                    episode_ids: eps.iter().map(|e| e.id()).collect(),
-                    thumbnail_url: None,
-                    playlist_structure: PlaylistStructure::Split,
-                    year_binding: YearBinding::None,
-                    show_year_headers: false,
-                    show_date_range: false,
-                    groups: None,
-                }
+                    season_number,
+                    eps.iter().map(|e| e.id()).collect(),
+                )
             })
             .collect();
 
@@ -82,21 +80,3 @@ impl Resolver for RssResolver {
     }
 }
 
-fn extract_display_name(
-    season_number: i32,
-    episodes: &[&dyn EpisodeData],
-    title_extractor: Option<&crate::models::TitleExtractor>,
-) -> String {
-    let fallback = format!("Season {}", season_number);
-
-    let extractor = match title_extractor {
-        Some(e) => e,
-        None => return fallback,
-    };
-
-    if episodes.is_empty() {
-        return fallback;
-    }
-
-    extractor.extract(episodes[0]).unwrap_or(fallback)
-}

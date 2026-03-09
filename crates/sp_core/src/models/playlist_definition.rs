@@ -2,12 +2,9 @@ use serde::{Deserialize, Serialize};
 
 use super::episode_extractor::EpisodeExtractor;
 use super::group_def::GroupDef;
+use super::is_zero;
 use super::sort::{EpisodeSortRule, SortRule};
 use super::title_extractor::TitleExtractor;
-
-fn is_zero(v: &i32) -> bool {
-    *v == 0
-}
 
 /// Unified per-playlist definition with all fields strongly typed.
 #[derive(Debug, Clone, Serialize, Deserialize)]

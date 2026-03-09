@@ -1,8 +1,8 @@
 use regex::Regex;
 
 use crate::models::{
-    EpisodeData, Grouping, Playlist, PlaylistDefinition, PlaylistStructure, SortField, SortOrder,
-    SortRule, TitleExtractor, YearBinding,
+    EpisodeData, Grouping, Playlist, PlaylistDefinition, SortField, SortOrder, SortRule,
+    TitleExtractor,
 };
 
 use super::resolver::Resolver;
@@ -107,18 +107,12 @@ fn resolve_by_appearance(
     for (i, name) in playlist_order.iter().enumerate() {
         let playlist_episodes = &grouped[name];
         let sort_key = (i as i32) + 1;
-        playlists.push(Playlist {
-            id: format!("season_{}", sort_key),
-            display_name: name.clone(),
+        playlists.push(Playlist::new(
+            format!("season_{}", sort_key),
+            name.clone(),
             sort_key,
-            episode_ids: playlist_episodes.iter().map(|e| e.id()).collect(),
-            thumbnail_url: None,
-            playlist_structure: PlaylistStructure::Split,
-            year_binding: YearBinding::None,
-            show_year_headers: false,
-            show_date_range: false,
-            groups: None,
-        });
+            playlist_episodes.iter().map(|e| e.id()).collect(),
+        ));
     }
 
     Some(Grouping {

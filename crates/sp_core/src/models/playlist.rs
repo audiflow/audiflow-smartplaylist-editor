@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use super::is_zero;
+
 /// Whether a smart playlist directly contains episodes or groups.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,10 +30,6 @@ fn is_default_year_binding(v: &YearBinding) -> bool {
     *v == YearBinding::None
 }
 
-fn is_zero_i32(v: &i32) -> bool {
-    *v == 0
-}
-
 /// A group within a smart playlist containing episodes.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -39,7 +37,7 @@ pub struct PlaylistGroup {
     pub id: String,
     pub display_name: String,
 
-    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    #[serde(default, skip_serializing_if = "is_zero")]
     pub sort_key: i32,
 
     pub episode_ids: Vec<i64>,
@@ -101,6 +99,21 @@ pub struct Playlist {
 }
 
 impl Playlist {
+    pub fn new(id: String, display_name: String, sort_key: i32, episode_ids: Vec<i64>) -> Self {
+        Self {
+            id,
+            display_name,
+            sort_key,
+            episode_ids,
+            thumbnail_url: None,
+            playlist_structure: PlaylistStructure::default(),
+            year_binding: YearBinding::default(),
+            show_year_headers: false,
+            show_date_range: false,
+            groups: None,
+        }
+    }
+
     pub fn episode_count(&self) -> usize {
         self.episode_ids.len()
     }

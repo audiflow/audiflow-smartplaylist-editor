@@ -1,9 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::time::Duration;
 
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 
+use super::atomic_write::atomic_write_str;
 use super::feed_parser;
 
 /// Disk-based feed cache that can be shared between processes.
@@ -106,8 +107,8 @@ impl DiskFeedCacheService {
         .map_err(|e| Error::Io(std::io::Error::other(e)))?;
 
         // Write data before meta for crash safety
-        atomic_write(&self.data_path(hash), &data)?;
-        atomic_write(&self.meta_path(hash), &meta)?;
+        atomic_write_str(&self.data_path(hash), &data).map_err(Error::Io)?;
+        atomic_write_str(&self.meta_path(hash), &meta).map_err(Error::Io)?;
 
         Ok(())
     }
@@ -118,14 +119,6 @@ pub fn hash_url(url: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(url.as_bytes());
     format!("{:x}", hasher.finalize())
-}
-
-/// Writes content to a file atomically via a .tmp intermediate.
-fn atomic_write(path: &Path, content: &str) -> Result<(), Error> {
-    let tmp_path = path.with_extension("tmp");
-    std::fs::write(&tmp_path, content).map_err(Error::Io)?;
-    std::fs::rename(&tmp_path, path).map_err(Error::Io)?;
-    Ok(())
 }
 
 #[derive(Debug)]

@@ -1,6 +1,7 @@
 mod cmd_format;
 mod cmd_serve;
 mod cmd_validate;
+mod config_walker;
 
 use clap::{Parser, Subcommand};
 

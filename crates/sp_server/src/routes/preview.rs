@@ -134,7 +134,7 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData]) -> Value 
     let excluded_episodes: Vec<Value> = episodes
         .iter()
         .filter(|e| !grouped_ids.contains(&e.id) && !ungrouped_set.contains(&e.id))
-        .filter_map(|e| serialize_episode(e, None))
+        .map(|e| serialize_episode(e, None))
         .collect();
 
     let playlists: Vec<Value> = result
@@ -153,9 +153,8 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData]) -> Value 
     let ungrouped: Vec<Value> = result
         .ungrouped_episode_ids
         .iter()
-        .filter_map(|id| {
-            episode_by_id.get(id).and_then(|e| serialize_episode(e, None))
-        })
+        .filter_map(|id| episode_by_id.get(id))
+        .map(|e| serialize_episode(e, None))
         .collect();
 
     serde_json::json!({
@@ -287,7 +286,7 @@ fn serialize_group(
         .filter_map(|id| {
             let ep = episode_by_id.get(id)?;
             let name = extracted_names.and_then(|m| m.get(id)).map(|s| s.as_str());
-            serialize_episode(ep, name)
+            Some(serialize_episode(ep, name))
         })
         .collect();
 
@@ -303,7 +302,7 @@ fn serialize_group(
 fn serialize_episode(
     episode: &SimpleEpisodeData,
     extracted_display_name: Option<&str>,
-) -> Option<Value> {
+) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("id".to_string(), Value::from(episode.id));
     obj.insert("title".to_string(), Value::String(episode.title.clone()));
@@ -327,5 +326,5 @@ fn serialize_episode(
         );
     }
 
-    Some(Value::Object(obj))
+    Value::Object(obj)
 }

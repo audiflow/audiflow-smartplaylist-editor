@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-fn default_data_version() -> i32 {
-    1
-}
+use super::default_data_version;
 
 /// Summary of a pattern from root meta.json.
 #[derive(Debug, Clone, Serialize, Deserialize)]

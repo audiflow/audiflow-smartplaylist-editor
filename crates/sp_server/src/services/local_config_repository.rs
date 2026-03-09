@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use regex::Regex;
 use serde_json::Value;
 use sp_core::models::{PatternConfig, PatternMeta, PatternSummary, PlaylistDefinition, RootMeta};
 use sp_core::services::ConfigAssembler;
@@ -118,7 +117,7 @@ impl LocalConfigRepository {
             .join(pattern_id)
             .join("playlists")
             .join(format!("{playlist_id}.json"));
-        atomic_write(&path, json)
+        atomic_write_json(&path, json)
     }
 
     /// Writes pattern meta JSON to disk using atomic write.
@@ -129,13 +128,13 @@ impl LocalConfigRepository {
     ) -> Result<(), Error> {
         validate_path_segment(pattern_id, "patternId")?;
         let path = self.patterns_dir.join(pattern_id).join("meta.json");
-        atomic_write(&path, json)
+        atomic_write_json(&path, json)
     }
 
     /// Writes the root meta.json from a raw JSON value using atomic write.
     pub fn save_root_meta(&self, json: &Value) -> Result<(), Error> {
         let path = self.patterns_dir.join("meta.json");
-        atomic_write(&path, json)
+        atomic_write_json(&path, json)
     }
 
     /// Creates a new pattern directory with playlists/ subdir and
@@ -153,7 +152,7 @@ impl LocalConfigRepository {
         std::fs::create_dir_all(&playlists_dir).map_err(Error::Io)?;
 
         let meta_path = pattern_dir.join("meta.json");
-        atomic_write(&meta_path, meta_json)
+        atomic_write_json(&meta_path, meta_json)
     }
 
     // -- Delete methods --
@@ -171,20 +170,20 @@ impl LocalConfigRepository {
             .join(pattern_id)
             .join("playlists")
             .join(format!("{playlist_id}.json"));
-        if !path.exists() {
-            return Err(Error::NotFound(path.display().to_string()));
-        }
-        std::fs::remove_file(&path).map_err(Error::Io)
+        std::fs::remove_file(&path).map_err(|e| match e.kind() {
+            std::io::ErrorKind::NotFound => Error::NotFound(path.display().to_string()),
+            _ => Error::Io(e),
+        })
     }
 
     /// Deletes an entire pattern directory recursively.
     pub fn delete_pattern(&self, pattern_id: &str) -> Result<(), Error> {
         validate_path_segment(pattern_id, "patternId")?;
         let dir = self.patterns_dir.join(pattern_id);
-        if !dir.exists() {
-            return Err(Error::NotFound(dir.display().to_string()));
-        }
-        std::fs::remove_dir_all(&dir).map_err(Error::Io)
+        std::fs::remove_dir_all(&dir).map_err(|e| match e.kind() {
+            std::io::ErrorKind::NotFound => Error::NotFound(dir.display().to_string()),
+            _ => Error::Io(e),
+        })
     }
 
     // -- Private helpers --
@@ -196,8 +195,11 @@ impl LocalConfigRepository {
 
 /// Validates that a path segment contains only safe characters.
 fn validate_path_segment(segment: &str, label: &str) -> Result<(), Error> {
-    let re = Regex::new(r"^[a-zA-Z0-9_-]+$").expect("valid regex");
-    if !re.is_match(segment) {
+    if segment.is_empty()
+        || !segment
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+    {
         return Err(Error::InvalidPathSegment {
             label: label.to_string(),
             value: segment.to_string(),
@@ -208,14 +210,12 @@ fn validate_path_segment(segment: &str, label: &str) -> Result<(), Error> {
 
 /// Writes JSON to a file atomically: write to .tmp first, then rename.
 /// Output is pretty-printed with 2-space indent and a trailing newline.
-fn atomic_write(path: &Path, json: &Value) -> Result<(), Error> {
-    let content = format!("{}\n", serde_json::to_string_pretty(json).map_err(|e| {
-        Error::ParseError(e.to_string())
-    })?);
-    let tmp_path = path.with_extension("json.tmp");
-    std::fs::write(&tmp_path, &content).map_err(Error::Io)?;
-    std::fs::rename(&tmp_path, path).map_err(Error::Io)?;
-    Ok(())
+fn atomic_write_json(path: &Path, json: &Value) -> Result<(), Error> {
+    let content = format!(
+        "{}\n",
+        serde_json::to_string_pretty(json).map_err(|e| Error::ParseError(e.to_string()))?
+    );
+    super::atomic_write::atomic_write_str(path, &content).map_err(Error::Io)
 }
 
 #[derive(Debug)]

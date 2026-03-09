@@ -1,8 +1,7 @@
 use regex::Regex;
 
 use crate::models::{
-    EpisodeData, GroupDef, Grouping, Playlist, PlaylistDefinition, PlaylistStructure, SortField,
-    SortOrder, SortRule, YearBinding,
+    EpisodeData, GroupDef, Grouping, Playlist, PlaylistDefinition, SortField, SortOrder, SortRule,
 };
 
 use super::resolver::Resolver;
@@ -99,36 +98,28 @@ fn resolve_with_groups(
         if let Some(ids) = grouped.get(&pg.id)
             && !ids.is_empty()
         {
-            playlists.push(Playlist {
-                id: pg.id.clone(),
-                display_name: pg.display_name.clone(),
+            let mut playlist = Playlist::new(
+                pg.id.clone(),
+                pg.display_name.clone(),
                 sort_key,
-                episode_ids: ids.clone(),
-                thumbnail_url: None,
-                playlist_structure: PlaylistStructure::Split,
-                year_binding: YearBinding::None,
-                show_year_headers: pg.show_year_headers.unwrap_or(false),
-                show_date_range: false,
-                groups: None,
-            });
+                ids.clone(),
+            );
+            playlist.show_year_headers = pg.show_year_headers.unwrap_or(false);
+            playlists.push(playlist);
             sort_key += 1;
         }
     }
 
     // Add fallback group last
     if !fallback_ids.is_empty() {
-        playlists.push(Playlist {
-            id: fallback_id.unwrap().to_string(),
-            display_name: fallback_display_name.unwrap().to_string(),
-            sort_key: playlists.len() as i32 + 1,
-            episode_ids: fallback_ids,
-            thumbnail_url: None,
-            playlist_structure: PlaylistStructure::Split,
-            year_binding: YearBinding::None,
-            show_year_headers: fallback_show_year_headers.unwrap_or(false),
-            show_date_range: false,
-            groups: None,
-        });
+        let mut playlist = Playlist::new(
+            fallback_id.unwrap().to_string(),
+            fallback_display_name.unwrap().to_string(),
+            playlists.len() as i32 + 1,
+            fallback_ids,
+        );
+        playlist.show_year_headers = fallback_show_year_headers.unwrap_or(false);
+        playlists.push(playlist);
     }
 
     if playlists.is_empty() && ungrouped.is_empty() {

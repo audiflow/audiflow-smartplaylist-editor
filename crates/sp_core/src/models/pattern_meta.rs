@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-fn default_data_version() -> i32 {
-    1
-}
+use super::default_data_version;
 
 /// Pattern-level meta.json from a pattern directory.
 #[derive(Debug, Clone, Serialize, Deserialize)]

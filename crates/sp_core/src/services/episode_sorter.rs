@@ -15,9 +15,7 @@ pub fn sort_episode_ids_by_published_at(
     episode_ids: &[i64],
     episode_by_id: &HashMap<i64, &dyn EpisodeData>,
 ) -> Vec<i64> {
-    if 2 <= episode_ids.len() {
-        // need to sort
-    } else {
+    if episode_ids.len() < 2 {
         return episode_ids.to_vec();
     }
 
