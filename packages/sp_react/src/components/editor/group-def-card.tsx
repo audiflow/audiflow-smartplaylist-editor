@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/schemas/config-schema.ts';
@@ -48,6 +49,20 @@ export function GroupDefCard({
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
   const prefix = `playlists.${playlistIndex}.groups.${groupIndex}` as const;
+
+  const yearBinding = watch(`${prefix}.display.yearBinding`);
+  const episodeSort = watch(`${prefix}.episodeList.sort` as any);
+  const titleExtractor = watch(`${prefix}.episodeList.titleExtractor` as any);
+  const episodeExtractor = watch(`${prefix}.episodeExtractor` as any);
+
+  const expandedOverrides = useMemo(() => {
+    const items: string[] = [];
+    if (yearBinding != null) items.push('yearBinding');
+    if (episodeSort != null) items.push('episodeSort');
+    if (titleExtractor != null) items.push('titleExtractor');
+    if (episodeExtractor != null) items.push('episodeExtractor');
+    return items;
+  }, [yearBinding, episodeSort, titleExtractor, episodeExtractor]);
 
   return (
     <Card className="py-4">
@@ -161,7 +176,7 @@ export function GroupDefCard({
           </div>
         </div>
 
-        <Accordion type="multiple" className="w-full">
+        <Accordion type="multiple" defaultValue={expandedOverrides} className="w-full">
           {/* Year Binding Override */}
           <AccordionItem value="yearBinding">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">

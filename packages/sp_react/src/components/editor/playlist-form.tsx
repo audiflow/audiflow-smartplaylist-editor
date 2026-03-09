@@ -62,10 +62,15 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
       />
 
       <DisplayOptions index={index} prefix={prefix} />
+
+      <hr className="border-border" />
       <EpisodeListSettings index={index} prefix={prefix} />
 
+      <hr className="border-border" />
       <SortForm index={index} />
       <GroupsForm index={index} />
+
+      <hr className="border-border" />
       <ExtractorsForm index={index} />
 
       <RemoveButton onRemove={onRemove} />
