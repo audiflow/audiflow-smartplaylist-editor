@@ -529,9 +529,9 @@ fn episode_extractor_serialization_omits_defaults() {
     assert!(!extractor.fallback_to_rss);
 
     let serialized = serde_json::to_value(&extractor).unwrap();
-    // Defaults should be omitted
-    assert!(serialized.get("seasonGroup").is_none());
-    assert!(serialized.get("episodeGroup").is_none());
+    // seasonGroup=1 serialized (Dart includes non-null), episodeGroup=2 always serialized
+    assert_eq!(serialized["seasonGroup"], 1);
+    assert_eq!(serialized["episodeGroup"], 2);
     assert!(serialized.get("fallbackEpisodeCaptureGroup").is_none());
     assert!(serialized.get("fallbackToRss").is_none());
 }
@@ -549,9 +549,8 @@ fn episode_extractor_serialization_includes_non_defaults() {
     .unwrap();
 
     let serialized = serde_json::to_value(&extractor).unwrap();
-    // null seasonGroup should be serialized (not omitted)
-    assert!(serialized.get("seasonGroup").is_some());
-    assert_eq!(serialized["seasonGroup"], Value::Null);
+    // null seasonGroup should be omitted (matches Dart: if seasonGroup != null)
+    assert!(serialized.get("seasonGroup").is_none());
     assert_eq!(serialized["episodeGroup"], 1);
     assert_eq!(serialized["fallbackToRss"], true);
     assert_eq!(serialized["fallbackEpisodeCaptureGroup"], 2);

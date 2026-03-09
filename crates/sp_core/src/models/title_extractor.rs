@@ -41,7 +41,9 @@ impl TitleExtractor {
     pub fn extract(&self, episode: &dyn EpisodeData) -> Option<String> {
         // For null/zero seasonNumber, use fallback_value if available
         let season_num = episode.season_number();
-        if self.fallback_value.is_some() && (season_num.is_none() || season_num == Some(0)) {
+        if self.fallback_value.is_some()
+            && (season_num.is_none() || season_num.is_some_and(|n| n < 1))
+        {
             return self.fallback_value.clone();
         }
 

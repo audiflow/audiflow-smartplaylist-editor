@@ -3,10 +3,6 @@ use serde::{Deserialize, Serialize};
 
 use super::episode_data::EpisodeData;
 
-fn is_default_episode_group(v: &i32) -> bool {
-    *v == 2
-}
-
 fn is_default_fallback_capture_group(v: &i32) -> bool {
     *v == 1
 }
@@ -40,10 +36,6 @@ fn default_season_group() -> Option<i32> {
     Some(1)
 }
 
-fn is_default_season_group(v: &Option<i32>) -> bool {
-    *v == Some(1)
-}
-
 /// Result of extracting season and episode numbers from episode data.
 #[derive(Debug, Clone, Default)]
 pub struct EpisodeExtractionResult {
@@ -71,13 +63,13 @@ pub struct EpisodeExtractor {
     /// Capture group index for season number (default: 1, null to skip).
     #[serde(
         default = "default_season_group",
-        skip_serializing_if = "is_default_season_group",
+        skip_serializing_if = "Option::is_none",
         with = "season_group_serde"
     )]
     pub season_group: Option<i32>,
 
     /// Capture group index for episode number (default: 2).
-    #[serde(default = "default_episode_group", skip_serializing_if = "is_default_episode_group")]
+    #[serde(default = "default_episode_group")]
     pub episode_group: i32,
 
     /// Season number to use when primary pattern fails but fallback matches.
