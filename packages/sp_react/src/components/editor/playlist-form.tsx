@@ -148,13 +148,23 @@ function FilterSettings({
           const titleValue = watch(`playlists.${index}.episodeFilters.require.${filterIndex}.title`) ?? '';
           return (
             <div key={field.id} className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 space-y-1.5">
-                  <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
-                  <Input
-                    {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.title`)}
-                    placeholder={t('placeholderRegex')}
-                  />
+              <div className="flex items-start gap-2">
+                <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.title`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                    {titleValue && <RegexTester pattern={titleValue} variant="include" titles={episodeTitles} />}
+                  </div>
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterDescription">{t('filterDescription')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.description`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -167,7 +177,6 @@ function FilterSettings({
                   <span className="sr-only">{t('removeFilter')}</span>
                 </Button>
               </div>
-              {titleValue && <RegexTester pattern={titleValue} variant="include" titles={episodeTitles} />}
             </div>
           );
         })}
@@ -188,13 +197,23 @@ function FilterSettings({
           const titleValue = watch(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`) ?? '';
           return (
             <div key={field.id} className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 space-y-1.5">
-                  <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
-                  <Input
-                    {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`)}
-                    placeholder={t('placeholderRegex')}
-                  />
+              <div className="flex items-start gap-2">
+                <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                    {titleValue && <RegexTester pattern={titleValue} variant="exclude" titles={episodeTitles} />}
+                  </div>
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterDescription">{t('filterDescription')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.description`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -207,7 +226,6 @@ function FilterSettings({
                   <span className="sr-only">{t('removeFilter')}</span>
                 </Button>
               </div>
-              {titleValue && <RegexTester pattern={titleValue} variant="exclude" titles={episodeTitles} />}
             </div>
           );
         })}
