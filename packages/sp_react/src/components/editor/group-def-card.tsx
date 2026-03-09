@@ -254,25 +254,28 @@ function GroupEpisodeSortOverride({ prefix }: { prefix: string }) {
   const isEnabled = sort != null;
 
   return (
-    <div className="space-y-3">
-      <Button
-        type="button"
-        variant={isEnabled ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => {
-          if (isEnabled) {
-            setValue(`${prefix}.episodeList.sort` as any, undefined, { shouldDirty: true });
-          } else {
-            setValue(
-              `${prefix}.episodeList.sort` as any,
-              { field: 'publishedAt', order: 'ascending' },
-              { shouldDirty: true },
-            );
-          }
-        }}
-      >
-        {isEnabled ? t('sortEnabled') : t('sortDisabled')}
-      </Button>
+    <div className="rounded-lg border border-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <HintLabel hint="groupEpisodeSort">{t('groupEpisodeSort')}</HintLabel>
+        <Button
+          type="button"
+          variant={isEnabled ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => {
+            if (isEnabled) {
+              setValue(`${prefix}.episodeList.sort` as any, undefined, { shouldDirty: true });
+            } else {
+              setValue(
+                `${prefix}.episodeList.sort` as any,
+                { field: 'publishedAt', order: 'ascending' },
+                { shouldDirty: true },
+              );
+            }
+          }}
+        >
+          {isEnabled ? t('sortEnabled') : t('sortDisabled')}
+        </Button>
+      </div>
 
       {isEnabled && (
         <div className="grid grid-cols-2 gap-3">

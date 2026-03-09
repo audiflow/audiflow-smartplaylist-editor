@@ -150,12 +150,12 @@ function FilterSettings({
     <div className="space-y-3">
       <h4 className="text-sm font-medium">{t('episodeFilters')}</h4>
 
-      <div className="space-y-3">
+      <div className="rounded-lg border border-border p-4 space-y-3">
         <h5 className="text-xs font-medium text-muted-foreground">{t('requireFilters')}</h5>
         {requireFields.map((field, filterIndex) => {
           const titleValue = watch(`playlists.${index}.episodeFilters.require.${filterIndex}.title`) ?? '';
           return (
-            <div key={field.id} className="space-y-1.5">
+            <div key={field.id} className="rounded-lg border border-border p-3">
               <div className="flex items-start gap-2">
                 <div className="flex-1 grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -199,12 +199,12 @@ function FilterSettings({
         </Button>
       </div>
 
-      <div className="space-y-3">
+      <div className="rounded-lg border border-border p-4 space-y-3">
         <h5 className="text-xs font-medium text-muted-foreground">{t('excludeFilters')}</h5>
         {excludeFields.map((field, filterIndex) => {
           const titleValue = watch(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`) ?? '';
           return (
-            <div key={field.id} className="space-y-1.5">
+            <div key={field.id} className="rounded-lg border border-border p-3">
               <div className="flex items-start gap-2">
                 <div className="flex-1 grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -436,8 +436,8 @@ function EpisodeListSettings({
     <div className="space-y-3">
       <h4 className="text-sm font-medium">{t('episodeListSettings')}</h4>
 
-      <div className="space-y-3">
-        <div className="space-y-1.5">
+      <div className="rounded-lg border border-border p-4 space-y-3">
+        <div className="flex items-center justify-between">
           <HintLabel hint="episodeListSort">{t('episodeListSort')}</HintLabel>
           <Button
             type="button"
