@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, PlaylistStructure, ResolverType, YearBinding } from '@/schemas/config-schema.ts';
+import type { PatternConfig, PlaylistStructure, ResolverType, YearBinding, EpisodeSortField, SortOrder } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
@@ -19,7 +19,11 @@ import { RegexTester } from '@/components/editor/regex-tester.tsx';
 import { GroupsForm } from '@/components/editor/groups-form.tsx';
 import { SortForm } from '@/components/editor/sort-form.tsx';
 import { ExtractorsForm } from '@/components/editor/extractors-form.tsx';
+import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { Plus, Trash2 } from 'lucide-react';
+
+const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
+const SORT_ORDERS = ['ascending', 'descending'] as const;
 
 const RESOLVER_TYPES = [
   'rss',
@@ -58,6 +62,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
       />
 
       <DisplayOptions index={index} prefix={prefix} />
+      <EpisodeListSettings index={index} prefix={prefix} />
 
       <SortForm index={index} />
       <GroupsForm index={index} />
@@ -407,6 +412,101 @@ function DisplayOptions({
           </Select>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EpisodeListSettings({
+  index,
+  prefix,
+}: {
+  index: number;
+  prefix: `playlists.${number}`;
+}) {
+  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
+
+  const sort = watch(`${prefix}.episodeList.sort`);
+  const isSortEnabled = sort != null;
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-medium">{t('episodeListSettings')}</h4>
+
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <HintLabel hint="episodeListSort">{t('episodeListSort')}</HintLabel>
+          <Button
+            type="button"
+            variant={isSortEnabled ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              if (isSortEnabled) {
+                setValue(`${prefix}.episodeList.sort`, undefined, { shouldDirty: true });
+              } else {
+                setValue(
+                  `${prefix}.episodeList.sort`,
+                  { field: 'publishedAt', order: 'ascending' },
+                  { shouldDirty: true },
+                );
+              }
+            }}
+          >
+            {isSortEnabled ? t('sortEnabled') : t('sortDisabled')}
+          </Button>
+        </div>
+
+        {isSortEnabled && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <HintLabel hint="episodeSortField">{t('episodeSortField')}</HintLabel>
+              <Select
+                value={sort?.field ?? 'publishedAt'}
+                onValueChange={(val) =>
+                  setValue(`${prefix}.episodeList.sort.field`, val as EpisodeSortField, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EPISODE_SORT_FIELDS.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {t(`episodeSortField_${f}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <HintLabel hint="episodeSortOrder">{t('episodeSortOrder')}</HintLabel>
+              <Select
+                value={sort?.order ?? 'ascending'}
+                onValueChange={(val) =>
+                  setValue(`${prefix}.episodeList.sort.order`, val as SortOrder, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_ORDERS.map((o) => (
+                    <SelectItem key={o} value={o}>
+                      {t(`sortOrder_${o}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <TitleExtractorForm
+        fieldPath={`playlists.${index}.episodeList.titleExtractor`}
+        idPrefix={`ep-list-title-ext-${index}`}
+      />
     </div>
   );
 }

@@ -139,6 +139,8 @@
   "structureSettings": "Structure",
   "displayOptions": "Display Options",
   "displayOverrides": "Display Overrides",
+  "episodeListSettings": "Episode List",
+  "episodeListSort": "Episode Sort",
   "groupOverrides": "Group Overrides",
   "groupEpisodeSort": "Episode Sort",
   "groupTitleExtractor": "Title Extractor",

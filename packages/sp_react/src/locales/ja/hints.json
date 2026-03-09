@@ -42,6 +42,7 @@
   "episodeExtractorFallbackPattern": "プライマリパターンが一致しない場合に試行されるセカンダリ正規表現。特別/ボーナスエピソードのキャッチに使用します。",
   "episodeExtractorFallbackCaptureGroup": "フォールバックパターンでエピソード番号を含むキャプチャグループ（デフォルト: 1）。",
   "episodeExtractorFallbackToRss": "パターンが一致しない場合、代わりに RSS メタデータのエピソード番号を使用します。最終手段のフォールバックとして便利です。",
+  "episodeListSort": "グループまたはプレイリスト内のエピソードのデフォルトのソート順。未設定の場合、publishedAt 昇順でソートされます。グループごとに上書き可能です。",
   "episodeSortField": "グループ内のエピソードのソート基準フィールド。'publishedAt' は公開日、'episodeNumber' は抽出されたエピソード番号、'title' はタイトルのアルファベット順でソートします。",
   "episodeSortOrder": "昇順（古い順、小さい数値順）または降順（新しい順、大きい数値順）。",
   "groupEpisodeSort": "このグループのデフォルトのエピソードソート順を上書きします。未設定の場合、プレイリストレベルのエピソードソートを継承します。",

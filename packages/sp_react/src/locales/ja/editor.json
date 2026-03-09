@@ -139,6 +139,8 @@
   "structureSettings": "構造",
   "displayOptions": "表示オプション",
   "displayOverrides": "表示オーバーライド",
+  "episodeListSettings": "エピソードリスト",
+  "episodeListSort": "エピソードソート",
   "groupOverrides": "グループオーバーライド",
   "groupEpisodeSort": "エピソードソート",
   "groupTitleExtractor": "タイトル抽出器",
