@@ -42,6 +42,8 @@
   "episodeExtractorFallbackPattern": "A secondary regex tried when the primary pattern doesn't match. Used for catching special/bonus episodes.",
   "episodeExtractorFallbackCaptureGroup": "Which capture group in the fallback pattern contains the episode number (default: 1).",
   "episodeExtractorFallbackToRss": "When no pattern matches, use the episode number from RSS metadata instead. Useful as a last-resort fallback.",
+  "episodeSortField": "The field to sort episodes by within a group. 'publishedAt' uses publication date, 'episodeNumber' uses extracted episode numbers, 'title' sorts alphabetically by title.",
+  "episodeSortOrder": "Ascending (oldest first, lowest number first) or descending (newest first, highest number first).",
   "groupEpisodeSort": "Override the default episode sort order for this specific group. When unset, inherits the playlist-level episode sort.",
   "groupTitleExtractor": "Override the playlist-level title extractor for this group. Extracts display names from episode data.",
   "groupEpisodeExtractor": "Override the playlist-level episode extractor for this group. Extracts season/episode numbers from titles.",
