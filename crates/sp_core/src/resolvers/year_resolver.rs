@@ -37,7 +37,7 @@ impl Resolver for YearResolver {
         for &episode in episodes {
             match episode.published_at() {
                 Some(pub_date) => {
-                    let year = pub_date.year() as i32;
+                    let year = pub_date.year();
                     grouped.entry(year).or_default().push(episode);
                 }
                 None => {

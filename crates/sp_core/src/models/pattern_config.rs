@@ -37,15 +37,15 @@ pub struct PatternConfig {
 impl PatternConfig {
     /// Returns true if this config matches the given podcast.
     pub fn matches_podcast(&self, guid: Option<&str>, feed_url: &str) -> bool {
-        if let Some(ref my_guid) = self.podcast_guid {
-            if guid == Some(my_guid.as_str()) {
-                return true;
-            }
+        if let Some(ref my_guid) = self.podcast_guid
+            && guid == Some(my_guid.as_str())
+        {
+            return true;
         }
-        if let Some(ref urls) = self.feed_urls {
-            if urls.iter().any(|u| u == feed_url) {
-                return true;
-            }
+        if let Some(ref urls) = self.feed_urls
+            && urls.iter().any(|u| u == feed_url)
+        {
+            return true;
         }
         false
     }

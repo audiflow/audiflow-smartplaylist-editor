@@ -64,7 +64,7 @@ fn resolve_by_appearance(
         .filter(|e| e.published_at().is_some())
         .copied()
         .collect();
-    with_date.sort_by(|a, b| a.published_at().unwrap().cmp(&b.published_at().unwrap()));
+    with_date.sort_by_key(|a| a.published_at().unwrap());
 
     let without_date: Vec<&dyn EpisodeData> = episodes
         .iter()
@@ -75,7 +75,7 @@ fn resolve_by_appearance(
     // Process all episodes: dated first (oldest to newest), then undated
     let all_episodes: Vec<&dyn EpisodeData> = with_date
         .into_iter()
-        .chain(without_date.into_iter())
+        .chain(without_date)
         .collect();
 
     let mut playlist_order: Vec<String> = Vec::new();

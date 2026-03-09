@@ -177,17 +177,17 @@ pub async fn get_assembled(
         .map_err(|e| AppError::internal(format!("Serialization error: {e}")))?;
 
     // Enrich with displayName from root meta.json
-    if let Ok(root_meta) = state.config_repo.get_root_meta_json() {
-        if let Some(patterns) = root_meta.get("patterns").and_then(|v| v.as_array()) {
-            for entry in patterns {
-                if entry.get("id").and_then(|v| v.as_str()) == Some(&id) {
-                    if let Some(name) = entry.get("displayName").and_then(|v| v.as_str()) {
-                        if !name.is_empty() {
-                            json["displayName"] = Value::String(name.to_string());
-                        }
-                    }
-                    break;
+    if let Ok(root_meta) = state.config_repo.get_root_meta_json()
+        && let Some(patterns) = root_meta.get("patterns").and_then(|v| v.as_array())
+    {
+        for entry in patterns {
+            if entry.get("id").and_then(|v| v.as_str()) == Some(&id) {
+                if let Some(name) = entry.get("displayName").and_then(|v| v.as_str())
+                    && !name.is_empty()
+                {
+                    json["displayName"] = Value::String(name.to_string());
                 }
+                break;
             }
         }
     }

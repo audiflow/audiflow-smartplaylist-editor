@@ -2,32 +2,22 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Whether a smart playlist directly contains episodes or groups.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PlaylistStructure {
+    #[default]
     Split,
     Grouped,
 }
 
-impl Default for PlaylistStructure {
-    fn default() -> Self {
-        PlaylistStructure::Split
-    }
-}
-
 /// How year headers are applied to groups or episodes.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum YearBinding {
+    #[default]
     None,
     PinToYear,
     SplitByYear,
-}
-
-impl Default for YearBinding {
-    fn default() -> Self {
-        YearBinding::None
-    }
 }
 
 fn is_default_playlist_structure(v: &PlaylistStructure) -> bool {

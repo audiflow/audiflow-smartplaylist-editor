@@ -96,22 +96,22 @@ fn resolve_with_groups(
     let mut sort_key = 1;
 
     for pg in &pattern_groups {
-        if let Some(ids) = grouped.get(&pg.id) {
-            if !ids.is_empty() {
-                playlists.push(Playlist {
-                    id: pg.id.clone(),
-                    display_name: pg.display_name.clone(),
-                    sort_key,
-                    episode_ids: ids.clone(),
-                    thumbnail_url: None,
-                    playlist_structure: PlaylistStructure::Split,
-                    year_binding: YearBinding::None,
-                    show_year_headers: pg.show_year_headers.unwrap_or(false),
-                    show_date_range: false,
-                    groups: None,
-                });
-                sort_key += 1;
-            }
+        if let Some(ids) = grouped.get(&pg.id)
+            && !ids.is_empty()
+        {
+            playlists.push(Playlist {
+                id: pg.id.clone(),
+                display_name: pg.display_name.clone(),
+                sort_key,
+                episode_ids: ids.clone(),
+                thumbnail_url: None,
+                playlist_structure: PlaylistStructure::Split,
+                year_binding: YearBinding::None,
+                show_year_headers: pg.show_year_headers.unwrap_or(false),
+                show_date_range: false,
+                groups: None,
+            });
+            sort_key += 1;
         }
     }
 

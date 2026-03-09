@@ -45,14 +45,13 @@ pub fn parse_feed(content: &str) -> Vec<Value> {
                     image_url = None;
                 } else if inside_item {
                     // Handle itunes:image as empty element with href attr
-                    if local == "image" && prefix.as_deref() == Some("itunes") {
-                        if let Some(attr) = e
+                    if local == "image" && prefix.as_deref() == Some("itunes")
+                        && let Some(attr) = e
                             .attributes()
                             .flatten()
                             .find(|a| a.key.as_ref() == b"href")
-                        {
-                            image_url = String::from_utf8(attr.value.to_vec()).ok();
-                        }
+                    {
+                        image_url = String::from_utf8(attr.value.to_vec()).ok();
                     }
                     current_element = Some((local, prefix));
                 }

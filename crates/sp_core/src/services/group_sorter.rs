@@ -64,12 +64,11 @@ fn newest_date(
 ) -> Option<DateTime<Utc>> {
     let mut newest: Option<DateTime<Utc>> = None;
     for &id in &group.episode_ids {
-        if let Some(ep) = episode_by_id.get(&id) {
-            if let Some(date) = ep.published_at() {
-                if newest.map_or(true, |n| n < date) {
-                    newest = Some(date);
-                }
-            }
+        if let Some(ep) = episode_by_id.get(&id)
+            && let Some(date) = ep.published_at()
+            && newest.is_none_or(|n| n < date)
+        {
+            newest = Some(date);
         }
     }
     newest

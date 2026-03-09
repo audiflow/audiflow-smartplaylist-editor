@@ -266,10 +266,10 @@ impl ResolverService {
         let all_candidates = self.filter_episodes(episodes, definition, &HashSet::new());
         for ep in &all_candidates {
             let id = ep.id();
-            if claimed_ids.contains(&id) {
-                if let Some(claimer) = claimed_by_map.get(&id) {
-                    claimed_by_others.insert(id, claimer.clone());
-                }
+            if claimed_ids.contains(&id)
+                && let Some(claimer) = claimed_by_map.get(&id)
+            {
+                claimed_by_others.insert(id, claimer.clone());
             }
         }
         claimed_by_others
@@ -631,25 +631,22 @@ impl ResolverService {
     }
 
     fn matches_filter_entry(episode: &dyn EpisodeData, entry: &EpisodeFilterEntry) -> bool {
-        if let Some(ref title_pattern) = entry.title {
-            if let Ok(regex) = RegexBuilder::new(title_pattern)
+        if let Some(ref title_pattern) = entry.title
+            && let Ok(regex) = RegexBuilder::new(title_pattern)
                 .case_insensitive(true)
                 .build()
-            {
-                if !regex.is_match(episode.title()) {
-                    return false;
-                }
-            }
+            && !regex.is_match(episode.title())
+        {
+            return false;
         }
-        if let Some(ref desc_pattern) = entry.description {
-            if let Ok(regex) = RegexBuilder::new(desc_pattern)
+        if let Some(ref desc_pattern) = entry.description
+            && let Ok(regex) = RegexBuilder::new(desc_pattern)
                 .case_insensitive(true)
                 .build()
-            {
-                let desc = episode.description().unwrap_or("");
-                if !regex.is_match(desc) {
-                    return false;
-                }
+        {
+            let desc = episode.description().unwrap_or("");
+            if !regex.is_match(desc) {
+                return false;
             }
         }
         true

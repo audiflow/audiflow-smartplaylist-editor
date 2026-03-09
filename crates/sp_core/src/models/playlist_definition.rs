@@ -64,11 +64,11 @@ impl PlaylistDefinition {
                 let has_require = f
                     .require
                     .as_ref()
-                    .map_or(false, |r| !r.is_empty());
+                    .is_some_and(|r| !r.is_empty());
                 let has_exclude = f
                     .exclude
                     .as_ref()
-                    .map_or(false, |e| !e.is_empty());
+                    .is_some_and(|e| !e.is_empty());
                 has_require || has_exclude
             }
         }

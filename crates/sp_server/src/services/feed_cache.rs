@@ -98,12 +98,12 @@ impl DiskFeedCacheService {
         std::fs::create_dir_all(&self.cache_dir).map_err(Error::Io)?;
 
         let data = serde_json::to_string(episodes)
-            .map_err(|e| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+            .map_err(|e| Error::Io(std::io::Error::other(e)))?;
         let meta = serde_json::to_string(&serde_json::json!({
             "url": url,
             "fetchedAt": chrono::Utc::now().to_rfc3339(),
         }))
-        .map_err(|e| Error::Io(std::io::Error::new(std::io::ErrorKind::Other, e)))?;
+        .map_err(|e| Error::Io(std::io::Error::other(e)))?;
 
         // Write data before meta for crash safety
         atomic_write(&self.data_path(hash), &data)?;
