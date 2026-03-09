@@ -54,27 +54,35 @@ const SOURCE_OPTIONS = [
 ] as const;
 
 interface TitleExtractorFormProps {
-  index: number;
+  fieldPath: string;
+  idPrefix: string;
+  showCategoryNote?: boolean;
+  resolverType?: string;
 }
 
-export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
+export function TitleExtractorForm({
+  fieldPath,
+  idPrefix,
+  showCategoryNote,
+  resolverType,
+}: TitleExtractorFormProps) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const resolverType = watch(`playlists.${index}.resolverType`);
-  const extractor = watch(`playlists.${index}.titleExtractor`);
+  // Dynamic paths require casting to any since TypeScript can't infer nested types
+  const extractor = watch(fieldPath as any) as TitleExtractor | null | undefined;
   const steps = useMemo(() => flattenChain(extractor), [extractor]);
   const fallbackValue = extractor?.fallbackValue ?? null;
 
   const applySteps = useCallback(
     (nextSteps: TitleExtractor[], nextFallbackValue?: string | null) => {
       setValue(
-        `playlists.${index}.titleExtractor`,
+        fieldPath as any,
         nestChain(nextSteps, nextFallbackValue ?? fallbackValue),
         { shouldDirty: true },
       );
     },
-    [index, setValue, fallbackValue],
+    [fieldPath, setValue, fallbackValue],
   );
 
   const handleAdd = useCallback(() => {
@@ -85,13 +93,13 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
   const handleRemove = useCallback(
     (stepIndex: number) => {
       if (stepIndex === 0 && steps.length === 1) {
-        setValue(`playlists.${index}.titleExtractor`, null, { shouldDirty: true });
+        setValue(fieldPath as any, null, { shouldDirty: true });
         return;
       }
       const nextSteps = steps.filter((_, i) => i !== stepIndex);
       applySteps(nextSteps, fallbackValue);
     },
-    [steps, applySteps, fallbackValue, index, setValue],
+    [steps, applySteps, fallbackValue, fieldPath, setValue],
   );
 
   const updateStep = useCallback(
@@ -107,15 +115,15 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
   const handleFallbackValueChange = useCallback(
     (value: string) => {
       setValue(
-        `playlists.${index}.titleExtractor`,
+        fieldPath as any,
         nestChain(steps, value || null),
         { shouldDirty: true },
       );
     },
-    [steps, index, setValue],
+    [steps, fieldPath, setValue],
   );
 
-  if (resolverType === 'category') {
+  if (showCategoryNote && resolverType === 'category') {
     return (
       <div className="space-y-2">
         <h4 className="text-sm font-medium">{t('titleExtractor')}</h4>
@@ -135,7 +143,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
           variant="outline"
           size="sm"
           onClick={() =>
-            setValue(`playlists.${index}.titleExtractor`, {
+            setValue(fieldPath as any, {
               source: 'title',
               group: 0,
             }, { shouldDirty: true })
@@ -159,7 +167,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
           key={stepIndex}
           step={step}
           stepIndex={stepIndex}
-          playlistIndex={index}
+          idPrefix={idPrefix}
           onUpdate={(patch) => updateStep(stepIndex, patch)}
           onRemove={() => handleRemove(stepIndex)}
         />
@@ -191,7 +199,7 @@ export function TitleExtractorForm({ index }: TitleExtractorFormProps) {
 interface TitleExtractorStepProps {
   step: TitleExtractor;
   stepIndex: number;
-  playlistIndex: number;
+  idPrefix: string;
   onUpdate: (patch: Partial<TitleExtractor>) => void;
   onRemove: () => void;
 }
@@ -199,7 +207,7 @@ interface TitleExtractorStepProps {
 function TitleExtractorStep({
   step,
   stepIndex,
-  playlistIndex,
+  idPrefix,
   onUpdate,
   onRemove,
 }: TitleExtractorStepProps) {
@@ -229,7 +237,7 @@ function TitleExtractorStep({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <HintLabel
-              htmlFor={`title-ext-${playlistIndex}-${stepIndex}-source`}
+              htmlFor={`${idPrefix}-${stepIndex}-source`}
               hint="titleExtractorSource"
             >
               {t('titleExtractorSource')}
@@ -238,7 +246,7 @@ function TitleExtractorStep({
               value={step.source}
               onValueChange={(val) => onUpdate({ source: val })}
             >
-              <SelectTrigger id={`title-ext-${playlistIndex}-${stepIndex}-source`}>
+              <SelectTrigger id={`${idPrefix}-${stepIndex}-source`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -253,13 +261,13 @@ function TitleExtractorStep({
 
           <div className="space-y-1.5">
             <HintLabel
-              htmlFor={`title-ext-${playlistIndex}-${stepIndex}-group`}
+              htmlFor={`${idPrefix}-${stepIndex}-group`}
               hint="titleExtractorGroup"
             >
               {t('titleExtractorGroup')}
             </HintLabel>
             <Input
-              id={`title-ext-${playlistIndex}-${stepIndex}-group`}
+              id={`${idPrefix}-${stepIndex}-group`}
               type="number"
               value={step.group ?? 0}
               onChange={(e) =>
@@ -271,13 +279,13 @@ function TitleExtractorStep({
 
         <div className="space-y-1.5">
           <HintLabel
-            htmlFor={`title-ext-${playlistIndex}-${stepIndex}-pattern`}
+            htmlFor={`${idPrefix}-${stepIndex}-pattern`}
             hint="titleExtractorPattern"
           >
             {t('titleExtractorPattern')}
           </HintLabel>
           <Input
-            id={`title-ext-${playlistIndex}-${stepIndex}-pattern`}
+            id={`${idPrefix}-${stepIndex}-pattern`}
             value={step.pattern ?? ''}
             onChange={(e) =>
               onUpdate({ pattern: e.target.value || null })
@@ -288,13 +296,13 @@ function TitleExtractorStep({
 
         <div className="space-y-1.5">
           <HintLabel
-            htmlFor={`title-ext-${playlistIndex}-${stepIndex}-template`}
+            htmlFor={`${idPrefix}-${stepIndex}-template`}
             hint="titleExtractorTemplate"
           >
             {t('titleExtractorTemplate')}
           </HintLabel>
           <Input
-            id={`title-ext-${playlistIndex}-${stepIndex}-template`}
+            id={`${idPrefix}-${stepIndex}-template`}
             value={step.template ?? ''}
             onChange={(e) =>
               onUpdate({ template: e.target.value || null })
