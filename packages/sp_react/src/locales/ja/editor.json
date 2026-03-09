@@ -83,7 +83,7 @@
   "groupId": "グループ ID",
   "groupDisplayName": "表示名",
   "groupPattern": "パターン（正規表現）",
-  "sortToggle": "カスタムソート",
+  "sortToggle": "グループソート",
   "sortEnabled": "有効",
   "sortDisabled": "無効",
   "sortField": "フィールド",

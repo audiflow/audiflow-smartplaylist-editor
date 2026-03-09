@@ -17,7 +17,6 @@ import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { RegexTester } from '@/components/editor/regex-tester.tsx';
 import { GroupsForm } from '@/components/editor/groups-form.tsx';
-import { SortForm } from '@/components/editor/sort-form.tsx';
 import { ExtractorsForm } from '@/components/editor/extractors-form.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { Plus, Trash2 } from 'lucide-react';
@@ -67,7 +66,6 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
       <EpisodeListSettings index={index} prefix={prefix} />
 
       <hr className="border-border" />
-      <SortForm index={index} />
       <GroupsForm index={index} />
 
       <hr className="border-border" />

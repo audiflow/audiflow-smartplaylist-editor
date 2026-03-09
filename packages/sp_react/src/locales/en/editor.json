@@ -83,7 +83,7 @@
   "groupId": "Group ID",
   "groupDisplayName": "Display Name",
   "groupPattern": "Pattern (regex)",
-  "sortToggle": "Custom Sort",
+  "sortToggle": "Group Sort",
   "sortEnabled": "Enabled",
   "sortDisabled": "Disabled",
   "sortField": "Field",

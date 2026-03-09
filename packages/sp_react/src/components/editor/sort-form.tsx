@@ -45,8 +45,6 @@ export function SortForm({ index }: SortFormProps) {
 
   return (
     <div className="space-y-4">
-      <h4 className="text-sm font-medium">{t('sortSection')}</h4>
-
       {!isGroupedMode ? (
         <p className="text-muted-foreground text-sm">{t('sortDisabledNote')}</p>
       ) : (
