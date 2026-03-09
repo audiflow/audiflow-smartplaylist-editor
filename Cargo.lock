@@ -1871,13 +1871,18 @@ name = "sp_server"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "chrono",
  "feed-rs",
  "notify",
+ "quick-xml",
+ "regex",
  "reqwest",
  "rust-embed",
  "serde",
  "serde_json",
+ "sha2",
  "sp_core",
+ "tempfile",
  "tokio",
  "tower-http",
 ]
