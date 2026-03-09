@@ -21,3 +21,5 @@ deploy/terraform/.terraform/
 !.claude/hooks/
 !.claude/rules/
 !.claude/skills/
+
+/target/
