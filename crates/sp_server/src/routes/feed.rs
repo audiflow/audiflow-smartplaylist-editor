@@ -30,7 +30,7 @@ pub async fn fetch_feed(
         .feed_cache
         .fetch_feed(&url, &state.http_client)
         .await
-        .map_err(|e| AppError::internal(format!("Failed to fetch feed: {e}")))?;
+        .map_err(|e| AppError::bad_gateway(format!("Failed to fetch feed: {e}")))?;
 
     Ok(Json(serde_json::json!({ "episodes": episodes })))
 }

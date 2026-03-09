@@ -79,6 +79,7 @@ fn resolve_by_appearance(
         .collect();
 
     let mut playlist_order: Vec<String> = Vec::new();
+    let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut grouped: std::collections::HashMap<String, Vec<&dyn EpisodeData>> =
         std::collections::HashMap::new();
     let mut ungrouped: Vec<i64> = Vec::new();
@@ -88,7 +89,7 @@ fn resolve_by_appearance(
 
         match playlist_name {
             Some(name) => {
-                if !playlist_order.contains(&name) {
+                if seen.insert(name.clone()) {
                     playlist_order.push(name.clone());
                 }
                 grouped.entry(name).or_default().push(*episode);

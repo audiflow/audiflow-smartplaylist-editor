@@ -1,8 +1,9 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use notify::{Event, EventKind, RecursiveMode, Watcher};
+use tokio::runtime::Handle;
 use tokio::sync::broadcast;
 
 /// Types of file changes detected by the watcher.
@@ -56,17 +57,21 @@ impl FileWatcherService {
     ) -> Result<Self, notify::Error> {
         let (sender, _) = broadcast::channel(100);
         let tx = sender.clone();
-        let watch_dir_str = watch_dir.to_string_lossy().to_string();
         let pending: Arc<Mutex<HashMap<String, FileChangeEvent>>> =
             Arc::new(Mutex::new(HashMap::new()));
         let pending_clone = Arc::clone(&pending);
         let tx_flush = tx.clone();
+
+        // Capture the tokio runtime handle so we can spawn from the
+        // notify callback (which runs on an OS thread, not a tokio task).
+        let handle = Handle::current();
 
         // Debounce timer handle, reset on each event.
         let debounce_handle: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>> =
             Arc::new(Mutex::new(None));
         let debounce_clone = Arc::clone(&debounce_handle);
 
+        let watch_dir_clone = watch_dir.clone();
         let mut watcher = notify::recommended_watcher(move |res: Result<Event, _>| {
             let event = match res {
                 Ok(e) => e,
@@ -80,16 +85,9 @@ impl FileWatcherService {
                 _ => return,
             };
 
-            let prefix = if watch_dir_str.ends_with('/') {
-                watch_dir_str.clone()
-            } else {
-                format!("{}/", watch_dir_str)
-            };
-
             for path in &event.paths {
-                let path_str = path.to_string_lossy();
-                let relative = match path_str.strip_prefix(&prefix) {
-                    Some(r) => r.to_string(),
+                let relative = match to_relative(path, &watch_dir_clone) {
+                    Some(r) => r,
                     None => continue,
                 };
 
@@ -117,17 +115,16 @@ impl FileWatcherService {
             }
 
             // Reset debounce timer
-            if let Ok(mut handle) = debounce_clone.lock() {
-                if let Some(h) = handle.take() {
+            if let Ok(mut guard) = debounce_clone.lock() {
+                if let Some(h) = guard.take() {
                     h.abort();
                 }
                 let pending_flush = Arc::clone(&pending);
                 let tx = tx_flush.clone();
-                *handle = Some(tokio::spawn(async move {
+                *guard = Some(handle.spawn(async move {
                     tokio::time::sleep(std::time::Duration::from_millis(200)).await;
                     if let Ok(mut map) = pending_flush.lock() {
                         for (_, event) in map.drain() {
-                            // Ignore send errors (no receivers connected)
                             let _ = tx.send(event);
                         }
                     }
@@ -147,4 +144,12 @@ impl FileWatcherService {
     pub fn subscribe(&self) -> broadcast::Receiver<FileChangeEvent> {
         self.sender.subscribe()
     }
+}
+
+/// Converts an absolute path to a relative path under `base`, using
+/// `Path::strip_prefix` for portable behavior across platforms.
+fn to_relative(path: &Path, base: &Path) -> Option<String> {
+    path.strip_prefix(base)
+        .ok()
+        .map(|p| p.to_string_lossy().to_string())
 }
