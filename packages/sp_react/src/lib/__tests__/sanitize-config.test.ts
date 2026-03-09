@@ -19,6 +19,26 @@ describe('sanitizeConfig', () => {
     expect(result.displayName).toBe('Test');
     expect(result.resolverType).toBe('year');
     expect(result.playlistStructure).toBe('grouped');
+    expect(result).not.toHaveProperty('episodeFilters');
+  });
+
+  it('strips empty arrays', () => {
+    const config = {
+      id: 'test',
+      episodeFilters: {
+        require: [],
+        exclude: [],
+      },
+      episodeList: {
+        sort: null,
+      },
+    };
+
+    const result = sanitizeConfig(config) as Record<string, unknown>;
+
+    expect(result.id).toBe('test');
+    expect(result).not.toHaveProperty('episodeFilters');
+    expect(result).not.toHaveProperty('episodeList');
   });
 
   it('removes keys with null values', () => {

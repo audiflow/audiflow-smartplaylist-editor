@@ -10,7 +10,10 @@
 export function sanitizeConfig(config: unknown): unknown {
   if (config === null || config === undefined) return undefined;
   if (typeof config === 'string') return config === '' ? undefined : config;
-  if (Array.isArray(config)) return config.map(sanitizeConfig).filter((v) => v !== undefined);
+  if (Array.isArray(config)) {
+    const cleaned = config.map(sanitizeConfig).filter((v) => v !== undefined);
+    return cleaned.length === 0 ? undefined : cleaned;
+  }
   if (typeof config === 'object') {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(config)) {
