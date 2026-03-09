@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, PlaylistStructure, ResolverType, YearBinding } from '@/schemas/config-schema.ts';
+import type { PatternConfig, PlaylistStructure, ResolverType, YearBinding, EpisodeSortField, SortOrder } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
@@ -17,9 +17,12 @@ import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { RegexTester } from '@/components/editor/regex-tester.tsx';
 import { GroupsForm } from '@/components/editor/groups-form.tsx';
-import { SortForm } from '@/components/editor/sort-form.tsx';
 import { ExtractorsForm } from '@/components/editor/extractors-form.tsx';
+import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { Plus, Trash2 } from 'lucide-react';
+
+const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
+const SORT_ORDERS = ['ascending', 'descending'] as const;
 
 const RESOLVER_TYPES = [
   'rss',
@@ -59,8 +62,13 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
 
       <DisplayOptions index={index} prefix={prefix} />
 
-      <SortForm index={index} />
+      <hr className="border-border" />
+      <EpisodeListSettings index={index} prefix={prefix} />
+
+      <hr className="border-border" />
       <GroupsForm index={index} />
+
+      <hr className="border-border" />
       <ExtractorsForm index={index} />
 
       <RemoveButton onRemove={onRemove} />
@@ -142,19 +150,29 @@ function FilterSettings({
     <div className="space-y-3">
       <h4 className="text-sm font-medium">{t('episodeFilters')}</h4>
 
-      <div className="space-y-3">
+      <div className="rounded-lg border border-border p-4 space-y-3">
         <h5 className="text-xs font-medium text-muted-foreground">{t('requireFilters')}</h5>
         {requireFields.map((field, filterIndex) => {
           const titleValue = watch(`playlists.${index}.episodeFilters.require.${filterIndex}.title`) ?? '';
           return (
-            <div key={field.id} className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 space-y-1.5">
-                  <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
-                  <Input
-                    {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.title`)}
-                    placeholder={t('placeholderRegex')}
-                  />
+            <div key={field.id} className="rounded-lg border border-border p-3">
+              <div className="flex items-start gap-2">
+                <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.title`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                    {titleValue && <RegexTester pattern={titleValue} variant="include" titles={episodeTitles} />}
+                  </div>
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterDescription">{t('filterDescription')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.description`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -167,7 +185,6 @@ function FilterSettings({
                   <span className="sr-only">{t('removeFilter')}</span>
                 </Button>
               </div>
-              {titleValue && <RegexTester pattern={titleValue} variant="include" titles={episodeTitles} />}
             </div>
           );
         })}
@@ -182,19 +199,29 @@ function FilterSettings({
         </Button>
       </div>
 
-      <div className="space-y-3">
+      <div className="rounded-lg border border-border p-4 space-y-3">
         <h5 className="text-xs font-medium text-muted-foreground">{t('excludeFilters')}</h5>
         {excludeFields.map((field, filterIndex) => {
           const titleValue = watch(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`) ?? '';
           return (
-            <div key={field.id} className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 space-y-1.5">
-                  <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
-                  <Input
-                    {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`)}
-                    placeholder={t('placeholderRegex')}
-                  />
+            <div key={field.id} className="rounded-lg border border-border p-3">
+              <div className="flex items-start gap-2">
+                <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                    {titleValue && <RegexTester pattern={titleValue} variant="exclude" titles={episodeTitles} />}
+                  </div>
+                  <div className="space-y-1.5">
+                    <HintLabel hint="filterDescription">{t('filterDescription')}</HintLabel>
+                    <Input
+                      {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.description`)}
+                      placeholder={t('placeholderRegex')}
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -207,7 +234,6 @@ function FilterSettings({
                   <span className="sr-only">{t('removeFilter')}</span>
                 </Button>
               </div>
-              {titleValue && <RegexTester pattern={titleValue} variant="exclude" titles={episodeTitles} />}
             </div>
           );
         })}
@@ -389,6 +415,101 @@ function DisplayOptions({
           </Select>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EpisodeListSettings({
+  index,
+  prefix,
+}: {
+  index: number;
+  prefix: `playlists.${number}`;
+}) {
+  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
+
+  const sort = watch(`${prefix}.episodeList.sort`);
+  const isSortEnabled = sort != null;
+
+  return (
+    <div className="space-y-3">
+      <h4 className="text-sm font-medium">{t('episodeListSettings')}</h4>
+
+      <div className="rounded-lg border border-border p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <HintLabel hint="episodeListSort">{t('episodeListSort')}</HintLabel>
+          <Button
+            type="button"
+            variant={isSortEnabled ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              if (isSortEnabled) {
+                setValue(`${prefix}.episodeList.sort`, undefined, { shouldDirty: true });
+              } else {
+                setValue(
+                  `${prefix}.episodeList.sort`,
+                  { field: 'publishedAt', order: 'ascending' },
+                  { shouldDirty: true },
+                );
+              }
+            }}
+          >
+            {isSortEnabled ? t('sortEnabled') : t('sortDisabled')}
+          </Button>
+        </div>
+
+        {isSortEnabled && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <HintLabel hint="episodeSortField">{t('episodeSortField')}</HintLabel>
+              <Select
+                value={sort?.field ?? 'publishedAt'}
+                onValueChange={(val) =>
+                  setValue(`${prefix}.episodeList.sort.field`, val as EpisodeSortField, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EPISODE_SORT_FIELDS.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {t(`episodeSortField_${f}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <HintLabel hint="episodeSortOrder">{t('episodeSortOrder')}</HintLabel>
+              <Select
+                value={sort?.order ?? 'ascending'}
+                onValueChange={(val) =>
+                  setValue(`${prefix}.episodeList.sort.order`, val as SortOrder, { shouldDirty: true })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_ORDERS.map((o) => (
+                    <SelectItem key={o} value={o}>
+                      {t(`sortOrder_${o}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <TitleExtractorForm
+        fieldPath={`playlists.${index}.episodeList.titleExtractor`}
+        idPrefix={`ep-list-title-ext-${index}`}
+      />
     </div>
   );
 }

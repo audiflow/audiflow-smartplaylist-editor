@@ -83,7 +83,7 @@
   "groupId": "グループ ID",
   "groupDisplayName": "表示名",
   "groupPattern": "パターン（正規表現）",
-  "sortToggle": "カスタムソート",
+  "sortToggle": "グループソート",
   "sortEnabled": "有効",
   "sortDisabled": "無効",
   "sortField": "フィールド",
@@ -138,5 +138,17 @@
   "moveGroupDown": "グループを下に移動",
   "structureSettings": "構造",
   "displayOptions": "表示オプション",
-  "displayOverrides": "表示オーバーライド"
+  "displayOverrides": "表示オーバーライド",
+  "episodeListSettings": "エピソードリスト（デフォルト）",
+  "episodeListSort": "エピソードソート",
+  "groupOverrides": "グループオーバーライド",
+  "groupEpisodeSort": "エピソードソート",
+  "groupTitleExtractor": "タイトル抽出器",
+  "groupEpisodeExtractor": "エピソード抽出器",
+  "groupYearBinding": "年バインディング",
+  "episodeSortField": "フィールド",
+  "episodeSortOrder": "順序",
+  "episodeSortField_publishedAt": "公開日",
+  "episodeSortField_episodeNumber": "エピソード番号",
+  "episodeSortField_title": "タイトル"
 }

@@ -44,82 +44,78 @@ export function SortForm({ index }: SortFormProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <h4 className="text-sm font-medium">{t('sortSection')}</h4>
+    <div className="rounded-lg border border-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <HintLabel hint="groupListSort">{t('sortToggle')}</HintLabel>
+        {isGroupedMode && (
+          <Button
+            type="button"
+            variant={isEnabled ? 'default' : 'outline'}
+            size="sm"
+            onClick={handleToggle}
+          >
+            {isEnabled ? t('sortEnabled') : t('sortDisabled')}
+          </Button>
+        )}
+      </div>
 
       {!isGroupedMode ? (
         <p className="text-muted-foreground text-sm">{t('sortDisabledNote')}</p>
-      ) : (
-        <>
+      ) : isEnabled ? (
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <HintLabel hint="groupListSort">{t('sortToggle')}</HintLabel>
-            <Button
-              type="button"
-              variant={isEnabled ? 'default' : 'outline'}
-              size="sm"
-              onClick={handleToggle}
+            <HintLabel
+              htmlFor={`sort-${index}-field`}
+              hint="sortField"
             >
-              {isEnabled ? t('sortEnabled') : t('sortDisabled')}
-            </Button>
+              {t('sortField')}
+            </HintLabel>
+            <Select
+              value={sort?.field ?? 'playlistNumber'}
+              onValueChange={(val) =>
+                setValue(`playlists.${index}.groupList.sort.field`, val as SortField, { shouldDirty: true })
+              }
+            >
+              <SelectTrigger id={`sort-${index}-field`} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_FIELDS.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {t(`sortField_${f}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {isEnabled && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <HintLabel
-                  htmlFor={`sort-${index}-field`}
-                  hint="sortField"
-                >
-                  {t('sortField')}
-                </HintLabel>
-                <Select
-                  value={sort?.field ?? 'playlistNumber'}
-                  onValueChange={(val) =>
-                    setValue(`playlists.${index}.groupList.sort.field`, val as SortField, { shouldDirty: true })
-                  }
-                >
-                  <SelectTrigger id={`sort-${index}-field`} className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_FIELDS.map((f) => (
-                      <SelectItem key={f} value={f}>
-                        {t(`sortField_${f}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <HintLabel
-                  htmlFor={`sort-${index}-order`}
-                  hint="sortOrder"
-                >
-                  {t('sortOrder')}
-                </HintLabel>
-                <Select
-                  value={sort?.order ?? 'ascending'}
-                  onValueChange={(val) =>
-                    setValue(`playlists.${index}.groupList.sort.order`, val as SortOrder, { shouldDirty: true })
-                  }
-                >
-                  <SelectTrigger id={`sort-${index}-order`} className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SORT_ORDERS.map((o) => (
-                      <SelectItem key={o} value={o}>
-                        {t(`sortOrder_${o}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+          <div className="space-y-1.5">
+            <HintLabel
+              htmlFor={`sort-${index}-order`}
+              hint="sortOrder"
+            >
+              {t('sortOrder')}
+            </HintLabel>
+            <Select
+              value={sort?.order ?? 'ascending'}
+              onValueChange={(val) =>
+                setValue(`playlists.${index}.groupList.sort.order`, val as SortOrder, { shouldDirty: true })
+              }
+            >
+              <SelectTrigger id={`sort-${index}-order`} className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_ORDERS.map((o) => (
+                  <SelectItem key={o} value={o}>
+                    {t(`sortOrder_${o}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

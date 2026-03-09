@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { GroupDefCard } from '@/components/editor/group-def-card.tsx';
 import { GroupReorderDialog } from '@/components/editor/group-reorder-dialog.tsx';
+import { SortForm } from '@/components/editor/sort-form.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { ArrowUpDown, Plus } from 'lucide-react';
 
@@ -43,6 +44,8 @@ export function GroupsForm({ index }: GroupsFormProps) {
   return (
     <div className="space-y-4">
       <h4 className="text-sm font-medium">{t('groupsSection')}</h4>
+
+      <SortForm index={index} />
 
       {1 < fields.length && (
         <Button

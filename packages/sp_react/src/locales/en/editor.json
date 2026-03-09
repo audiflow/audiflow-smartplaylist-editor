@@ -83,7 +83,7 @@
   "groupId": "Group ID",
   "groupDisplayName": "Display Name",
   "groupPattern": "Pattern (regex)",
-  "sortToggle": "Custom Sort",
+  "sortToggle": "Group Sort",
   "sortEnabled": "Enabled",
   "sortDisabled": "Disabled",
   "sortField": "Field",
@@ -138,5 +138,17 @@
   "moveGroupDown": "Move group down",
   "structureSettings": "Structure",
   "displayOptions": "Display Options",
-  "displayOverrides": "Display Overrides"
+  "displayOverrides": "Display Overrides",
+  "episodeListSettings": "Episode List (Default)",
+  "episodeListSort": "Episode Sort",
+  "groupOverrides": "Group Overrides",
+  "groupEpisodeSort": "Episode Sort",
+  "groupTitleExtractor": "Title Extractor",
+  "groupEpisodeExtractor": "Episode Extractor",
+  "groupYearBinding": "Year Binding",
+  "episodeSortField": "Field",
+  "episodeSortOrder": "Order",
+  "episodeSortField_publishedAt": "Published Date",
+  "episodeSortField_episodeNumber": "Episode Number",
+  "episodeSortField_title": "Title"
 }
