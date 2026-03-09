@@ -33,3 +33,28 @@ export function HintLabel({ hint, children, ...props }: HintLabelProps) {
     </div>
   );
 }
+
+/**
+ * Inline hint icon safe for use inside interactive elements (e.g. AccordionTrigger).
+ * Uses a <span> trigger instead of a <button> to avoid nested button violations.
+ */
+export function HintIcon({ hint }: { hint: string }) {
+  const { t } = useTranslation('hints');
+  const { t: tCommon } = useTranslation('common');
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          role="img"
+          aria-label={tCommon('help')}
+          tabIndex={-1}
+          className="inline-flex text-muted-foreground hover:text-foreground"
+        >
+          <CircleHelp className="h-3.5 w-3.5" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">{t(hint)}</TooltipContent>
+    </Tooltip>
+  );
+}

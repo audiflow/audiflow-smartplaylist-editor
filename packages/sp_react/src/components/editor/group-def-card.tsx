@@ -3,7 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
-import { HintLabel } from '@/components/editor/hint-label.tsx';
+import { HintLabel, HintIcon } from '@/components/editor/hint-label.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
@@ -176,11 +176,11 @@ export function GroupDefCard({
           </div>
         </div>
 
-        <Accordion type="multiple" defaultValue={expandedOverrides} className="w-full">
+        <Accordion type="multiple" defaultValue={expandedOverrides} key={expandedOverrides.join(',')} className="w-full">
           {/* Year Binding Override */}
           <AccordionItem value="yearBinding">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
-              <HintLabel hint="groupYearBinding">{t('groupYearBinding')}</HintLabel>
+              {t('groupYearBinding')} <HintIcon hint="groupYearBinding" />
             </AccordionTrigger>
             <AccordionContent>
               <Select
@@ -208,7 +208,7 @@ export function GroupDefCard({
           {/* Episode Sort Override */}
           <AccordionItem value="episodeSort">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
-              <HintLabel hint="groupEpisodeSort">{t('groupEpisodeSort')}</HintLabel>
+              {t('groupEpisodeSort')} <HintIcon hint="groupEpisodeSort" />
             </AccordionTrigger>
             <AccordionContent>
               <GroupEpisodeSortOverride prefix={prefix} />
@@ -218,7 +218,7 @@ export function GroupDefCard({
           {/* Title Extractor Override */}
           <AccordionItem value="titleExtractor">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
-              <HintLabel hint="groupTitleExtractor">{t('groupTitleExtractor')}</HintLabel>
+              {t('groupTitleExtractor')} <HintIcon hint="groupTitleExtractor" />
             </AccordionTrigger>
             <AccordionContent>
               <TitleExtractorForm
@@ -231,7 +231,7 @@ export function GroupDefCard({
           {/* Episode Extractor Override */}
           <AccordionItem value="episodeExtractor">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
-              <HintLabel hint="groupEpisodeExtractor">{t('groupEpisodeExtractor')}</HintLabel>
+              {t('groupEpisodeExtractor')} <HintIcon hint="groupEpisodeExtractor" />
             </AccordionTrigger>
             <AccordionContent>
               <EpisodeExtractorForm
