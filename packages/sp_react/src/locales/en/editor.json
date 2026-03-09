@@ -138,5 +138,15 @@
   "moveGroupDown": "Move group down",
   "structureSettings": "Structure",
   "displayOptions": "Display Options",
-  "displayOverrides": "Display Overrides"
+  "displayOverrides": "Display Overrides",
+  "groupOverrides": "Group Overrides",
+  "groupEpisodeSort": "Episode Sort",
+  "groupTitleExtractor": "Title Extractor",
+  "groupEpisodeExtractor": "Episode Extractor",
+  "groupYearBinding": "Year Binding",
+  "episodeSortField": "Field",
+  "episodeSortOrder": "Order",
+  "episodeSortField_publishedAt": "Published Date",
+  "episodeSortField_episodeNumber": "Episode Number",
+  "episodeSortField_title": "Title"
 }

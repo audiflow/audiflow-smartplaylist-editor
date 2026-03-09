@@ -1,12 +1,30 @@
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion.tsx';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select.tsx';
+import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
+import { EpisodeExtractorForm } from '@/components/editor/episode-extractor-form.tsx';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+
+const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
+const SORT_ORDERS = ['ascending', 'descending'] as const;
 
 interface GroupDefCardProps {
   playlistIndex: number;
@@ -142,7 +160,154 @@ export function GroupDefCard({
             </HintLabel>
           </div>
         </div>
+
+        <Accordion type="multiple" className="w-full">
+          {/* Year Binding Override */}
+          <AccordionItem value="yearBinding">
+            <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
+              <HintLabel hint="groupYearBinding">{t('groupYearBinding')}</HintLabel>
+            </AccordionTrigger>
+            <AccordionContent>
+              <Select
+                value={watch(`${prefix}.display.yearBinding`) ?? 'none'}
+                onValueChange={(v) =>
+                  setValue(
+                    `${prefix}.display.yearBinding`,
+                    v === 'none' ? undefined : (v as YearBinding),
+                    { shouldDirty: true },
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('yearBinding_none')}</SelectItem>
+                  <SelectItem value="pinToYear">{t('yearBinding_pinToYear')}</SelectItem>
+                  <SelectItem value="splitByYear">{t('yearBinding_splitByYear')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Episode Sort Override */}
+          <AccordionItem value="episodeSort">
+            <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
+              <HintLabel hint="groupEpisodeSort">{t('groupEpisodeSort')}</HintLabel>
+            </AccordionTrigger>
+            <AccordionContent>
+              <GroupEpisodeSortOverride prefix={prefix} />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Title Extractor Override */}
+          <AccordionItem value="titleExtractor">
+            <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
+              <HintLabel hint="groupTitleExtractor">{t('groupTitleExtractor')}</HintLabel>
+            </AccordionTrigger>
+            <AccordionContent>
+              <TitleExtractorForm
+                fieldPath={`${prefix}.episodeList.titleExtractor`}
+                idPrefix={`group-title-ext-${playlistIndex}-${groupIndex}`}
+              />
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Episode Extractor Override */}
+          <AccordionItem value="episodeExtractor">
+            <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
+              <HintLabel hint="groupEpisodeExtractor">{t('groupEpisodeExtractor')}</HintLabel>
+            </AccordionTrigger>
+            <AccordionContent>
+              <EpisodeExtractorForm
+                fieldPath={`${prefix}.episodeExtractor`}
+                idPrefix={`group-ep-ext-${playlistIndex}-${groupIndex}`}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </CardContent>
     </Card>
+  );
+}
+
+function GroupEpisodeSortOverride({ prefix }: { prefix: string }) {
+  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { t } = useTranslation('editor');
+
+  const sort = watch(`${prefix}.episodeList.sort` as any);
+  const isEnabled = sort != null;
+
+  return (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        variant={isEnabled ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => {
+          if (isEnabled) {
+            setValue(`${prefix}.episodeList.sort` as any, undefined, { shouldDirty: true });
+          } else {
+            setValue(
+              `${prefix}.episodeList.sort` as any,
+              { field: 'publishedAt', order: 'ascending' },
+              { shouldDirty: true },
+            );
+          }
+        }}
+      >
+        {isEnabled ? t('sortEnabled') : t('sortDisabled')}
+      </Button>
+
+      {isEnabled && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <HintLabel hint="episodeSortField">{t('episodeSortField')}</HintLabel>
+            <Select
+              value={sort?.field ?? 'publishedAt'}
+              onValueChange={(val) =>
+                setValue(`${prefix}.episodeList.sort.field` as any, val as EpisodeSortField, {
+                  shouldDirty: true,
+                })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EPISODE_SORT_FIELDS.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {t(`episodeSortField_${f}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <HintLabel hint="episodeSortOrder">{t('episodeSortOrder')}</HintLabel>
+            <Select
+              value={sort?.order ?? 'ascending'}
+              onValueChange={(val) =>
+                setValue(`${prefix}.episodeList.sort.order` as any, val as SortOrder, {
+                  shouldDirty: true,
+                })
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_ORDERS.map((o) => (
+                  <SelectItem key={o} value={o}>
+                    {t(`sortOrder_${o}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

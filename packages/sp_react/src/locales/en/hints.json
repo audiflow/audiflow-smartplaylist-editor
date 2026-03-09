@@ -41,5 +41,9 @@
   "episodeExtractorFallbackSeason": "Season number to assign when only the fallback pattern matches (e.g., 0 for special episodes).",
   "episodeExtractorFallbackPattern": "A secondary regex tried when the primary pattern doesn't match. Used for catching special/bonus episodes.",
   "episodeExtractorFallbackCaptureGroup": "Which capture group in the fallback pattern contains the episode number (default: 1).",
-  "episodeExtractorFallbackToRss": "When no pattern matches, use the episode number from RSS metadata instead. Useful as a last-resort fallback."
+  "episodeExtractorFallbackToRss": "When no pattern matches, use the episode number from RSS metadata instead. Useful as a last-resort fallback.",
+  "groupEpisodeSort": "Override the default episode sort order for this specific group. When unset, inherits the playlist-level episode sort.",
+  "groupTitleExtractor": "Override the playlist-level title extractor for this group. Extracts display names from episode data.",
+  "groupEpisodeExtractor": "Override the playlist-level episode extractor for this group. Extracts season/episode numbers from titles.",
+  "groupYearBinding": "Override the playlist-level year binding for this group. Controls how this group relates to year headers."
 }
