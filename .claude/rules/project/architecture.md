@@ -1,24 +1,25 @@
 # Architecture
 
-Dart monorepo with three Dart workspace packages plus a React SPA.
+Rust workspace with three crates plus a React SPA.
 
 ## Package Overview
 
 ```
 audiflow-smartplaylist-editor/
-├── packages/
-│   ├── sp_shared/     # Domain models, resolvers, services (pure Dart)
-│   ├── sp_server/     # Local API server (shelf)
-│   └── sp_react/      # React SPA web editor (TanStack + Zustand + shadcn/ui)
-└── mcp_server/        # MCP server for Claude integration
+├── crates/
+│   ├── sp_core/       # Domain models, resolvers, schema, services (pure Rust)
+│   ├── sp_server/     # Local API server (axum)
+│   └── sp_cli/        # CLI binary (serve, validate, format commands)
+└── packages/
+    └── sp_react/      # React SPA web editor (TanStack + Zustand + shadcn/ui)
 ```
 
-| Package | Role | Dependencies |
-|---------|------|-------------|
-| `sp_shared` | Shared domain layer: models, resolvers, schema, services, DiskFeedCacheService | None (pure Dart) |
-| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching | sp_shared, shelf |
+| Crate/Package | Role | Dependencies |
+|---------------|------|-------------|
+| `sp_core` | Shared domain layer: models, resolvers, schema, services | serde, jsonschema, regex, chrono |
+| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching | sp_core, axum, tokio, notify |
+| `sp_cli` | CLI binary: serve, validate, format subcommands | sp_core, sp_server, clap |
 | `sp_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod, CodeMirror 6 |
-| `mcp_server` | Exposes smart playlist operations as MCP tools | sp_shared, sp_server |
 
 ## Ecosystem Context
 
@@ -31,7 +32,6 @@ User clones data repo locally
 [audiflow-smartplaylist-editor]              Local data repo clone         GitHub (remote)
  (this repo)                  read/write  (on user's machine)  push    (source of truth)
  sp_server + sp_react  <────────────────>  JSON files on disk  ──────>  origin/main
- mcp_server            <────────────────>
                                                                 CI sync
                                                                 ──────>  GitHub Pages / GCS
                                                                             ^
@@ -42,28 +42,28 @@ User clones data repo locally
 - **audiflow-smartplaylist** (data repo): Static JSON files on GitHub, source of truth
 - **GitHub Pages / GCS**: Mirrors the data repo; the mobile app fetches configs from here
 - **audiflow app**: Consumes configs via `audiflow_domain` with local caching
-- **This repo**: Local web editor and MCP server that read/write files in a cloned data repo
+- **This repo**: Local web editor that reads/writes files in a cloned data repo
 
 Model serialization (JSON keys, field structure) must stay aligned across all three.
 
-## sp_shared
+## sp_core
 
-Pure Dart package with no framework dependencies. All domain logic lives here.
+Pure Rust library crate with no framework dependencies. All domain logic lives here.
 
 ### Models
 
-Core types use `final class` with hand-written `fromJson()`/`toJson()`. No code generation.
+Core types use Rust structs with `serde::Serialize`/`Deserialize`. Custom serialization uses `#[serde(...)]` attributes.
 
 | Model | Purpose |
 |-------|---------|
-| `EpisodeData` | Abstract interface for episode data; `SimpleEpisodeData` for concrete use |
+| `EpisodeData` | Trait for episode data; `SimpleEpisodeData` for concrete use |
 | `SmartPlaylist` | A playlist containing episode IDs, with optional groups |
 | `SmartPlaylistGroup` | A group within a playlist (when contentType is `groups`) |
 | `SmartPlaylistGrouping` | Resolver output: playlists + ungrouped episode IDs |
 | `SmartPlaylistDefinition` | Per-playlist config: resolver type, filters, extractors |
 | `SmartPlaylistPatternConfig` | Per-podcast config: feed URL matching + playlist definitions |
 | `PatternMeta` / `PatternSummary` / `RootMeta` | Split config metadata hierarchy |
-| `SmartPlaylistSort` | Sealed sort specification (simple or composite) |
+| `SmartPlaylistSort` | Sort specification (simple or composite) |
 | `SmartPlaylistGroupDef` | Static group definitions for category resolver |
 | `SmartPlaylistTitleExtractor` | Regex-based display name extraction with templates and fallbacks |
 | `SmartPlaylistEpisodeExtractor` | Season/episode number extraction from titles |
@@ -71,7 +71,7 @@ Core types use `final class` with hand-written `fromJson()`/`toJson()`. No code 
 
 ### Resolver Chain
 
-Resolvers implement `SmartPlaylistResolver` and group episodes by different strategies:
+Resolvers implement the `SmartPlaylistResolver` trait and group episodes by different strategies:
 
 | Resolver | Strategy |
 |----------|----------|
@@ -86,7 +86,7 @@ Resolvers implement `SmartPlaylistResolver` and group episodes by different stra
 2. If matched: route episodes through definitions in priority order, filtering by title/exclude/require regexes
 3. If no match: try resolvers in order with no definition (auto-detect mode)
 4. Sort all episode IDs by `publishedAt` ascending (nulls last)
-5. Return `SmartPlaylistGrouping` or null
+5. Return `SmartPlaylistGrouping` or `None`
 
 Content type determines output shape:
 - `episodes`: Each resolver playlist becomes a top-level `SmartPlaylist`
@@ -98,17 +98,16 @@ Content type determines output shape:
 |---------|---------|
 | `SmartPlaylistResolverService` | Resolver chain orchestrator (described above) |
 | `ConfigAssembler` | Combines `PatternMeta` + playlist definitions into unified config |
-| `SmartPlaylistPatternLoader` | Parses JSON into pattern configs with version validation |
 | `DiskFeedCacheService` | Disk-based feed cache with SHA-256 URL hashing and configurable TTL |
-| `sortEpisodeIdsByPublishedAt` | Episode sorting utility (ascending, nulls last, stable) |
+| `sort_episode_ids_by_published_at` | Episode sorting utility (ascending, nulls last, stable) |
 
 ### Schema
 
-`SmartPlaylistSchema` generates JSON Schema and validates configs at runtime.
+Schema files are embedded via `include_str!` and validated at runtime using `jsonschema`.
 
 ## sp_server
 
-Shelf-based local API server with Cascade routing. Runs on localhost only, no authentication required.
+Axum-based local API server with tokio async runtime. Runs on localhost only, no authentication required.
 
 ### Routes
 
@@ -135,17 +134,28 @@ Shelf-based local API server with Cascade routing. Runs on localhost only, no au
 | Service | Purpose |
 |---------|---------|
 | `LocalConfigRepository` | Read/write config files on disk with atomic writes |
-| `FileWatcherService` | Watch data directory for changes, emit SSE events |
-| `DiskFeedCacheService` (from sp_shared) | Disk-based feed cache with SHA-256 URL hashing |
-| `SmartPlaylistValidator` (from sp_shared) | Schema validation |
+| `FileWatcherService` | Watch data directory for changes, emit SSE events (via `notify`) |
+| `DiskFeedCacheService` (from sp_core) | Disk-based feed cache with SHA-256 URL hashing |
+| `FeedParser` | RSS feed fetching and parsing (via `feed-rs`) |
 
 ### Local-First Architecture
 
-- Server auto-detects data dir from CWD (requires `patterns/meta.json`)
-- Binds to localhost only (`InternetAddress.loopbackIPv4`)
+- Server accepts `--data-dir` flag pointing to a cloned data repo
+- Binds to localhost only
 - No authentication required
-- File changes trigger SSE events to connected browsers
+- File changes trigger SSE events to connected browsers (via `notify` crate)
 - Feed cache stored in `$dataDir/.cache/feeds/`
+- Static files served via `rust-embed` or `--static-dir` flag
+
+## sp_cli
+
+CLI binary built with `clap`. Provides subcommands:
+
+| Command | Purpose |
+|---------|---------|
+| `serve` | Start the API server with `--data-dir`, `--port`, `--static-dir` options |
+| `validate` | Validate all configs in a data directory against the JSON schema |
+| `format` | Format/normalize JSON config files |
 
 ## sp_react
 
@@ -177,30 +187,6 @@ React 19 SPA built with Vite + TypeScript.
 - `useFileEvents`: SSE hook for real-time cache invalidation
 - Query hooks: `usePatterns`, `useAssembledConfig`, `useFeed`, `usePreviewMutation`, `useSavePlaylist`, `useSavePatternMeta`, `useDeletePlaylist`, `useDeletePattern`, `useCreatePattern`, etc.
 
-## mcp_server
-
-Exposes smart playlist operations as MCP tools over stdio.
-
-### Tools
-
-| Tool | Purpose |
-|------|---------|
-| `search_configs` | Search pattern configs by keyword |
-| `get_config` | Get assembled config by pattern ID |
-| `get_schema` | Get JSON Schema from disk |
-| `fetch_feed` | Fetch and cache RSS feed |
-| `validate_config` | Validate config against schema |
-| `preview_config` | Preview playlists from config + feed |
-| `submit_config` | Save config to disk (validates first) |
-
-### Architecture
-
-- Auto-detects data directory from CWD (same as sp_server)
-- Uses `LocalConfigRepository` for config CRUD
-- Uses `DiskFeedCacheService` for feed caching
-- Uses `SmartPlaylistValidator` for schema validation
-- Communicates via stdio (JSON-RPC over stdin/stdout)
-
 ## Split Config Structure
 
 Configs are stored as a three-level file hierarchy:
@@ -218,10 +204,11 @@ meta.json                               # Root: version + pattern summaries
 
 ## Key Design Decisions
 
-- **Hand-written JSON serialization**: No code generation; `fromJson()`/`toJson()` on every model
-- **`final class` for models**: Immutable value objects throughout
-- **`abstract interface class` for abstractions**: `EpisodeData`, `SmartPlaylistResolver`
-- **Local-first**: Server and MCP read/write local files, no remote API calls for config operations
+- **Serde for JSON serialization**: Custom `#[serde(...)]` attributes for field mapping and defaults
+- **Immutable structs**: Domain models are plain structs, cloned when modified
+- **Trait-based abstractions**: `EpisodeData` trait, `SmartPlaylistResolver` trait
+- **Local-first**: Server reads/writes local files, no remote API calls for config operations
 - **Atomic file writes**: Write to `.tmp` then rename to prevent partial reads
 - **SSE for reactivity**: FileWatcherService streams changes to connected browsers
-- **Schema validation at boundaries**: Validate JSON before parsing into `SmartPlaylistDefinition`
+- **Schema validation at boundaries**: Validate JSON via `jsonschema` crate before deserializing
+- **Embedded schema files**: Schema JSON embedded in binary via `include_str!`

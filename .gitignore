@@ -1,11 +1,3 @@
-.dart_tool/
-build/
-.packages
-pubspec.lock
-*.g.dart
-*.freezed.dart
-.melos_workspace/
-
 .env
 .envrc
 
