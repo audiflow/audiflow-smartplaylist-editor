@@ -1,5 +1,8 @@
 use std::path::{Path, PathBuf};
 
+use sp_core::models::{PatternMeta, PlaylistDefinition, RootMeta};
+use sp_core::schema::SchemaType;
+
 use crate::config_walker;
 
 /// Formats config JSON files with 2-space indent and trailing newline.
@@ -19,8 +22,8 @@ fn format_all(patterns_dir: &Path, check: bool) -> anyhow::Result<i32> {
     let mut would_change = false;
     let mut formatted_count = 0u32;
 
-    config_walker::walk_config_files(patterns_dir, |path, _schema_type| {
-        let result = format_file(path, check)?;
+    config_walker::walk_config_files(patterns_dir, |path, schema_type| {
+        let result = format_file(path, schema_type, check)?;
         if result == FormatResult::Changed {
             would_change = true;
             formatted_count += 1;
@@ -45,7 +48,8 @@ fn format_files(data_dir: &str, files: &[String], check: bool) -> anyhow::Result
             continue;
         }
 
-        let result = format_file(&path, check)?;
+        let schema_type = config_walker::detect_schema_type(&path);
+        let result = format_file(&path, schema_type, check)?;
         if result == FormatResult::Changed {
             would_change = true;
             formatted_count += 1;
@@ -79,14 +83,16 @@ enum FormatResult {
     Changed,
 }
 
-/// Formats a single JSON file. In check mode, reports whether it would change.
-/// In write mode, writes the formatted version only if different from original.
-fn format_file(path: &Path, check: bool) -> anyhow::Result<FormatResult> {
+/// Formats a single JSON file by round-tripping through the typed
+/// model so default-valued fields are stripped, matching the API's
+/// save behavior.  In check mode, reports whether it would change.
+fn format_file(path: &Path, schema_type: SchemaType, check: bool) -> anyhow::Result<FormatResult> {
     let original = std::fs::read_to_string(path)?;
-    let value: serde_json::Value = serde_json::from_str(&original)
+
+    let normalized = normalize_json(&original, schema_type)
         .map_err(|e| anyhow::anyhow!("Invalid JSON in {}: {e}", path.display()))?;
 
-    let formatted = format!("{}\n", serde_json::to_string_pretty(&value)?);
+    let formatted = format!("{normalized}\n");
 
     if original == formatted {
         return Ok(FormatResult::Unchanged);
@@ -101,4 +107,24 @@ fn format_file(path: &Path, check: bool) -> anyhow::Result<FormatResult> {
     println!("  Formatted: {}", path.display());
 
     Ok(FormatResult::Changed)
+}
+
+/// Round-trips JSON through the typed model for the given schema type,
+/// stripping default-valued fields via serde skip_serializing_if
+/// attributes.
+fn normalize_json(raw: &str, schema_type: SchemaType) -> Result<String, serde_json::Error> {
+    match schema_type {
+        SchemaType::PlaylistDefinition => {
+            let model: PlaylistDefinition = serde_json::from_str(raw)?;
+            serde_json::to_string_pretty(&model)
+        }
+        SchemaType::PatternMeta => {
+            let model: PatternMeta = serde_json::from_str(raw)?;
+            serde_json::to_string_pretty(&model)
+        }
+        SchemaType::PatternIndex => {
+            let model: RootMeta = serde_json::from_str(raw)?;
+            serde_json::to_string_pretty(&model)
+        }
+    }
 }
