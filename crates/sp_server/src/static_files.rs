@@ -4,29 +4,42 @@ use axum::body::Body;
 use axum::extract::State;
 use axum::http::{header, Request, StatusCode};
 use axum::response::{IntoResponse, Response};
+use rust_embed::RustEmbed;
 
 use crate::app::SharedState;
 
-/// Fallback handler that serves static files from the configured
-/// static directory (React SPA).
+/// Embedded SPA assets built from sp_react.
+/// The folder path is resolved at compile time; if it doesn't exist
+/// the binary still compiles but contains no embedded files.
+#[derive(RustEmbed)]
+#[folder = "../../packages/sp_react/dist/"]
+struct EmbeddedAssets;
+
+/// Fallback handler that serves static files.
 ///
+/// Priority:
+/// 1. If `--static-dir` is set, serve from disk.
+/// 2. Otherwise, serve from compile-time embedded assets.
+///
+/// In both modes:
 /// - Files with extensions are served with appropriate content types.
 /// - Extensionless paths serve `index.html` (SPA fallback).
 /// - Missing assets (paths with extensions) return 404 directly.
-/// - Returns 404 if no static directory is configured.
 pub async fn static_handler(
     State(state): State<SharedState>,
     request: Request<Body>,
 ) -> Response {
-    let static_dir = match &state.static_dir {
-        Some(dir) => dir,
-        None => return StatusCode::NOT_FOUND.into_response(),
-    };
-
     let path = request.uri().path().trim_start_matches('/');
     let has_extension = Path::new(path).extension().is_some();
 
-    // Sanitize: resolve the path and ensure it stays within static_dir
+    match &state.static_dir {
+        Some(dir) => serve_from_disk(dir, path, has_extension).await,
+        None => serve_from_embedded(path, has_extension),
+    }
+}
+
+/// Serves a file from the on-disk static directory.
+async fn serve_from_disk(static_dir: &Path, path: &str, has_extension: bool) -> Response {
     let file_path = if path.is_empty() || !has_extension {
         static_dir.join("index.html")
     } else {
@@ -43,8 +56,6 @@ pub async fn static_handler(
             ([(header::CONTENT_TYPE, content_type)], contents).into_response()
         }
         Err(_) => {
-            // Only fall back to index.html for extensionless paths (SPA routes).
-            // Missing assets (.js, .css, etc.) should 404.
             if has_extension {
                 return StatusCode::NOT_FOUND.into_response();
             }
@@ -58,6 +69,30 @@ pub async fn static_handler(
                 Err(_) => StatusCode::NOT_FOUND.into_response(),
             }
         }
+    }
+}
+
+/// Serves a file from compile-time embedded assets.
+fn serve_from_embedded(path: &str, has_extension: bool) -> Response {
+    let lookup = if path.is_empty() || !has_extension {
+        "index.html"
+    } else {
+        path
+    };
+
+    if let Some(file) = EmbeddedAssets::get(lookup) {
+        let content_type = mime_from_extension(Path::new(lookup));
+        ([(header::CONTENT_TYPE, content_type)], file.data.to_vec()).into_response()
+    } else if has_extension {
+        StatusCode::NOT_FOUND.into_response()
+    } else if let Some(index) = EmbeddedAssets::get("index.html") {
+        (
+            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            index.data.to_vec(),
+        )
+            .into_response()
+    } else {
+        StatusCode::NOT_FOUND.into_response()
     }
 }
 
@@ -82,7 +117,11 @@ fn is_safe_path(base_dir: &Path, candidate: &Path) -> bool {
 }
 
 /// Returns a MIME type string based on file extension.
-fn mime_from_path(path: &std::path::Path) -> &'static str {
+fn mime_from_path(path: &Path) -> &'static str {
+    mime_from_extension(path)
+}
+
+fn mime_from_extension(path: &Path) -> &'static str {
     match path.extension().and_then(|e| e.to_str()) {
         Some("html") => "text/html; charset=utf-8",
         Some("js") | Some("mjs") => "application/javascript; charset=utf-8",

@@ -103,11 +103,22 @@ pub async fn get_pattern(
 }
 
 /// DELETE /api/configs/patterns/{id} -- deletes a pattern and all playlists.
+///
+/// Also removes the pattern's entry from root meta.json to keep the
+/// browse listing consistent.
 pub async fn delete_pattern(
     State(state): State<SharedState>,
     Path(id): Path<String>,
 ) -> Result<Json<Value>, AppError> {
     state.config_repo.delete_pattern(&id)?;
+
+    // Remove from root meta.json
+    let mut root_meta = state.config_repo.get_root_meta_json()?;
+    if let Some(patterns) = root_meta.get_mut("patterns").and_then(|v| v.as_array_mut()) {
+        patterns.retain(|entry| entry.get("id").and_then(|v| v.as_str()) != Some(&id));
+        state.config_repo.save_root_meta(&root_meta)?;
+    }
+
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
@@ -237,15 +248,25 @@ pub async fn save_playlist(
 
     state.config_repo.save_playlist(&id, &pid, &normalized)?;
 
+    // Ensure playlist ID is listed in pattern meta so assemble_config includes it
+    add_playlist_to_meta(&state, &id, &pid)?;
+
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
 /// DELETE /api/configs/patterns/{id}/playlists/{pid}
+///
+/// Removes the playlist file and its ID from the pattern meta's
+/// playlists array to keep assemble_config consistent.
 pub async fn delete_playlist(
     State(state): State<SharedState>,
     Path((id, pid)): Path<(String, String)>,
 ) -> Result<Json<Value>, AppError> {
     state.config_repo.delete_playlist(&id, &pid)?;
+
+    // Remove pid from pattern meta
+    remove_playlist_from_meta(&state, &id, &pid)?;
+
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
@@ -282,6 +303,46 @@ pub async fn validate_config(
         "valid": errors.is_empty(),
         "errors": errors,
     })))
+}
+
+/// Adds a playlist ID to the pattern meta's playlists array if not already present,
+/// and updates the playlistCount in root meta.
+fn add_playlist_to_meta(state: &SharedState, pattern_id: &str, playlist_id: &str) -> Result<(), AppError> {
+    let mut meta = state.config_repo.get_pattern_meta_json(pattern_id)?;
+    let playlists = meta
+        .get_mut("playlists")
+        .and_then(|v| v.as_array_mut());
+
+    let already_listed = playlists
+        .as_ref()
+        .is_some_and(|arr| arr.iter().any(|v| v.as_str() == Some(playlist_id)));
+
+    if already_listed {
+        return Ok(());
+    }
+
+    match playlists {
+        Some(arr) => arr.push(Value::String(playlist_id.to_string())),
+        None => {
+            meta["playlists"] = Value::Array(vec![Value::String(playlist_id.to_string())]);
+        }
+    }
+
+    state.config_repo.save_pattern_meta(pattern_id, &meta)?;
+    sync_root_meta(state, pattern_id, &meta, None)?;
+    Ok(())
+}
+
+/// Removes a playlist ID from the pattern meta's playlists array
+/// and updates the playlistCount in root meta.
+fn remove_playlist_from_meta(state: &SharedState, pattern_id: &str, playlist_id: &str) -> Result<(), AppError> {
+    let mut meta = state.config_repo.get_pattern_meta_json(pattern_id)?;
+    if let Some(playlists) = meta.get_mut("playlists").and_then(|v| v.as_array_mut()) {
+        playlists.retain(|v| v.as_str() != Some(playlist_id));
+        state.config_repo.save_pattern_meta(pattern_id, &meta)?;
+        sync_root_meta(state, pattern_id, &meta, None)?;
+    }
+    Ok(())
 }
 
 /// Recursively removes null-valued keys from JSON maps.
