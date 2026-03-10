@@ -84,7 +84,7 @@ fn validate_file(
         return Ok(0);
     }
 
-    eprintln!("  FAIL: {}", path.display());
+    println!("  FAIL: {}", path.display());
     let error_json = serde_json::to_string_pretty(&errors)?;
     eprintln!("{error_json}");
 

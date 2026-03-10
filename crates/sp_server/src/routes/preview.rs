@@ -48,7 +48,7 @@ pub async fn preview_config(
         .collect();
 
     let enriched = enrich_episodes(&config, &episodes);
-    let result = run_preview(&config, &enriched);
+    let result = run_preview(&config, &enriched, feed_url);
 
     Ok(Json(result))
 }
@@ -90,7 +90,7 @@ fn enrich_episodes(
         .collect()
 }
 
-fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData]) -> Value {
+fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_feed_url: &str) -> Value {
     let episode_refs: Vec<&dyn EpisodeData> = episodes
         .iter()
         .map(|e| e as &dyn EpisodeData)
@@ -106,7 +106,7 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData]) -> Value 
     let service = ResolverService::new(resolvers, vec![config.clone()]);
     let result = service.resolve_for_preview(
         config.podcast_guid.as_deref(),
-        config.feed_urls.as_ref().and_then(|u| u.first()).map(|s| s.as_str()).unwrap_or(""),
+        config.feed_urls.as_ref().and_then(|u| u.first()).map(|s| s.as_str()).unwrap_or(request_feed_url),
         &episode_refs,
     );
 

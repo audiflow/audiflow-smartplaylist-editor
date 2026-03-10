@@ -7,6 +7,11 @@ use std::path::Path;
 pub fn atomic_write_str(path: &Path, content: &str) -> std::io::Result<()> {
     let tmp_path = path.with_extension("tmp");
     std::fs::write(&tmp_path, content)?;
+    // On Windows, rename does not overwrite an existing destination.
+    #[cfg(windows)]
+    if path.exists() {
+        std::fs::remove_file(path)?;
+    }
     std::fs::rename(&tmp_path, path)?;
     Ok(())
 }

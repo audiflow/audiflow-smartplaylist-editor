@@ -37,7 +37,7 @@ sp_server + sp_react  <───────────────>  JSON file
 
 ## JSON Schema as Single Source of Truth
 
-`crates/sp_core/src/schema/` contains three **canonical JSON Schema** files (embedded via `include_str!`) matching the split file structure:
+`crates/sp_core/assets/` contains three **canonical JSON Schema** files (embedded via `include_str!`) matching the split file structure:
 
 - `pattern-index.schema.json` -- validates root `meta.json` (dataVersion, schemaVersion, pattern summaries)
 - `pattern-meta.schema.json` -- validates per-pattern `meta.json` (feedUrls, flags, playlist IDs)
@@ -64,7 +64,7 @@ When you modify the schema (add fields, change enums, rename properties), all co
 
 When a consumer repo has its own hand-written models (like `audiflow_domain`), it should:
 
-1. **Vendor schema files** into `test/fixtures/` (copy from `crates/sp_core/src/schema/*.schema.json`)
+1. **Vendor schema files** into `test/fixtures/` (copy from `crates/sp_core/assets/*.schema.json`)
 2. **Add `json_schema: ^5.2.2`** as a dev dependency for schema validation
 3. **Write conformance tests** that:
    - Construct models with `toJson()`, validate directly against the appropriate schema (no envelope wrapping)
@@ -73,7 +73,7 @@ When a consumer repo has its own hand-written models (like `audiflow_domain`), i
 
 ### When updating the schema
 
-1. Update schema files in `crates/sp_core/src/schema/`
+1. Update schema files in `crates/sp_core/assets/`
 2. Update `sp_core` models, constants, and conformance tests
 3. Update `sp_react` Zod schema and conformance tests
 4. Copy updated schema files to consumer repos' `test/fixtures/`

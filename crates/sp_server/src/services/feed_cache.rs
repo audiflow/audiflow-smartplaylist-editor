@@ -43,6 +43,8 @@ impl DiskFeedCacheService {
             .get(url)
             .send()
             .await
+            .map_err(|e| Error::Http(e.to_string()))?
+            .error_for_status()
             .map_err(|e| Error::Http(e.to_string()))?;
 
         let xml = response

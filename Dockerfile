@@ -20,5 +20,6 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=rust-build /build/target/release/audiflow-editor /usr/local/bin/
 COPY --from=web-build /build/packages/sp_react/dist /app/public/
+WORKDIR /data
 EXPOSE 8080
-ENTRYPOINT ["audiflow-editor", "serve", "--port", "8080", "--static-dir", "/app/public"]
+ENTRYPOINT ["audiflow-editor", "serve", "--port", "8080", "--static-dir", "/app/public", "--data-dir", "/data"]

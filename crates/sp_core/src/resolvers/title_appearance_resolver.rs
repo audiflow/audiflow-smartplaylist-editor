@@ -78,6 +78,9 @@ fn resolve_by_appearance(
         .chain(without_date)
         .collect();
 
+    // Pre-compile regex once if pattern is provided
+    let compiled_regex = pattern_str.and_then(|p| Regex::new(p).ok());
+
     let mut playlist_order: Vec<String> = Vec::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut grouped: std::collections::HashMap<String, Vec<&dyn EpisodeData>> =
@@ -85,7 +88,7 @@ fn resolve_by_appearance(
     let mut ungrouped: Vec<i64> = Vec::new();
 
     for episode in &all_episodes {
-        let playlist_name = extract_playlist_name(*episode, title_extractor, pattern_str);
+        let playlist_name = extract_playlist_name(*episode, title_extractor, compiled_regex.as_ref());
 
         match playlist_name {
             Some(name) => {
@@ -126,16 +129,15 @@ fn resolve_by_appearance(
 fn extract_playlist_name(
     episode: &dyn EpisodeData,
     title_extractor: Option<&TitleExtractor>,
-    pattern_str: Option<&str>,
+    compiled_regex: Option<&Regex>,
 ) -> Option<String> {
     // Try titleExtractor first if available
     if let Some(extractor) = title_extractor {
         return extractor.extract(episode);
     }
 
-    // Fall back to group pattern
-    if let Some(pattern) = pattern_str {
-        let regex = Regex::new(pattern).ok()?;
+    // Fall back to pre-compiled group pattern regex
+    if let Some(regex) = compiled_regex {
         let captures = regex.captures(episode.title())?;
         if 1 <= captures.len() {
             // captures.len() includes the full match at index 0,

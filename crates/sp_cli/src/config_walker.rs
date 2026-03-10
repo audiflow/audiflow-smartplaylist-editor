@@ -16,13 +16,8 @@ where
         callback(&root_meta_path, SchemaType::PatternIndex)?;
     }
 
-    let entries = match std::fs::read_dir(patterns_dir) {
-        Ok(e) => e,
-        Err(e) => {
-            eprintln!("Failed to read patterns directory: {e}");
-            return Ok(());
-        }
-    };
+    let entries = std::fs::read_dir(patterns_dir)
+        .map_err(|e| anyhow::anyhow!("Failed to read patterns directory {}: {e}", patterns_dir.display()))?;
 
     for entry in entries {
         let entry = entry?;
