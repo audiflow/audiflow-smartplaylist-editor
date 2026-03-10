@@ -30,9 +30,8 @@ pub async fn run(data_dir: &str, host: &str, port: u16, static_dir: Option<&str>
 
     let schema_json = Validator::playlist_definition_schema_json().to_string();
 
-    let patterns_dir = data_path.join("patterns");
     let file_watcher = FileWatcherService::new(
-        patterns_dir,
+        data_path.clone(),
         vec![".cache".to_string()],
     )
     .map_err(|e| anyhow::anyhow!("Failed to start file watcher: {e}"))?;
