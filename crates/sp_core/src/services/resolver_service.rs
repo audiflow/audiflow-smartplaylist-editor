@@ -687,22 +687,16 @@ impl ResolverService {
             .find(|config| config.matches_podcast(guid, feed_url))
     }
 
-    /// Enriches episodes using the definition's episode extractor (or
-    /// its group-level extractors as fallback).  Returns `None` when no
-    /// extractor is configured, letting callers skip the copy.
+    /// Enriches episodes using the definition's own episode extractor.
+    /// Group-level extractors are intentionally excluded: they are
+    /// per-group display concerns (applied after grouping), not inputs
+    /// to the resolver's grouping logic.  Returns `None` when the
+    /// definition has no extractor, letting callers skip the copy.
     fn enrich_for_definition(
         definition: &PlaylistDefinition,
         episodes: &[&dyn EpisodeData],
     ) -> Option<Vec<SimpleEpisodeData>> {
-        let extractor = definition
-            .episode_extractor
-            .as_ref()
-            .or_else(|| {
-                definition
-                    .groups
-                    .as_ref()
-                    .and_then(|gs| gs.iter().find_map(|g| g.episode_extractor.as_ref()))
-            })?;
+        let extractor = definition.episode_extractor.as_ref()?;
 
         let compiled = extractor.compile();
         Some(
