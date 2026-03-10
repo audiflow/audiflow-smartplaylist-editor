@@ -117,7 +117,7 @@ fn resolve_by_appearance(
         let playlist_episodes = &grouped[name];
         let sort_key = (i as i32) + 1;
         playlists.push(Playlist::new(
-            format!("season_{}", sort_key),
+            format!("appearance_{}", sort_key),
             name.clone(),
             sort_key,
             playlist_episodes.iter().map(|e| e.id()).collect(),

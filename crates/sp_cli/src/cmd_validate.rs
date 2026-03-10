@@ -20,6 +20,12 @@ pub fn run(data_dir: &str, files: &[String]) -> anyhow::Result<i32> {
 
 /// Validates all config files found under the patterns directory.
 fn validate_all(patterns_dir: &Path, validator: &Validator) -> anyhow::Result<i32> {
+    let root_meta = patterns_dir.join("meta.json");
+    if !root_meta.exists() {
+        eprintln!("File not found: {}", root_meta.display());
+        return Ok(2);
+    }
+
     let mut error_count = 0u32;
     let mut file_count = 0u32;
 

@@ -64,7 +64,9 @@ impl FileWatcherService {
 
         // Capture the tokio runtime handle so we can spawn from the
         // notify callback (which runs on an OS thread, not a tokio task).
-        let handle = Handle::current();
+        let handle = Handle::try_current().map_err(|_| {
+            notify::Error::generic("FileWatcherService must be created within a Tokio runtime")
+        })?;
 
         // Debounce timer handle, reset on each event.
         let debounce_handle: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>> =

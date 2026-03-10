@@ -60,25 +60,21 @@ pub fn parse_feed(content: &str) -> Vec<Value> {
                 if !inside_item {
                     continue;
                 }
-                if let Some((ref local, ref prefix)) = current_element {
-                    let text = e.unescape().unwrap_or_default().trim().to_string();
-                    if text.is_empty() {
-                        continue;
-                    }
-                    match (prefix.as_deref(), local.as_str()) {
-                        (None, "title") => title = text,
-                        (None, "description") => description = Some(text),
-                        (None, "guid") => guid = Some(text),
-                        (None, "pubDate") => pub_date = Some(text),
-                        (Some("itunes"), "season") => {
-                            season_number = text.parse::<i64>().ok();
-                        }
-                        (Some("itunes"), "episode") => {
-                            episode_number = text.parse::<i64>().ok();
-                        }
-                        _ => {}
-                    }
+                let text = e.unescape().unwrap_or_default().trim().to_string();
+                apply_text_content(
+                    &text, &current_element, &mut title, &mut description,
+                    &mut guid, &mut pub_date, &mut season_number, &mut episode_number,
+                );
+            }
+            Ok(Event::CData(ref e)) => {
+                if !inside_item {
+                    continue;
                 }
+                let text = String::from_utf8_lossy(e.as_ref()).trim().to_string();
+                apply_text_content(
+                    &text, &current_element, &mut title, &mut description,
+                    &mut guid, &mut pub_date, &mut season_number, &mut episode_number,
+                );
             }
             Ok(Event::End(ref e)) => {
                 let local = String::from_utf8_lossy(e.local_name().as_ref()).to_string();
@@ -107,6 +103,37 @@ pub fn parse_feed(content: &str) -> Vec<Value> {
     }
 
     episodes
+}
+
+#[allow(clippy::too_many_arguments)]
+fn apply_text_content(
+    text: &str,
+    current_element: &Option<(String, Option<String>)>,
+    title: &mut String,
+    description: &mut Option<String>,
+    guid: &mut Option<String>,
+    pub_date: &mut Option<String>,
+    season_number: &mut Option<i64>,
+    episode_number: &mut Option<i64>,
+) {
+    if text.is_empty() {
+        return;
+    }
+    if let Some((local, prefix)) = current_element {
+        match (prefix.as_deref(), local.as_str()) {
+            (None, "title") => *title = text.to_string(),
+            (None, "description") => *description = Some(text.to_string()),
+            (None, "guid") => *guid = Some(text.to_string()),
+            (None, "pubDate") => *pub_date = Some(text.to_string()),
+            (Some("itunes"), "season") => {
+                *season_number = text.parse::<i64>().ok();
+            }
+            (Some("itunes"), "episode") => {
+                *episode_number = text.parse::<i64>().ok();
+            }
+            _ => {}
+        }
+    }
 }
 
 /// Attempts to parse a date string, trying ISO 8601 first, then RFC 2822.
@@ -250,6 +277,27 @@ mod tests {
         let episodes = parse_feed(xml);
         assert_eq!(episodes.len(), 1);
         assert_eq!(episodes[0]["title"], "");
+    }
+
+    #[test]
+    fn parse_feed_handles_cdata_description() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title><![CDATA[CDATA Title]]></title>
+      <description><![CDATA[This is a <b>rich</b> description]]></description>
+      <guid>cdata-ep</guid>
+    </item>
+  </channel>
+</rss>"#;
+        let episodes = parse_feed(xml);
+        assert_eq!(episodes.len(), 1);
+        assert_eq!(episodes[0]["title"], "CDATA Title");
+        assert_eq!(
+            episodes[0]["description"],
+            "This is a <b>rich</b> description"
+        );
     }
 
     #[test]

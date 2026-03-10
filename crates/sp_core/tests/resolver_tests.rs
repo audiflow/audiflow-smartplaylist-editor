@@ -814,7 +814,7 @@ fn title_appearance_uses_title_extractor() {
 }
 
 #[test]
-fn title_appearance_playlist_ids_are_season_based() {
+fn title_appearance_playlist_ids_use_appearance_prefix() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("title_appearance");
     def.groups = Some(vec![GroupDef {
@@ -833,8 +833,8 @@ fn title_appearance_playlist_ids_are_season_based() {
     let refs = as_refs(&episodes);
     let result = resolver.resolve(&refs, Some(&def)).unwrap();
 
-    assert_eq!(result.playlists[0].id, "season_1");
-    assert_eq!(result.playlists[1].id, "season_2");
+    assert_eq!(result.playlists[0].id, "appearance_1");
+    assert_eq!(result.playlists[1].id, "appearance_2");
 }
 
 // ============================================================
