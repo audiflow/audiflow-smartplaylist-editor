@@ -55,6 +55,17 @@ pub async fn create_pattern(
     meta_with_version["dataVersion"] = Value::from(1);
     meta_with_version["id"] = Value::String(id.clone());
 
+    // Validate against pattern-meta schema before writing.
+    let errors = state
+        .validator
+        .validate(SchemaType::PatternMeta, &meta_with_version);
+    if !errors.is_empty() {
+        return Err(AppError::bad_request(format!(
+            "Validation failed: {}",
+            errors.join("; ")
+        )));
+    }
+
     state.config_repo.create_pattern(&id, &meta_with_version)?;
 
     // Add the new pattern to root meta.json
@@ -140,9 +151,11 @@ pub async fn update_pattern_meta(
         .ok_or_else(|| AppError::bad_request("Request body must be a JSON object"))?;
 
     // Extract displayName before merging (lives in root meta only).
+    // Empty string is rejected since the root index schema requires it.
     let display_name = obj.remove("displayName").and_then(|v| {
         match v {
-            Value::String(s) => Some(s),
+            Value::String(s) if !s.is_empty() => Some(s),
+            Value::String(_) => None, // empty string ignored, keeps existing
             Value::Null => None,
             _ => None,
         }
@@ -271,6 +284,18 @@ pub async fn delete_playlist(
     State(state): State<SharedState>,
     Path((id, pid)): Path<(String, String)>,
 ) -> Result<Json<Value>, AppError> {
+    // Reject if this is the last playlist (schema requires minItems: 1).
+    let meta = state.config_repo.get_pattern_meta_json(&id)?;
+    let playlist_count = meta
+        .get("playlists")
+        .and_then(|v| v.as_array())
+        .map_or(0, |a| a.len());
+    if 2 > playlist_count {
+        return Err(AppError::bad_request(
+            "Cannot delete the last playlist; a pattern must have at least one",
+        ));
+    }
+
     state.config_repo.delete_playlist(&id, &pid)?;
 
     // Remove pid from pattern meta
@@ -397,11 +422,7 @@ fn sync_root_meta(
             entry["feedUrlHint"] = Value::String(feed_url_hint(meta));
 
             if let Some(name) = display_name {
-                if name.is_empty() {
-                    entry.as_object_mut().map(|o| o.remove("displayName"));
-                } else {
-                    entry["displayName"] = Value::String(name.to_string());
-                }
+                entry["displayName"] = Value::String(name.to_string());
             }
             found = true;
             break;

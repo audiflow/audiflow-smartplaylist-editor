@@ -51,8 +51,9 @@ pub async fn preview_config(
         }
     }
 
-    let enriched = enrich_episodes(&config, &episodes);
-    let mut result = run_preview(&config, &enriched, feed_url);
+    // Episodes are passed unenriched; the resolver service applies
+    // per-definition episode extractors during preview resolution.
+    let mut result = run_preview(&config, &episodes, feed_url);
 
     if 0 < parse_failures
         && let Some(debug) = result.get_mut("debug").and_then(|d| d.as_object_mut())
@@ -64,55 +65,6 @@ pub async fn preview_config(
     }
 
     Ok(Json(result))
-}
-
-/// Collects all episode extractors from definitions and their group
-/// overrides, compiles them, and applies each to every episode.  The
-/// first extractor that produces values wins for a given episode.
-fn enrich_episodes(
-    config: &PatternConfig,
-    episodes: &[SimpleEpisodeData],
-) -> Vec<SimpleEpisodeData> {
-    use sp_core::models::CompiledEpisodeExtractor;
-
-    let mut compiled_extractors: Vec<CompiledEpisodeExtractor> = Vec::new();
-    for def in &config.playlists {
-        if let Some(ext) = &def.episode_extractor {
-            compiled_extractors.push(ext.compile());
-        }
-        if let Some(groups) = &def.groups {
-            for group in groups {
-                if let Some(ext) = &group.episode_extractor {
-                    compiled_extractors.push(ext.compile());
-                }
-            }
-        }
-    }
-
-    if compiled_extractors.is_empty() {
-        return episodes.to_vec();
-    }
-
-    episodes
-        .iter()
-        .map(|episode| {
-            for compiled in &compiled_extractors {
-                let result = compiled.extract(episode);
-                if result.has_values() {
-                    return SimpleEpisodeData {
-                        id: episode.id,
-                        title: episode.title.clone(),
-                        description: episode.description.clone(),
-                        season_number: result.season_number.or(episode.season_number),
-                        episode_number: result.episode_number.or(episode.episode_number),
-                        published_at: episode.published_at,
-                        image_url: episode.image_url.clone(),
-                    };
-                }
-            }
-            episode.clone()
-        })
-        .collect()
 }
 
 fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_feed_url: &str) -> Value {

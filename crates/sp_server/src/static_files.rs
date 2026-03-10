@@ -16,6 +16,11 @@ use crate::app::SharedState;
 #[folder = "../../packages/sp_react/dist/"]
 struct EmbeddedAssets;
 
+/// Returns true when compile-time embedded assets include `index.html`.
+pub fn has_embedded_index() -> bool {
+    EmbeddedAssets::get("index.html").is_some()
+}
+
 /// Fallback handler that serves static files.
 ///
 /// Priority:

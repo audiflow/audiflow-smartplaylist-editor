@@ -4,7 +4,7 @@ use regex::{Regex, RegexBuilder};
 
 use crate::models::{
     EpisodeData, EpisodeFilterEntry, Grouping, PatternConfig, Playlist, PlaylistDefinition,
-    PlaylistGroup, PlaylistPreviewResult, PlaylistStructure, PreviewGrouping,
+    PlaylistGroup, PlaylistPreviewResult, PlaylistStructure, PreviewGrouping, SimpleEpisodeData,
 };
 
 /// Precompiled filter entry for efficient per-episode matching.
@@ -271,7 +271,16 @@ impl ResolverService {
                 None => continue,
             };
 
-            let result = match resolver.resolve(&filtered, Some(definition)) {
+            // Per-definition enrichment: apply this definition's episode
+            // extractor so each resolver sees correctly extracted
+            // season/episode numbers for its own definition.
+            let enriched_storage = Self::enrich_for_definition(definition, &filtered);
+            let resolve_slice: Vec<&dyn EpisodeData> = match &enriched_storage {
+                Some(enriched) => enriched.iter().map(|e| e as &dyn EpisodeData).collect(),
+                None => filtered,
+            };
+
+            let result = match resolver.resolve(&resolve_slice, Some(definition)) {
                 Some(r) => r,
                 None => continue,
             };
@@ -676,6 +685,51 @@ impl ResolverService {
         self.patterns
             .iter()
             .find(|config| config.matches_podcast(guid, feed_url))
+    }
+
+    /// Enriches episodes using the definition's episode extractor (or
+    /// its group-level extractors as fallback).  Returns `None` when no
+    /// extractor is configured, letting callers skip the copy.
+    fn enrich_for_definition(
+        definition: &PlaylistDefinition,
+        episodes: &[&dyn EpisodeData],
+    ) -> Option<Vec<SimpleEpisodeData>> {
+        let extractor = definition
+            .episode_extractor
+            .as_ref()
+            .or_else(|| {
+                definition
+                    .groups
+                    .as_ref()
+                    .and_then(|gs| gs.iter().find_map(|g| g.episode_extractor.as_ref()))
+            })?;
+
+        let compiled = extractor.compile();
+        Some(
+            episodes
+                .iter()
+                .map(|ep| {
+                    let result = compiled.extract(*ep);
+                    SimpleEpisodeData {
+                        id: ep.id(),
+                        title: ep.title().to_string(),
+                        description: ep.description().map(|s| s.to_string()),
+                        season_number: if result.has_values() {
+                            result.season_number.or(ep.season_number())
+                        } else {
+                            ep.season_number()
+                        },
+                        episode_number: if result.has_values() {
+                            result.episode_number.or(ep.episode_number())
+                        } else {
+                            ep.episode_number()
+                        },
+                        published_at: ep.published_at(),
+                        image_url: ep.image_url().map(|s| s.to_string()),
+                    }
+                })
+                .collect(),
+        )
     }
 
     fn find_resolver_by_type(&self, resolver_type: &str) -> Option<&dyn Resolver> {

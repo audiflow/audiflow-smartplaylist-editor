@@ -38,6 +38,15 @@ pub async fn run(data_dir: &str, host: &str, port: u16, static_dir: Option<&str>
 
     let static_path = static_dir.map(PathBuf::from);
 
+    // Warn when no SPA assets are available (common on fresh builds).
+    if static_path.is_none() && !sp_server::has_embedded_index() {
+        eprintln!(
+            "Warning: no embedded SPA assets found and --static-dir not set.\n\
+             Build the React app first (cd packages/sp_react && pnpm build) \
+             or pass --static-dir to serve from disk."
+        );
+    }
+
     let state = Arc::new(AppState {
         config_repo,
         feed_cache,
