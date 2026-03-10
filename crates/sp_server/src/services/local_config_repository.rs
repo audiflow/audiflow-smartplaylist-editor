@@ -137,6 +137,11 @@ impl LocalConfigRepository {
         atomic_write_json(&path, json)
     }
 
+    /// Returns true if a pattern directory already exists on disk.
+    pub fn pattern_exists(&self, pattern_id: &str) -> bool {
+        self.patterns_dir.join(pattern_id).join("meta.json").exists()
+    }
+
     /// Creates a new pattern directory with playlists/ subdir and
     /// writes the initial meta.json.
     pub fn create_pattern(

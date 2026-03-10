@@ -45,6 +45,12 @@ pub async fn create_pattern(
         .filter(|s| !s.is_empty())
         .unwrap_or(&id);
 
+    if state.config_repo.pattern_exists(&id) {
+        return Err(AppError::conflict(format!(
+            "Pattern \"{id}\" already exists"
+        )));
+    }
+
     let mut meta_with_version = Value::Object(meta.clone());
     meta_with_version["dataVersion"] = Value::from(1);
 
@@ -234,10 +240,10 @@ pub async fn save_playlist(
         .validator
         .validate(SchemaType::PlaylistDefinition, &sanitized);
     if !errors.is_empty() {
-        return Ok(Json(serde_json::json!({
-            "error": "Validation failed",
-            "errors": errors,
-        })));
+        return Err(AppError::bad_request(format!(
+            "Validation failed: {}",
+            errors.join("; ")
+        )));
     }
 
     // Round-trip through the typed model for canonical field ordering

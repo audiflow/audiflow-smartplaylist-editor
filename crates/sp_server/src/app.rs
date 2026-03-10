@@ -53,6 +53,13 @@ impl AppError {
         }
     }
 
+    pub fn conflict(msg: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::CONFLICT,
+            message: msg.into(),
+        }
+    }
+
     pub fn bad_gateway(msg: impl Into<String>) -> Self {
         Self {
             status: StatusCode::BAD_GATEWAY,
