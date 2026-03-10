@@ -8,7 +8,7 @@ use sp_server::routes::create_router;
 use sp_server::services::{DiskFeedCacheService, FileWatcherService, LocalConfigRepository};
 
 /// Starts the web editor server bound to localhost.
-pub async fn run(data_dir: &str, port: u16, static_dir: Option<&str>) -> anyhow::Result<()> {
+pub async fn run(data_dir: &str, host: &str, port: u16, static_dir: Option<&str>) -> anyhow::Result<()> {
     let data_path = PathBuf::from(data_dir);
 
     // Verify patterns/meta.json exists
@@ -51,7 +51,7 @@ pub async fn run(data_dir: &str, port: u16, static_dir: Option<&str>) -> anyhow:
 
     let app = create_router(state);
 
-    let addr = format!("127.0.0.1:{port}");
+    let addr = format!("{host}:{port}");
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     println!("Server running at http://{addr}");
 

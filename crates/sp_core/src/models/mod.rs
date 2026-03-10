@@ -33,4 +33,4 @@ pub use playlist_definition::{
 pub use preview_grouping::{PlaylistPreviewResult, PreviewGrouping};
 pub use root_meta::RootMeta;
 pub use sort::{EpisodeSortField, EpisodeSortRule, SortField, SortOrder, SortRule};
-pub use title_extractor::TitleExtractor;
+pub use title_extractor::{CompiledTitleExtractor, TitleExtractor};

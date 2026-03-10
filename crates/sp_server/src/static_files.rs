@@ -61,13 +61,22 @@ pub async fn static_handler(
 }
 
 /// Returns true if `candidate` is safely within `base_dir` (no traversal).
+///
+/// Canonicalizes both paths when possible so symlinks and normalization
+/// differences cannot bypass the prefix check.
 fn is_safe_path(base_dir: &Path, candidate: &Path) -> bool {
+    let canonical_base = base_dir.canonicalize().unwrap_or_else(|_| base_dir.to_path_buf());
     match candidate.canonicalize() {
-        Ok(resolved) => resolved.starts_with(base_dir),
-        // File doesn't exist yet; check components for traversal
-        Err(_) => !candidate
-            .components()
-            .any(|c| matches!(c, std::path::Component::ParentDir)),
+        Ok(resolved) => resolved.starts_with(&canonical_base),
+        // File doesn't exist yet; reject any traversal or root/prefix components
+        Err(_) => !candidate.components().any(|c| {
+            matches!(
+                c,
+                std::path::Component::ParentDir
+                    | std::path::Component::RootDir
+                    | std::path::Component::Prefix(_)
+            )
+        }),
     }
 }
 
@@ -89,5 +98,66 @@ fn mime_from_path(path: &std::path::Path) -> &'static str {
         Some("wasm") => "application/wasm",
         Some("map") => "application/json",
         _ => "application/octet-stream",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn is_safe_path_allows_normal_path() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let base = tmp.path();
+        let file = base.join("app.js");
+        std::fs::write(&file, "console.log()").unwrap();
+        assert!(is_safe_path(base, &file));
+    }
+
+    #[test]
+    fn is_safe_path_rejects_parent_traversal() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let base = tmp.path();
+        let traversal = base.join("..").join("etc").join("passwd");
+        assert!(!is_safe_path(base, &traversal));
+    }
+
+    #[test]
+    fn is_safe_path_rejects_absolute_path() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let base = tmp.path();
+        let absolute = PathBuf::from("/etc/passwd");
+        assert!(!is_safe_path(base, &absolute));
+    }
+
+    #[test]
+    fn is_safe_path_allows_nested_path() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let base = tmp.path();
+        let nested = base.join("assets").join("css");
+        std::fs::create_dir_all(&nested).unwrap();
+        let file = nested.join("style.css");
+        std::fs::write(&file, "body {}").unwrap();
+        assert!(is_safe_path(base, &file));
+    }
+
+    #[test]
+    fn is_safe_path_rejects_nonexistent_with_traversal() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let base = tmp.path();
+        // File doesn't exist, but has traversal component
+        let traversal = base.join("assets").join("..").join("..").join("secret");
+        assert!(!is_safe_path(base, &traversal));
+    }
+
+    #[test]
+    fn mime_from_path_returns_correct_types() {
+        assert_eq!(mime_from_path(Path::new("index.html")), "text/html; charset=utf-8");
+        assert_eq!(mime_from_path(Path::new("app.js")), "application/javascript; charset=utf-8");
+        assert_eq!(mime_from_path(Path::new("style.css")), "text/css; charset=utf-8");
+        assert_eq!(mime_from_path(Path::new("data.json")), "application/json");
+        assert_eq!(mime_from_path(Path::new("image.png")), "image/png");
+        assert_eq!(mime_from_path(Path::new("unknown.xyz")), "application/octet-stream");
     }
 }

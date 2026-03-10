@@ -1,8 +1,8 @@
 use regex::Regex;
 
 use crate::models::{
-    EpisodeData, Grouping, Playlist, PlaylistDefinition, SortField, SortOrder, SortRule,
-    TitleExtractor,
+    CompiledTitleExtractor, EpisodeData, Grouping, Playlist, PlaylistDefinition, SortField,
+    SortOrder, SortRule, TitleExtractor,
 };
 
 use super::resolver::Resolver;
@@ -78,8 +78,9 @@ fn resolve_by_appearance(
         .chain(without_date)
         .collect();
 
-    // Pre-compile regex once if pattern is provided
-    let compiled_regex = pattern_str.and_then(|p| Regex::new(p).ok());
+    // Pre-compile regexes once before the episode loop
+    let compiled_group_regex = pattern_str.and_then(|p| Regex::new(p).ok());
+    let compiled_title_extractor = title_extractor.map(|e| e.compile());
 
     let mut playlist_order: Vec<String> = Vec::new();
     let mut seen: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -88,7 +89,11 @@ fn resolve_by_appearance(
     let mut ungrouped: Vec<i64> = Vec::new();
 
     for episode in &all_episodes {
-        let playlist_name = extract_playlist_name(*episode, title_extractor, compiled_regex.as_ref());
+        let playlist_name = extract_playlist_name(
+            *episode,
+            compiled_title_extractor.as_ref(),
+            compiled_group_regex.as_ref(),
+        );
 
         match playlist_name {
             Some(name) => {
@@ -128,11 +133,11 @@ fn resolve_by_appearance(
 
 fn extract_playlist_name(
     episode: &dyn EpisodeData,
-    title_extractor: Option<&TitleExtractor>,
+    compiled_extractor: Option<&CompiledTitleExtractor<'_>>,
     compiled_regex: Option<&Regex>,
 ) -> Option<String> {
-    // Try titleExtractor first if available
-    if let Some(extractor) = title_extractor {
+    // Try precompiled titleExtractor first if available
+    if let Some(extractor) = compiled_extractor {
         return extractor.extract(episode);
     }
 

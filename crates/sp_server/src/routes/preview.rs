@@ -181,9 +181,10 @@ fn compute_extracted_display_names(
             Some(e) => e,
             None => continue,
         };
+        let compiled = extractor.compile();
         let mut names = HashMap::new();
         for episode in episodes {
-            if let Some(name) = extractor.extract(episode) {
+            if let Some(name) = compiled.extract(episode) {
                 names.insert(episode.id, name);
             }
         }

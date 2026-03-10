@@ -151,5 +151,5 @@ impl FileWatcherService {
 fn to_relative(path: &Path, base: &Path) -> Option<String> {
     path.strip_prefix(base)
         .ok()
-        .map(|p| p.to_string_lossy().to_string())
+        .map(|p| p.to_string_lossy().replace('\\', "/"))
 }

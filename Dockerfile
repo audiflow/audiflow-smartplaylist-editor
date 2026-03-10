@@ -22,4 +22,4 @@ COPY --from=rust-build /build/target/release/audiflow-editor /usr/local/bin/
 COPY --from=web-build /build/packages/sp_react/dist /app/public/
 WORKDIR /data
 EXPOSE 8080
-ENTRYPOINT ["audiflow-editor", "serve", "--port", "8080", "--static-dir", "/app/public", "--data-dir", "/data"]
+ENTRYPOINT ["audiflow-editor", "serve", "--host", "0.0.0.0", "--port", "8080", "--static-dir", "/app/public", "--data-dir", "/data"]

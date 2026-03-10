@@ -69,6 +69,9 @@ fn validate_files(data_dir: &str, files: &[String], validator: &Validator) -> an
 
 /// Validates a single file and prints errors.
 /// Returns the number of validation errors found.
+///
+/// Human-readable status goes to stdout (OK/FAIL lines).
+/// Structured JSON error objects go to stderr for machine consumption.
 fn validate_file(
     path: &Path,
     schema_type: SchemaType,
@@ -78,6 +81,12 @@ fn validate_file(
     let value: serde_json::Value = serde_json::from_str(&content)
         .map_err(|e| anyhow::anyhow!("Invalid JSON in {}: {e}", path.display()))?;
 
+    let schema_type_str = match schema_type {
+        SchemaType::PatternIndex => "patternIndex",
+        SchemaType::PatternMeta => "patternMeta",
+        SchemaType::PlaylistDefinition => "playlistDefinition",
+    };
+
     let errors = validator.validate(schema_type, &value);
     if errors.is_empty() {
         println!("  OK: {}", path.display());
@@ -85,7 +94,11 @@ fn validate_file(
     }
 
     println!("  FAIL: {}", path.display());
-    let error_json = serde_json::to_string_pretty(&errors)?;
+    let error_json = serde_json::to_string_pretty(&serde_json::json!({
+        "file": path.display().to_string(),
+        "schemaType": schema_type_str,
+        "errors": errors,
+    }))?;
     eprintln!("{error_json}");
 
     let count = errors.len() as u32;

@@ -22,6 +22,9 @@ enum Commands {
         /// Path to data directory (must contain patterns/meta.json)
         #[arg(long, default_value = ".")]
         data_dir: String,
+        /// Host address to bind to (use 0.0.0.0 for Docker/LAN access)
+        #[arg(long, default_value = "127.0.0.1")]
+        host: String,
         /// Port to listen on
         #[arg(long, default_value = "8080")]
         port: u16,
@@ -57,9 +60,10 @@ async fn main() {
     let exit_code = match cli.command {
         Commands::Serve {
             data_dir,
+            host,
             port,
             static_dir,
-        } => match cmd_serve::run(&data_dir, port, static_dir.as_deref()).await {
+        } => match cmd_serve::run(&data_dir, &host, port, static_dir.as_deref()).await {
             Ok(()) => 0,
             Err(e) => {
                 eprintln!("Error: {e}");
