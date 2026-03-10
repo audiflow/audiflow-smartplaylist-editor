@@ -35,11 +35,13 @@ fn format_all(patterns_dir: &Path, check: bool) -> anyhow::Result<i32> {
 fn format_files(data_dir: &str, files: &[String], check: bool) -> anyhow::Result<i32> {
     let mut would_change = false;
     let mut formatted_count = 0u32;
+    let mut missing_count = 0u32;
 
     for file in files {
         let path = config_walker::resolve_file_path(data_dir, file);
         if !path.exists() {
             eprintln!("File not found: {}", path.display());
+            missing_count += 1;
             continue;
         }
 
@@ -48,6 +50,11 @@ fn format_files(data_dir: &str, files: &[String], check: bool) -> anyhow::Result
             would_change = true;
             formatted_count += 1;
         }
+    }
+
+    if 0 < missing_count {
+        eprintln!("{missing_count} file(s) not found.");
+        return Ok(2);
     }
 
     report_format_result(check, would_change, formatted_count)
