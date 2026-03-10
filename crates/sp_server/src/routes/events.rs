@@ -18,7 +18,7 @@ pub async fn sse_events(
     let stream = BroadcastStream::new(rx).filter_map(|result| {
         match result {
             Ok(change_event) => {
-                let json = serde_json::to_string(&change_event).unwrap_or_default();
+                let json = serde_json::to_string(&change_event).ok()?;
                 Some(Ok(Event::default().data(json)))
             }
             // Skip lagged messages

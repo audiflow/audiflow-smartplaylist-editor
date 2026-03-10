@@ -75,7 +75,9 @@ impl DiskFeedCacheService {
             serde_json::from_str(&meta_content).ok()?;
 
         let fetched_at_str = meta.get("fetchedAt")?.as_str()?;
-        let fetched_at = chrono::DateTime::parse_from_rfc3339(fetched_at_str).ok()?;
+        let fetched_at = chrono::DateTime::parse_from_rfc3339(fetched_at_str)
+            .ok()?
+            .with_timezone(&chrono::Utc);
         let elapsed = chrono::Utc::now().signed_duration_since(fetched_at);
         let ttl_secs = self.cache_ttl.as_secs() as i64;
         if ttl_secs < elapsed.num_seconds() {

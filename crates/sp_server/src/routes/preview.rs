@@ -42,13 +42,26 @@ pub async fn preview_config(
         .await
         .map_err(|e| AppError::bad_gateway(format!("Failed to fetch feed: {e}")))?;
 
-    let episodes: Vec<SimpleEpisodeData> = episode_maps
-        .iter()
-        .filter_map(|v| serde_json::from_value(v.clone()).ok())
-        .collect();
+    let mut episodes: Vec<SimpleEpisodeData> = Vec::with_capacity(episode_maps.len());
+    let mut parse_failures = 0usize;
+    for v in &episode_maps {
+        match serde_json::from_value(v.clone()) {
+            Ok(ep) => episodes.push(ep),
+            Err(_) => parse_failures += 1,
+        }
+    }
 
     let enriched = enrich_episodes(&config, &episodes);
-    let result = run_preview(&config, &enriched, feed_url);
+    let mut result = run_preview(&config, &enriched, feed_url);
+
+    if 0 < parse_failures
+        && let Some(debug) = result.get_mut("debug").and_then(|d| d.as_object_mut())
+    {
+        debug.insert(
+            "parseFailures".to_string(),
+            Value::from(parse_failures),
+        );
+    }
 
     Ok(Json(result))
 }

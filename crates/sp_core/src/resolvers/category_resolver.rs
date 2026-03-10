@@ -122,7 +122,7 @@ fn resolve_with_groups(
         playlists.push(playlist);
     }
 
-    if playlists.is_empty() && ungrouped.is_empty() {
+    if playlists.is_empty() {
         return None;
     }
 

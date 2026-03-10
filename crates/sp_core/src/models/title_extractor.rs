@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use super::episode_data::EpisodeData;
 
-fn is_zero(v: &i32) -> bool {
+fn is_zero(v: &u32) -> bool {
     *v == 0
 }
 
@@ -20,7 +20,7 @@ pub struct TitleExtractor {
 
     /// Capture group to use from regex match (default: 0 = full match).
     #[serde(default, skip_serializing_if = "is_zero")]
-    pub group: i32,
+    pub group: u32,
 
     /// Template for formatting the extracted value. Use `{value}` as placeholder.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -123,15 +123,7 @@ impl<'a> CompiledTitleExtractor<'a> {
         let regex = self.regex.as_ref()?;
         let captures = regex.captures(value)?;
 
-        if self.extractor.group == 0 {
-            return captures.get(0).map(|m| m.as_str().to_string());
-        }
-
-        let group_usize = self.extractor.group as usize;
-        if captures.len() < group_usize + 1 {
-            return None;
-        }
-
-        captures.get(group_usize).map(|m| m.as_str().to_string())
+        let group = self.extractor.group as usize;
+        captures.get(group).map(|m| m.as_str().to_string())
     }
 }
