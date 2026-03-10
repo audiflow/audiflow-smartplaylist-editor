@@ -40,7 +40,7 @@ pub async fn preview_config(
         .feed_cache
         .fetch_feed(feed_url, &state.http_client)
         .await
-        .map_err(|e| AppError::bad_request(format!("Preview failed: {e}")))?;
+        .map_err(|e| AppError::bad_gateway(format!("Failed to fetch feed: {e}")))?;
 
     let episodes: Vec<SimpleEpisodeData> = episode_maps
         .iter()

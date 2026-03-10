@@ -13,6 +13,9 @@ FROM rust:1-bookworm AS rust-build
 WORKDIR /build
 COPY Cargo.toml Cargo.lock ./
 COPY crates/ crates/
+# rust-embed resolves the folder at compile time; copy web build output
+# so embedded assets are included in the binary.
+COPY --from=web-build /build/packages/sp_react/dist/ packages/sp_react/dist/
 RUN cargo build --release
 
 # Stage 3: Runtime

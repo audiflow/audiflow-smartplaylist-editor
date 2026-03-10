@@ -155,3 +155,36 @@ fn to_relative(path: &Path, base: &Path) -> Option<String> {
         .ok()
         .map(|p| p.to_string_lossy().replace('\\', "/"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_relative_strips_base_prefix() {
+        let base = Path::new("/data/configs");
+        let path = Path::new("/data/configs/patterns/meta.json");
+        assert_eq!(to_relative(path, base), Some("patterns/meta.json".to_string()));
+    }
+
+    #[test]
+    fn to_relative_returns_none_for_unrelated_path() {
+        let base = Path::new("/data/configs");
+        let path = Path::new("/other/dir/file.json");
+        assert_eq!(to_relative(path, base), None);
+    }
+
+    #[test]
+    fn to_relative_handles_nested_paths() {
+        let base = Path::new("/data");
+        let path = Path::new("/data/a/b/c/d.json");
+        assert_eq!(to_relative(path, base), Some("a/b/c/d.json".to_string()));
+    }
+
+    #[test]
+    fn to_relative_returns_empty_for_exact_match() {
+        let base = Path::new("/data/configs");
+        let path = Path::new("/data/configs");
+        assert_eq!(to_relative(path, base), Some("".to_string()));
+    }
+}

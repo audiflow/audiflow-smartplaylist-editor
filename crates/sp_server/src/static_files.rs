@@ -9,8 +9,8 @@ use rust_embed::RustEmbed;
 use crate::app::SharedState;
 
 /// Embedded SPA assets built from sp_react.
-/// The folder path is resolved at compile time; if it doesn't exist
-/// the binary still compiles but contains no embedded files.
+/// The folder must exist at compile time (CI and Docker stages copy it
+/// before `cargo build`). rust-embed embeds every file it finds there.
 #[derive(RustEmbed)]
 #[folder = "../../packages/sp_react/dist/"]
 struct EmbeddedAssets;

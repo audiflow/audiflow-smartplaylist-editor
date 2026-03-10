@@ -1,3 +1,4 @@
+use chrono::TimeZone;
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
 use serde_json::{json, Value};
@@ -151,6 +152,9 @@ fn parse_date(date_str: &str) -> Option<String> {
 }
 
 /// Manual RFC 2822-like date parsing for unusual formats.
+///
+/// Handles optional timezone tokens: numeric offsets (`+0530`, `-0800`)
+/// and common named zones (`GMT`, `UTC`, `EST`, etc.).
 fn parse_rfc2822_manual(input: &str) -> Option<String> {
     let cleaned = if input.contains(',') {
         input[input.find(',')? + 1..].trim()
@@ -169,12 +173,46 @@ fn parse_rfc2822_manual(input: &str) -> Option<String> {
         let minute: u32 = time_parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
         let second: u32 = time_parts.get(2).and_then(|s| s.parse().ok()).unwrap_or(0);
 
+        let offset_seconds = parts.get(4).map(|tz| parse_tz_offset(tz)).unwrap_or(0);
+        let offset = chrono::FixedOffset::east_opt(offset_seconds)?;
+
         let dt = chrono::NaiveDate::from_ymd_opt(year, month, day)?
             .and_hms_opt(hour, minute, second)?;
-        let utc = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(dt, chrono::Utc);
-        return Some(utc.to_rfc3339());
+        let with_tz = offset.from_local_datetime(&dt).single()?;
+        return Some(with_tz.to_rfc3339());
     }
     None
+}
+
+/// Parses a timezone token into a UTC offset in seconds.
+///
+/// Accepts numeric offsets (`+0530` -> 19800, `-0800` -> -28800) and
+/// common named abbreviations. Returns 0 for unrecognized tokens.
+fn parse_tz_offset(tz: &str) -> i32 {
+    // Numeric offset: +HHMM or -HHMM
+    if (tz.starts_with('+') || tz.starts_with('-'))
+        && tz.len() == 5
+        && let (Ok(hours), Ok(minutes)) = (tz[1..3].parse::<i32>(), tz[3..5].parse::<i32>())
+    {
+        let total = hours * 3600 + minutes * 60;
+        return if tz.starts_with('-') { -total } else { total };
+    }
+    // Named timezone abbreviations
+    match tz {
+        "GMT" | "UTC" | "UT" | "Z" => 0,
+        "EDT" => -4 * 3600,
+        "EST" | "CDT" => -5 * 3600,
+        "CST" | "MDT" => -6 * 3600,
+        "MST" | "PDT" => -7 * 3600,
+        "PST" => -8 * 3600,
+        "JST" => 9 * 3600,
+        "IST" => 5 * 3600 + 1800,
+        "CET" => 3600,
+        "CEST" => 2 * 3600,
+        "AEST" => 10 * 3600,
+        "AEDT" => 11 * 3600,
+        _ => 0,
+    }
 }
 
 fn month_number(abbr: &str) -> Option<u32> {
@@ -310,5 +348,51 @@ mod tests {
     #[test]
     fn parse_date_returns_none_for_garbage() {
         assert!(parse_date("not a date").is_none());
+    }
+
+    #[test]
+    fn parse_rfc2822_manual_applies_positive_offset() {
+        // +0530 is IST (5h30m ahead of UTC)
+        let result = parse_rfc2822_manual("01 Jan 2024 12:00:00 +0530").unwrap();
+        assert!(result.contains("2024-01-01T12:00:00+05:30"));
+    }
+
+    #[test]
+    fn parse_rfc2822_manual_applies_negative_offset() {
+        let result = parse_rfc2822_manual("15 Mar 2024 08:30:00 -0500").unwrap();
+        assert!(result.contains("2024-03-15T08:30:00-05:00"));
+    }
+
+    #[test]
+    fn parse_rfc2822_manual_handles_named_timezone() {
+        let result = parse_rfc2822_manual("01 Jun 2024 10:00:00 EST").unwrap();
+        assert!(result.contains("2024-06-01T10:00:00-05:00"));
+    }
+
+    #[test]
+    fn parse_rfc2822_manual_defaults_to_utc_without_timezone() {
+        let result = parse_rfc2822_manual("01 Jan 2024 12:00:00").unwrap();
+        assert!(result.contains("2024-01-01T12:00:00+00:00"));
+    }
+
+    #[test]
+    fn parse_tz_offset_numeric() {
+        assert_eq!(parse_tz_offset("+0000"), 0);
+        assert_eq!(parse_tz_offset("+0530"), 19800);
+        assert_eq!(parse_tz_offset("-0800"), -28800);
+    }
+
+    #[test]
+    fn parse_tz_offset_named() {
+        assert_eq!(parse_tz_offset("GMT"), 0);
+        assert_eq!(parse_tz_offset("UTC"), 0);
+        assert_eq!(parse_tz_offset("EST"), -18000);
+        assert_eq!(parse_tz_offset("PST"), -28800);
+        assert_eq!(parse_tz_offset("JST"), 32400);
+    }
+
+    #[test]
+    fn parse_tz_offset_unknown_returns_zero() {
+        assert_eq!(parse_tz_offset("XYZ"), 0);
     }
 }
