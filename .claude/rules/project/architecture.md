@@ -17,9 +17,9 @@ audiflow-smartplaylist-editor/
 | Crate/Package | Role | Dependencies |
 |---------------|------|-------------|
 | `sp_core` | Shared domain layer: models, resolvers, schema, services | serde, jsonschema, regex, chrono |
-| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching | sp_core, axum, tokio, notify |
+| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching | sp_core, axum 0.8, tokio, notify 7, reqwest, feed-rs, rust-embed |
 | `sp_cli` | CLI binary: serve, validate, format subcommands | sp_core, sp_server, clap |
-| `sp_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod, CodeMirror 6 |
+| `sp_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod 4, CodeMirror 6, i18next, dnd-kit |
 
 ## Ecosystem Context
 
@@ -56,106 +56,150 @@ Core types use Rust structs with `serde::Serialize`/`Deserialize`. Custom serial
 
 | Model | Purpose |
 |-------|---------|
-| `EpisodeData` | Trait for episode data; `SimpleEpisodeData` for concrete use |
-| `SmartPlaylist` | A playlist containing episode IDs, with optional groups |
-| `SmartPlaylistGroup` | A group within a playlist (when contentType is `groups`) |
-| `SmartPlaylistGrouping` | Resolver output: playlists + ungrouped episode IDs |
-| `SmartPlaylistDefinition` | Per-playlist config: resolver type, filters, extractors |
-| `SmartPlaylistPatternConfig` | Per-podcast config: feed URL matching + playlist definitions |
+| `EpisodeData` | Trait for episode data (id, title, description, season/episode numbers, published_at, image_url) |
+| `SimpleEpisodeData` | Concrete `EpisodeData` implementation with serde support |
+| `Playlist` | A playlist with id, display_name, sort_key, episode_ids, groups, playlist_structure, year_binding |
+| `PlaylistGroup` | A group within a playlist (id, display_name, sort_key, episode_ids, metadata fields) |
+| `PlaylistStructure` | Enum: `Split` (default) or `Grouped` |
+| `YearBinding` | Enum: `None` (default), `PinToYear`, `SplitByYear` |
+| `Grouping` | Resolver output: playlists + ungrouped_episode_ids + resolver_type |
+| `PlaylistDefinition` | Per-playlist config: resolver_type, filters, extractors, groups, display settings |
+| `PatternConfig` | Per-podcast config: id, podcast_guid, feed_urls, year_grouped_episodes, playlists |
 | `PatternMeta` / `PatternSummary` / `RootMeta` | Split config metadata hierarchy |
-| `SmartPlaylistSort` | Sort specification (simple or composite) |
-| `SmartPlaylistGroupDef` | Static group definitions for category resolver |
-| `SmartPlaylistTitleExtractor` | Regex-based display name extraction with templates and fallbacks |
-| `SmartPlaylistEpisodeExtractor` | Season/episode number extraction from titles |
-| `EpisodeNumberExtractor` | Episode number extraction with RSS fallback |
+| `EpisodeFilters` / `EpisodeFilterEntry` | Require/exclude regex filters on title/description |
+| `GroupDef` | Static group definition with id, display_name, pattern, display, episode_list, episode_extractor |
+| `GroupListSettings` | year_binding, user_sortable, show_date_range, sort rule |
+| `EpisodeListSettings` | show_year_headers, sort rule, title_extractor |
+| `TitleExtractor` | Regex-based display name extraction with source, pattern, group, template, fallback chain |
+| `EpisodeExtractor` | Season/episode number extraction with primary/fallback patterns and RSS fallback |
+| `SortRule` / `SortField` / `SortOrder` | Group-level sorting (PlaylistNumber, NewestEpisodeDate, Alphabetical) |
+| `EpisodeSortRule` / `EpisodeSortField` | Episode-level sorting (PublishedAt, EpisodeNumber, Title) |
+| `PlaylistPreviewResult` | Preview output: definition_id, playlist, claimed_by_others map |
+| `PreviewGrouping` | Preview output: playlist_results, ungrouped_episode_ids, resolver_type |
 
 ### Resolver Chain
 
-Resolvers implement the `SmartPlaylistResolver` trait and group episodes by different strategies:
+Resolvers implement the `Resolver` trait and group episodes by different strategies:
+
+```rust
+trait Resolver {
+    fn resolver_type(&self) -> &str;
+    fn default_sort(&self) -> SortRule;
+    fn resolve(&self, episodes: &[&dyn EpisodeData], definition: Option<&PlaylistDefinition>) -> Option<Grouping>;
+}
+```
 
 | Resolver | Strategy |
 |----------|----------|
-| `RssMetadataResolver` | Groups by `seasonNumber` RSS field |
+| `RssResolver` | Groups by `seasonNumber` RSS field |
 | `CategoryResolver` | Groups by regex patterns against group definitions |
 | `YearResolver` | Groups by publication year |
-| `TitleAppearanceOrderResolver` | Groups by title pattern, ordered by first appearance |
+| `TitleAppearanceResolver` | Groups by title pattern, ordered by first appearance |
 
-`SmartPlaylistResolverService` orchestrates the chain:
+`ResolverService` orchestrates the chain:
 
-1. Match podcast by GUID or feed URL against `SmartPlaylistPatternConfig` list
-2. If matched: route episodes through definitions in priority order, filtering by title/exclude/require regexes
-3. If no match: try resolvers in order with no definition (auto-detect mode)
-4. Sort all episode IDs by `publishedAt` ascending (nulls last)
-5. Return `SmartPlaylistGrouping` or `None`
+1. Match podcast by GUID or feed URL against `PatternConfig` list
+2. If matched: route episodes through definitions in priority order, filtering by require/exclude regexes
+3. Higher-priority definitions claim episodes, preventing lower-priority ones from receiving them
+4. If no match: try resolvers in order with no definition (auto-detect mode)
+5. Sort all episode IDs by `publishedAt` ascending (nulls last)
+6. Return `Grouping` or `None`
 
-Content type determines output shape:
-- `episodes`: Each resolver playlist becomes a top-level `SmartPlaylist`
-- `groups`: Resolver playlists become `SmartPlaylistGroup` entries inside one parent playlist
+Playlist structure determines output shape:
+- `Split`: Each resolver playlist becomes a top-level `Playlist`
+- `Grouped`: Resolver playlists become `PlaylistGroup` entries inside one parent playlist
 
 ### Services
 
 | Service | Purpose |
 |---------|---------|
-| `SmartPlaylistResolverService` | Resolver chain orchestrator (described above) |
-| `ConfigAssembler` | Combines `PatternMeta` + playlist definitions into unified config |
-| `DiskFeedCacheService` | Disk-based feed cache with SHA-256 URL hashing and configurable TTL |
-| `sort_episode_ids_by_published_at` | Episode sorting utility (ascending, nulls last, stable) |
+| `ResolverService` | Resolver chain orchestrator with `resolve_smart_playlists()` and `resolve_for_preview()` |
+| `ConfigAssembler` | Combines `PatternMeta` + playlist definitions into unified `PatternConfig` |
+| `sort_episode_ids_by_published_at` | Three-tier sorting: has date > no date but found > not found |
+| `sort_groups` | Sorts groups by `SortRule`, populates earliest_date/latest_date |
 
 ### Schema
 
-Schema files are embedded via `include_str!` and validated at runtime using `jsonschema`.
+Three JSON Schema files embedded via `include_str!` from `crates/sp_core/assets/`:
+
+- `pattern-index.schema.json` -- root `meta.json`
+- `pattern-meta.schema.json` -- per-pattern `meta.json`
+- `playlist-definition.schema.json` -- playlist definitions
+
+`Validator` struct wraps `jsonschema` crate for runtime validation. Supports `from_embedded()` and `from_dir()` construction. `SchemaType` enum selects which schema to validate against.
 
 ## sp_server
 
 Axum-based local API server with tokio async runtime. Runs on localhost only, no authentication required.
+
+### App State
+
+```rust
+pub struct AppState {
+    pub config_repo: LocalConfigRepository,
+    pub feed_cache: DiskFeedCacheService,
+    pub validator: Validator,
+    pub file_watcher: FileWatcherService,
+    pub schema_json: String,
+    pub http_client: reqwest::Client,
+    pub static_dir: Option<PathBuf>,
+}
+```
+
+`AppError` provides `bad_request()`, `not_found()`, `internal()`, `bad_gateway()` constructors. Implements `IntoResponse` returning JSON with error message + HTTP status.
 
 ### Routes
 
 | Endpoint | Purpose |
 |----------|---------|
 | `GET /api/health` | Health check |
-| `GET /api/schema` | JSON Schema for configs |
+| `GET /api/schema` | Playlist-definition JSON Schema |
 | `GET /api/configs/patterns` | List pattern summaries |
-| `POST /api/configs/patterns` | Create new pattern |
-| `GET /api/configs/patterns/<id>` | Get pattern metadata |
-| `DELETE /api/configs/patterns/<id>` | Delete pattern and all playlists |
-| `PUT /api/configs/patterns/<id>/meta` | Update pattern metadata |
-| `GET /api/configs/patterns/<id>/assembled` | Assemble full config |
-| `GET /api/configs/patterns/<id>/playlists/<pid>` | Get playlist definition |
-| `PUT /api/configs/patterns/<id>/playlists/<pid>` | Save playlist definition |
-| `DELETE /api/configs/patterns/<id>/playlists/<pid>` | Delete playlist |
+| `POST /api/configs/patterns` | Create new pattern (requires id, meta) |
+| `GET /api/configs/patterns/{id}` | Get pattern metadata |
+| `DELETE /api/configs/patterns/{id}` | Delete pattern and all playlists |
+| `PUT /api/configs/patterns/{id}/meta` | Update pattern metadata (merges, preserves dataVersion) |
+| `GET /api/configs/patterns/{id}/assembled` | Assemble full config |
+| `GET /api/configs/patterns/{id}/playlists/{pid}` | Get playlist definition |
+| `PUT /api/configs/patterns/{id}/playlists/{pid}` | Save playlist definition |
+| `DELETE /api/configs/patterns/{id}/playlists/{pid}` | Delete playlist |
 | `POST /api/configs/validate` | Validate config against schema |
 | `POST /api/configs/preview` | Preview smart playlists from config + feed |
-| `GET /api/feeds` | Fetch and parse RSS feed |
+| `GET /api/feeds?url=...` | Fetch and parse RSS feed (http/https only) |
 | `GET /api/events` | SSE stream of file change events |
+| Static fallback | Serves files from `--static-dir` or embedded assets; SPA fallback for extensionless paths |
 
 ### Services
 
 | Service | Purpose |
 |---------|---------|
-| `LocalConfigRepository` | Read/write config files on disk with atomic writes |
-| `FileWatcherService` | Watch data directory for changes, emit SSE events (via `notify`) |
-| `DiskFeedCacheService` (from sp_core) | Disk-based feed cache with SHA-256 URL hashing |
-| `FeedParser` | RSS feed fetching and parsing (via `feed-rs`) |
+| `LocalConfigRepository` | Read/write split config files with atomic writes and path traversal protection |
+| `DiskFeedCacheService` | Disk-based feed cache with SHA-256 URL hashing, configurable TTL, `error_for_status()` on HTTP responses |
+| `FileWatcherService` | Watch data directory via `notify` crate, debounced event batching, broadcast channel for SSE; ignores `.tmp` and `.cache` |
+| `FeedParser` | RSS feed parsing via `feed-rs` crate |
+| `atomic_write_str` | Write to `.tmp` then rename; Windows-safe with remove-before-rename |
 
 ### Local-First Architecture
 
 - Server accepts `--data-dir` flag pointing to a cloned data repo
-- Binds to localhost only
+- Binds to `127.0.0.1` only
 - No authentication required
 - File changes trigger SSE events to connected browsers (via `notify` crate)
 - Feed cache stored in `$dataDir/.cache/feeds/`
-- Static files served via `rust-embed` or `--static-dir` flag
+- Static files served via `--static-dir` flag or `rust-embed` fallback
+- Path segments validated to prevent directory traversal
 
 ## sp_cli
 
-CLI binary built with `clap`. Provides subcommands:
+CLI binary (`audiflow-editor`) built with `clap`. Provides subcommands:
 
 | Command | Purpose |
 |---------|---------|
-| `serve` | Start the API server with `--data-dir`, `--port`, `--static-dir` options |
-| `validate` | Validate all configs in a data directory against the JSON schema |
-| `format` | Format/normalize JSON config files |
+| `serve` | Start the API server (`--data-dir .`, `--port 8080`, `--static-dir`); validates `patterns/meta.json` exists |
+| `validate` | Validate configs against JSON schema; exits 0 (valid), 1 (errors), 2 (file not found); auto-detects schema type from path |
+| `format` | Format/normalize JSON files with `--check` mode for CI |
+
+`config_walker` walks the pattern directory tree calling a callback per file with detected `SchemaType`.
 
 ## sp_react
 
@@ -166,9 +210,12 @@ React 19 SPA built with Vite + TypeScript.
 - **Routing**: TanStack Router (file-based)
 - **Server state**: TanStack Query (caching, refetching)
 - **Local state**: Zustand (editor-store)
-- **Forms**: React Hook Form + Zod (zodResolver)
+- **Forms**: React Hook Form + Zod 4 (zodResolver)
 - **Styling**: Tailwind CSS v4 + shadcn/ui (new-york style)
 - **JSON editing**: CodeMirror 6
+- **Drag and drop**: dnd-kit
+- **i18n**: i18next + react-i18next (en, ja)
+- **Linting**: oxlint
 - **Testing**: Vitest + @testing-library/react
 
 ### Routes
@@ -184,7 +231,7 @@ React 19 SPA built with Vite + TypeScript.
 
 - `ApiClient`: Simple HTTP wrapper for API calls (no auth)
 - Stores (Zustand): `editor-store` (UI state)
-- `useFileEvents`: SSE hook for real-time cache invalidation
+- `useFileEvents`: SSE hook for real-time TanStack Query cache invalidation
 - Query hooks: `usePatterns`, `useAssembledConfig`, `useFeed`, `usePreviewMutation`, `useSavePlaylist`, `useSavePatternMeta`, `useDeletePlaylist`, `useDeletePattern`, `useCreatePattern`, etc.
 
 ## Split Config Structure
@@ -192,23 +239,25 @@ React 19 SPA built with Vite + TypeScript.
 Configs are stored as a three-level file hierarchy:
 
 ```
-meta.json                               # Root: version + pattern summaries
-{patternId}/
-  meta.json                             # Pattern: feedUrls, playlistIds, flags
-  playlists/
-    {playlistId}.json                   # SmartPlaylistDefinition
+patterns/
+  meta.json                             # Root: version + pattern summaries
+  {patternId}/
+    meta.json                           # Pattern: feedUrls, playlistIds, flags
+    playlists/
+      {playlistId}.json                 # PlaylistDefinition
 ```
 
-`LocalConfigRepository` reads/writes each level as local files with atomic writes.
-`ConfigAssembler` combines pattern meta + playlist files into a unified `SmartPlaylistPatternConfig`.
+`LocalConfigRepository` reads/writes each level with atomic writes.
+`ConfigAssembler` combines pattern meta + playlist files into a unified `PatternConfig`.
 
 ## Key Design Decisions
 
 - **Serde for JSON serialization**: Custom `#[serde(...)]` attributes for field mapping and defaults
-- **Immutable structs**: Domain models are plain structs, cloned when modified
-- **Trait-based abstractions**: `EpisodeData` trait, `SmartPlaylistResolver` trait
+- **Plain structs**: Domain models are immutable structs, cloned when modified
+- **Trait-based abstractions**: `EpisodeData` trait, `Resolver` trait
 - **Local-first**: Server reads/writes local files, no remote API calls for config operations
-- **Atomic file writes**: Write to `.tmp` then rename to prevent partial reads
-- **SSE for reactivity**: FileWatcherService streams changes to connected browsers
-- **Schema validation at boundaries**: Validate JSON via `jsonschema` crate before deserializing
-- **Embedded schema files**: Schema JSON embedded in binary via `include_str!`
+- **Atomic file writes**: Write to `.tmp` then rename to prevent partial reads; Windows-safe
+- **SSE for reactivity**: `FileWatcherService` broadcasts debounced file changes to connected browsers
+- **Schema validation at boundaries**: Three embedded JSON Schemas validated via `jsonschema` crate
+- **Claiming semantics**: Higher-priority definitions claim episodes in preview, preventing duplicates
+- **Path traversal protection**: `LocalConfigRepository` validates path segments; feed endpoint restricts to http/https
