@@ -148,20 +148,52 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
     })
 }
 
+/// Computes display names per definition using per-definition enriched
+/// episodes so that titleExtractors reading seasonNumber/episodeNumber
+/// see the same values the resolver used for grouping.
 fn compute_extracted_display_names(
     config: &PatternConfig,
     episodes: &[SimpleEpisodeData],
 ) -> HashMap<String, HashMap<i64, String>> {
     let mut result = HashMap::new();
     for definition in &config.playlists {
-        let extractor = match &definition.title_extractor {
+        let title_ext = match &definition.title_extractor {
             Some(e) => e,
             None => continue,
         };
-        let compiled = extractor.compile();
+        let compiled_title = title_ext.compile();
+
+        // Enrich episodes with this definition's episode extractor
+        // (mirrors what the resolver does) so title extraction sees
+        // the same season/episode numbers the resolver used.
+        let enriched: Option<Vec<SimpleEpisodeData>> =
+            definition.episode_extractor.as_ref().map(|ext| {
+                let compiled_ep = ext.compile();
+                episodes
+                    .iter()
+                    .map(|ep| {
+                        let r = compiled_ep.extract(ep);
+                        if r.has_values() {
+                            SimpleEpisodeData {
+                                id: ep.id,
+                                title: ep.title.clone(),
+                                description: ep.description.clone(),
+                                season_number: r.season_number.or(ep.season_number),
+                                episode_number: r.episode_number.or(ep.episode_number),
+                                published_at: ep.published_at,
+                                image_url: ep.image_url.clone(),
+                            }
+                        } else {
+                            ep.clone()
+                        }
+                    })
+                    .collect()
+            });
+
+        let source: &[SimpleEpisodeData] = enriched.as_deref().unwrap_or(episodes);
         let mut names = HashMap::new();
-        for episode in episodes {
-            if let Some(name) = compiled.extract(episode) {
+        for episode in source {
+            if let Some(name) = compiled_title.extract(episode) {
                 names.insert(episode.id, name);
             }
         }
