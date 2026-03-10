@@ -125,10 +125,19 @@ impl FileWatcherService {
                 let tx = tx_flush.clone();
                 *guard = Some(handle.spawn(async move {
                     tokio::time::sleep(std::time::Duration::from_millis(200)).await;
-                    if let Ok(mut map) = pending_flush.lock() {
-                        for (_, event) in map.drain() {
-                            let _ = tx.send(event);
-                        }
+                    // Drain under std::sync::Mutex in a blocking task to
+                    // avoid holding the lock on a Tokio worker thread.
+                    let events = tokio::task::spawn_blocking(move || {
+                        pending_flush
+                            .lock()
+                            .ok()
+                            .map(|mut map| map.drain().map(|(_, e)| e).collect::<Vec<_>>())
+                            .unwrap_or_default()
+                    })
+                    .await
+                    .unwrap_or_default();
+                    for event in events {
+                        let _ = tx.send(event);
                     }
                 }));
             }

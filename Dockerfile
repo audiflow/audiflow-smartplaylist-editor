@@ -1,7 +1,7 @@
 # Stage 1: Build React
 FROM node:22-slim AS web-build
 WORKDIR /build
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable
 COPY packages/sp_react/package.json packages/sp_react/pnpm-lock.yaml ./packages/sp_react/
 COPY pnpm-workspace.yaml ./
 RUN cd packages/sp_react && pnpm install --frozen-lockfile
