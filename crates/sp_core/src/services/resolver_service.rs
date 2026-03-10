@@ -1,11 +1,82 @@
 use std::collections::{HashMap, HashSet};
 
-use regex::RegexBuilder;
+use regex::{Regex, RegexBuilder};
 
 use crate::models::{
     EpisodeData, EpisodeFilterEntry, Grouping, PatternConfig, Playlist, PlaylistDefinition,
     PlaylistGroup, PlaylistPreviewResult, PlaylistStructure, PreviewGrouping,
 };
+
+/// Precompiled filter entry for efficient per-episode matching.
+struct CompiledFilterEntry {
+    title: Option<Regex>,
+    description: Option<Regex>,
+}
+
+impl CompiledFilterEntry {
+    fn compile(entry: &EpisodeFilterEntry) -> Self {
+        Self {
+            title: entry
+                .title
+                .as_ref()
+                .and_then(|p| RegexBuilder::new(p).case_insensitive(true).build().ok()),
+            description: entry
+                .description
+                .as_ref()
+                .and_then(|p| RegexBuilder::new(p).case_insensitive(true).build().ok()),
+        }
+    }
+
+    fn matches(&self, episode: &dyn EpisodeData) -> bool {
+        if let Some(ref regex) = self.title
+            && !regex.is_match(episode.title())
+        {
+            return false;
+        }
+        if let Some(ref regex) = self.description
+            && !regex.is_match(episode.description().unwrap_or(""))
+        {
+            return false;
+        }
+        true
+    }
+}
+
+/// Precompiled require/exclude filters for a playlist definition.
+struct CompiledFilters {
+    require: Vec<CompiledFilterEntry>,
+    exclude: Vec<CompiledFilterEntry>,
+}
+
+impl CompiledFilters {
+    fn compile(definition: &PlaylistDefinition) -> Option<Self> {
+        let filters = definition.episode_filters.as_ref()?;
+        Some(Self {
+            require: filters
+                .require
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .map(CompiledFilterEntry::compile)
+                .collect(),
+            exclude: filters
+                .exclude
+                .as_deref()
+                .unwrap_or(&[])
+                .iter()
+                .map(CompiledFilterEntry::compile)
+                .collect(),
+        })
+    }
+
+    fn matches(&self, episode: &dyn EpisodeData) -> bool {
+        let require_ok = self.require.is_empty()
+            || self.require.iter().all(|f| f.matches(episode));
+        let exclude_ok = self.exclude.is_empty()
+            || !self.exclude.iter().any(|f| f.matches(episode));
+        require_ok && exclude_ok
+    }
+}
 use crate::resolvers::Resolver;
 use crate::services::episode_sorter::sort_episode_ids_by_published_at;
 use crate::services::group_sorter::sort_groups;
@@ -97,7 +168,8 @@ impl ResolverService {
         let sorted = Self::sort_by_processing_order(&config.playlists);
 
         for definition in &sorted {
-            let filtered = self.filter_episodes(episodes, definition, &claimed_ids);
+            let compiled_filters = CompiledFilters::compile(definition);
+            let filtered = Self::filter_episodes(episodes, &compiled_filters, &claimed_ids);
             if filtered.is_empty() {
                 continue;
             }
@@ -174,14 +246,16 @@ impl ResolverService {
         let sorted = Self::sort_by_processing_order(&config.playlists);
 
         for definition in &sorted {
-            let claimed_by_others = self.compute_claimed_by_others(
+            let compiled_filters = CompiledFilters::compile(definition);
+            let claimed_by_others = Self::compute_claimed_by_others(
                 definition,
                 episodes,
+                &compiled_filters,
                 &claimed_ids,
                 &claimed_by_map,
             );
 
-            let filtered = self.filter_episodes(episodes, definition, &claimed_ids);
+            let filtered = Self::filter_episodes(episodes, &compiled_filters, &claimed_ids);
 
             if filtered.is_empty() {
                 self.add_empty_preview_result(
@@ -242,9 +316,9 @@ impl ResolverService {
     }
 
     fn compute_claimed_by_others(
-        &self,
         definition: &PlaylistDefinition,
         episodes: &[&dyn EpisodeData],
+        compiled_filters: &Option<CompiledFilters>,
         claimed_ids: &HashSet<i64>,
         claimed_by_map: &HashMap<i64, String>,
     ) -> HashMap<i64, String> {
@@ -253,7 +327,7 @@ impl ResolverService {
             return claimed_by_others;
         }
 
-        let all_candidates = self.filter_episodes(episodes, definition, &HashSet::new());
+        let all_candidates = Self::filter_episodes(episodes, compiled_filters, &HashSet::new());
         for ep in &all_candidates {
             let id = ep.id();
             if claimed_ids.contains(&id)
@@ -569,15 +643,14 @@ impl ResolverService {
         }
     }
 
-    /// Filters episodes based on definition routing rules.
+    /// Filters episodes based on precompiled definition filters.
     ///
     /// Episodes already claimed by a higher-priority definition are excluded.
     /// A definition with no filters acts as a fallback, receiving all
     /// unclaimed episodes.
     fn filter_episodes<'a>(
-        &self,
         episodes: &[&'a dyn EpisodeData],
-        definition: &PlaylistDefinition,
+        compiled_filters: &Option<CompiledFilters>,
         claimed_ids: &HashSet<i64>,
     ) -> Vec<&'a dyn EpisodeData> {
         let unclaimed: Vec<&'a dyn EpisodeData> = episodes
@@ -586,65 +659,13 @@ impl ResolverService {
             .copied()
             .collect();
 
-        let filters = match &definition.episode_filters {
-            Some(f) => f,
-            None => return unclaimed,
-        };
-
-        unclaimed
-            .into_iter()
-            .filter(|episode| {
-                if !Self::matches_require_filters(*episode, filters.require.as_deref()) {
-                    return false;
-                }
-                if Self::matches_any_exclude_filter(*episode, filters.exclude.as_deref()) {
-                    return false;
-                }
-                true
-            })
-            .collect()
-    }
-
-    fn matches_require_filters(
-        episode: &dyn EpisodeData,
-        entries: Option<&[EpisodeFilterEntry]>,
-    ) -> bool {
-        match entries {
-            None => true,
-            Some(entries) => entries.iter().all(|entry| Self::matches_filter_entry(episode, entry)),
+        match compiled_filters {
+            Some(filters) => unclaimed
+                .into_iter()
+                .filter(|episode| filters.matches(*episode))
+                .collect(),
+            None => unclaimed,
         }
-    }
-
-    fn matches_any_exclude_filter(
-        episode: &dyn EpisodeData,
-        entries: Option<&[EpisodeFilterEntry]>,
-    ) -> bool {
-        match entries {
-            None => false,
-            Some(entries) => entries.iter().any(|entry| Self::matches_filter_entry(episode, entry)),
-        }
-    }
-
-    fn matches_filter_entry(episode: &dyn EpisodeData, entry: &EpisodeFilterEntry) -> bool {
-        if let Some(ref title_pattern) = entry.title
-            && let Ok(regex) = RegexBuilder::new(title_pattern)
-                .case_insensitive(true)
-                .build()
-            && !regex.is_match(episode.title())
-        {
-            return false;
-        }
-        if let Some(ref desc_pattern) = entry.description
-            && let Ok(regex) = RegexBuilder::new(desc_pattern)
-                .case_insensitive(true)
-                .build()
-        {
-            let desc = episode.description().unwrap_or("");
-            if !regex.is_match(desc) {
-                return false;
-            }
-        }
-        true
     }
 
     fn find_matching_config(
