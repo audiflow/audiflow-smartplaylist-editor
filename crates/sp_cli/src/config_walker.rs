@@ -16,16 +16,15 @@ where
         callback(&root_meta_path, SchemaType::PatternIndex)?;
     }
 
-    let entries = std::fs::read_dir(patterns_dir)
-        .map_err(|e| anyhow::anyhow!("Failed to read patterns directory {}: {e}", patterns_dir.display()))?;
+    let mut dirs: Vec<PathBuf> = std::fs::read_dir(patterns_dir)
+        .map_err(|e| anyhow::anyhow!("Failed to read patterns directory {}: {e}", patterns_dir.display()))?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .filter(|p| p.is_dir())
+        .collect();
+    dirs.sort();
 
-    for entry in entries {
-        let entry = entry?;
-        let path = entry.path();
-        if !path.is_dir() {
-            continue;
-        }
-
+    for path in &dirs {
         let pattern_meta_path = path.join("meta.json");
         if pattern_meta_path.exists() {
             callback(&pattern_meta_path, SchemaType::PatternMeta)?;
@@ -45,17 +44,18 @@ where
         return Ok(());
     }
 
-    let entries = match std::fs::read_dir(playlists_dir) {
+    let mut files: Vec<PathBuf> = match std::fs::read_dir(playlists_dir) {
         Ok(e) => e,
         Err(_) => return Ok(()),
-    };
+    }
+    .filter_map(|e| e.ok())
+    .map(|e| e.path())
+    .filter(|p| p.extension().and_then(|e| e.to_str()) == Some("json"))
+    .collect();
+    files.sort();
 
-    for entry in entries {
-        let entry = entry?;
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) == Some("json") {
-            callback(&path, SchemaType::PlaylistDefinition)?;
-        }
+    for path in &files {
+        callback(path, SchemaType::PlaylistDefinition)?;
     }
 
     Ok(())

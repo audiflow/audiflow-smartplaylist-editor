@@ -20,7 +20,7 @@ pub(crate) fn is_zero(v: &i32) -> bool {
 }
 
 pub use episode_data::{EpisodeData, SimpleEpisodeData};
-pub use episode_extractor::{EpisodeExtractionResult, EpisodeExtractor};
+pub use episode_extractor::{CompiledEpisodeExtractor, EpisodeExtractionResult, EpisodeExtractor};
 pub use group_def::{GroupDef, GroupDefDisplay, GroupDefEpisodeList};
 pub use pattern_config::PatternConfig;
 pub use pattern_meta::PatternMeta;

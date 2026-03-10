@@ -24,9 +24,10 @@ pub async fn static_handler(
     };
 
     let path = request.uri().path().trim_start_matches('/');
+    let has_extension = Path::new(path).extension().is_some();
 
     // Sanitize: resolve the path and ensure it stays within static_dir
-    let file_path = if path.is_empty() || !path.contains('.') {
+    let file_path = if path.is_empty() || !has_extension {
         static_dir.join("index.html")
     } else {
         let candidate = static_dir.join(path);
@@ -44,7 +45,7 @@ pub async fn static_handler(
         Err(_) => {
             // Only fall back to index.html for extensionless paths (SPA routes).
             // Missing assets (.js, .css, etc.) should 404.
-            if path.contains('.') {
+            if has_extension {
                 return StatusCode::NOT_FOUND.into_response();
             }
             let index_path = static_dir.join("index.html");

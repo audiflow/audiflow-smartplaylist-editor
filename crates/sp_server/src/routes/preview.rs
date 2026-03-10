@@ -70,10 +70,11 @@ fn enrich_episodes(
         None => return episodes.to_vec(),
     };
 
+    let compiled = extractor.compile();
     episodes
         .iter()
         .map(|episode| {
-            let result = extractor.extract(episode);
+            let result = compiled.extract(episode);
             if !result.has_values() {
                 return episode.clone();
             }
