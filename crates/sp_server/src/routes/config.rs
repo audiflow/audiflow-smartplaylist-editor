@@ -53,6 +53,7 @@ pub async fn create_pattern(
 
     let mut meta_with_version = Value::Object(meta.clone());
     meta_with_version["dataVersion"] = Value::from(1);
+    meta_with_version["id"] = Value::String(id.clone());
 
     state.config_repo.create_pattern(&id, &meta_with_version)?;
 
@@ -246,9 +247,11 @@ pub async fn save_playlist(
         )));
     }
 
-    // Round-trip through the typed model for canonical field ordering
-    let definition: PlaylistDefinition = serde_json::from_value(sanitized)
+    // Round-trip through the typed model for canonical field ordering,
+    // forcing the id to match the route parameter.
+    let mut definition: PlaylistDefinition = serde_json::from_value(sanitized)
         .map_err(|e| AppError::bad_request(format!("Invalid playlist definition: {e}")))?;
+    definition.id = pid.clone();
     let normalized = serde_json::to_value(&definition)
         .map_err(|e| AppError::internal(format!("Serialization error: {e}")))?;
 

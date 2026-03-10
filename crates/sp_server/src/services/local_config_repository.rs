@@ -194,7 +194,10 @@ impl LocalConfigRepository {
     // -- Private helpers --
 
     fn read_file(&self, path: &Path) -> Result<String, Error> {
-        std::fs::read_to_string(path).map_err(Error::Io)
+        std::fs::read_to_string(path).map_err(|e| match e.kind() {
+            std::io::ErrorKind::NotFound => Error::NotFound(path.display().to_string()),
+            _ => Error::Io(e),
+        })
     }
 }
 
@@ -505,8 +508,8 @@ mod tests {
 
         // This should not error on validation (may error on file not found)
         let result = repo.get_pattern_meta("valid-id_123");
-        // Should fail with IO error (not found), not validation error
-        assert!(matches!(result.unwrap_err(), Error::Io(_)));
+        // Should fail with NotFound, not validation error
+        assert!(matches!(result.unwrap_err(), Error::NotFound(_)));
     }
 
     #[test]

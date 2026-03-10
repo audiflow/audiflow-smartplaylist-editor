@@ -66,40 +66,51 @@ pub async fn preview_config(
     Ok(Json(result))
 }
 
-/// Applies the first available episode extractor from the config to
-/// enrich episodes with title-derived season/episode numbers.
+/// Collects all episode extractors from definitions and their group
+/// overrides, compiles them, and applies each to every episode.  The
+/// first extractor that produces values wins for a given episode.
 fn enrich_episodes(
     config: &PatternConfig,
     episodes: &[SimpleEpisodeData],
 ) -> Vec<SimpleEpisodeData> {
-    let extractor = config
-        .playlists
-        .iter()
-        .filter_map(|d| d.episode_extractor.as_ref())
-        .next();
+    use sp_core::models::CompiledEpisodeExtractor;
 
-    let extractor = match extractor {
-        Some(e) => e,
-        None => return episodes.to_vec(),
-    };
+    let mut compiled_extractors: Vec<CompiledEpisodeExtractor> = Vec::new();
+    for def in &config.playlists {
+        if let Some(ext) = &def.episode_extractor {
+            compiled_extractors.push(ext.compile());
+        }
+        if let Some(groups) = &def.groups {
+            for group in groups {
+                if let Some(ext) = &group.episode_extractor {
+                    compiled_extractors.push(ext.compile());
+                }
+            }
+        }
+    }
 
-    let compiled = extractor.compile();
+    if compiled_extractors.is_empty() {
+        return episodes.to_vec();
+    }
+
     episodes
         .iter()
         .map(|episode| {
-            let result = compiled.extract(episode);
-            if !result.has_values() {
-                return episode.clone();
+            for compiled in &compiled_extractors {
+                let result = compiled.extract(episode);
+                if result.has_values() {
+                    return SimpleEpisodeData {
+                        id: episode.id,
+                        title: episode.title.clone(),
+                        description: episode.description.clone(),
+                        season_number: result.season_number.or(episode.season_number),
+                        episode_number: result.episode_number.or(episode.episode_number),
+                        published_at: episode.published_at,
+                        image_url: episode.image_url.clone(),
+                    };
+                }
             }
-            SimpleEpisodeData {
-                id: episode.id,
-                title: episode.title.clone(),
-                description: episode.description.clone(),
-                season_number: result.season_number.or(episode.season_number),
-                episode_number: result.episode_number.or(episode.episode_number),
-                published_at: episode.published_at,
-                image_url: episode.image_url.clone(),
-            }
+            episode.clone()
         })
         .collect()
 }
@@ -212,6 +223,13 @@ fn collect_grouped_ids(result: &PreviewGrouping) -> HashSet<i64> {
     for pr in &result.playlist_results {
         for &id in &pr.playlist.episode_ids {
             ids.insert(id);
+        }
+        if let Some(groups) = &pr.playlist.groups {
+            for group in groups {
+                for &id in &group.episode_ids {
+                    ids.insert(id);
+                }
+            }
         }
     }
     ids
