@@ -2,7 +2,7 @@ use std::path::Path;
 
 use axum::body::Body;
 use axum::extract::State;
-use axum::http::{header, Request, StatusCode};
+use axum::http::{header, Method, Request, StatusCode};
 use axum::response::{IntoResponse, Response};
 use rust_embed::RustEmbed;
 
@@ -35,6 +35,10 @@ pub async fn static_handler(
     State(state): State<SharedState>,
     request: Request<Body>,
 ) -> Response {
+    if !matches!(request.method(), &Method::GET | &Method::HEAD) {
+        return StatusCode::METHOD_NOT_ALLOWED.into_response();
+    }
+
     let path = request.uri().path().trim_start_matches('/');
     let has_extension = Path::new(path).extension().is_some();
 
