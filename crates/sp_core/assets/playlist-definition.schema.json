@@ -62,19 +62,19 @@
     },
     "episodeFilters": {
       "type": "object",
-      "description": "Episode filters applied before resolver processing. Having any filter makes this a 'filtered' definition, which is processed before filter-less fallback definitions. Matched episodes are claimed and unavailable to later definitions. All require conditions are ANDed (episode must match every entry); all exclude conditions are ORed (episode is excluded if it matches any entry). Order does not matter.",
+      "description": "Episode filters applied before resolver processing. Having any filter makes this a 'filtered' definition, which is processed before filter-less fallback definitions. Matched episodes are claimed and unavailable to later definitions. Within each entry, all specified fields must match (AND). Across entries: require includes episodes matching any entry (OR); exclude rejects episodes matching any entry (OR).",
       "additionalProperties": false,
       "properties": {
         "require": {
           "type": "array",
-          "description": "Inclusion filters. An episode must match ALL entries to be passed to the resolver. Each entry can specify regex patterns against one or more episode fields; all specified fields within an entry must match.",
+          "description": "Inclusion filters (OR). An episode is included if it matches ANY entry. Within each entry, all specified fields must match (AND).",
           "items": {
             "$ref": "#/$defs/EpisodeFilterEntry"
           }
         },
         "exclude": {
           "type": "array",
-          "description": "Exclusion filters. An episode matching ANY entry is excluded, even if it passed all require filters. Each entry can specify regex patterns against one or more episode fields; all specified fields within an entry must match for the exclusion to apply.",
+          "description": "Exclusion filters (OR). An episode is excluded if it matches ANY entry. Within each entry, all specified fields must match (AND).",
           "items": {
             "$ref": "#/$defs/EpisodeFilterEntry"
           }
@@ -151,11 +151,27 @@
       }
     }
   },
+  "if": {
+    "properties": {
+      "resolverType": {
+        "const": "category"
+      }
+    },
+    "required": [
+      "resolverType"
+    ]
+  },
+  "then": {
+    "required": [
+      "groups"
+    ]
+  },
   "$defs": {
     "EpisodeFilterEntry": {
       "type": "object",
-      "description": "A single filter condition matched against episode fields. When multiple fields are specified, all must match (AND logic within an entry). An empty entry matches all episodes.",
+      "description": "A single filter condition matched against episode fields. When multiple fields are specified, all must match (AND logic within an entry). At least one field must be specified.",
       "additionalProperties": false,
+      "minProperties": 1,
       "properties": {
         "title": {
           "type": "string",
@@ -204,7 +220,7 @@
         },
         "pattern": {
           "type": "string",
-          "description": "Case-insensitive regex pattern matched against episode titles. When present, episodes whose title matches are assigned to this group. When absent (null), this group acts as a catch-all that collects all episodes not matched by any preceding group's pattern."
+          "description": "Case-insensitive regex pattern matched against episode titles. When present, episodes whose title matches are assigned to this group. When omitted, this group acts as a catch-all that collects all episodes not matched by any preceding group's pattern."
         },
         "display": {
           "type": "object",
