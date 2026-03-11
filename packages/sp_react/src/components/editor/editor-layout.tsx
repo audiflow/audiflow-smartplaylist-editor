@@ -471,7 +471,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         </FormProvider>
       ) : (
         <FormProvider {...form}>
-          <PatternSettingsCard />
+          <PatternSettingsCard configId={configId} />
 
           {/* Playlist Tabs */}
           <Tabs
