@@ -1,34 +1,32 @@
-# audiflow v2 - Tech Stack
+# audiflow-smartplaylist-editor - Tech Stack
 
 ## Core Stack
-- **Flutter 3.38.5** / **Dart 3.10.4**
-- **Analyzer**: 10.x (overridden in root pubspec.yaml for Riverpod 4.x compatibility)
+- **Rust** edition 2024
+- **React 19** / **TypeScript** (sp_react package)
 
 ## Common Commands
 
-**Analysis:**
+**Build:**
 ```bash
-flutter analyze  # Must pass with zero issues
-flutter test     # Must pass all tests
+cargo build            # Debug build
+cargo build --release  # Release build
 ```
 
-**Localization:**
+**Testing:**
 ```bash
-flutter gen-l10n  # Generate from ARB files
+cargo test     # Run all Rust tests
 ```
 
-## Generated Files
-- `*.freezed.dart` - Freezed classes
-- `*.gr.dart` - GoRouter routes
-
-**Never edit generated files manually!**
+**Linting:**
+```bash
+cargo clippy -- -W warnings  # Must pass with zero warnings
+```
 
 ## Post-Implementation Checklist (MANDATORY)
 
 After completing implementation, Claude MUST perform all of the following:
 
-1. **Format**: Run `dart_format` tool
-2. **Analyze**: Run `analyze_files` tool - must have zero errors/warnings
-3. **Tests**: Run `run_tests` tool - all tests must pass
+1. **Test**: Run `cargo test` - all tests must pass
+2. **Lint**: Run `cargo clippy -- -W warnings` - must have zero warnings
 
 **Do NOT report completion if any of these steps fail.** Fix issues first.

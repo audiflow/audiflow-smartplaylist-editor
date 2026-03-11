@@ -1,0 +1,447 @@
+use axum::extract::{Path, Query, State};
+use axum::Json;
+use serde_json::Value;
+
+use crate::app::{AppError, SharedState};
+use sp_core::models::PlaylistDefinition;
+use sp_core::schema::SchemaType;
+
+/// GET /api/configs/patterns -- returns pattern summaries.
+pub async fn list_patterns(
+    State(state): State<SharedState>,
+) -> Result<Json<Value>, AppError> {
+    let patterns = state.config_repo.list_patterns()?;
+    let json: Vec<Value> = patterns
+        .iter()
+        .map(|p| serde_json::to_value(p).unwrap_or(Value::Null))
+        .collect();
+    Ok(Json(Value::Array(json)))
+}
+
+/// POST /api/configs/patterns -- creates a new pattern.
+pub async fn create_pattern(
+    State(state): State<SharedState>,
+    Json(body): Json<Value>,
+) -> Result<(axum::http::StatusCode, Json<Value>), AppError> {
+    let obj = body.as_object().ok_or_else(|| {
+        AppError::bad_request("Request body must be a JSON object")
+    })?;
+
+    let id = obj
+        .get("id")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| AppError::bad_request("Missing or invalid \"id\" field"))?
+        .to_string();
+
+    let meta = obj
+        .get("meta")
+        .and_then(|v| v.as_object())
+        .ok_or_else(|| AppError::bad_request("Missing or invalid \"meta\" field"))?;
+
+    let display_name = obj
+        .get("displayName")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .unwrap_or(&id);
+
+    if state.config_repo.pattern_exists(&id) {
+        return Err(AppError::conflict(format!(
+            "Pattern \"{id}\" already exists"
+        )));
+    }
+
+    let mut meta_with_version = Value::Object(meta.clone());
+    meta_with_version["dataVersion"] = Value::from(1);
+    meta_with_version["id"] = Value::String(id.clone());
+
+    // Validate against pattern-meta schema before writing.
+    let errors = state
+        .validator
+        .validate(SchemaType::PatternMeta, &meta_with_version);
+    if !errors.is_empty() {
+        return Err(AppError::bad_request(format!(
+            "Validation failed: {}",
+            errors.join("; ")
+        )));
+    }
+
+    state.config_repo.create_pattern(&id, &meta_with_version)?;
+
+    // Add the new pattern to root meta.json
+    let mut root_meta = state.config_repo.get_root_meta_json()?;
+    let patterns = root_meta
+        .get_mut("patterns")
+        .and_then(|v| v.as_array_mut());
+
+    let playlists = meta
+        .get("playlists")
+        .and_then(|v| v.as_array())
+        .map_or(0, |a| a.len());
+
+    let feed_url_hint = meta
+        .get("feedUrls")
+        .and_then(|v| v.as_array())
+        .and_then(|a| a.first())
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    let summary = serde_json::json!({
+        "id": id,
+        "dataVersion": 1,
+        "displayName": display_name,
+        "feedUrlHint": feed_url_hint,
+        "playlistCount": playlists,
+    });
+
+    match patterns {
+        Some(arr) => arr.push(summary),
+        None => {
+            root_meta["patterns"] = Value::Array(vec![summary]);
+        }
+    }
+
+    state.config_repo.save_root_meta(&root_meta)?;
+
+    Ok((
+        axum::http::StatusCode::CREATED,
+        Json(serde_json::json!({ "ok": true, "id": id })),
+    ))
+}
+
+/// GET /api/configs/patterns/{id} -- returns pattern metadata.
+pub async fn get_pattern(
+    State(state): State<SharedState>,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, AppError> {
+    let meta = state.config_repo.get_pattern_meta(&id)?;
+    let json = serde_json::to_value(meta)
+        .map_err(|e| AppError::internal(format!("Serialization error: {e}")))?;
+    Ok(Json(json))
+}
+
+/// DELETE /api/configs/patterns/{id} -- deletes a pattern and all playlists.
+///
+/// Also removes the pattern's entry from root meta.json to keep the
+/// browse listing consistent.
+pub async fn delete_pattern(
+    State(state): State<SharedState>,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, AppError> {
+    state.config_repo.delete_pattern(&id)?;
+
+    // Remove from root meta.json
+    let mut root_meta = state.config_repo.get_root_meta_json()?;
+    if let Some(patterns) = root_meta.get_mut("patterns").and_then(|v| v.as_array_mut()) {
+        patterns.retain(|entry| entry.get("id").and_then(|v| v.as_str()) != Some(&id));
+        state.config_repo.save_root_meta(&root_meta)?;
+    }
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+/// PUT /api/configs/patterns/{id}/meta -- saves pattern meta to disk.
+pub async fn update_pattern_meta(
+    State(state): State<SharedState>,
+    Path(id): Path<String>,
+    Json(mut body): Json<Value>,
+) -> Result<Json<Value>, AppError> {
+    let obj = body
+        .as_object_mut()
+        .ok_or_else(|| AppError::bad_request("Request body must be a JSON object"))?;
+
+    // Extract displayName before merging (lives in root meta only).
+    // Empty string is rejected since the root index schema requires it.
+    let display_name = obj.remove("displayName").and_then(|v| {
+        match v {
+            Value::String(s) if !s.is_empty() => Some(s),
+            Value::String(_) => None, // empty string ignored, keeps existing
+            Value::Null => None,
+            _ => None,
+        }
+    });
+
+    // Read-modify-write: preserve existing dataVersion.
+    let mut existing = state.config_repo.get_pattern_meta_json(&id)?;
+    let existing_obj = existing
+        .as_object_mut()
+        .ok_or_else(|| AppError::internal("Existing meta is not a JSON object"))?;
+
+    let preserved_data_version = existing_obj.get("dataVersion").cloned();
+
+    // Merge body into existing
+    for (key, value) in obj.iter() {
+        existing_obj.insert(key.clone(), value.clone());
+    }
+    // Force canonical ID from route parameter
+    existing_obj.insert("id".to_string(), Value::String(id.clone()));
+    // Restore preserved dataVersion
+    if let Some(dv) = preserved_data_version {
+        existing_obj.insert("dataVersion".to_string(), dv);
+    }
+
+    let errors = state
+        .validator
+        .validate(SchemaType::PatternMeta, &existing);
+    if !errors.is_empty() {
+        return Err(AppError::bad_request(format!(
+            "Validation failed: {}",
+            errors.join("; ")
+        )));
+    }
+
+    state.config_repo.save_pattern_meta(&id, &existing)?;
+
+    // Sync root meta.json
+    sync_root_meta(&state, &id, &existing, display_name.as_deref())?;
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+/// GET /api/configs/patterns/{id}/assembled -- assembles full config.
+pub async fn get_assembled(
+    State(state): State<SharedState>,
+    Path(id): Path<String>,
+) -> Result<Json<Value>, AppError> {
+    let config = state.config_repo.assemble_config(&id)?;
+    let mut json = serde_json::to_value(config)
+        .map_err(|e| AppError::internal(format!("Serialization error: {e}")))?;
+
+    // Enrich with displayName from root meta.json
+    if let Ok(root_meta) = state.config_repo.get_root_meta_json()
+        && let Some(patterns) = root_meta.get("patterns").and_then(|v| v.as_array())
+    {
+        for entry in patterns {
+            if entry.get("id").and_then(|v| v.as_str()) == Some(&id) {
+                if let Some(name) = entry.get("displayName").and_then(|v| v.as_str())
+                    && !name.is_empty()
+                {
+                    json["displayName"] = Value::String(name.to_string());
+                }
+                break;
+            }
+        }
+    }
+
+    Ok(Json(json))
+}
+
+/// GET /api/configs/patterns/{id}/playlists/{pid} -- returns a playlist definition.
+pub async fn get_playlist(
+    State(state): State<SharedState>,
+    Path((id, pid)): Path<(String, String)>,
+) -> Result<Json<Value>, AppError> {
+    let playlist = state.config_repo.get_playlist(&id, &pid)?;
+    let json = serde_json::to_value(playlist)
+        .map_err(|e| AppError::internal(format!("Serialization error: {e}")))?;
+    Ok(Json(json))
+}
+
+/// PUT /api/configs/patterns/{id}/playlists/{pid} -- saves a playlist definition.
+pub async fn save_playlist(
+    State(state): State<SharedState>,
+    Path((id, pid)): Path<(String, String)>,
+    Json(body): Json<Value>,
+) -> Result<Json<Value>, AppError> {
+    if !body.is_object() {
+        return Err(AppError::bad_request("Request body must be a JSON object"));
+    }
+
+    // Strip null values for schema validation
+    let sanitized = strip_nulls(&body);
+
+    let errors = state
+        .validator
+        .validate(SchemaType::PlaylistDefinition, &sanitized);
+    if !errors.is_empty() {
+        return Err(AppError::bad_request(format!(
+            "Validation failed: {}",
+            errors.join("; ")
+        )));
+    }
+
+    // Round-trip through the typed model for canonical field ordering,
+    // forcing the id to match the route parameter.
+    let mut definition: PlaylistDefinition = serde_json::from_value(sanitized)
+        .map_err(|e| AppError::bad_request(format!("Invalid playlist definition: {e}")))?;
+    definition.id = pid.clone();
+    let normalized = serde_json::to_value(&definition)
+        .map_err(|e| AppError::internal(format!("Serialization error: {e}")))?;
+
+    state.config_repo.save_playlist(&id, &pid, &normalized)?;
+
+    // Ensure playlist ID is listed in pattern meta so assemble_config includes it
+    add_playlist_to_meta(&state, &id, &pid)?;
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+/// DELETE /api/configs/patterns/{id}/playlists/{pid}
+///
+/// Removes the playlist file and its ID from the pattern meta's
+/// playlists array to keep assemble_config consistent.
+pub async fn delete_playlist(
+    State(state): State<SharedState>,
+    Path((id, pid)): Path<(String, String)>,
+) -> Result<Json<Value>, AppError> {
+    // Reject if this is the last playlist (schema requires minItems: 1).
+    let meta = state.config_repo.get_pattern_meta_json(&id)?;
+    let playlist_count = meta
+        .get("playlists")
+        .and_then(|v| v.as_array())
+        .map_or(0, |a| a.len());
+    if 2 > playlist_count {
+        return Err(AppError::bad_request(
+            "Cannot delete the last playlist; a pattern must have at least one",
+        ));
+    }
+
+    state.config_repo.delete_playlist(&id, &pid)?;
+
+    // Remove pid from pattern meta
+    remove_playlist_from_meta(&state, &id, &pid)?;
+
+    Ok(Json(serde_json::json!({ "ok": true })))
+}
+
+#[derive(serde::Deserialize)]
+pub struct ValidateQuery {
+    #[serde(rename = "type")]
+    pub schema_type: Option<String>,
+}
+
+/// POST /api/configs/validate -- validates JSON against a schema.
+pub async fn validate_config(
+    State(state): State<SharedState>,
+    Query(query): Query<ValidateQuery>,
+    body: String,
+) -> Result<Json<Value>, AppError> {
+    if body.is_empty() {
+        return Err(AppError::bad_request("Request body is empty"));
+    }
+
+    let value: Value = serde_json::from_str(&body)
+        .map_err(|_| AppError::bad_request("Invalid JSON"))?;
+
+    let schema_type_str = query.schema_type.as_deref().unwrap_or("playlistDefinition");
+
+    let schema_type = match schema_type_str {
+        "playlistDefinition" => SchemaType::PlaylistDefinition,
+        "patternMeta" => SchemaType::PatternMeta,
+        "patternIndex" => SchemaType::PatternIndex,
+        other => return Err(AppError::bad_request(format!("Invalid type: {other}"))),
+    };
+
+    let errors = state.validator.validate(schema_type, &value);
+    Ok(Json(serde_json::json!({
+        "valid": errors.is_empty(),
+        "errors": errors,
+    })))
+}
+
+/// Adds a playlist ID to the pattern meta's playlists array if not already present,
+/// and updates the playlistCount in root meta.
+fn add_playlist_to_meta(state: &SharedState, pattern_id: &str, playlist_id: &str) -> Result<(), AppError> {
+    let mut meta = state.config_repo.get_pattern_meta_json(pattern_id)?;
+    let playlists = meta
+        .get_mut("playlists")
+        .and_then(|v| v.as_array_mut());
+
+    let already_listed = playlists
+        .as_ref()
+        .is_some_and(|arr| arr.iter().any(|v| v.as_str() == Some(playlist_id)));
+
+    if already_listed {
+        return Ok(());
+    }
+
+    match playlists {
+        Some(arr) => arr.push(Value::String(playlist_id.to_string())),
+        None => {
+            meta["playlists"] = Value::Array(vec![Value::String(playlist_id.to_string())]);
+        }
+    }
+
+    state.config_repo.save_pattern_meta(pattern_id, &meta)?;
+    sync_root_meta(state, pattern_id, &meta, None)?;
+    Ok(())
+}
+
+/// Removes a playlist ID from the pattern meta's playlists array
+/// and updates the playlistCount in root meta.
+fn remove_playlist_from_meta(state: &SharedState, pattern_id: &str, playlist_id: &str) -> Result<(), AppError> {
+    let mut meta = state.config_repo.get_pattern_meta_json(pattern_id)?;
+    if let Some(playlists) = meta.get_mut("playlists").and_then(|v| v.as_array_mut()) {
+        playlists.retain(|v| v.as_str() != Some(playlist_id));
+        state.config_repo.save_pattern_meta(pattern_id, &meta)?;
+        sync_root_meta(state, pattern_id, &meta, None)?;
+    }
+    Ok(())
+}
+
+/// Recursively removes null-valued keys from JSON maps.
+fn strip_nulls(value: &Value) -> Value {
+    match value {
+        Value::Object(map) => {
+            let mut result = serde_json::Map::new();
+            for (key, val) in map {
+                if val.is_null() {
+                    continue;
+                }
+                result.insert(key.clone(), strip_nulls(val));
+            }
+            Value::Object(result)
+        }
+        Value::Array(arr) => Value::Array(arr.iter().map(strip_nulls).collect()),
+        other => other.clone(),
+    }
+}
+
+/// Updates the root meta.json entry for a pattern to keep browse
+/// listing in sync with pattern meta changes.
+fn sync_root_meta(
+    state: &SharedState,
+    id: &str,
+    meta: &Value,
+    display_name: Option<&str>,
+) -> Result<(), AppError> {
+    let mut root_meta = state.config_repo.get_root_meta_json()?;
+    let patterns = match root_meta.get_mut("patterns").and_then(|v| v.as_array_mut()) {
+        Some(arr) => arr,
+        None => return Ok(()),
+    };
+
+    let mut found = false;
+    for entry in patterns.iter_mut() {
+        if entry.get("id").and_then(|v| v.as_str()) == Some(id) {
+            let playlists_count = meta
+                .get("playlists")
+                .and_then(|v| v.as_array())
+                .map_or(0, |a| a.len());
+            entry["playlistCount"] = Value::from(playlists_count);
+            entry["feedUrlHint"] = Value::String(feed_url_hint(meta));
+
+            if let Some(name) = display_name {
+                entry["displayName"] = Value::String(name.to_string());
+            }
+            found = true;
+            break;
+        }
+    }
+
+    if !found {
+        return Ok(());
+    }
+
+    state.config_repo.save_root_meta(&root_meta)?;
+    Ok(())
+}
+
+fn feed_url_hint(meta: &Value) -> String {
+    meta.get("feedUrls")
+        .and_then(|v| v.as_array())
+        .and_then(|a| a.first())
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string()
+}

@@ -1,18 +1,18 @@
-.PHONY: deps build-runner server dev mcp test test-shared test-server test-react test-mcp \
-	analyze lint format build-web clean help
+.PHONY: help deps dev-server dev-ui dev build test test-rust test-react \
+	lint clippy validate format format-check build-web clean
 
 # Ports
 SERVER_PORT ?= 8080
 
 # Paths
 ROOT        := $(shell pwd)
-SP_SHARED   := $(ROOT)/packages/sp_shared
-SP_SERVER   := $(ROOT)/packages/sp_server
 SP_REACT    := $(ROOT)/packages/sp_react
-MCP_SERVER  := $(ROOT)/mcp_server
 
 # Data directory (path to a cloned audiflow-smartplaylist data repo)
 DATA_DIR    ?= $(ROOT)/../audiflow-smartplaylist
+
+# Vite env: point React dev server at the API
+export VITE_API_BASE_URL ?= http://localhost:$(SERVER_PORT)
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -21,71 +21,65 @@ help: ## Show this help
 # -- Setup -------------------------------------------------------------------
 
 deps: ## Install dependencies for all packages
-	dart pub get
 	cd $(SP_REACT) && pnpm install
-
-build-runner: ## Run code generation (json_serializable) for sp_shared
-	cd $(SP_SHARED) && dart run build_runner build --delete-conflicting-outputs
-
-setup: deps build-runner ## Full setup: install deps + run code generation
 
 # -- Run services ------------------------------------------------------------
 
-server: ## Start the backend API server (PORT=$(SERVER_PORT))
-	cd $(SP_SERVER) && PORT=$(SERVER_PORT) DATA_DIR="$(DATA_DIR)" dart run bin/server.dart
+dev-server: ## Start the backend API server (PORT=$(SERVER_PORT))
+	cargo run -- serve --data-dir $(DATA_DIR) --port $(SERVER_PORT)
+
+dev-ui: ## Start React web app dev server
+	cd $(SP_REACT) && pnpm dev
 
 dev: ## Start server and React web app together (Ctrl+C stops both)
 	@trap 'kill 0 2>/dev/null' EXIT; \
-	(cd $(SP_SERVER) && PORT=$(SERVER_PORT) DATA_DIR="$(DATA_DIR)" dart run bin/server.dart) & \
+	cargo run -- serve --data-dir $(DATA_DIR) --port $(SERVER_PORT) & \
 	echo "sp_server started on port $(SERVER_PORT)"; \
 	cd $(SP_REACT) && pnpm dev
 
-mcp: ## Start the MCP server (run from a data repo directory)
-	dart run $(MCP_SERVER)/bin/mcp_server.dart
-
 # -- Testing -----------------------------------------------------------------
 
-test: ## Run all tests
-	dart test $(SP_SHARED)
-	dart test $(SP_SERVER)
-	dart test $(MCP_SERVER)
+test: ## Run all tests (Rust + React)
+	cargo test
 	cd $(SP_REACT) && pnpm test -- --run
 
-test-shared: ## Run sp_shared tests
-	dart test $(SP_SHARED)
+test-rust: ## Run Rust tests
+	cargo test
 
-test-server: ## Run sp_server tests
-	dart test $(SP_SERVER)
-
-test-react: ## Run sp_react tests
+test-react: ## Run React tests
 	cd $(SP_REACT) && pnpm test -- --run
-
-test-mcp: ## Run mcp_server tests
-	dart test $(MCP_SERVER)
 
 # -- Quality -----------------------------------------------------------------
 
-analyze: ## Run static analysis on all packages
-	dart analyze
+lint: ## Run all linters (clippy + oxlint + tsc)
+	cargo clippy -- -W warnings
+	cd $(SP_REACT) && npx oxlint
 	cd $(SP_REACT) && npx tsc -b --noEmit
 
-lint: ## Run linters (ESLint for React, dart analyze for Dart)
-	dart analyze
-	cd $(SP_REACT) && npx oxlint
+clippy: ## Run cargo clippy
+	cargo clippy -- -W warnings
 
-format: ## Format all Dart files
-	dart format .
+format: ## Format JSON configs in data directory
+	cargo run -- format --data-dir $(DATA_DIR)
 
-format-check: ## Check formatting without applying changes
-	dart format --set-exit-if-changed .
+format-check: ## Check JSON formatting without applying changes
+	cargo run -- format --data-dir $(DATA_DIR) --check
 
 # -- Build -------------------------------------------------------------------
 
+build: build-web ## Build React SPA + Rust release binary
+	cargo build --release
+
 build-web: ## Build React SPA for production
 	cd $(SP_REACT) && pnpm build
+
+# -- Validation --------------------------------------------------------------
+
+validate: ## Validate configs in data directory against schema
+	cargo run -- validate --data-dir $(DATA_DIR)
 
 # -- Cleanup -----------------------------------------------------------------
 
 clean: ## Remove build artifacts and caches
 	rm -rf $(SP_REACT)/dist $(SP_REACT)/node_modules
-	dart pub get
+	cargo clean
