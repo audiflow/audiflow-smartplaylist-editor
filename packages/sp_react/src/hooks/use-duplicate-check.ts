@@ -39,7 +39,8 @@ export function useDuplicateCheck(
       }
     }
 
-    for (const url of feedUrls ?? []) {
+    const uniqueUrls = [...new Set(feedUrls ?? [])];
+    for (const url of uniqueUrls) {
       const match = others.find((p) => p.feedUrls.includes(url));
       if (match) {
         conflicts.push({

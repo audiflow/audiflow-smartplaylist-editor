@@ -139,7 +139,7 @@ fn validate_cross_pattern_uniqueness(patterns_dir: &Path) -> anyhow::Result<u32>
 fn load_pattern_metas(patterns_dir: &Path) -> anyhow::Result<Vec<PatternMeta>> {
     let mut metas: Vec<PatternMeta> = Vec::new();
 
-    let dirs: Vec<PathBuf> = match std::fs::read_dir(patterns_dir) {
+    let mut dirs: Vec<PathBuf> = match std::fs::read_dir(patterns_dir) {
         Ok(entries) => entries
             .filter_map(|e| e.ok())
             .map(|e| e.path())
@@ -147,6 +147,7 @@ fn load_pattern_metas(patterns_dir: &Path) -> anyhow::Result<Vec<PatternMeta>> {
             .collect(),
         Err(_) => return Ok(metas),
     };
+    dirs.sort();
 
     for dir in &dirs {
         let meta_path = dir.join("meta.json");

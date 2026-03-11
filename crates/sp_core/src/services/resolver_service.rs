@@ -71,7 +71,7 @@ impl CompiledFilters {
 
     fn matches(&self, episode: &dyn EpisodeData) -> bool {
         let require_ok = self.require.is_empty()
-            || self.require.iter().any(|f| f.matches(episode));
+            || self.require.iter().all(|f| f.matches(episode));
         let exclude_ok = self.exclude.is_empty()
             || !self.exclude.iter().any(|f| f.matches(episode));
         require_ok && exclude_ok

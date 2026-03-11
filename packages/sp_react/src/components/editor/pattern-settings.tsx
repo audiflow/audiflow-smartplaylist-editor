@@ -142,7 +142,7 @@ function DuplicateWarning({ conflict }: { conflict: DuplicateConflict }) {
     <p className="flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
       <TriangleAlert className="h-3.5 w-3.5 shrink-0" />
       <span>
-        {message}
+        {message}{' '}
         <Link
           to="/editor/$id"
           params={{ id: conflict.claimedBy }}

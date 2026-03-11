@@ -3,6 +3,7 @@ use axum::Json;
 use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
+use crate::services::local_config_repository::Error as RepoError;
 use sp_core::models::{PatternMeta, PlaylistDefinition};
 use sp_core::schema::SchemaType;
 use sp_core::services::check_uniqueness;
@@ -462,7 +463,8 @@ fn check_cross_pattern_uniqueness(
         }
         match state.config_repo.get_pattern_meta(&summary.id) {
             Ok(meta) => others.push(meta),
-            Err(_) => continue,
+            Err(RepoError::NotFound(_)) => continue,
+            Err(e) => return Err(e.into()),
         }
     }
 

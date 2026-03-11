@@ -438,13 +438,13 @@ mod filter_semantics {
     }
 
     #[test]
-    fn require_or_semantics_any_entry_matches() {
-        // Two require entries: title matches "alpha" OR title matches "beta"
-        // Episode matching either one should pass.
+    fn require_and_semantics_all_entries_must_match() {
+        // Two require entries: title matches "alpha" AND title matches "episode"
+        // Only episodes matching ALL entries pass.
         let episodes = vec![
             ep(1, "alpha episode"),
             ep(2, "beta episode"),
-            ep(3, "gamma episode"),
+            ep(3, "alpha standalone"),
         ];
 
         let require = Some(vec![
@@ -453,15 +453,15 @@ mod filter_semantics {
                 description: None,
             },
             EpisodeFilterEntry {
-                title: Some("beta".to_string()),
+                title: Some("episode".to_string()),
                 description: None,
             },
         ]);
 
         let ids = filtered_ids(require, None, &episodes);
-        assert!(ids.contains(&1), "alpha should pass require OR");
-        assert!(ids.contains(&2), "beta should pass require OR");
-        assert!(!ids.contains(&3), "gamma should not pass require");
+        assert!(ids.contains(&1), "alpha episode matches both entries");
+        assert!(!ids.contains(&2), "beta episode only matches second entry");
+        assert!(!ids.contains(&3), "alpha standalone only matches first entry");
     }
 
     #[test]
@@ -504,21 +504,21 @@ mod filter_semantics {
 
     #[test]
     fn require_and_exclude_combined() {
-        // require: alpha OR beta; exclude: beta
-        // Only alpha should survive.
+        // require: title contains "special" AND "episode"; exclude: "beta"
+        // Only episodes matching all require entries and no exclude entries pass.
         let episodes = vec![
-            ep(1, "alpha episode"),
-            ep(2, "beta episode"),
+            ep(1, "special alpha episode"),
+            ep(2, "special beta episode"),
             ep(3, "gamma episode"),
         ];
 
         let require = Some(vec![
             EpisodeFilterEntry {
-                title: Some("alpha".to_string()),
+                title: Some("special".to_string()),
                 description: None,
             },
             EpisodeFilterEntry {
-                title: Some("beta".to_string()),
+                title: Some("episode".to_string()),
                 description: None,
             },
         ]);
@@ -528,9 +528,9 @@ mod filter_semantics {
         }]);
 
         let ids = filtered_ids(require, exclude, &episodes);
-        assert!(ids.contains(&1), "alpha passes require and not excluded");
-        assert!(!ids.contains(&2), "beta passes require but is excluded");
-        assert!(!ids.contains(&3), "gamma fails require");
+        assert!(ids.contains(&1), "special alpha episode passes all require and not excluded");
+        assert!(!ids.contains(&2), "special beta episode passes require but is excluded");
+        assert!(!ids.contains(&3), "gamma episode only matches second require entry");
     }
 }
 

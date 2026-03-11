@@ -40,16 +40,22 @@ fn find_feed_url_conflicts(
     candidate: &PatternMeta,
     others: &[PatternMeta],
 ) -> Vec<UniquenessConflict> {
-    candidate.feed_urls.iter().filter_map(|url| {
-        others.iter().find_map(|other| {
-            (other.id != candidate.id && other.feed_urls.contains(url))
-                .then(|| UniquenessConflict {
-                    field: "feedUrls",
-                    value: url.clone(),
-                    claimed_by: other.id.clone(),
-                })
+    let mut seen = std::collections::HashSet::new();
+    candidate
+        .feed_urls
+        .iter()
+        .filter(|url| seen.insert(url.as_str()))
+        .filter_map(|url| {
+            others.iter().find_map(|other| {
+                (other.id != candidate.id && other.feed_urls.contains(url))
+                    .then(|| UniquenessConflict {
+                        field: "feedUrls",
+                        value: url.clone(),
+                        claimed_by: other.id.clone(),
+                    })
+            })
         })
-    }).collect()
+        .collect()
 }
 
 /// Checks that the given pattern's `podcastGuid` and `feedUrls` do not
