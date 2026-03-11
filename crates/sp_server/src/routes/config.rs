@@ -3,8 +3,10 @@ use axum::Json;
 use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
-use sp_core::models::PlaylistDefinition;
+use crate::services::local_config_repository::Error as RepoError;
+use sp_core::models::{PatternMeta, PlaylistDefinition};
 use sp_core::schema::SchemaType;
+use sp_core::services::check_uniqueness;
 
 /// GET /api/configs/patterns -- returns pattern summaries.
 pub async fn list_patterns(
@@ -65,6 +67,11 @@ pub async fn create_pattern(
             errors.join("; ")
         )));
     }
+
+    // Check cross-pattern uniqueness (podcastGuid, feedUrls).
+    let candidate: PatternMeta = serde_json::from_value(meta_with_version.clone())
+        .map_err(|e| AppError::bad_request(format!("Invalid pattern meta: {e}")))?;
+    check_cross_pattern_uniqueness(&state, &candidate, None)?;
 
     state.config_repo.create_pattern(&id, &meta_with_version)?;
 
@@ -189,6 +196,11 @@ pub async fn update_pattern_meta(
             errors.join("; ")
         )));
     }
+
+    // Check cross-pattern uniqueness (podcastGuid, feedUrls).
+    let candidate: PatternMeta = serde_json::from_value(existing.clone())
+        .map_err(|e| AppError::internal(format!("Pattern meta deserialization error: {e}")))?;
+    check_cross_pattern_uniqueness(&state, &candidate, Some(&id))?;
 
     state.config_repo.save_pattern_meta(&id, &existing)?;
 
@@ -435,6 +447,34 @@ fn sync_root_meta(
 
     state.config_repo.save_root_meta(&root_meta)?;
     Ok(())
+}
+
+/// Loads all pattern metas except `exclude_id` and checks for uniqueness conflicts.
+fn check_cross_pattern_uniqueness(
+    state: &SharedState,
+    candidate: &PatternMeta,
+    exclude_id: Option<&str>,
+) -> Result<(), AppError> {
+    let summaries = state.config_repo.list_patterns()?;
+    let mut others = Vec::new();
+    for summary in &summaries {
+        if exclude_id == Some(summary.id.as_str()) {
+            continue;
+        }
+        match state.config_repo.get_pattern_meta(&summary.id) {
+            Ok(meta) => others.push(meta),
+            Err(RepoError::NotFound(_)) => continue,
+            Err(e) => return Err(e.into()),
+        }
+    }
+
+    let conflicts = check_uniqueness(candidate, &others);
+    if conflicts.is_empty() {
+        return Ok(());
+    }
+
+    let messages: Vec<String> = conflicts.iter().map(|c| c.to_string()).collect();
+    Err(AppError::conflict(messages.join("; ")))
 }
 
 fn feed_url_hint(meta: &Value) -> String {

@@ -1,6 +1,8 @@
 use std::path::{Path, PathBuf};
 
+use sp_core::models::PatternMeta;
 use sp_core::schema::{SchemaType, Validator};
+use sp_core::services::check_uniqueness;
 
 use crate::config_walker;
 
@@ -34,6 +36,8 @@ fn validate_all(patterns_dir: &Path, validator: &Validator) -> anyhow::Result<i3
         error_count += validate_file(path, schema_type, validator)?;
         Ok(())
     })?;
+
+    error_count += validate_cross_pattern_uniqueness(patterns_dir)?;
 
     println!("Validated {file_count} file(s).");
     if 0 < error_count {
@@ -109,4 +113,52 @@ fn validate_file(
 
     let count = errors.len() as u32;
     Ok(count)
+}
+
+/// Loads every pattern meta.json and checks for cross-pattern uniqueness
+/// conflicts (duplicate podcastGuid or feedUrls).
+/// Returns the number of conflicts found.
+fn validate_cross_pattern_uniqueness(patterns_dir: &Path) -> anyhow::Result<u32> {
+    let metas = load_pattern_metas(patterns_dir)?;
+
+    let mut conflict_count = 0u32;
+    for i in 1..metas.len() {
+        let candidate = &metas[i];
+        let others = &metas[..i];
+        let conflicts = check_uniqueness(candidate, others);
+        for conflict in &conflicts {
+            println!("  FAIL: pattern \"{}\" -- {conflict}", candidate.id);
+            conflict_count += 1;
+        }
+    }
+
+    Ok(conflict_count)
+}
+
+/// Reads pattern meta.json files from subdirectories of patterns_dir.
+fn load_pattern_metas(patterns_dir: &Path) -> anyhow::Result<Vec<PatternMeta>> {
+    let mut metas: Vec<PatternMeta> = Vec::new();
+
+    let mut dirs: Vec<PathBuf> = match std::fs::read_dir(patterns_dir) {
+        Ok(entries) => entries
+            .filter_map(|e| e.ok())
+            .map(|e| e.path())
+            .filter(|p| p.is_dir())
+            .collect(),
+        Err(_) => return Ok(metas),
+    };
+    dirs.sort();
+
+    for dir in &dirs {
+        let meta_path = dir.join("meta.json");
+        if !meta_path.exists() {
+            continue;
+        }
+        let content = std::fs::read_to_string(&meta_path)?;
+        if let Ok(meta) = serde_json::from_str::<PatternMeta>(&content) {
+            metas.push(meta);
+        }
+    }
+
+    Ok(metas)
 }

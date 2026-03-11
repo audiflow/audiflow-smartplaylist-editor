@@ -20,6 +20,14 @@ export const patternMetaSchema = z.object({
   playlists: z.array(z.string()),
 });
 
+export const patternIdentifiersSchema = z.object({
+  id: z.string(),
+  podcastGuid: z.string().nullish(),
+  feedUrls: z.array(z.string()),
+});
+
+export type PatternIdentifiers = z.infer<typeof patternIdentifiersSchema>;
+
 // -- Feed episodes --
 
 export const feedEpisodeSchema = z.object({

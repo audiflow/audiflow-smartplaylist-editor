@@ -1,221 +1,141 @@
 # audiflow-smartplaylist-editor
 
-Local-first web editor and MCP server for managing [audiflow](https://github.com/reedom/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser-based UI, preview resolver results against live RSS feeds, and save changes directly to your local data repo clone.
+Local web editor for managing [audiflow](https://github.com/reedom/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser UI, preview resolver results against live RSS feeds, and save changes directly to your local data repo clone.
 
-## Architecture
+## Quick Start
 
-Dart workspace with three Dart packages plus a React SPA:
+### Prerequisites
 
-```
-audiflow-smartplaylist-editor/
-├── packages/
-│   ├── sp_shared/     # Domain models, resolvers, schema, services (pure Dart)
-│   ├── sp_server/     # Local API server (shelf)
-│   └── sp_react/      # React SPA web editor
-└── mcp_server/        # MCP server for Claude integration
-```
-
-| Package | Role | Stack |
-|---------|------|-------|
-| `sp_shared` | Shared domain layer: models, resolvers, JSON schema validation, disk feed cache | Pure Dart |
-| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching, SSE | Dart, shelf |
-| `sp_react` | Web editor UI: pattern browsing, config editing, live preview | React 19, TanStack, Zustand, shadcn/ui |
-| `mcp_server` | Exposes smart playlist operations as MCP tools for Claude | Dart, JSON-RPC 2.0 over stdio |
-
-### How It Works
-
-Both the web server and MCP server read/write config files directly on disk. No authentication, no remote API calls for config operations.
-
-```
-Browser (sp_react)          sp_server (Dart)              MCP server (Dart)
-   |                           |                              |
-   |<--- HTTP REST API ------->|                              |
-   |<--- SSE (file changes) ---|                              |
-   |                           |                              |
-   |                     local data repo directory
-   |                     +-- schema/schema.json
-   |                     +-- patterns/meta.json
-   |                     +-- patterns/{id}/meta.json
-   |                     +-- patterns/{id}/playlists/{pid}.json
-   |                     +-- .cache/feeds/          (gitignored)
-   |                           |                              |
-   |                           |--- reads/writes/watches ---->|
-   |                           |                              |
-   |                           |<---- reads/writes -----------|
-   |                           |                              |
-                          localhost:8080              stdio JSON-RPC
-```
-
-### Ecosystem
-
-This repo is part of a three-repo ecosystem:
-
-```
-User clones data repo locally
-                |
-                v
-audiflow-smartplaylist-editor              Local data repo clone         GitHub (remote)
-(this repo)                 read/write  (on user's machine)  push    (source of truth)
-sp_server + sp_react  <───────────────>  JSON files on disk  ──────>  origin/main
-mcp_server            <───────────────>
-                                                              CI
-                                                              ──────>  GitHub Pages / GCS
-                                                                          ^
-                                                                          |
-                                                                       audiflow app fetches
-```
-
-- **[audiflow-smartplaylist](https://github.com/reedom/audiflow-smartplaylist)**: Production config data (JSON on GitHub, synced to GitHub Pages)
-- **[audiflow-smartplaylist-dev](https://github.com/reedom/audiflow-smartplaylist-dev)**: Dev config data (synced to GCS)
-- **[audiflow](https://github.com/reedom/audiflow)**: Flutter mobile app that consumes configs from hosting
-
-Users manage git operations (commit, push, PR) themselves.
-
-## Prerequisites
-
-- [Dart SDK](https://dart.dev/get-dart) 3.10+
+- [Rust](https://www.rust-lang.org/tools/install) (edition 2024)
 - [Node.js](https://nodejs.org/) 22+
 - [pnpm](https://pnpm.io/) 10+
 
-## Setup
+### Setup
+
+1. Clone this repo and a data repo side by side:
 
 ```bash
-# Install all dependencies (Dart + React)
-make setup
-
-# Or manually:
-dart pub get
-cd packages/sp_react && pnpm install
+git clone https://github.com/reedom/audiflow-smartplaylist-editor.git
+git clone https://github.com/reedom/audiflow-smartplaylist.git     # production data
+# or
+git clone https://github.com/reedom/audiflow-smartplaylist-dev.git # dev data
 ```
 
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SP_DATA_DIR` | CWD | Path to a cloned data repo. If unset, auto-detects from current working directory |
-| `PORT` | `8080` | Server listen port |
-| `WEB_ROOT` | `public` | Directory containing the built React SPA |
-| `SP_FEED_CACHE_TTL` | `3600` | Feed cache TTL in seconds |
-| `SP_LOG_LEVEL` | `info` | Log verbosity: `info` (method/path/status) or `debug` (also logs request/response bodies for write operations and errors) |
-
-## Development
-
-Clone a data repo alongside this project, then start the server:
+2. Install dependencies:
 
 ```bash
-# Start both sp_server (port 8080) and React dev server
+cd audiflow-smartplaylist-editor
+make deps
+```
+
+3. Start the editor:
+
+```bash
 make dev
-
-# Or with a custom data directory:
-DATA_DIR=/path/to/audiflow-smartplaylist make dev
-
-# Or run them separately:
-make server                      # Backend API only
-cd packages/sp_react && pnpm dev # React SPA only
 ```
 
-The data directory defaults to `../audiflow-smartplaylist` relative to this project root. Override it with `DATA_DIR` in Make or `SP_DATA_DIR` as an env var.
+This launches the API server on port 8080 and the React dev server. Open the URL shown by Vite in your browser.
 
-## Testing
+The data directory defaults to `../audiflow-smartplaylist`. Override with:
 
 ```bash
-make test          # Run all tests (sp_shared, sp_server, mcp_server, sp_react)
-
-make test-shared   # sp_shared only
-make test-server   # sp_server only
-make test-react    # sp_react only (vitest)
-make test-mcp      # mcp_server only
+DATA_DIR=/path/to/your/data-repo make dev
 ```
 
-## Quality Checks
+### Docker
 
 ```bash
-make analyze       # Static analysis (dart analyze + TypeScript type check)
-make lint          # Linters (dart analyze + oxlint)
-make format        # Format all Dart files
-make format-check  # Check formatting without applying
+docker build -t audiflow-editor .
+docker run -p 8080:8080 -v /path/to/data-repo:/data audiflow-editor
 ```
 
-## MCP Server
+## How It Works
 
-The MCP server exposes smart playlist operations as tools for Claude via the [Model Context Protocol](https://modelcontextprotocol.io/). It reads and writes config files directly on the local filesystem and communicates over stdio using JSON-RPC 2.0.
+The editor reads and writes JSON config files in your locally cloned data repo. You manage git operations (commit, push, PR) yourself.
 
-### Available Tools
-
-| Tool | Description |
-|------|-------------|
-| `search_configs` | Search SmartPlaylist configs by keyword |
-| `get_config` | Get a specific config by ID |
-| `get_schema` | Retrieve JSON Schema for configs |
-| `fetch_feed` | Fetch and parse a podcast RSS feed (disk-cached) |
-| `validate_config` | Validate a config against JSON Schema |
-| `preview_config` | Preview how a config resolves episodes from a feed |
-| `submit_config` | Save a config to disk (validates first) |
-
-### Running Standalone
-
-```bash
-# Run from a data repo directory:
-cd /path/to/audiflow-smartplaylist && dart run /path/to/mcp_server/bin/mcp_server.dart
-
-# Or with SP_DATA_DIR:
-SP_DATA_DIR=/path/to/audiflow-smartplaylist dart run mcp_server/bin/mcp_server.dart
+```
+Browser (sp_react)          API server (Rust/axum)
+   |                           |
+   |<--- HTTP REST API ------->|
+   |<--- SSE (file changes) ---|
+   |                           |
+                         local data repo directory
+                         +-- patterns/meta.json
+                         +-- patterns/{id}/meta.json
+                         +-- patterns/{id}/playlists/{pid}.json
+                         +-- .cache/feeds/          (gitignored)
 ```
 
-### Connecting from Claude Code
+Changes you make in the editor are written to disk immediately. The browser receives live updates via SSE when files change on disk.
 
-Add the following to your Claude Code MCP settings (`.claude/mcp.json` or project-level):
+## Ecosystem
 
-```json
-{
-  "mcpServers": {
-    "audiflow-smartplaylist": {
-      "type": "stdio",
-      "command": "dart",
-      "args": ["run", "mcp_server/bin/mcp_server.dart"],
-      "cwd": "/path/to/audiflow-smartplaylist-editor",
-      "env": {
-        "SP_DATA_DIR": "/path/to/audiflow-smartplaylist"
-      }
-    }
-  }
-}
+This repo is part of a three-repo ecosystem:
+
+| Repo | Role |
+|------|------|
+| [audiflow-smartplaylist](https://github.com/reedom/audiflow-smartplaylist) | Production config data (GitHub Pages) |
+| [audiflow-smartplaylist-dev](https://github.com/reedom/audiflow-smartplaylist-dev) | Dev config data (GCS) |
+| [audiflow](https://github.com/reedom/audiflow) | Flutter mobile app that fetches configs |
+
+```
+editor  <--read/write-->  local data repo  --push-->  GitHub  --CI-->  hosting
+                                                                         ^
+                                                                    audiflow app
 ```
 
-### Connecting from Claude Desktop
+## CLI Commands
 
-Add the following to `claude_desktop_config.json`:
+The binary `audiflow-editor` provides three subcommands:
 
-```json
-{
-  "mcpServers": {
-    "audiflow-smartplaylist": {
-      "command": "dart",
-      "args": ["run", "mcp_server/bin/mcp_server.dart"],
-      "cwd": "/path/to/audiflow-smartplaylist-editor",
-      "env": {
-        "SP_DATA_DIR": "/path/to/audiflow-smartplaylist"
-      }
-    }
-  }
-}
+| Command | Description |
+|---------|-------------|
+| `serve` | Start the web editor server (`--data-dir`, `--host`, `--port`, `--static-dir`) |
+| `validate` | Validate config files against JSON schema |
+| `format` | Format/normalize config JSON (`--check` for CI) |
+
+## Project Structure
+
+```
+audiflow-smartplaylist-editor/
+├── crates/
+│   ├── sp_core/       # Domain models, resolvers, schema validation (pure Rust)
+│   ├── sp_server/     # API server (axum, tokio, SSE, feed caching)
+│   └── sp_cli/        # CLI binary (serve, validate, format)
+└── packages/
+    └── sp_react/      # React SPA (TanStack, Zustand, shadcn/ui, CodeMirror)
 ```
 
-## Split Config Structure
+## Config File Structure
 
-Configs are stored as a three-level file hierarchy in the data repos:
+Configs are stored as a three-level file hierarchy in data repos:
 
 ```
 patterns/
-  meta.json                             # Root: version + pattern summaries
+  meta.json                        # Root: version + pattern summaries
   {patternId}/
-    meta.json                           # Pattern: feedUrls, playlistIds, flags
+    meta.json                      # Pattern: feedUrls, playlistIds, flags
     playlists/
-      {playlistId}.json                 # SmartPlaylistDefinition
+      {playlistId}.json            # Playlist definition
 ```
 
-The canonical JSON Schema lives at `schema/schema.json` inside each data repo.
+The canonical JSON Schema files live in `crates/sp_core/assets/`.
+
+## Development
+
+```bash
+make dev          # Start server + React dev server
+make dev-server   # Backend only
+make dev-ui       # Frontend only
+make test         # Run all tests (Rust + React)
+make lint         # clippy + oxlint + tsc
+make build        # Build React SPA + Rust release binary
+make validate     # Validate configs against schema
+make format-check # Check JSON formatting
+```
+
+See `make help` for the full list.
 
 ## License
 
-Private.
+MIT

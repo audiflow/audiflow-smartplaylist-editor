@@ -12,10 +12,10 @@ import {
   episodeSortFieldSchema,
 } from '../config-schema';
 
-// Load vendored playlist-definition.schema.json from sp_shared
+// Load canonical playlist-definition.schema.json from sp_core
 const schemaPath = resolve(
   __dirname,
-  '../../../../sp_shared/assets/playlist-definition.schema.json',
+  '../../../../../crates/sp_core/assets/playlist-definition.schema.json',
 );
 const schemaJson = JSON.parse(readFileSync(schemaPath, 'utf-8'));
 const defs = schemaJson.$defs as Record<string, Record<string, unknown>>;

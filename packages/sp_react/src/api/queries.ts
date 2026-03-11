@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useApiClient } from './client-context.ts';
 import type {
   PatternSummary,
+  PatternIdentifiers,
   FeedEpisode,
   PreviewResult,
 } from '../schemas/api-schema.ts';
@@ -12,6 +13,18 @@ export function usePatterns() {
   return useQuery({
     queryKey: ['patterns'],
     queryFn: () => client.get<PatternSummary[]>('/api/configs/patterns'),
+  });
+}
+
+export function usePatternIdentifiers() {
+  const client = useApiClient();
+  return useQuery({
+    queryKey: ['patternIdentifiers'],
+    queryFn: () =>
+      client.get<PatternIdentifiers[]>(
+        '/api/configs/patterns/identifiers',
+      ),
+    staleTime: 60 * 1000,
   });
 }
 
@@ -85,6 +98,7 @@ export function useSavePatternMeta() {
         queryKey: ['assembledConfig', variables.patternId],
       });
       void queryClient.invalidateQueries({ queryKey: ['patterns'] });
+      void queryClient.invalidateQueries({ queryKey: ['patternIdentifiers'] });
     },
   });
 }
@@ -97,6 +111,7 @@ export function useCreatePattern() {
       client.post<void>('/api/configs/patterns', params.data),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['patterns'] });
+      void queryClient.invalidateQueries({ queryKey: ['patternIdentifiers'] });
     },
   });
 }
@@ -125,6 +140,7 @@ export function useDeletePattern() {
       client.delete<void>(`/api/configs/patterns/${patternId}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['patterns'] });
+      void queryClient.invalidateQueries({ queryKey: ['patternIdentifiers'] });
     },
   });
 }

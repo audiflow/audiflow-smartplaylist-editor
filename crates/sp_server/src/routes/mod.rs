@@ -2,6 +2,7 @@ pub mod config;
 pub mod events;
 pub mod feed;
 pub mod health;
+pub mod identifiers;
 pub mod preview;
 pub mod schema;
 
@@ -32,6 +33,10 @@ pub fn create_router(state: SharedState) -> Router {
         .route(
             "/configs/patterns",
             get(config::list_patterns).post(config::create_pattern),
+        )
+        .route(
+            "/configs/patterns/identifiers",
+            get(identifiers::list_pattern_identifiers),
         )
         .route(
             "/configs/patterns/{id}",

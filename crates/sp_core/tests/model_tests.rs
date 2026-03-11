@@ -370,6 +370,170 @@ fn has_filters_none() {
     assert!(!def.has_filters());
 }
 
+// --- CompiledFilters OR semantics ---
+
+/// Helper: build a minimal resolver service + config and run filter_episodes
+/// to test require/exclude OR semantics end-to-end through ResolverService.
+mod filter_semantics {
+    use chrono::{TimeZone, Utc};
+    use sp_core::models::*;
+    use sp_core::services::resolver_service::ResolverService;
+
+    fn ep(id: i64, title: &str) -> SimpleEpisodeData {
+        SimpleEpisodeData {
+            id,
+            title: title.to_string(),
+            description: None,
+            season_number: None,
+            episode_number: None,
+            published_at: Some(Utc.with_ymd_and_hms(2025, 1, 1, 0, 0, 0).unwrap()),
+            image_url: None,
+        }
+    }
+
+    /// Build a config with one definition that has the given filters, then
+    /// resolve and return which episode IDs survived filtering.
+    fn filtered_ids(
+        require: Option<Vec<EpisodeFilterEntry>>,
+        exclude: Option<Vec<EpisodeFilterEntry>>,
+        episodes: &[SimpleEpisodeData],
+    ) -> Vec<i64> {
+        let definition = PlaylistDefinition {
+            id: "test".to_string(),
+            display_name: "Test".to_string(),
+            resolver_type: "year".to_string(),
+            playlist_structure: "split".to_string(),
+            priority: 0,
+            episode_filters: Some(EpisodeFilters { require, exclude }),
+            null_season_group_key: None,
+            title_extractor: None,
+            prepend_season_number: false,
+            group_list: None,
+            episode_list: None,
+            episode_extractor: None,
+            groups: None,
+        };
+
+        let config = PatternConfig {
+            id: "p".to_string(),
+            podcast_guid: None,
+            feed_urls: Some(vec!["https://example.com/feed".to_string()]),
+            year_grouped_episodes: false,
+            playlists: vec![definition],
+        };
+
+        let resolvers: Vec<Box<dyn sp_core::resolvers::Resolver>> =
+            vec![Box::new(sp_core::resolvers::YearResolver)];
+        let service = ResolverService::new(resolvers, vec![config]);
+
+        let ep_refs: Vec<&dyn EpisodeData> = episodes.iter().map(|e| e as &dyn EpisodeData).collect();
+        match service.resolve_smart_playlists(None, "https://example.com/feed", &ep_refs) {
+            Some(grouping) => {
+                let mut ids: Vec<i64> = grouping.playlists.iter().flat_map(|p| &p.episode_ids).copied().collect();
+                ids.sort();
+                ids
+            }
+            None => vec![],
+        }
+    }
+
+    #[test]
+    fn require_and_semantics_all_entries_must_match() {
+        // Two require entries: title matches "alpha" AND title matches "episode"
+        // Only episodes matching ALL entries pass.
+        let episodes = vec![
+            ep(1, "alpha episode"),
+            ep(2, "beta episode"),
+            ep(3, "alpha standalone"),
+        ];
+
+        let require = Some(vec![
+            EpisodeFilterEntry {
+                title: Some("alpha".to_string()),
+                description: None,
+            },
+            EpisodeFilterEntry {
+                title: Some("episode".to_string()),
+                description: None,
+            },
+        ]);
+
+        let ids = filtered_ids(require, None, &episodes);
+        assert!(ids.contains(&1), "alpha episode matches both entries");
+        assert!(!ids.contains(&2), "beta episode only matches second entry");
+        assert!(!ids.contains(&3), "alpha standalone only matches first entry");
+    }
+
+    #[test]
+    fn require_no_match_excludes_episode() {
+        let episodes = vec![ep(1, "unrelated title")];
+
+        let require = Some(vec![EpisodeFilterEntry {
+            title: Some("alpha".to_string()),
+            description: None,
+        }]);
+
+        let ids = filtered_ids(require, None, &episodes);
+        assert!(ids.is_empty(), "episode matching no require entry should be excluded");
+    }
+
+    #[test]
+    fn exclude_or_semantics_any_entry_rejects() {
+        let episodes = vec![
+            ep(1, "alpha episode"),
+            ep(2, "beta episode"),
+            ep(3, "gamma episode"),
+        ];
+
+        let exclude = Some(vec![
+            EpisodeFilterEntry {
+                title: Some("alpha".to_string()),
+                description: None,
+            },
+            EpisodeFilterEntry {
+                title: Some("beta".to_string()),
+                description: None,
+            },
+        ]);
+
+        let ids = filtered_ids(None, exclude, &episodes);
+        assert!(!ids.contains(&1), "alpha should be excluded");
+        assert!(!ids.contains(&2), "beta should be excluded");
+        assert!(ids.contains(&3), "gamma should survive");
+    }
+
+    #[test]
+    fn require_and_exclude_combined() {
+        // require: title contains "special" AND "episode"; exclude: "beta"
+        // Only episodes matching all require entries and no exclude entries pass.
+        let episodes = vec![
+            ep(1, "special alpha episode"),
+            ep(2, "special beta episode"),
+            ep(3, "gamma episode"),
+        ];
+
+        let require = Some(vec![
+            EpisodeFilterEntry {
+                title: Some("special".to_string()),
+                description: None,
+            },
+            EpisodeFilterEntry {
+                title: Some("episode".to_string()),
+                description: None,
+            },
+        ]);
+        let exclude = Some(vec![EpisodeFilterEntry {
+            title: Some("beta".to_string()),
+            description: None,
+        }]);
+
+        let ids = filtered_ids(require, exclude, &episodes);
+        assert!(ids.contains(&1), "special alpha episode passes all require and not excluded");
+        assert!(!ids.contains(&2), "special beta episode passes require but is excluded");
+        assert!(!ids.contains(&3), "gamma episode only matches second require entry");
+    }
+}
+
 // --- PatternConfig::matches_podcast() ---
 
 #[test]
