@@ -13,10 +13,13 @@ function compareByField(
 ): number {
   switch (field) {
     case 'publishedAt': {
-      const aVal = a.publishedAt ?? '';
-      const bVal = b.publishedAt ?? '';
-      if (aVal < bVal) return -1;
-      if (bVal < aVal) return 1;
+      const aHas = a.publishedAt != null;
+      const bHas = b.publishedAt != null;
+      // Tiered: episodes with dates sort before those without (matching Rust backend)
+      if (aHas !== bHas) return aHas ? -1 : 1;
+      if (!aHas) return 0;
+      if (a.publishedAt! < b.publishedAt!) return -1;
+      if (b.publishedAt! < a.publishedAt!) return 1;
       return 0;
     }
     case 'episodeNumber': {

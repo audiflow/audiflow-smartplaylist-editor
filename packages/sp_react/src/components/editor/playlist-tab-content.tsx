@@ -54,7 +54,7 @@ export function PlaylistTabContent({
     if (!groupDefs) return map;
     for (const g of groupDefs) {
       const override = g?.display?.yearBinding as YearBinding | undefined;
-      if (override && override !== 'none' && g?.id) {
+      if (override !== undefined && g?.id) {
         map.set(g.id, override);
       }
     }
