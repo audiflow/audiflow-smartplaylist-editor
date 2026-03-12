@@ -113,4 +113,60 @@ describe('groupByYear', () => {
     expect(result[0].year).toBe(2025);
     expect(result[1].year).toBe(2024);
   });
+
+  describe('per-group overrides', () => {
+    it('applies splitByYear override to specific group while others use playlist default', () => {
+      const groups = [
+        makeGroup('g1', [ep2024a, ep2025a]),
+        makeGroup('g2', [ep2024b, ep2025b]),
+      ];
+      const overrides = new Map([['g2', 'splitByYear' as const]]);
+      const result = groupByYear(groups, 'pinToYear', overrides)!;
+
+      // g1 pinToYear -> pinned to 2024 (first episode year)
+      // g2 splitByYear -> split into 2024 and 2025
+      const y2024 = result.find((y) => y.year === 2024)!;
+      expect(y2024.entries).toHaveLength(2);
+      const g1Entry = y2024.entries.find((e) => e.group.id === 'g1')!;
+      expect(g1Entry.episodeCount).toBe(2);
+      expect(g1Entry.filteredEpisodes).toBeUndefined();
+      const g2In2024 = y2024.entries.find((e) => e.group.id === 'g2')!;
+      expect(g2In2024.episodeCount).toBe(1);
+      expect(g2In2024.filteredEpisodes).toEqual([ep2024b]);
+
+      const y2025 = result.find((y) => y.year === 2025)!;
+      expect(y2025.entries).toHaveLength(1);
+      expect(y2025.entries[0].group.id).toBe('g2');
+      expect(y2025.entries[0].episodeCount).toBe(1);
+    });
+
+    it('treats none-mode groups as pinToYear in mixed context', () => {
+      const groups = [
+        makeGroup('g1', [ep2024a, ep2025a]),
+        makeGroup('g2', [ep2025a, ep2025b]),
+      ];
+      const overrides = new Map([['g2', 'splitByYear' as const]]);
+      const result = groupByYear(groups, 'none', overrides)!;
+
+      // g1 has effective 'none' but in mixed context -> pinToYear
+      const y2024 = result.find((y) => y.year === 2024)!;
+      expect(y2024.entries).toHaveLength(1);
+      expect(y2024.entries[0].group.id).toBe('g1');
+      expect(y2024.entries[0].episodeCount).toBe(2);
+    });
+
+    it('returns null when all effective modes are none', () => {
+      const groups = [makeGroup('g1', [ep2024a])];
+      const overrides = new Map<string, 'none' | 'pinToYear' | 'splitByYear'>();
+      expect(groupByYear(groups, 'none', overrides)).toBeNull();
+    });
+
+    it('ignores empty overrides map and uses default mode', () => {
+      const groups = [makeGroup('g1', [ep2024a, ep2025a])];
+      const overrides = new Map<string, 'none' | 'pinToYear' | 'splitByYear'>();
+      const result = groupByYear(groups, 'splitByYear', overrides)!;
+      // Empty map -> falls through to normal splitByYear
+      expect(result).toHaveLength(2);
+    });
+  });
 });

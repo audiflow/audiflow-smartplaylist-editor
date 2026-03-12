@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type {
   PreviewPlaylist,
@@ -14,17 +15,25 @@ import {
 import { Badge } from '@/components/ui/badge.tsx';
 import { groupByYear } from '@/components/preview/year-group-utils.ts';
 import type { YearGroupEntry } from '@/components/preview/year-group-utils.ts';
+import { sortEpisodes } from '@/components/preview/episode-sort-utils.ts';
+import type { EpisodeSortRule } from '@/components/preview/episode-sort-utils.ts';
 
 interface PlaylistTreeProps {
   playlists: PreviewPlaylist[];
   prependSeasonNumber?: boolean;
   yearBinding?: YearBinding;
+  /** Per-group yearBinding overrides keyed by group id. */
+  groupYearBindingOverrides?: ReadonlyMap<string, YearBinding>;
+  /** Per-group episode sort rules keyed by group id. Playlist-level default uses key '_default'. */
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
 }
 
 export function PlaylistTree({
   playlists,
   prependSeasonNumber = false,
   yearBinding = 'none',
+  groupYearBindingOverrides,
+  episodeSortRules,
 }: PlaylistTreeProps) {
   const { t } = useTranslation('preview');
 
@@ -37,6 +46,8 @@ export function PlaylistTree({
               groups={playlist.groups}
               prependSeasonNumber={prependSeasonNumber}
               yearBinding={yearBinding}
+              groupYearBindingOverrides={groupYearBindingOverrides}
+              episodeSortRules={episodeSortRules}
             />
           ) : (
             <p className="text-sm text-muted-foreground py-2">{t('noGroups')}</p>
@@ -51,15 +62,19 @@ function YearAwareGroupList({
   groups,
   prependSeasonNumber,
   yearBinding,
+  groupYearBindingOverrides,
+  episodeSortRules,
 }: {
   groups: PreviewGroup[];
   prependSeasonNumber: boolean;
   yearBinding: YearBinding;
+  groupYearBindingOverrides?: ReadonlyMap<string, YearBinding>;
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
 }) {
-  const yearSections = groupByYear(groups, yearBinding);
+  const yearSections = groupByYear(groups, yearBinding, groupYearBindingOverrides);
 
   if (!yearSections) {
-    return <GroupList groups={groups} prependSeasonNumber={prependSeasonNumber} />;
+    return <GroupList groups={groups} prependSeasonNumber={prependSeasonNumber} episodeSortRules={episodeSortRules} />;
   }
 
   return (
@@ -70,6 +85,7 @@ function YearAwareGroupList({
           year={section.year}
           entries={section.entries}
           prependSeasonNumber={prependSeasonNumber}
+          episodeSortRules={episodeSortRules}
         />
       ))}
     </div>
@@ -80,10 +96,12 @@ function YearSection({
   year,
   entries,
   prependSeasonNumber,
+  episodeSortRules,
 }: {
   year: number;
   entries: YearGroupEntry[];
   prependSeasonNumber: boolean;
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
 }) {
   const { t } = useTranslation('preview');
 
@@ -94,7 +112,7 @@ function YearSection({
           {year === 0 ? t('yearUnknown') : t('yearHeader', { year })}
         </span>
       </div>
-      <YearGroupEntryList entries={entries} prependSeasonNumber={prependSeasonNumber} />
+      <YearGroupEntryList entries={entries} prependSeasonNumber={prependSeasonNumber} episodeSortRules={episodeSortRules} />
     </div>
   );
 }
@@ -102,9 +120,11 @@ function YearSection({
 function YearGroupEntryList({
   entries,
   prependSeasonNumber,
+  episodeSortRules,
 }: {
   entries: YearGroupEntry[];
   prependSeasonNumber: boolean;
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
 }) {
   const { t } = useTranslation('preview');
 
@@ -121,7 +141,11 @@ function YearGroupEntryList({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <EpisodeList episodes={entry.filteredEpisodes ?? entry.group.episodes} />
+            <SortedEpisodeList
+              groupId={entry.group.id}
+              episodes={entry.filteredEpisodes ?? entry.group.episodes}
+              episodeSortRules={episodeSortRules}
+            />
           </AccordionContent>
         </AccordionItem>
       ))}
@@ -136,7 +160,15 @@ function formatGroupName(group: PreviewGroup, prependSeasonNumber: boolean): str
   return group.displayName;
 }
 
-function GroupList({ groups, prependSeasonNumber }: { groups: PreviewGroup[]; prependSeasonNumber: boolean }) {
+function GroupList({
+  groups,
+  prependSeasonNumber,
+  episodeSortRules,
+}: {
+  groups: PreviewGroup[];
+  prependSeasonNumber: boolean;
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
+}) {
   const { t } = useTranslation('preview');
 
   return (
@@ -152,12 +184,34 @@ function GroupList({ groups, prependSeasonNumber }: { groups: PreviewGroup[]; pr
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <EpisodeList episodes={group.episodes} />
+            <SortedEpisodeList
+              groupId={group.id}
+              episodes={group.episodes}
+              episodeSortRules={episodeSortRules}
+            />
           </AccordionContent>
         </AccordionItem>
       ))}
     </Accordion>
   );
+}
+
+/** Resolves per-group or playlist-default sort rule and sorts episodes. */
+function SortedEpisodeList({
+  groupId,
+  episodes,
+  episodeSortRules,
+}: {
+  groupId: string;
+  episodes: PreviewEpisode[];
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
+}) {
+  const rule = episodeSortRules?.get(groupId) ?? episodeSortRules?.get('_default');
+  const sorted = useMemo(
+    () => (rule ? sortEpisodes(episodes, rule) : episodes),
+    [episodes, rule],
+  );
+  return <EpisodeList episodes={sorted} />;
 }
 
 function EpisodeList({ episodes }: { episodes: PreviewEpisode[] }) {
