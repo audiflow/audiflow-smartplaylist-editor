@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import type {
@@ -6,6 +7,7 @@ import type {
   PreviewDebug,
 } from '@/schemas/api-schema.ts';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
+import type { EpisodeSortRule } from '@/components/preview/episode-sort-utils.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
@@ -44,6 +46,35 @@ export function PlaylistTabContent({
   const { watch } = useFormContext<PatternConfig>();
   const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
   const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
+  const groupDefs = watch(`playlists.${index}.groups`);
+  const defaultSortField = watch(`playlists.${index}.episodeList.sort.field`);
+  const defaultSortOrder = watch(`playlists.${index}.episodeList.sort.order`);
+  const groupYearBindingOverrides = useMemo(() => {
+    const map = new Map<string, YearBinding>();
+    if (!groupDefs) return map;
+    for (const g of groupDefs) {
+      const override = g?.display?.yearBinding as YearBinding | undefined;
+      if (override !== undefined && g?.id) {
+        map.set(g.id, override);
+      }
+    }
+    return map;
+  }, [groupDefs]);
+  const episodeSortRules = useMemo(() => {
+    const map = new Map<string, EpisodeSortRule>();
+    if (defaultSortField && defaultSortOrder) {
+      map.set('_default', { field: defaultSortField, order: defaultSortOrder });
+    }
+    if (groupDefs) {
+      for (const g of groupDefs) {
+        const sort = g?.episodeList?.sort;
+        if (sort?.field && sort?.order && g?.id) {
+          map.set(g.id, { field: sort.field, order: sort.order });
+        }
+      }
+    }
+    return map;
+  }, [defaultSortField, defaultSortOrder, groupDefs]);
 
   const claimedCount = previewPlaylist?.claimedByOthers?.length ?? 0;
   const ungroupedCount = ungroupedEpisodes.length;
@@ -109,7 +140,7 @@ export function PlaylistTabContent({
                   )}
                 </TabsList>
                 <TabsContent value="groups">
-                  <PlaylistTree playlists={[previewPlaylist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} />
+                  <PlaylistTree playlists={[previewPlaylist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
                 </TabsContent>
                 <TabsContent value="ungrouped">
                   {0 < ungroupedCount ? (

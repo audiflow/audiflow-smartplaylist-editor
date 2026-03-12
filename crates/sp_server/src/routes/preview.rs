@@ -6,8 +6,8 @@ use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
 use sp_core::models::{
-    EpisodeData, PatternConfig, Playlist, PlaylistGroup, PlaylistPreviewResult, PreviewGrouping,
-    SimpleEpisodeData,
+    EpisodeData, EpisodeExtractor, PatternConfig, Playlist, PlaylistGroup, PlaylistPreviewResult,
+    PreviewGrouping, SimpleEpisodeData,
 };
 use sp_core::resolvers::{CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver};
 use sp_core::services::ResolverService;
@@ -102,7 +102,9 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
     let episode_by_id: HashMap<i64, &SimpleEpisodeData> =
         episodes.iter().map(|e| (e.id, e)).collect();
 
-    // Pre-compute extracted display names per definition
+    // Pre-compute per-definition enriched episodes (extracted season/episode numbers)
+    // and extracted display names so preview serialization reflects what the resolver saw.
+    let enriched_episodes = compute_enriched_episodes(config, episodes, &result);
     let extracted_display_names = compute_extracted_display_names(config, episodes);
 
     let grouped_ids = collect_grouped_ids(&result);
@@ -118,10 +120,12 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
         .playlist_results
         .iter()
         .map(|pr| {
+            let enriched_by_id = enriched_episodes.get(&pr.definition_id);
             serialize_preview_result(
                 pr,
                 result.resolver_type.as_str(),
                 &episode_by_id,
+                enriched_by_id,
                 extracted_display_names.get(&pr.definition_id),
             )
         })
@@ -146,6 +150,127 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
             "excludedEpisodes": excluded_episodes.len(),
         },
     })
+}
+
+/// Applies each definition's episode extractor (and group-level extractors)
+/// to produce enriched episodes with extracted season/episode numbers,
+/// keyed by definition id then episode id.
+///
+/// Definition-level extractors apply to all episodes first.
+/// Group-level extractors apply only to their group's episodes and
+/// override any definition-level enrichment.
+fn compute_enriched_episodes(
+    config: &PatternConfig,
+    episodes: &[SimpleEpisodeData],
+    preview: &PreviewGrouping,
+) -> HashMap<String, HashMap<i64, SimpleEpisodeData>> {
+    // Build a lookup from definition_id -> (group_id -> set of episode IDs)
+    let group_episode_ids: HashMap<&str, HashMap<&str, HashSet<i64>>> = preview
+        .playlist_results
+        .iter()
+        .map(|pr| {
+            let groups: HashMap<&str, HashSet<i64>> = pr
+                .playlist
+                .groups
+                .as_ref()
+                .map(|gs| {
+                    gs.iter()
+                        .map(|g| (g.id.as_str(), g.episode_ids.iter().copied().collect()))
+                        .collect()
+                })
+                .unwrap_or_default();
+            (pr.definition_id.as_str(), groups)
+        })
+        .collect();
+
+    let mut result = HashMap::new();
+    for definition in &config.playlists {
+        let mut map = HashMap::new();
+
+        // Definition-level extractor: applies to all episodes (skip already-enriched)
+        if let Some(ext) = &definition.episode_extractor {
+            enrich_with_extractor(ext, episodes, &mut map, false);
+        }
+
+        // Group-level extractors: scoped to that group's resolved episodes,
+        // overwriting any definition-level entry
+        if let Some(groups) = &definition.groups
+            && let Some(def_groups) = group_episode_ids.get(definition.id.as_str())
+        {
+            for group in groups {
+                if let Some(ext) = &group.episode_extractor
+                    && let Some(ep_ids) = def_groups.get(group.id.as_str())
+                {
+                    let group_episodes: Vec<&SimpleEpisodeData> = episodes
+                        .iter()
+                        .filter(|e| ep_ids.contains(&e.id))
+                        .collect();
+                    enrich_group_episodes(ext, &group_episodes, &mut map);
+                }
+            }
+        }
+
+        if !map.is_empty() {
+            result.insert(definition.id.clone(), map);
+        }
+    }
+    result
+}
+
+fn enrich_with_extractor(
+    extractor: &EpisodeExtractor,
+    episodes: &[SimpleEpisodeData],
+    map: &mut HashMap<i64, SimpleEpisodeData>,
+    allow_overwrite: bool,
+) {
+    let compiled = extractor.compile();
+    for ep in episodes {
+        if !allow_overwrite && map.contains_key(&ep.id) {
+            continue;
+        }
+        let r = compiled.extract(ep);
+        if r.has_values() {
+            map.insert(
+                ep.id,
+                SimpleEpisodeData {
+                    id: ep.id,
+                    title: ep.title.clone(),
+                    description: ep.description.clone(),
+                    season_number: r.season_number.or(ep.season_number),
+                    episode_number: r.episode_number.or(ep.episode_number),
+                    published_at: ep.published_at,
+                    image_url: ep.image_url.clone(),
+                },
+            );
+        }
+    }
+}
+
+/// Like `enrich_with_extractor` but takes a pre-filtered slice of episode
+/// references and always overwrites existing entries.
+fn enrich_group_episodes(
+    extractor: &EpisodeExtractor,
+    episodes: &[&SimpleEpisodeData],
+    map: &mut HashMap<i64, SimpleEpisodeData>,
+) {
+    let compiled = extractor.compile();
+    for ep in episodes {
+        let r = compiled.extract(*ep);
+        if r.has_values() {
+            map.insert(
+                ep.id,
+                SimpleEpisodeData {
+                    id: ep.id,
+                    title: ep.title.clone(),
+                    description: ep.description.clone(),
+                    season_number: r.season_number.or(ep.season_number),
+                    episode_number: r.episode_number.or(ep.episode_number),
+                    published_at: ep.published_at,
+                    image_url: ep.image_url.clone(),
+                },
+            );
+        }
+    }
 }
 
 /// Computes display names per definition using per-definition enriched
@@ -223,12 +348,14 @@ fn serialize_preview_result(
     pr: &PlaylistPreviewResult,
     resolver_type: &str,
     episode_by_id: &HashMap<i64, &SimpleEpisodeData>,
+    enriched_by_id: Option<&HashMap<i64, SimpleEpisodeData>>,
     extracted_names: Option<&HashMap<i64, String>>,
 ) -> Value {
     let mut base = serialize_playlist(
         &pr.playlist,
         resolver_type,
         episode_by_id,
+        enriched_by_id,
         extracted_names,
     );
 
@@ -270,6 +397,7 @@ fn serialize_playlist(
     playlist: &Playlist,
     resolver_type: &str,
     episode_by_id: &HashMap<i64, &SimpleEpisodeData>,
+    enriched_by_id: Option<&HashMap<i64, SimpleEpisodeData>>,
     extracted_names: Option<&HashMap<i64, String>>,
 ) -> Value {
     let mut obj = serde_json::json!({
@@ -284,7 +412,7 @@ fn serialize_playlist(
     if let Some(groups) = &playlist.groups {
         let groups_json: Vec<Value> = groups
             .iter()
-            .map(|g| serialize_group(g, episode_by_id, extracted_names))
+            .map(|g| serialize_group(g, episode_by_id, enriched_by_id, extracted_names))
             .collect();
         obj["groups"] = Value::Array(groups_json);
     }
@@ -295,13 +423,17 @@ fn serialize_playlist(
 fn serialize_group(
     group: &PlaylistGroup,
     episode_by_id: &HashMap<i64, &SimpleEpisodeData>,
+    enriched_by_id: Option<&HashMap<i64, SimpleEpisodeData>>,
     extracted_names: Option<&HashMap<i64, String>>,
 ) -> Value {
     let episodes_json: Vec<Value> = group
         .episode_ids
         .iter()
         .filter_map(|id| {
-            let ep = episode_by_id.get(id)?;
+            // Use enriched episode (with extracted season/episode numbers) if available
+            let ep: &SimpleEpisodeData = enriched_by_id
+                .and_then(|m| m.get(id))
+                .or_else(|| episode_by_id.get(id).copied())?;
             let name = extracted_names.and_then(|m| m.get(id)).map(|s| s.as_str());
             Some(serialize_episode(ep, name))
         })
