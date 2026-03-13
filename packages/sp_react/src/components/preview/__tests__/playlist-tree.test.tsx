@@ -52,17 +52,14 @@ function makePlaylist(
 }
 
 /** Clicks all accordion triggers to expand content, then returns episode titles in DOM order. */
-async function expandAndGetEpisodeTitles(container: HTMLElement): Promise<string[]> {
+async function expandAllAndGetEpisodeTitles(): Promise<string[]> {
   const user = userEvent.setup();
-  const triggers = container.querySelectorAll<HTMLButtonElement>('[data-slot="accordion-trigger"]');
+  const triggers = screen.getAllByRole('button', { expanded: false });
   for (const trigger of triggers) {
     await user.click(trigger);
   }
-  const items = container.querySelectorAll('li');
-  return Array.from(items).map((li) => {
-    const span = li.querySelector('span.truncate');
-    return span?.textContent ?? '';
-  });
+  const items = screen.getAllByRole('listitem');
+  return items.map((li) => li.firstElementChild?.textContent ?? '');
 }
 
 // Shared episodes
@@ -92,8 +89,8 @@ describe('PlaylistTree', () => {
         makeGroup('g1', [ep2024b, ep2025a, ep2024a]),
       ]);
 
-      const { container } = render(<PlaylistTree playlists={[playlist]} />);
-      const titles = await expandAndGetEpisodeTitles(container);
+      render(<PlaylistTree playlists={[playlist]} />);
+      const titles = await expandAllAndGetEpisodeTitles();
       expect(titles).toEqual(['Beta', 'Charlie', 'Alpha']);
     });
 
@@ -114,10 +111,10 @@ describe('PlaylistTree', () => {
         ['g1', { field: 'episodeNumber', order: 'descending' }],
       ]);
 
-      const { container } = render(
+      render(
         <PlaylistTree playlists={[playlist]} episodeSortRules={rules} />,
       );
-      const titles = await expandAndGetEpisodeTitles(container);
+      const titles = await expandAllAndGetEpisodeTitles();
       // episodeNumbers: Alpha=3, Beta=1, Charlie=2 -> descending: 3,2,1
       expect(titles).toEqual(['Alpha', 'Charlie', 'Beta']);
     });
@@ -125,20 +122,20 @@ describe('PlaylistTree', () => {
     it('uses _default rule for groups without a specific rule', async () => {
       const playlist = makePlaylist('p1', [
         makeGroup('g1', [ep2024a, ep2024b, ep2025a]),
-        makeGroup('g2', [ep2025b, ep2025a]),
+        makeGroup('g2', [ep2025a, ep2025b]),
       ]);
       const rules = new Map<string, EpisodeSortRule>([
         ['g1', { field: 'episodeNumber', order: 'ascending' }],
         ['_default', { field: 'publishedAt', order: 'descending' }],
       ]);
 
-      const { container } = render(
+      render(
         <PlaylistTree playlists={[playlist]} episodeSortRules={rules} />,
       );
 
       // g1: episodeNumber ascending: Beta(1), Charlie(2), Alpha(3)
-      // g2: _default publishedAt descending: Delta(2025-06), Charlie(2025-01)
-      const titles = await expandAndGetEpisodeTitles(container);
+      // g2: input [Charlie, Delta], _default publishedAt descending reorders to: Delta(2025-06), Charlie(2025-01)
+      const titles = await expandAllAndGetEpisodeTitles();
       expect(titles).toEqual(['Beta', 'Charlie', 'Alpha', 'Delta', 'Charlie']);
     });
 
@@ -147,8 +144,8 @@ describe('PlaylistTree', () => {
         makeGroup('g1', [ep2025a, ep2024a, ep2024b]),
       ]);
 
-      const { container } = render(<PlaylistTree playlists={[playlist]} />);
-      const titles = await expandAndGetEpisodeTitles(container);
+      render(<PlaylistTree playlists={[playlist]} />);
+      const titles = await expandAllAndGetEpisodeTitles();
       expect(titles).toEqual(['Charlie', 'Alpha', 'Beta']);
     });
   });
@@ -162,7 +159,7 @@ describe('PlaylistTree', () => {
         ['_default', { field: 'episodeNumber', order: 'ascending' }],
       ]);
 
-      const { container } = render(
+      render(
         <PlaylistTree
           playlists={[playlist]}
           yearBinding="splitByYear"
@@ -175,7 +172,7 @@ describe('PlaylistTree', () => {
       expect(yearHeaders.map((el) => el.textContent)).toEqual(['2025', '2024']);
 
       // Expand all accordions to reveal episode content
-      const titles = await expandAndGetEpisodeTitles(container);
+      const titles = await expandAllAndGetEpisodeTitles();
       // 2025 section: Charlie(epNum=2), Delta(epNum=4) -> ascending: Charlie, Delta
       // 2024 section: Alpha(epNum=3), Beta(epNum=1) -> ascending: Beta, Alpha
       expect(titles).toEqual(['Charlie', 'Delta', 'Beta', 'Alpha']);
@@ -187,7 +184,7 @@ describe('PlaylistTree', () => {
         makeGroup('g1', [epNoDate]),
       ]);
 
-      const { container } = render(
+      render(
         <PlaylistTree playlists={[playlist]} yearBinding="splitByYear" />,
       );
 
@@ -195,7 +192,7 @@ describe('PlaylistTree', () => {
 
       // Expand accordion to see episode content
       const user = userEvent.setup();
-      const trigger = container.querySelector<HTMLButtonElement>('[data-slot="accordion-trigger"]')!;
+      const trigger = screen.getByRole('button', { expanded: false });
       await user.click(trigger);
 
       expect(screen.getByText('Timeless')).toBeInTheDocument();
@@ -227,7 +224,7 @@ describe('PlaylistTree', () => {
 
       // g1 splitByYear: appears in both 2025 and 2024 year sections
       const groupOneElements = screen.getAllByText('Group One');
-      expect(2 <= groupOneElements.length).toBe(true);
+      expect(groupOneElements).toHaveLength(2);
 
       // g2 pinToYear: pinned to 2024 (first episode year), appears once
       const groupTwoElements = screen.getAllByText('Group Two');
