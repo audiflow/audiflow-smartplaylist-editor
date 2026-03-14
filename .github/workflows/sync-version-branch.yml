@@ -14,11 +14,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fast-forward v2 to main
+      - name: Detect schema version
+        id: version
         run: |
-          git fetch origin v2
-          if git merge-base --is-ancestor origin/v2 origin/main; then
-            git push origin origin/main:refs/heads/v2
+          version=$(python3 -c "
+          import json, re, sys
+          with open('crates/sp_core/assets/playlist-definition.schema.json') as f:
+              id_url = json.load(f)['\$id']
+          m = re.search(r'/v(\d+)/', id_url)
+          if not m:
+              print('::error::Cannot parse version from schema \$id', file=sys.stderr)
+              sys.exit(1)
+          print(m.group(0).strip('/'))
+          ")
+          echo "branch=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Fast-forward version branch
+        run: |
+          BRANCH="${{ steps.version.outputs.branch }}"
+          git fetch origin "$BRANCH" 2>/dev/null || { echo "::warning::Branch $BRANCH does not exist — skipping"; exit 0; }
+          if git merge-base --is-ancestor "origin/$BRANCH" origin/main; then
+            git push origin "origin/main:refs/heads/$BRANCH"
           else
-            echo "::warning::v2 has diverged from main — skipping fast-forward"
+            echo "::warning::$BRANCH has diverged from main — skipping fast-forward"
           fi
