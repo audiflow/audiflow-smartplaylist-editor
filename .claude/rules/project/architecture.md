@@ -1,3 +1,7 @@
+---
+paths: crates/**/*.rs, packages/**/*.{ts,tsx}, Cargo.toml, package.json
+---
+
 # Architecture
 
 Rust workspace with three crates plus a React SPA.

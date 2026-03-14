@@ -1,0 +1,63 @@
+# Overview
+
+## Purpose
+
+audiflow-smartplaylist-editor is a local-first web editor for creating and managing
+smart playlist configurations used by the audiflow podcast app. It consists of a Rust
+backend (API server + domain logic + CLI) and a React frontend. The editor reads and
+writes JSON config files in a locally cloned data repository; users handle git
+operations (commit, push, PR) themselves.
+
+## Responsibilities
+
+- Provide a web UI for browsing, creating, editing, and previewing smart playlist configs
+- Define and enforce JSON Schema for all config files (three schemas)
+- Implement episode resolver logic that groups episodes into playlists
+- Serve a local API for config CRUD, RSS feed fetching/caching, and live preview
+- Provide CLI tools for validation (`validate`), formatting (`format`), and serving (`serve`)
+- Watch the local data directory for external changes and notify the browser via SSE
+
+## Non-responsibilities
+
+- Hosting or deploying config data (owned by data repo CI pipelines)
+- Managing git operations on data repos (user responsibility)
+- Mobile app playback, caching, or UI (owned by `audiflow` Flutter app)
+- Production or staging data content (owned by `audiflow-smartplaylist` and `audiflow-smartplaylist-dev`)
+
+## Main concepts
+
+- **Pattern**: A podcast-specific configuration identified by a unique ID. Contains feed URLs, flags, and playlist definitions.
+- **Playlist definition**: A JSON config describing how episodes are grouped, filtered, sorted, and displayed.
+- **Resolver**: A strategy that groups episodes into playlists. Types: `rss`, `category`, `year`, `titleAppearanceOrder`.
+- **Split config**: The three-level file hierarchy (`patterns/meta.json` -> `{id}/meta.json` -> `{id}/playlists/{pid}.json`).
+- **Schema**: Three JSON Schema files in `crates/sp_core/assets/` that validate each level of the split config.
+- **Claiming**: Higher-priority playlist definitions claim episodes during preview, preventing duplicates in lower-priority definitions.
+- **Data repo**: A git repository containing JSON config files (e.g., `audiflow-smartplaylist` for production).
+
+## Primary entry points
+
+- `crates/sp_cli/src/main.rs`: CLI binary entry point (`serve`, `validate`, `format` subcommands)
+- `crates/sp_server/src/app.rs`: Axum router and app state construction
+- `crates/sp_core/src/lib.rs`: Domain library root (models, resolvers, schema, services)
+- `packages/sp_react/src/`: React SPA root (Vite + TanStack Router)
+
+## Key dependencies
+
+- **Rust**: serde, jsonschema, axum 0.8, tokio, reqwest, feed-rs, notify 7, clap, rust-embed, chrono, regex
+- **React**: React 19, TanStack Query/Router, Zustand, React Hook Form, Zod 4, CodeMirror 6, Tailwind v4, shadcn/ui, dnd-kit, i18next
+
+## Read next
+
+- docs/architecture/system-overview.md
+- docs/architecture/module-boundaries.md
+- docs/integration/editor-to-schema.md
+- docs/integration/smartplaylist-contract.md
+- docs/development/change-workflow.md
+
+## When to update
+
+Update this document when:
+- Repository purpose or scope changes
+- New crates or packages are added to the workspace
+- Major dependencies are added or removed
+- Responsibility boundaries shift between this repo and siblings
