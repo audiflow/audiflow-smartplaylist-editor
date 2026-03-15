@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: ["v[0-9]*"]
+    branches: [main]
 
 jobs:
   version:
@@ -10,16 +10,10 @@ jobs:
     outputs:
       semver: ${{ steps.parse.outputs.semver }}
       major: ${{ steps.parse.outputs.major }}
+      branch: ${{ steps.parse.outputs.branch }}
     steps:
-      - name: Validate branch name
-        run: |
-          branch="${GITHUB_REF#refs/heads/}"
-          if ! [[ "$branch" =~ ^v[0-9]+$ ]]; then
-            echo "::error::Branch '$branch' is not a valid version-channel branch (expected v followed by one or more digits, e.g. v2, v10)"
-            exit 1
-          fi
       - uses: actions/checkout@v4
-      - name: Parse version from Cargo.toml
+      - name: Parse version and schema info
         id: parse
         run: |
           semver=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
@@ -28,8 +22,42 @@ jobs:
             echo "::error::Failed to parse version from Cargo.toml (semver='$semver', major='$major')"
             exit 1
           fi
+
+          branch=$(python3 -c "
+          import json, re, sys
+          with open('crates/sp_core/assets/playlist-definition.schema.json') as f:
+              id_url = json.load(f)['\$id']
+          m = re.search(r'/v(\d+)/', id_url)
+          if not m:
+              print('::error::Cannot parse version from schema \$id', file=sys.stderr)
+              sys.exit(1)
+          print(m.group(0).strip('/'))
+          ")
+
           echo "semver=$semver" >> "$GITHUB_OUTPUT"
           echo "major=$major" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+  sync:
+    needs: version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward version branch
+        env:
+          BRANCH: ${{ needs.version.outputs.branch }}
+        run: |
+          git fetch origin "$BRANCH" 2>/dev/null || { echo "::warning::Branch $BRANCH does not exist — skipping"; exit 0; }
+          if git merge-base --is-ancestor "origin/$BRANCH" origin/main; then
+            git push origin "origin/main:refs/heads/$BRANCH"
+          else
+            echo "::warning::$BRANCH has diverged from main — skipping fast-forward"
+          fi
 
   build:
     needs: version
