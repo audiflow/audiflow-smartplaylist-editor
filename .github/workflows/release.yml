@@ -1,13 +1,27 @@
 name: Release
+
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version (e.g. 0.1.0)'
-        required: true
+  push:
+    branches: ["v[0-9]+"]
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.parse.outputs.semver }}
+      major: ${{ steps.parse.outputs.major }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse version from Cargo.toml
+        id: parse
+        run: |
+          semver=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          major=$(echo "$semver" | cut -d. -f1)
+          echo "semver=$semver" >> "$GITHUB_OUTPUT"
+          echo "major=$major" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: version
     strategy:
       matrix:
         include:
@@ -53,7 +67,7 @@ jobs:
           path: audiflow-editor-*
 
   release:
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -62,9 +76,37 @@ jobs:
         with:
           pattern: binary-*
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: v${{ github.event.inputs.version }}
-          files: audiflow-editor-*
-          generate_release_notes: true
+
+      - name: Create immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SEMVER: ${{ needs.version.outputs.semver }}
+        run: |
+          TAG="v${SEMVER}"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping immutable release"
+          else
+            gh release create "$TAG" audiflow-editor-* \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TAG" \
+              --generate-notes
+          fi
+
+      - name: Update mutable major-version release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SEMVER: ${{ needs.version.outputs.semver }}
+          MAJOR: ${{ needs.version.outputs.major }}
+        run: |
+          TAG="v${MAJOR}"
+
+          # Delete existing mutable release and tag if present
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes 2>/dev/null || true
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}" 2>/dev/null || true
+
+          # Create mutable release pointing at the same commit
+          gh release create "$TAG" audiflow-editor-* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$TAG (latest v${MAJOR}.x)" \
+            --notes "Mutable tag tracking the latest v${MAJOR}.x release (currently v${SEMVER})." \
+            --target "$GITHUB_SHA"
