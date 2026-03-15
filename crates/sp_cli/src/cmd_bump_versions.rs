@@ -148,6 +148,95 @@ fn apply_root_bump(
     Ok(new_root_version)
 }
 
+#[derive(serde::Serialize)]
+struct BumpResult {
+    pattern_id: String,
+    previous_version: i32,
+    new_version: i32,
+}
+
+#[derive(serde::Serialize)]
+struct BumpSummary {
+    changed_patterns: usize,
+    root_version: i32,
+    bumps: Vec<BumpResult>,
+}
+
+/// Entry point for the `bump-versions` subcommand.
+///
+/// Detects changed patterns via `git diff`, loads previous versions,
+/// computes bumps, and writes updated `dataVersion` fields to disk.
+pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result<i32> {
+    let patterns_path = std::path::PathBuf::from(patterns_dir);
+    if !patterns_path.join("meta.json").exists() {
+        anyhow::bail!("No meta.json found in {patterns_dir}");
+    }
+
+    let patterns_dir_name = patterns_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("patterns");
+
+    let diff_output = git_diff_names(previous_ref, &patterns_path)?;
+    let changed_ids = extract_changed_pattern_ids(&diff_output, patterns_dir_name);
+
+    if changed_ids.is_empty() {
+        if json {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&BumpSummary {
+                    changed_patterns: 0,
+                    root_version: 0,
+                    bumps: vec![],
+                })?
+            );
+        } else {
+            eprintln!("No pattern changes detected.");
+        }
+        return Ok(0);
+    }
+
+    let previous_versions =
+        load_previous_versions(previous_ref, &changed_ids, patterns_dir_name)?;
+    let bumps = compute_version_bumps(&changed_ids, &previous_versions);
+
+    apply_pattern_bumps(&patterns_path, &bumps)?;
+    let new_root_version =
+        apply_root_bump(&patterns_path, &bumps, previous_ref, patterns_dir_name)?;
+
+    let results: Vec<BumpResult> = changed_ids
+        .iter()
+        .map(|id| BumpResult {
+            pattern_id: id.clone(),
+            previous_version: *previous_versions.get(id).unwrap_or(&0),
+            new_version: *bumps.get(id).unwrap_or(&1),
+        })
+        .collect();
+
+    if json {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&BumpSummary {
+                changed_patterns: results.len(),
+                root_version: new_root_version,
+                bumps: results,
+            })?
+        );
+    } else {
+        eprintln!("Detecting changes from {previous_ref}...");
+        for r in &results {
+            eprintln!(
+                "  {}: version {} -> {}",
+                r.pattern_id, r.previous_version, r.new_version
+            );
+        }
+        eprintln!("  Root meta: version -> {new_root_version}");
+        eprintln!("Version bump complete.");
+    }
+
+    Ok(0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
