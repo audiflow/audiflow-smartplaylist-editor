@@ -1,8 +1,42 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use sp_core::models::PatternMeta;
+
+/// Validates that a string is safe to use as a single path segment.
+/// Rejects empty strings, `.`, `..`, and strings containing `/`, `\`, or null bytes.
+fn validate_path_segment(segment: &str) -> anyhow::Result<()> {
+    if segment.is_empty()
+        || segment == "."
+        || segment == ".."
+        || segment.contains('/')
+        || segment.contains('\\')
+        || segment.contains('\0')
+    {
+        anyhow::bail!("Invalid path segment: {segment:?}");
+    }
+    Ok(())
+}
+
+/// Computes the repo-relative path for a given directory by querying
+/// `git rev-parse --show-toplevel` and stripping the prefix.
+fn repo_relative_path(path: &Path) -> anyhow::Result<String> {
+    let output = Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .map_err(|e| anyhow::anyhow!("Failed to run git rev-parse: {e}"))?;
+    if !output.status.success() {
+        anyhow::bail!("Not a git repository");
+    }
+    let toplevel = PathBuf::from(String::from_utf8_lossy(&output.stdout).trim());
+    let abs_path = std::fs::canonicalize(path)
+        .map_err(|e| anyhow::anyhow!("Failed to resolve {}: {e}", path.display()))?;
+    let relative = abs_path
+        .strip_prefix(&toplevel)
+        .map_err(|_| anyhow::anyhow!("{} is not inside the git repository", path.display()))?;
+    Ok(relative.to_string_lossy().to_string())
+}
 
 /// Runs `git diff --name-only` against a previous ref, scoped to the patterns directory.
 fn git_diff_names(previous_ref: &str, patterns_dir: &Path) -> anyhow::Result<String> {
@@ -32,7 +66,8 @@ fn git_show_file(previous_ref: &str, file_path: &str) -> anyhow::Result<Option<S
 }
 
 /// Loads the previous `dataVersion` for each changed pattern by reading
-/// its `meta.json` from the given git ref.
+/// its `meta.json` from the given git ref. Returns an error if the file
+/// exists at the ref but cannot be parsed.
 fn load_previous_versions(
     previous_ref: &str,
     changed_ids: &[String],
@@ -41,9 +76,9 @@ fn load_previous_versions(
     let mut versions = HashMap::new();
     for id in changed_ids {
         let path = format!("{patterns_dir_name}/{id}/meta.json");
-        if let Some(content) = git_show_file(previous_ref, &path)?
-            && let Ok(meta) = serde_json::from_str::<PatternMeta>(&content)
-        {
+        if let Some(content) = git_show_file(previous_ref, &path)? {
+            let meta: PatternMeta = serde_json::from_str(&content)
+                .map_err(|e| anyhow::anyhow!("Failed to parse {previous_ref}:{path}: {e}"))?;
             versions.insert(id.clone(), meta.data_version);
         }
     }
@@ -90,12 +125,16 @@ fn compute_version_bumps(
 }
 
 /// Writes updated `dataVersion` into each changed pattern's `meta.json`.
+/// Skips patterns whose `meta.json` no longer exists on disk (deleted patterns).
 fn apply_pattern_bumps(
     patterns_dir: &Path,
     bumps: &HashMap<String, i32>,
 ) -> anyhow::Result<()> {
     for (id, new_version) in bumps {
         let meta_path = patterns_dir.join(id).join("meta.json");
+        if !meta_path.exists() {
+            continue;
+        }
         let content = std::fs::read_to_string(&meta_path)
             .map_err(|e| anyhow::anyhow!("Failed to read {}: {e}", meta_path.display()))?;
         let mut value: serde_json::Value = serde_json::from_str(&content)?;
@@ -135,10 +174,22 @@ fn apply_root_bump(
                 pattern["dataVersion"] = serde_json::json!(new_version);
             }
             let meta_path = patterns_dir.join(&id).join("meta.json");
-            if let Ok(meta_content) = std::fs::read_to_string(&meta_path)
-                && let Ok(meta) = serde_json::from_str::<PatternMeta>(&meta_content)
-            {
-                pattern["playlistCount"] = serde_json::json!(meta.playlists.len());
+            if meta_path.exists() {
+                match std::fs::read_to_string(&meta_path)
+                    .map_err(anyhow::Error::from)
+                    .and_then(|c| {
+                        serde_json::from_str::<PatternMeta>(&c).map_err(Into::into)
+                    }) {
+                    Ok(meta) => {
+                        pattern["playlistCount"] = serde_json::json!(meta.playlists.len());
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "Warning: failed to read {}: {e}",
+                            meta_path.display()
+                        );
+                    }
+                }
             }
         }
     }
@@ -172,13 +223,21 @@ pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result
         anyhow::bail!("No meta.json found in {patterns_dir}");
     }
 
-    let patterns_dir_name = patterns_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("patterns");
+    let patterns_dir_name = repo_relative_path(&patterns_path)?;
 
     let diff_output = git_diff_names(previous_ref, &patterns_path)?;
-    let changed_ids = extract_changed_pattern_ids(&diff_output, patterns_dir_name);
+    let changed_ids = extract_changed_pattern_ids(&diff_output, &patterns_dir_name);
+
+    // Validate path segments to prevent directory traversal
+    for id in &changed_ids {
+        validate_path_segment(id)?;
+    }
+
+    // Filter out deleted patterns whose meta.json no longer exists on disk
+    let changed_ids: Vec<String> = changed_ids
+        .into_iter()
+        .filter(|id| patterns_path.join(id).join("meta.json").exists())
+        .collect();
 
     if changed_ids.is_empty() {
         if json {
@@ -197,12 +256,12 @@ pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result
     }
 
     let previous_versions =
-        load_previous_versions(previous_ref, &changed_ids, patterns_dir_name)?;
+        load_previous_versions(previous_ref, &changed_ids, &patterns_dir_name)?;
     let bumps = compute_version_bumps(&changed_ids, &previous_versions);
 
     apply_pattern_bumps(&patterns_path, &bumps)?;
     let new_root_version =
-        apply_root_bump(&patterns_path, &bumps, previous_ref, patterns_dir_name)?;
+        apply_root_bump(&patterns_path, &bumps, previous_ref, &patterns_dir_name)?;
 
     let results: Vec<BumpResult> = changed_ids
         .iter()
@@ -285,6 +344,22 @@ mod tests {
         let changed = vec!["new_pattern".into()];
         let result = compute_version_bumps(&changed, &previous);
         assert_eq!(result.get("new_pattern"), Some(&1));
+    }
+
+    #[test]
+    fn validates_safe_path_segments() {
+        assert!(validate_path_segment("coten_radio").is_ok());
+        assert!(validate_path_segment("my-show").is_ok());
+    }
+
+    #[test]
+    fn rejects_path_traversal_segments() {
+        assert!(validate_path_segment("..").is_err());
+        assert!(validate_path_segment(".").is_err());
+        assert!(validate_path_segment("").is_err());
+        assert!(validate_path_segment("foo/bar").is_err());
+        assert!(validate_path_segment("foo\\bar").is_err());
+        assert!(validate_path_segment("foo\0bar").is_err());
     }
 
     #[test]
@@ -379,5 +454,109 @@ mod tests {
         prev.insert("show_a".into(), 1);
         let bumps = compute_version_bumps(&changed, &prev);
         assert_eq!(bumps.get("show_a"), Some(&2));
+    }
+
+    #[test]
+    fn integration_run_bumps_versions_on_disk() {
+        use std::process::Command;
+        use tempfile::TempDir;
+
+        let tmp = TempDir::new().unwrap();
+        let repo = tmp.path();
+
+        // Init git repo
+        Command::new("git")
+            .args(["init"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["config", "user.email", "test@test.com"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["config", "user.name", "Test"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+
+        let patterns = repo.join("patterns");
+        std::fs::create_dir_all(patterns.join("show_a/playlists")).unwrap();
+
+        std::fs::write(
+            patterns.join("meta.json"),
+            r#"{"dataVersion": 1, "schemaVersion": 2, "patterns": [{"id": "show_a", "dataVersion": 1, "displayName": "Show A", "feedUrlHint": "https://example.com", "playlistCount": 1}]}"#,
+        )
+        .unwrap();
+
+        std::fs::write(
+            patterns.join("show_a/meta.json"),
+            r#"{"dataVersion": 1, "id": "show_a", "feedUrls": ["https://example.com"], "playlists": ["main", "bonus"]}"#,
+        )
+        .unwrap();
+
+        std::fs::write(
+            patterns.join("show_a/playlists/main.json"),
+            r#"{"resolverType": "category"}"#,
+        )
+        .unwrap();
+
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "init"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+
+        // Make a change
+        std::fs::write(
+            patterns.join("show_a/playlists/main.json"),
+            r#"{"resolverType": "rss"}"#,
+        )
+        .unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "update"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+
+        // Save current dir and change to repo
+        let original_dir = std::env::current_dir().unwrap();
+        std::env::set_current_dir(repo).unwrap();
+
+        let result = run("patterns", "HEAD~1", false);
+
+        // Restore dir
+        std::env::set_current_dir(&original_dir).unwrap();
+
+        assert!(result.is_ok(), "run() failed: {:?}", result.err());
+        assert_eq!(result.unwrap(), 0);
+
+        // Verify pattern meta was bumped
+        let meta: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(patterns.join("show_a/meta.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(meta["dataVersion"], 2);
+
+        // Verify root meta was bumped
+        let root: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(patterns.join("meta.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(root["dataVersion"], 2);
+        assert_eq!(root["patterns"][0]["dataVersion"], 2);
+        // "main" and "bonus" in playlists array
+        assert_eq!(root["patterns"][0]["playlistCount"], 2);
     }
 }

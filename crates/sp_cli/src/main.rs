@@ -55,7 +55,7 @@ enum Commands {
     /// Bump dataVersion fields for changed patterns (CI use)
     BumpVersions {
         /// Path to patterns directory
-        #[arg(default_value = "patterns")]
+        #[arg(long, default_value = "patterns")]
         patterns_dir: String,
         /// Git ref for previous state (e.g. HEAD~1)
         previous_ref: String,

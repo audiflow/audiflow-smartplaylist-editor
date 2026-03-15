@@ -1802,6 +1802,7 @@ dependencies = [
  "serde_json",
  "sp_core",
  "sp_server",
+ "tempfile",
  "tokio",
 ]
 
