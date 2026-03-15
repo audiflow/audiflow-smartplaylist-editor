@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: ["v[0-9]+"]
+    branches: ["v[0-9]"]
 
 jobs:
   version:
@@ -17,6 +17,10 @@ jobs:
         run: |
           semver=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
           major=$(echo "$semver" | cut -d. -f1)
+          if [ -z "$semver" ] || [ -z "$major" ]; then
+            echo "::error::Failed to parse version from Cargo.toml (semver='$semver', major='$major')"
+            exit 1
+          fi
           echo "semver=$semver" >> "$GITHUB_OUTPUT"
           echo "major=$major" >> "$GITHUB_OUTPUT"
 
@@ -89,7 +93,8 @@ jobs:
             gh release create "$TAG" audiflow-editor-* \
               --repo "$GITHUB_REPOSITORY" \
               --title "$TAG" \
-              --generate-notes
+              --generate-notes \
+              --target "$GITHUB_SHA"
           fi
 
       - name: Update mutable major-version release
