@@ -25,13 +25,14 @@ fn repo_relative_path(path: &Path) -> anyhow::Result<String> {
     if !output.status.success() {
         anyhow::bail!("Not a git repository");
     }
-    let toplevel = PathBuf::from(String::from_utf8_lossy(&output.stdout).trim());
+    let toplevel = std::fs::canonicalize(PathBuf::from(String::from_utf8_lossy(&output.stdout).trim()))
+        .map_err(|e| anyhow::anyhow!("Failed to resolve git toplevel: {e}"))?;
     let abs_path = std::fs::canonicalize(path)
         .map_err(|e| anyhow::anyhow!("Failed to resolve {}: {e}", path.display()))?;
     let relative = abs_path
         .strip_prefix(&toplevel)
         .map_err(|_| anyhow::anyhow!("{} is not inside the git repository", path.display()))?;
-    Ok(relative.to_string_lossy().to_string())
+    Ok(relative.to_string_lossy().replace('\\', "/"))
 }
 
 /// Runs `git diff --name-only` against a previous ref, scoped to the patterns directory.
@@ -133,7 +134,8 @@ fn apply_pattern_bumps(
         }
         let content = std::fs::read_to_string(&meta_path)
             .map_err(|e| anyhow::anyhow!("Failed to read {}: {e}", meta_path.display()))?;
-        let mut value: serde_json::Value = serde_json::from_str(&content)?;
+        let mut value: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| anyhow::anyhow!("Failed to parse {}: {e}", meta_path.display()))?;
         value["dataVersion"] = serde_json::json!(new_version);
         let formatted = serde_json::to_string_pretty(&value)? + "\n";
         sp_server::services::atomic_write_str(&meta_path, &formatted)?;
@@ -160,7 +162,9 @@ fn apply_root_bump(
         Some(content) => {
             let value: serde_json::Value = serde_json::from_str(&content)
                 .map_err(|e| anyhow::anyhow!("Failed to parse {previous_ref}:{prev_root_path}: {e}"))?;
-            value["dataVersion"].as_i64().unwrap_or(0) as i32
+            value["dataVersion"]
+                .as_i64()
+                .ok_or_else(|| anyhow::anyhow!("Missing or invalid dataVersion in {previous_ref}:{prev_root_path}"))? as i32
         }
         None => 0,
     };
@@ -217,8 +221,9 @@ struct BumpSummary {
 
 /// Entry point for the `bump-versions` subcommand.
 ///
-/// Detects changed patterns via `git diff`, loads previous versions,
-/// computes bumps, and writes updated `dataVersion` fields to disk.
+/// Accepts `--patterns-dir <path>` (default `"patterns"`) and a positional
+/// `<previous-ref>`. Detects changed patterns via `git diff`, loads previous
+/// versions, computes bumps, and writes updated `dataVersion` fields to disk.
 pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result<i32> {
     let patterns_path = std::path::PathBuf::from(patterns_dir);
     if !patterns_path.join("meta.json").exists() {
@@ -235,13 +240,15 @@ pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result
         validate_path_segment(id)?;
     }
 
+    let has_changes = !changed_ids.is_empty();
+
     // Filter out deleted patterns whose meta.json no longer exists on disk
     let changed_ids: Vec<String> = changed_ids
         .into_iter()
         .filter(|id| patterns_path.join(id).join("meta.json").exists())
         .collect();
 
-    if changed_ids.is_empty() {
+    if !has_changes {
         if json {
             println!(
                 "{}",
