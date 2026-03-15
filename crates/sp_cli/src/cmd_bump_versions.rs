@@ -17,7 +17,8 @@ fn validate_path_segment(segment: &str) -> anyhow::Result<()> {
 
 /// Computes the repo-relative path for a given directory by querying
 /// `git rev-parse --show-toplevel` and stripping the prefix.
-fn repo_relative_path(path: &Path) -> anyhow::Result<String> {
+/// Returns `(relative_path, toplevel)`.
+fn repo_relative_path(path: &Path) -> anyhow::Result<(String, PathBuf)> {
     let output = Command::new("git")
         .args(["rev-parse", "--show-toplevel"])
         .output()
@@ -32,12 +33,13 @@ fn repo_relative_path(path: &Path) -> anyhow::Result<String> {
     let relative = abs_path
         .strip_prefix(&toplevel)
         .map_err(|_| anyhow::anyhow!("{} is not inside the git repository", path.display()))?;
-    Ok(relative.to_string_lossy().replace('\\', "/"))
+    Ok((relative.to_string_lossy().replace('\\', "/"), toplevel))
 }
 
 /// Runs `git diff --name-only` against a previous ref, scoped to the patterns directory.
-fn git_diff_names(previous_ref: &str, patterns_dir: &Path) -> anyhow::Result<String> {
+fn git_diff_names(previous_ref: &str, patterns_dir: &Path, repo_root: &Path) -> anyhow::Result<String> {
     let output = Command::new("git")
+        .current_dir(repo_root)
         .args(["diff", previous_ref, "--name-only", "--"])
         .arg(patterns_dir)
         .output()
@@ -51,8 +53,9 @@ fn git_diff_names(previous_ref: &str, patterns_dir: &Path) -> anyhow::Result<Str
 
 /// Retrieves file content at a previous git ref. Returns `None` if the file
 /// did not exist at that ref.
-fn git_show_file(previous_ref: &str, file_path: &str) -> anyhow::Result<Option<String>> {
+fn git_show_file(previous_ref: &str, file_path: &str, repo_root: &Path) -> anyhow::Result<Option<String>> {
     let output = Command::new("git")
+        .current_dir(repo_root)
         .args(["show", &format!("{previous_ref}:{file_path}")])
         .output()
         .map_err(|e| anyhow::anyhow!("Failed to run git show: {e}"))?;
@@ -69,11 +72,12 @@ fn load_previous_versions(
     previous_ref: &str,
     changed_ids: &[String],
     patterns_dir_name: &str,
+    repo_root: &Path,
 ) -> anyhow::Result<HashMap<String, i32>> {
     let mut versions = HashMap::new();
     for id in changed_ids {
         let path = format!("{patterns_dir_name}/{id}/meta.json");
-        if let Some(content) = git_show_file(previous_ref, &path)? {
+        if let Some(content) = git_show_file(previous_ref, &path, repo_root)? {
             let meta: PatternMeta = serde_json::from_str(&content)
                 .map_err(|e| anyhow::anyhow!("Failed to parse {previous_ref}:{path}: {e}"))?;
             versions.insert(id.clone(), meta.data_version);
@@ -150,6 +154,7 @@ fn apply_root_bump(
     bumps: &HashMap<String, i32>,
     previous_ref: &str,
     patterns_dir_name: &str,
+    repo_root: &Path,
 ) -> anyhow::Result<i32> {
     let root_meta_path = patterns_dir.join("meta.json");
     let content = std::fs::read_to_string(&root_meta_path)
@@ -158,7 +163,7 @@ fn apply_root_bump(
         .map_err(|e| anyhow::anyhow!("Failed to parse {}: {e}", root_meta_path.display()))?;
 
     let prev_root_path = format!("{patterns_dir_name}/meta.json");
-    let prev_root_version = match git_show_file(previous_ref, &prev_root_path)? {
+    let prev_root_version = match git_show_file(previous_ref, &prev_root_path, repo_root)? {
         Some(content) => {
             let value: serde_json::Value = serde_json::from_str(&content)
                 .map_err(|e| anyhow::anyhow!("Failed to parse {previous_ref}:{prev_root_path}: {e}"))?;
@@ -230,25 +235,11 @@ pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result
         anyhow::bail!("No meta.json found in {patterns_dir}");
     }
 
-    let patterns_dir_name = repo_relative_path(&patterns_path)?;
+    let (patterns_dir_name, repo_root) = repo_relative_path(&patterns_path)?;
 
-    let diff_output = git_diff_names(previous_ref, Path::new(&patterns_dir_name))?;
-    let changed_ids = extract_changed_pattern_ids(&diff_output, &patterns_dir_name);
+    let diff_output = git_diff_names(previous_ref, Path::new(&patterns_dir_name), &repo_root)?;
 
-    // Validate path segments to prevent directory traversal
-    for id in &changed_ids {
-        validate_path_segment(id)?;
-    }
-
-    let has_changes = !changed_ids.is_empty();
-
-    // Filter out deleted patterns whose meta.json no longer exists on disk
-    let changed_ids: Vec<String> = changed_ids
-        .into_iter()
-        .filter(|id| patterns_path.join(id).join("meta.json").exists())
-        .collect();
-
-    if !has_changes {
+    if diff_output.trim().is_empty() {
         if json {
             println!(
                 "{}",
@@ -264,13 +255,26 @@ pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result
         return Ok(0);
     }
 
+    let changed_ids = extract_changed_pattern_ids(&diff_output, &patterns_dir_name);
+
+    // Validate path segments to prevent directory traversal
+    for id in &changed_ids {
+        validate_path_segment(id)?;
+    }
+
+    // Filter out deleted patterns whose meta.json no longer exists on disk
+    let changed_ids: Vec<String> = changed_ids
+        .into_iter()
+        .filter(|id| patterns_path.join(id).join("meta.json").exists())
+        .collect();
+
     let previous_versions =
-        load_previous_versions(previous_ref, &changed_ids, &patterns_dir_name)?;
+        load_previous_versions(previous_ref, &changed_ids, &patterns_dir_name, &repo_root)?;
     let bumps = compute_version_bumps(&changed_ids, &previous_versions);
 
     apply_pattern_bumps(&patterns_path, &bumps)?;
     let new_root_version =
-        apply_root_bump(&patterns_path, &bumps, previous_ref, &patterns_dir_name)?;
+        apply_root_bump(&patterns_path, &bumps, previous_ref, &patterns_dir_name, &repo_root)?;
 
     let results: Vec<BumpResult> = changed_ids
         .iter()
