@@ -14,29 +14,31 @@ operations (commit, push, PR) themselves.
 - Define and enforce JSON Schema for all config files (three schemas)
 - Implement episode resolver logic that groups episodes into playlists
 - Serve a local API for config CRUD, RSS feed fetching/caching, and live preview
-- Provide CLI tools for validation (`validate`), formatting (`format`), and serving (`serve`)
+- Provide CLI tools for validation (`validate`), formatting (`format`), serving (`serve`), and version bumping (`bump-versions`)
 - Watch the local data directory for external changes and notify the browser via SSE
+- Enforce cross-pattern uniqueness of podcast identifiers (podcastGuid, feedUrls)
 
 ## Non-responsibilities
 
 - Hosting or deploying config data (owned by data repo CI pipelines)
 - Managing git operations on data repos (user responsibility)
 - Mobile app playback, caching, or UI (owned by `audiflow` Flutter app)
-- Production or staging data content (owned by `audiflow-smartplaylist` and `audiflow-smartplaylist-dev`)
+- Production, staging, or dev data content (owned by `audiflow-smartplaylist` repo, branched by environment)
 
 ## Main concepts
 
-- **Pattern**: A podcast-specific configuration identified by a unique ID. Contains feed URLs, flags, and playlist definitions.
+- **Pattern**: A podcast-specific configuration identified by a unique ID. Contains feed URLs, podcast GUID, flags, and playlist definitions.
 - **Playlist definition**: A JSON config describing how episodes are grouped, filtered, sorted, and displayed.
 - **Resolver**: A strategy that groups episodes into playlists. Types: `rss`, `category`, `year`, `titleAppearanceOrder`.
 - **Split config**: The three-level file hierarchy (`patterns/meta.json` -> `{id}/meta.json` -> `{id}/playlists/{pid}.json`).
 - **Schema**: Three JSON Schema files in `crates/sp_core/assets/` that validate each level of the split config.
 - **Claiming**: Higher-priority playlist definitions claim episodes during preview, preventing duplicates in lower-priority definitions.
-- **Data repo**: A git repository containing JSON config files (e.g., `audiflow-smartplaylist` for production).
+- **Data repo**: A git repository containing JSON config files (`audiflow-smartplaylist` for all environments).
+- **Cross-pattern uniqueness**: Validation ensuring no two patterns share the same podcastGuid or feedUrl values.
 
 ## Primary entry points
 
-- `crates/sp_cli/src/main.rs`: CLI binary entry point (`serve`, `validate`, `format` subcommands)
+- `crates/sp_cli/src/main.rs`: CLI binary entry point (`serve`, `validate`, `format`, `bump-versions` subcommands)
 - `crates/sp_server/src/app.rs`: Axum router and app state construction
 - `crates/sp_core/src/lib.rs`: Domain library root (models, resolvers, schema, services)
 - `packages/sp_react/src/`: React SPA root (Vite + TanStack Router)

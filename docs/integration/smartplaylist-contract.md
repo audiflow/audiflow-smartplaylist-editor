@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Documents the file structure and format contract between this editor and the smart playlist data repositories (`audiflow-smartplaylist` for production, `audiflow-smartplaylist-dev` for dev/staging).
+Documents the file structure and format contract between this editor and the smart playlist data repository (`audiflow-smartplaylist`), which holds config data for all environments (prod, staging, dev) on separate branches.
 
 ## Scope
 
@@ -19,14 +19,15 @@ This document covers:
 - Use atomic writes (`.tmp` then rename) to prevent partial reads
 - Validate path segments to prevent directory traversal
 - Provide `format` CLI command for JSON normalization
-- Provide `validate` CLI command for schema validation (usable in data repo CI)
+- Provide `validate` CLI command for schema validation and cross-pattern uniqueness (usable in data repo CI)
+- Provide `bump-versions` CLI command for CI-driven dataVersion increments
 
 ## Non-responsibilities
 
 - Managing git operations on data repos (user responsibility)
 - CI/CD deployment of data repos to hosting (owned by data repo pipelines)
 - Content decisions about which podcasts or playlists exist
-- Hosting config files for app consumption (owned by GitHub Pages / GCS)
+- Hosting config files for app consumption (owned by GitHub Pages)
 
 ## File structure contract
 
@@ -51,23 +52,24 @@ patterns/
 
 ### Naming rules
 
-- `patternId`: string identifier, used as directory name (no path separators allowed)
-- `playlistId`: string identifier, used as filename without extension (no path separators allowed)
+- `patternId`: string identifier, used as directory name (alphanumeric, hyphens, underscores only)
+- `playlistId`: string identifier, used as filename without extension (alphanumeric, hyphens, underscores only)
 - All JSON files use 2-space indentation with trailing newline
 
 ### Version fields
 
-- `dataVersion` in root `meta.json`: incremented by the editor when patterns change
+- `dataVersion` in root `meta.json`: incremented by the editor or `bump-versions` CLI when patterns change
 - `schemaVersion` in root `meta.json`: tracks which schema version the data conforms to
 
 ## Data flow
 
 ```
-Editor writes -> Local data repo clone -> User pushes -> CI deploys -> Hosting -> App fetches
+Editor writes -> Local data repo clone -> User pushes -> CI deploys -> GitHub Pages -> App fetches
 ```
 
-- Production: `audiflow-smartplaylist` -> GitHub Pages
-- Dev/staging: `audiflow-smartplaylist-dev` -> GCS bucket (`audiflow-dev-config`)
+- Production: `main` branch -> GitHub Pages `/assets/`
+- Staging: `staging` branch -> GitHub Pages `/assets-stg/`
+- Dev: `dev` branch -> GitHub Pages `/assets-dev/`
 
 ## Integration assumptions
 
@@ -75,6 +77,7 @@ Editor writes -> Local data repo clone -> User pushes -> CI deploys -> Hosting -
 - External tools or manual edits may modify files while the server is running (FileWatcherService handles this)
 - Feed cache is stored in `$dataDir/.cache/feeds/` and is not part of the data contract
 - `.tmp` files are transient and should be gitignored
+- Cross-pattern uniqueness: no two patterns may share the same podcastGuid or feedUrl
 
 ## Related documents
 

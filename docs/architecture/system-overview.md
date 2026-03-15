@@ -7,21 +7,20 @@ Provide a local web editor that lets users create and manage smart playlist conf
 ## Context
 
 This repository is part of the audiflow podcast ecosystem:
-- **audiflow** (Flutter app): Consumes configs from hosted mirrors (GitHub Pages / GCS)
-- **audiflow-smartplaylist** (prod data): Static JSON files deployed to GitHub Pages
-- **audiflow-smartplaylist-dev** (dev data): Static JSON files deployed to GCS
+- **audiflow** (Flutter app): Consumes configs from hosted mirrors (GitHub Pages)
+- **audiflow-smartplaylist** (data repo): Static JSON files for all environments (prod/staging/dev), deployed to GitHub Pages from different branches
 - **This repo** (editor): Reads/writes config files in a locally cloned data repo
 
 ## High-level structure
 
-- **sp_core**: Pure Rust domain library. Models, resolvers, schema validation, services. No framework dependencies.
-- **sp_server**: Axum-based local API server. Config CRUD, feed caching, file watching, SSE, static file serving.
-- **sp_cli**: CLI binary wrapping sp_server. Subcommands: `serve`, `validate`, `format`.
-- **sp_react**: React 19 SPA. Pattern browsing, config editing with forms, live preview, SSE-driven cache invalidation.
+- **sp_core**: Pure Rust domain library. Models, resolvers, schema validation, services, cross-pattern uniqueness. No framework dependencies.
+- **sp_server**: Axum-based local API server. Config CRUD, feed caching, file watching, SSE, static file serving, pattern identifiers endpoint.
+- **sp_cli**: CLI binary wrapping sp_server. Subcommands: `serve`, `validate`, `format`, `bump-versions`.
+- **sp_react**: React 19 SPA. Pattern browsing, config editing with forms, live preview, SSE-driven cache invalidation, inline duplicate detection.
 
 ## Main data flow
 
-1. User clones a data repo (`audiflow-smartplaylist` or `audiflow-smartplaylist-dev`) locally
+1. User clones the data repo (`audiflow-smartplaylist`) locally
 2. User starts the editor: `cargo run -- serve --data-dir /path/to/data-repo`
 3. `sp_server` reads split config files from the data directory via `LocalConfigRepository`
 4. `sp_react` SPA loads in the browser, fetches config data via REST API
@@ -40,12 +39,13 @@ This repository is part of the audiflow podcast ecosystem:
 
 ## Design constraints
 
-- **Local-only**: Server binds to `127.0.0.1`, no authentication, no remote config storage
+- **Local-only**: Server binds to `127.0.0.1` by default (`--host 0.0.0.0` for Docker/LAN), no authentication, no remote config storage
 - **Atomic writes**: All file writes go through `.tmp` then rename to prevent partial reads
 - **Schema at boundaries**: Three JSON Schemas validate config at write time and via CLI
 - **Path traversal protection**: `LocalConfigRepository` validates all path segments
 - **Feed URL restriction**: Only `http://` and `https://` URLs accepted for feed fetching
 - **Embedded assets**: JSON Schemas embedded via `include_str!`; SPA assets via `rust-embed` (with `--static-dir` override)
+- **Cross-pattern uniqueness**: Server enforces that no two patterns share the same podcastGuid or feedUrl on create/update
 
 ## When to update
 

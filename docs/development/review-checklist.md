@@ -20,6 +20,12 @@
 - If file structure changed, was docs/integration/smartplaylist-contract.md updated?
 - Do schema conformance tests pass (`crates/sp_core/tests/schema_tests.rs`)?
 
+## Uniqueness and identifiers
+
+- If podcast identifier fields changed, was cross-pattern uniqueness validation updated in sp_core?
+- Does sp_server still enforce uniqueness on pattern create/update?
+- Does `validate` CLI still check cross-pattern uniqueness?
+
 ## Security
 
 - Are new API endpoints protected against path traversal?

@@ -15,6 +15,7 @@
 - Domain model changes in sp_core require corresponding Zod schema updates in sp_react
 - Add or update tests for all changed behavior
 - Follow the branching policy in `.claude/rules/project/branching.md`
+- If adding podcast identifier fields, update cross-pattern uniqueness validation in sp_core and sp_server
 
 ## Schema change checklist
 
