@@ -1,12 +1,61 @@
 use std::collections::HashMap;
+use std::path::Path;
+use std::process::Command;
+
+use sp_core::models::PatternMeta;
+
+/// Runs `git diff --name-only` against a previous ref, scoped to the patterns directory.
+fn git_diff_names(previous_ref: &str, patterns_dir: &Path) -> anyhow::Result<String> {
+    let output = Command::new("git")
+        .args(["diff", previous_ref, "--name-only", "--"])
+        .arg(patterns_dir)
+        .output()
+        .map_err(|e| anyhow::anyhow!("Failed to run git diff: {e}"))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        anyhow::bail!("git diff failed: {stderr}");
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).to_string())
+}
+
+/// Retrieves file content at a previous git ref. Returns `None` if the file
+/// did not exist at that ref.
+fn git_show_file(previous_ref: &str, file_path: &str) -> anyhow::Result<Option<String>> {
+    let output = Command::new("git")
+        .args(["show", &format!("{previous_ref}:{file_path}")])
+        .output()
+        .map_err(|e| anyhow::anyhow!("Failed to run git show: {e}"))?;
+    if !output.status.success() {
+        return Ok(None);
+    }
+    Ok(Some(String::from_utf8_lossy(&output.stdout).to_string()))
+}
+
+/// Loads the previous `dataVersion` for each changed pattern by reading
+/// its `meta.json` from the given git ref.
+fn load_previous_versions(
+    previous_ref: &str,
+    changed_ids: &[String],
+    patterns_dir_name: &str,
+) -> anyhow::Result<HashMap<String, i32>> {
+    let mut versions = HashMap::new();
+    for id in changed_ids {
+        let path = format!("{patterns_dir_name}/{id}/meta.json");
+        if let Some(content) = git_show_file(previous_ref, &path)?
+            && let Ok(meta) = serde_json::from_str::<PatternMeta>(&content)
+        {
+            versions.insert(id.clone(), meta.data_version);
+        }
+    }
+    Ok(versions)
+}
 
 /// Extracts unique pattern IDs from a git diff output.
 ///
 /// Parses lines like `patterns/coten_radio/meta.json` and extracts
 /// the pattern ID (`coten_radio`). Skips root-level files (e.g.,
 /// `patterns/meta.json`) that have no subdirectory.
-#[allow(dead_code)]
-pub(crate) fn extract_changed_pattern_ids(diff_output: &str, patterns_dir_name: &str) -> Vec<String> {
+fn extract_changed_pattern_ids(diff_output: &str, patterns_dir_name: &str) -> Vec<String> {
     let prefix = format!("{patterns_dir_name}/");
     let mut ids: Vec<String> = diff_output
         .lines()
@@ -27,8 +76,7 @@ pub(crate) fn extract_changed_pattern_ids(diff_output: &str, patterns_dir_name: 
 /// For each changed pattern ID, looks up the previous version and
 /// increments by one. Patterns not found in the previous map start
 /// at version 1.
-#[allow(dead_code)]
-pub(crate) fn compute_version_bumps(
+fn compute_version_bumps(
     changed_ids: &[String],
     previous_versions: &HashMap<String, i32>,
 ) -> HashMap<String, i32> {
