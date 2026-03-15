@@ -1,3 +1,4 @@
+mod cmd_bump_versions;
 mod cmd_format;
 mod cmd_serve;
 mod cmd_validate;
