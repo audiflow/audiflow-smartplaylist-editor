@@ -7,9 +7,9 @@ locally cloned data repo. Users manage git operations themselves.
 ## Ecosystem context
 
 Part of the audiflow podcast ecosystem. This repo owns the editor UX, JSON Schema
-definitions (`crates/sp_core/assets/`), and local-first editing workflow. Sibling repos
-`audiflow-smartplaylist` (prod data) and `audiflow-smartplaylist-dev` (dev data) hold
-the config JSON files. The `audiflow` Flutter app consumes configs from hosted mirrors.
+definitions (`crates/sp_core/assets/`), and local-first editing workflow. The sibling
+repo `audiflow-smartplaylist` holds config JSON files for all environments (prod/staging/dev,
+deployed via GitHub Pages). The `audiflow` Flutter app consumes configs from hosted mirrors.
 
 ## Responsibilities
 
@@ -17,11 +17,12 @@ the config JSON files. The `audiflow` Flutter app consumes configs from hosted m
 - JSON Schema validation (three schemas in `crates/sp_core/assets/`)
 - Episode resolver logic (rss, category, year, titleAppearanceOrder)
 - Local API server for config CRUD, feed fetching, and live preview
-- CLI tools for validation, formatting, and serving
+- CLI tools for validation, formatting, serving, and version bumping
+- Cross-pattern uniqueness enforcement (podcastGuid, feedUrls)
 
 ## Non-responsibilities
 
-- Production/dev config data hosting (owned by data repos)
+- Production/dev config data hosting (owned by data repo)
 - Git operations on data repos (user responsibility)
 - Mobile app behavior or playback logic (owned by `audiflow`)
 - CI/CD deployment of config data (owned by data repo CI)
@@ -31,7 +32,7 @@ the config JSON files. The `audiflow` Flutter app consumes configs from hosted m
 ```
 crates/sp_core/    -- Domain models, resolvers, schema, services (pure Rust)
 crates/sp_server/  -- Local API server (axum, tokio)
-crates/sp_cli/     -- CLI binary (serve, validate, format)
+crates/sp_cli/     -- CLI binary (serve, validate, format, bump-versions)
 packages/sp_react/ -- React 19 SPA (Vite + TypeScript)
 ```
 

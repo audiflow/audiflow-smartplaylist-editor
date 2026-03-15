@@ -10,6 +10,7 @@
 - Provide schema validation via embedded JSON Schema files
 - Implement services: ResolverService, ConfigAssembler, sorting utilities
 - Provide EpisodeData trait abstraction for episode data
+- Cross-pattern uniqueness validation (`check_uniqueness` for podcastGuid and feedUrl conflicts)
 
 #### Non-responsibilities
 - HTTP handling, routing, or request/response types
@@ -21,19 +22,21 @@
 - External crates: serde, jsonschema, regex, chrono
 
 #### Used by
-- sp_server (models, resolvers, schema validation, services)
-- sp_cli (schema validation via sp_core::schema)
+- sp_server (models, resolvers, schema validation, services, uniqueness)
+- sp_cli (schema validation via sp_core::schema, uniqueness validation)
 
 ### Module: sp_server
 
 #### Responsibilities
-- Axum REST API: config CRUD, preview, feed proxy, schema endpoint, health check
+- Axum REST API: config CRUD, preview, feed proxy, schema endpoint, health check, pattern identifiers
 - LocalConfigRepository: read/write split config files with atomic writes
 - DiskFeedCacheService: disk-based RSS feed caching with SHA-256 hashing and TTL
 - FileWatcherService: watch data directory, debounce events, broadcast via SSE
 - FeedParser: RSS feed parsing via feed-rs
 - Static file serving (rust-embed or --static-dir) with SPA fallback
 - AppError: structured JSON error responses
+- Cross-pattern uniqueness enforcement on pattern create/update
+- 404 JSON fallback for unmatched `/api/*` paths
 
 #### Non-responsibilities
 - Domain logic (resolvers, sorting, schema definitions) -- delegated to sp_core
@@ -41,8 +44,8 @@
 - Frontend rendering
 
 #### Depends on
-- sp_core (models, resolvers, schema, services)
-- External crates: axum 0.8, tokio, reqwest, feed-rs, notify 7, rust-embed
+- sp_core (models, resolvers, schema, services, uniqueness)
+- External crates: axum 0.8, tokio, reqwest, feed-rs, notify 7, rust-embed, tower-http
 
 #### Used by
 - sp_cli (starts server via sp_server::app)
@@ -50,10 +53,11 @@
 ### Module: sp_cli
 
 #### Responsibilities
-- CLI argument parsing via clap (serve, validate, format subcommands)
-- `serve`: start sp_server with --data-dir, --port, --static-dir flags
-- `validate`: walk config files and validate against JSON Schema (exit codes: 0/1/2)
+- CLI argument parsing via clap (serve, validate, format, bump-versions subcommands)
+- `serve`: start sp_server with --data-dir, --host, --port, --static-dir flags
+- `validate`: walk config files and validate against JSON Schema; check cross-pattern uniqueness (exit codes: 0/1/2)
 - `format`: normalize JSON files with --check mode for CI
+- `bump-versions`: detect changed patterns via git diff and increment their dataVersion fields (CI use)
 - `config_walker`: walk pattern directory tree with schema type detection
 
 #### Non-responsibilities
@@ -61,9 +65,9 @@
 - Frontend concerns
 
 #### Depends on
-- sp_core (schema validation)
+- sp_core (schema validation, models, uniqueness)
 - sp_server (app construction for serve command)
-- External crates: clap
+- External crates: clap, anyhow
 
 #### Used by
 - End users (as the `audiflow-editor` binary)
@@ -76,6 +80,7 @@
 - State management: Zustand for editor UI state, TanStack Query for server state
 - Form validation: React Hook Form + Zod 4 schemas mirroring JSON Schema
 - SSE hook (`useFileEvents`): invalidate TanStack Query cache on file changes
+- Inline duplicate detection for podcast identifiers (podcastGuid, feedUrls)
 - i18n: English and Japanese translations
 
 #### Non-responsibilities
