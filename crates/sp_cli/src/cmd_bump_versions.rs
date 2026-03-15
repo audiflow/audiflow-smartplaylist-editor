@@ -89,6 +89,65 @@ fn compute_version_bumps(
         .collect()
 }
 
+/// Writes updated `dataVersion` into each changed pattern's `meta.json`.
+fn apply_pattern_bumps(
+    patterns_dir: &Path,
+    bumps: &HashMap<String, i32>,
+) -> anyhow::Result<()> {
+    for (id, new_version) in bumps {
+        let meta_path = patterns_dir.join(id).join("meta.json");
+        let content = std::fs::read_to_string(&meta_path)
+            .map_err(|e| anyhow::anyhow!("Failed to read {}: {e}", meta_path.display()))?;
+        let mut value: serde_json::Value = serde_json::from_str(&content)?;
+        value["dataVersion"] = serde_json::json!(new_version);
+        let formatted = serde_json::to_string_pretty(&value)? + "\n";
+        sp_server::services::atomic_write_str(&meta_path, &formatted)?;
+    }
+    Ok(())
+}
+
+/// Bumps the root `meta.json` version, updates pattern entries with new
+/// `dataVersion` and `playlistCount` values, and writes the file atomically.
+fn apply_root_bump(
+    patterns_dir: &Path,
+    bumps: &HashMap<String, i32>,
+    previous_ref: &str,
+    patterns_dir_name: &str,
+) -> anyhow::Result<i32> {
+    let root_meta_path = patterns_dir.join("meta.json");
+    let content = std::fs::read_to_string(&root_meta_path)?;
+    let mut root: serde_json::Value = serde_json::from_str(&content)?;
+
+    let prev_root_path = format!("{patterns_dir_name}/meta.json");
+    let prev_root_version = git_show_file(previous_ref, &prev_root_path)?
+        .and_then(|c| serde_json::from_str::<serde_json::Value>(&c).ok())
+        .and_then(|v| v["dataVersion"].as_i64())
+        .unwrap_or(0) as i32;
+    let new_root_version = prev_root_version + 1;
+    root["dataVersion"] = serde_json::json!(new_root_version);
+
+    if let Some(patterns) = root["patterns"].as_array_mut() {
+        for pattern in patterns.iter_mut() {
+            let Some(id) = pattern["id"].as_str().map(String::from) else {
+                continue;
+            };
+            if let Some(&new_version) = bumps.get(&id) {
+                pattern["dataVersion"] = serde_json::json!(new_version);
+            }
+            let meta_path = patterns_dir.join(&id).join("meta.json");
+            if let Ok(meta_content) = std::fs::read_to_string(&meta_path)
+                && let Ok(meta) = serde_json::from_str::<PatternMeta>(&meta_content)
+            {
+                pattern["playlistCount"] = serde_json::json!(meta.playlists.len());
+            }
+        }
+    }
+
+    let formatted = serde_json::to_string_pretty(&root)? + "\n";
+    sp_server::services::atomic_write_str(&root_meta_path, &formatted)?;
+    Ok(new_root_version)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
