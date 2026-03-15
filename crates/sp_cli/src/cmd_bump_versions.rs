@@ -286,4 +286,98 @@ mod tests {
         let result = compute_version_bumps(&changed, &previous);
         assert_eq!(result.get("new_pattern"), Some(&1));
     }
+
+    #[test]
+    fn integration_bump_versions_in_temp_repo() {
+        use std::process::Command;
+        use tempfile::TempDir;
+
+        let tmp = TempDir::new().unwrap();
+        let repo = tmp.path();
+
+        // Init git repo
+        Command::new("git")
+            .args(["init"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["config", "user.email", "test@test.com"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["config", "user.name", "Test"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+
+        let patterns = repo.join("patterns");
+        std::fs::create_dir_all(patterns.join("show_a/playlists")).unwrap();
+
+        // Root meta
+        std::fs::write(
+            patterns.join("meta.json"),
+            r#"{"dataVersion": 1, "schemaVersion": 2, "patterns": [{"id": "show_a", "dataVersion": 1, "displayName": "Show A", "feedUrlHint": "https://example.com", "playlistCount": 1}]}"#,
+        )
+        .unwrap();
+
+        // Pattern meta
+        std::fs::write(
+            patterns.join("show_a/meta.json"),
+            r#"{"dataVersion": 1, "id": "show_a", "feedUrls": ["https://example.com"], "playlists": ["main", "bonus"]}"#,
+        )
+        .unwrap();
+
+        // Playlist
+        std::fs::write(
+            patterns.join("show_a/playlists/main.json"),
+            r#"{"resolverType": "category"}"#,
+        )
+        .unwrap();
+
+        // Initial commit
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "init"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+
+        // Make a change
+        std::fs::write(
+            patterns.join("show_a/playlists/main.json"),
+            r#"{"resolverType": "rss"}"#,
+        )
+        .unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "update"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+
+        // Test pure functions against real git diff output
+        let diff = Command::new("git")
+            .args(["diff", "HEAD~1", "--name-only", "--", "patterns"])
+            .current_dir(repo)
+            .output()
+            .unwrap();
+        let diff_output = String::from_utf8_lossy(&diff.stdout);
+        let changed = extract_changed_pattern_ids(&diff_output, "patterns");
+        assert_eq!(changed, vec!["show_a"]);
+
+        let mut prev: HashMap<String, i32> = HashMap::new();
+        prev.insert("show_a".into(), 1);
+        let bumps = compute_version_bumps(&changed, &prev);
+        assert_eq!(bumps.get("show_a"), Some(&2));
+    }
 }
