@@ -11,6 +11,13 @@ jobs:
       semver: ${{ steps.parse.outputs.semver }}
       major: ${{ steps.parse.outputs.major }}
     steps:
+      - name: Validate branch name
+        run: |
+          branch="${GITHUB_REF#refs/heads/}"
+          if ! [[ "$branch" =~ ^v[0-9]+$ ]]; then
+            echo "::error::Branch '$branch' is not a valid version-channel branch (expected v followed by one or more digits, e.g. v2, v10)"
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - name: Parse version from Cargo.toml
         id: parse
