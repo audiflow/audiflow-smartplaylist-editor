@@ -1,3 +1,4 @@
+mod cmd_bump_versions;
 mod cmd_format;
 mod cmd_serve;
 mod cmd_validate;
@@ -51,6 +52,17 @@ enum Commands {
         /// Specific files to format (formats all if omitted)
         files: Vec<String>,
     },
+    /// Bump dataVersion fields for changed patterns (CI use)
+    BumpVersions {
+        /// Path to patterns directory
+        #[arg(long, default_value = "patterns")]
+        patterns_dir: String,
+        /// Git ref for previous state (e.g. HEAD~1)
+        previous_ref: String,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 #[tokio::main]
@@ -82,6 +94,17 @@ async fn main() {
             check,
             files,
         } => match cmd_format::run(&data_dir, check, &files) {
+            Ok(code) => code,
+            Err(e) => {
+                eprintln!("Error: {e}");
+                1
+            }
+        },
+        Commands::BumpVersions {
+            patterns_dir,
+            previous_ref,
+            json,
+        } => match cmd_bump_versions::run(&patterns_dir, &previous_ref, json) {
             Ok(code) => code,
             Err(e) => {
                 eprintln!("Error: {e}");
