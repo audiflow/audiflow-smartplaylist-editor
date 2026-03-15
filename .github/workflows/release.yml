@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: ["v[0-9]+"]
+    branches: ["v[0-9]*"]
 
 jobs:
   version:
@@ -11,12 +11,23 @@ jobs:
       semver: ${{ steps.parse.outputs.semver }}
       major: ${{ steps.parse.outputs.major }}
     steps:
+      - name: Validate branch name
+        run: |
+          branch="${GITHUB_REF#refs/heads/}"
+          if ! [[ "$branch" =~ ^v[0-9]+$ ]]; then
+            echo "::error::Branch '$branch' is not a valid version-channel branch (expected v followed by one or more digits, e.g. v2, v10)"
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - name: Parse version from Cargo.toml
         id: parse
         run: |
           semver=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
           major=$(echo "$semver" | cut -d. -f1)
+          if [ -z "$semver" ] || [ -z "$major" ]; then
+            echo "::error::Failed to parse version from Cargo.toml (semver='$semver', major='$major')"
+            exit 1
+          fi
           echo "semver=$semver" >> "$GITHUB_OUTPUT"
           echo "major=$major" >> "$GITHUB_OUTPUT"
 
@@ -89,7 +100,8 @@ jobs:
             gh release create "$TAG" audiflow-editor-* \
               --repo "$GITHUB_REPOSITORY" \
               --title "$TAG" \
-              --generate-notes
+              --generate-notes \
+              --target "$GITHUB_SHA"
           fi
 
       - name: Update mutable major-version release
