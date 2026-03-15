@@ -8,13 +8,9 @@ use sp_core::models::PatternMeta;
 /// Rejects empty strings, `.`, `..`, and strings containing `/`, `\`, or null bytes.
 fn validate_path_segment(segment: &str) -> anyhow::Result<()> {
     if segment.is_empty()
-        || segment == "."
-        || segment == ".."
-        || segment.contains('/')
-        || segment.contains('\\')
-        || segment.contains('\0')
+        || !segment.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
     {
-        anyhow::bail!("Invalid path segment: {segment:?}");
+        anyhow::bail!("Invalid pattern ID: {segment:?}");
     }
     Ok(())
 }
@@ -154,14 +150,20 @@ fn apply_root_bump(
     patterns_dir_name: &str,
 ) -> anyhow::Result<i32> {
     let root_meta_path = patterns_dir.join("meta.json");
-    let content = std::fs::read_to_string(&root_meta_path)?;
-    let mut root: serde_json::Value = serde_json::from_str(&content)?;
+    let content = std::fs::read_to_string(&root_meta_path)
+        .map_err(|e| anyhow::anyhow!("Failed to read {}: {e}", root_meta_path.display()))?;
+    let mut root: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| anyhow::anyhow!("Failed to parse {}: {e}", root_meta_path.display()))?;
 
     let prev_root_path = format!("{patterns_dir_name}/meta.json");
-    let prev_root_version = git_show_file(previous_ref, &prev_root_path)?
-        .and_then(|c| serde_json::from_str::<serde_json::Value>(&c).ok())
-        .and_then(|v| v["dataVersion"].as_i64())
-        .unwrap_or(0) as i32;
+    let prev_root_version = match git_show_file(previous_ref, &prev_root_path)? {
+        Some(content) => {
+            let value: serde_json::Value = serde_json::from_str(&content)
+                .map_err(|e| anyhow::anyhow!("Failed to parse {previous_ref}:{prev_root_path}: {e}"))?;
+            value["dataVersion"].as_i64().unwrap_or(0) as i32
+        }
+        None => 0,
+    };
     let new_root_version = prev_root_version + 1;
     root["dataVersion"] = serde_json::json!(new_root_version);
 
@@ -225,7 +227,7 @@ pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result
 
     let patterns_dir_name = repo_relative_path(&patterns_path)?;
 
-    let diff_output = git_diff_names(previous_ref, &patterns_path)?;
+    let diff_output = git_diff_names(previous_ref, Path::new(&patterns_dir_name))?;
     let changed_ids = extract_changed_pattern_ids(&diff_output, &patterns_dir_name);
 
     // Validate path segments to prevent directory traversal
