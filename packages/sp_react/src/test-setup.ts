@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom/vitest';
+import { afterAll, afterEach, beforeAll } from 'vitest';
+import { server } from '@/mocks/server.ts';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
@@ -66,3 +68,8 @@ if (typeof globalThis.localStorage?.setItem !== 'function') {
     configurable: true,
   });
 }
+
+// -- MSW lifecycle --
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
