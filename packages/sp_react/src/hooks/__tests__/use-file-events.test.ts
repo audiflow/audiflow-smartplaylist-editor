@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import type { QueryClient } from '@tanstack/react-query';
-import { createTestQueryClient, createTestProviders } from '@/test-utils.tsx';
+import { createTestQueryClient, createTestProviders, TEST_BASE_URL } from '@/test-utils.tsx';
 import { useFileEvents } from '../use-file-events';
 
 type MessageHandler = ((event: MessageEvent) => void) | null;
@@ -51,7 +51,7 @@ describe('useFileEvents', () => {
     renderHook(() => useFileEvents(), { wrapper });
 
     const source = latestSource();
-    expect(source.url).toBe('http://localhost:8080/api/events');
+    expect(source.url).toBe(`${TEST_BASE_URL}/api/events`);
   });
 
   it('closes EventSource on unmount', () => {

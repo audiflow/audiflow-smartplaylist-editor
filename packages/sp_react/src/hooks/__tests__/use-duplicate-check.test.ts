@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { http } from 'msw';
+import { http, delay, HttpResponse } from 'msw';
 import { server } from '@/mocks/server.ts';
 import { createTestQueryClient, createTestProviders, TEST_BASE_URL } from '@/test-utils.tsx';
 import { useDuplicateCheck } from '@/hooks/use-duplicate-check.ts';
@@ -27,10 +27,9 @@ describe('useDuplicateCheck', () => {
   it('returns empty array before identifiers have loaded', () => {
     // Override to never respond
     server.use(
-      http.get(`${TEST_BASE_URL}/api/configs/patterns/identifiers`, () => {
-        return new Promise(() => {
-          // Never resolves -- simulates pending fetch
-        });
+      http.get(`${TEST_BASE_URL}/api/configs/patterns/identifiers`, async () => {
+        await delay('infinite');
+        return HttpResponse.json([]);
       }),
     );
 

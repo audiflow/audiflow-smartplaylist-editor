@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import { TEST_BASE_URL } from '@/test-utils.tsx';
 import {
   PATTERN_SUMMARIES,
   PATTERN_IDENTIFIERS,
@@ -8,7 +9,7 @@ import {
   PLAYLIST_SEASON,
 } from './fixtures.ts';
 
-const BASE = 'http://localhost:8080';
+const BASE = TEST_BASE_URL;
 
 export const handlers = [
   // -- Pattern browsing --

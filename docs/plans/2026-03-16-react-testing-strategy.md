@@ -36,12 +36,13 @@ Infrastructure is already set up: Vitest + jsdom + @testing-library/react + i18n
 function renderWithProviders(
   ui: ReactElement,
   options?: { queryClient?: QueryClient },
-): RenderResult;
+): RenderResult & { queryClient: QueryClient };
 ```
 
 Creates a fresh `QueryClient` per test (retry: false, gcTime: 0) to prevent state leaking.
-Wraps in `ApiClientProvider` with a client pointing at the MSW-intercepted base URL.
-Wraps in `I18nextProvider` (already initialized in test-setup.ts).
+Wraps in `QueryClientProvider` and `ApiClientProvider` with a client pointing at the MSW-intercepted base URL.
+Returns the standard `RenderResult` plus the `queryClient` for cache inspection.
+i18n is initialized globally in `test-setup.ts`, so no explicit provider is needed.
 
 No router wrapper by default - most component tests don't need routing. Tests that do
 can wrap with `createMemoryRouter` explicitly.
