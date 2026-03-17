@@ -10,7 +10,7 @@ on:
     types: [opened, closed, synchronize]
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
   statuses: write
 

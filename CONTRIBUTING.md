@@ -10,7 +10,7 @@ their first pull request can be merged. This is a one-time process.
 
 **Why do we require a CLA?**
 
-The audiflow project uses AGPL-3.0 for code and CC BY-SA 4.0 for data. The CLA
+The audiflow project uses AGPL-3.0-or-later for code and CC BY-SA 4.0 for data. The CLA
 ensures that the project maintainer can continue to offer the project under these
 licenses and, in the future, potentially under additional commercial licenses.
 Without a CLA, every contributor retains copyright over their contributions,
@@ -32,9 +32,9 @@ in a way that keeps the project sustainable long-term.
 
 | Repository | Content | License |
 |------------|---------|---------|
-| `audiflow` | Flutter mobile app | AGPL-3.0 |
+| `audiflow` | Flutter mobile app | AGPL-3.0-or-later |
 | `audiflow-smartplaylist` | Playlist config data | CC BY-SA 4.0 |
-| `audiflow-smartplaylist-editor` | Web editor (Rust + React) | AGPL-3.0 |
+| `audiflow-smartplaylist-editor` | Web editor (Rust + React) | AGPL-3.0-or-later |
 
 ## How to Contribute
 
