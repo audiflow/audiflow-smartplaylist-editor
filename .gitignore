@@ -4,7 +4,6 @@
 .cache/
 .worktrees/
 
-deploy/terraform/.terraform/
 
 .claude/*
 !.claude/settings.json
