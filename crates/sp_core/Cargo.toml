@@ -1,10 +1,13 @@
 [package]
-name = "sp_core"
+name = "audiflow-smartplaylist-core"
 description = "Domain models, resolvers, and schema validation for audiflow smart playlists"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+
+[lib]
+name = "sp_core"
 
 [dependencies]
 serde = { workspace = true }
