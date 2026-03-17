@@ -1,6 +1,6 @@
 # audiflow-smartplaylist-editor
 
-Local web editor for managing [audiflow](https://github.com/reedom/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser UI, preview resolver results against live RSS feeds, and save changes directly to your local data repo clone.
+Local web editor for managing [audiflow](https://github.com/audiflow/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser UI, preview resolver results against live RSS feeds, and save changes directly to your local data repo clone.
 
 ## Quick Start
 
@@ -15,10 +15,8 @@ Local web editor for managing [audiflow](https://github.com/reedom/audiflow) sma
 1. Clone this repo and a data repo side by side:
 
 ```bash
-git clone https://github.com/reedom/audiflow-smartplaylist-editor.git
-git clone https://github.com/reedom/audiflow-smartplaylist.git     # production data
-# or
-git clone https://github.com/reedom/audiflow-smartplaylist-dev.git # dev data
+git clone https://github.com/audiflow/audiflow-smartplaylist-editor.git
+git clone https://github.com/audiflow/audiflow-smartplaylist.git
 ```
 
 2. Install dependencies:
@@ -74,9 +72,8 @@ This repo is part of a three-repo ecosystem:
 
 | Repo | Role |
 |------|------|
-| [audiflow-smartplaylist](https://github.com/reedom/audiflow-smartplaylist) | Production config data (GitHub Pages) |
-| [audiflow-smartplaylist-dev](https://github.com/reedom/audiflow-smartplaylist-dev) | Dev config data (GCS) |
-| [audiflow](https://github.com/reedom/audiflow) | Flutter mobile app that fetches configs |
+| [audiflow-smartplaylist](https://github.com/audiflow/audiflow-smartplaylist) | Config data for all envs (GitHub Pages) |
+| [audiflow](https://github.com/audiflow/audiflow) | Flutter mobile app that fetches configs |
 
 ```
 editor  <--read/write-->  local data repo  --push-->  GitHub  --CI-->  hosting

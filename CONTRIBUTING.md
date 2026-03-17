@@ -58,7 +58,7 @@ The `audiflow-smartplaylist` repository contains curated podcast playlists.
 Contributions of new playlists or improvements to existing ones are welcome.
 
 1. Fork `audiflow-smartplaylist`
-2. Use the [audiflow-smartplaylist-editor](https://github.com/reedom/audiflow-smartplaylist-editor)
+2. Use the [audiflow-smartplaylist-editor](https://github.com/audiflow/audiflow-smartplaylist-editor)
    to create or modify playlists
 3. Export the config data
 4. Submit a pull request
