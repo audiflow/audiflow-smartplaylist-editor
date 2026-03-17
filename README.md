@@ -144,4 +144,4 @@ before submitting a pull request. All contributors must sign the
 
 ## License
 
-This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+This project is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).

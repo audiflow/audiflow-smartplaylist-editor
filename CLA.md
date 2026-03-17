@@ -91,5 +91,5 @@ applicable to the Project.
 
 By submitting a pull request to any audiflow project repository, You agree to
 the terms of this Agreement. Your agreement is recorded when you comment
-"I have read the CLA Document and I hereby sign the CLA" on your first pull
+`I have read the CLA Document and I hereby sign the CLA` on your first pull
 request.

@@ -37,6 +37,6 @@ jobs:
             Thank you for your contribution! Before we can merge this PR, you need
             to sign the Contributor License Agreement (CLA.md in this repository).
             To sign, please comment on this PR with exactly:
-            "I have read the CLA Document and I hereby sign the CLA"
+            `I have read the CLA Document and I hereby sign the CLA`
           custom-pr-sign-comment: "I have read the CLA Document and I hereby sign the CLA"
           lock-pullrequest-aftermerge: false
