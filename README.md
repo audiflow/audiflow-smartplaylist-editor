@@ -136,6 +136,12 @@ make format-check # Check JSON formatting
 
 See `make help` for the full list.
 
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
+before submitting a pull request. All contributors must sign the
+[Contributor License Agreement](CLA.md).
+
 ## License
 
-MIT
+This project is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).
