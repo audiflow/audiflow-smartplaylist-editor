@@ -1,5 +1,5 @@
 [package]
-name = "sp_cli"
+name = "audiflow-smartplaylist-editor"
 description = "CLI and local server for editing audiflow smart playlist configurations"
 version.workspace = true
 edition.workspace = true
@@ -13,8 +13,8 @@ name = "audiflow-editor"
 path = "src/main.rs"
 
 [dependencies]
-sp_core = { path = "../sp_core", version = "2.0.0" }
-sp_server = { path = "../sp_server", version = "2.0.0" }
+sp_core = { package = "audiflow-smartplaylist-core", path = "../sp_core", version = "2.0.0" }
+sp_server = { package = "audiflow-smartplaylist-server", path = "../sp_server", version = "2.0.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { version = "4", features = ["derive"] }

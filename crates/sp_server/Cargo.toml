@@ -1,13 +1,16 @@
 [package]
-name = "sp_server"
+name = "audiflow-smartplaylist-server"
 description = "Local API server for audiflow smart playlist editor"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[lib]
+name = "sp_server"
+
 [dependencies]
-sp_core = { path = "../sp_core", version = "2.0.0" }
+sp_core = { package = "audiflow-smartplaylist-core", path = "../sp_core", version = "2.0.0" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 axum = "0.8"

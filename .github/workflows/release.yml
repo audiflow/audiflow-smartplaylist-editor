@@ -70,7 +70,7 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
           # Publish in dependency order; --no-verify skips build (CI already tests)
-          for crate in sp_core sp_server sp_cli; do
+          for crate in audiflow-smartplaylist-core audiflow-smartplaylist-server audiflow-smartplaylist-editor; do
             echo "Publishing $crate..."
             # Check if this version is already published
             VERSION=$(cargo metadata --no-deps --format-version 1 \
