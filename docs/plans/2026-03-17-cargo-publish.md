@@ -12,21 +12,7 @@
 
 ### Task 1: Add LICENSE file
 
-The workspace declares `license = "MIT"` but no LICENSE file exists. crates.io requires the license file to be present.
-
-**Files:**
-- Create: `LICENSE`
-
-**Step 1: Create the MIT LICENSE file**
-
-Create `LICENSE` with standard MIT text, copyright holder "audiflow contributors", year 2025.
-
-**Step 2: Commit**
-
-```bash
-git add LICENSE
-git commit -m "chore: add MIT license file"
-```
+~~Completed in prior PR (#80): LICENSE file (AGPL-3.0-or-later) already exists.~~
 
 ---
 
@@ -44,7 +30,7 @@ Add to `[workspace.package]`:
 [workspace.package]
 version = "2.0.0"
 edition = "2024"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/audiflow/audiflow-smartplaylist-editor"
 ```
 
