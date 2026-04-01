@@ -13,8 +13,8 @@ name = "audiflow-editor"
 path = "src/main.rs"
 
 [dependencies]
-sp_core = { package = "audiflow-smartplaylist-core", path = "../sp_core", version = "2.0.0" }
-sp_server = { package = "audiflow-smartplaylist-server", path = "../sp_server", version = "2.0.0" }
+sp_core = { package = "audiflow-smartplaylist-core", path = "../sp_core", version = "2.0.1" }
+sp_server = { package = "audiflow-smartplaylist-server", path = "../sp_server", version = "2.0.1" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 clap = { version = "4", features = ["derive"] }
