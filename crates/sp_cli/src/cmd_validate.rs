@@ -49,7 +49,8 @@ fn validate_all(patterns_dir: &Path, validator: &Validator) -> anyhow::Result<i3
     }
 }
 
-/// Validates specific files, auto-detecting schema type from path.
+/// Validates specific files or directories, auto-detecting schema type from path.
+/// When a directory is given, walks it as a patterns directory.
 fn validate_files(data_dir: &str, files: &[String], validator: &Validator) -> anyhow::Result<i32> {
     let mut error_count = 0u32;
     let mut not_found = false;
@@ -62,8 +63,21 @@ fn validate_files(data_dir: &str, files: &[String], validator: &Validator) -> an
             continue;
         }
 
-        let schema_type = config_walker::detect_schema_type(&path);
-        error_count += validate_file(&path, schema_type, validator)?;
+        if path.is_dir() {
+            let patterns_dir = if path.join("meta.json").exists() {
+                path.clone()
+            } else {
+                path.join("patterns")
+            };
+            config_walker::walk_config_files(&patterns_dir, |p, schema_type| {
+                error_count += validate_file(p, schema_type, validator)?;
+                Ok(())
+            })?;
+            error_count += validate_cross_pattern_uniqueness(&patterns_dir)?;
+        } else {
+            let schema_type = config_walker::detect_schema_type(&path);
+            error_count += validate_file(&path, schema_type, validator)?;
+        }
     }
 
     if not_found {

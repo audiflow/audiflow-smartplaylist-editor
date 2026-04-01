@@ -34,7 +34,8 @@ fn format_all(patterns_dir: &Path, check: bool) -> anyhow::Result<i32> {
     report_format_result(check, would_change, formatted_count)
 }
 
-/// Formats specific files.
+/// Formats specific files or directories.
+/// When a directory is given, walks it as a patterns directory.
 fn format_files(data_dir: &str, files: &[String], check: bool) -> anyhow::Result<i32> {
     let mut would_change = false;
     let mut formatted_count = 0u32;
@@ -48,11 +49,27 @@ fn format_files(data_dir: &str, files: &[String], check: bool) -> anyhow::Result
             continue;
         }
 
-        let schema_type = config_walker::detect_schema_type(&path);
-        let result = format_file(&path, schema_type, check)?;
-        if result == FormatResult::Changed {
-            would_change = true;
-            formatted_count += 1;
+        if path.is_dir() {
+            let patterns_dir = if path.join("meta.json").exists() {
+                path.clone()
+            } else {
+                path.join("patterns")
+            };
+            config_walker::walk_config_files(&patterns_dir, |p, schema_type| {
+                let result = format_file(p, schema_type, check)?;
+                if result == FormatResult::Changed {
+                    would_change = true;
+                    formatted_count += 1;
+                }
+                Ok(())
+            })?;
+        } else {
+            let schema_type = config_walker::detect_schema_type(&path);
+            let result = format_file(&path, schema_type, check)?;
+            if result == FormatResult::Changed {
+                would_change = true;
+                formatted_count += 1;
+            }
         }
     }
 
