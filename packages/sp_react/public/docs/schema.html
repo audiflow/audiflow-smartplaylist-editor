@@ -1,0 +1,3179 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Overpass:300,400,600,800">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="schema_doc.css">
+    <script src="https://use.fontawesome.com/facf9fa52c.js"></script>
+    <script src="schema_doc.min.js"></script>
+    <meta charset="utf-8"/>
+        
+    
+    <title>SmartPlaylist Definition</title>
+</head>
+<body onload="anchorOnLoad();" id="root"><div class="text-right">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
+        </div>
+
+    <div class="breadcrumbs"></div> <h1>SmartPlaylist Definition</h1><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Defines how a smart playlist groups, filters, sorts, and displays episodes for a specific podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same pattern share the podcast's episode pool and claim episodes through a priority-based system.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span><h2 class="handle">
+    <label>Conditional Subschema</label>
+</h2>
+<p>If the conditions in the "If" tab are respected, then the conditions in the "Then" tab should be respected.
+    Otherwise, the conditions in the "Else" tab should be respected.</p>
+<ul class="nav nav-tabs" id="root_condition_tabs" role="tablist">
+    
+    <li class="nav-item">
+        <a class="nav-link active"
+           id="if" data-toggle="tab" href="#tab-pane_if" role="tab"
+           onclick="setAnchor('#if')"
+        >If</a>
+    </li>
+
+    
+        
+        <li class="nav-item">
+            <a class="nav-link"
+               id="then" data-toggle="tab" href="#tab-pane_then" role="tab"
+               onclick="setAnchor('#then')"
+            >Then</a>
+        </li></ul>
+
+<div class="tab-content card">
+    
+    <div class="tab-pane fade card-body active show"
+         id="tab-pane_if" role="tabpanel">
+        
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#if" onclick="anchorLink('if')">if</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionif_resolverType">
+    <div class="card">
+        <div class="card-header" id="headingif_resolverType">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#if_resolverType"
+                        aria-expanded="" aria-controls="if_resolverType" onclick="setAnchor('#if_resolverType')"><span class="property-name">resolverType</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="if_resolverType"
+             class="collapse property-definition-div" aria-labelledby="headingif_resolverType"
+             data-parent="#accordionif_resolverType">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#if" onclick="anchorLink('if')">if</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#if_resolverType" onclick="anchorLink('if_resolverType')">resolverType</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="const-value" id="if_resolverType_const">Specific value: <code>"category"</code></span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+
+    
+        
+        <div class="tab-pane fade card-body"
+             id="tab-pane_then" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#then" onclick="anchorLink('then')">then</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+        <div class="enum-value">
+    <h4>The following properties are required:</h4>
+    <ul class="list-group"><li class="list-group-item required-property">groups</li></ul>
+    </div>
+
+        
+        
+
+        
+        </div></div>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionid">
+    <div class="card">
+        <div class="card-header" id="headingid">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#id"
+                        aria-expanded="" aria-controls="id" onclick="setAnchor('#id')"><span class="property-name">id</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="id"
+             class="collapse property-definition-div" aria-labelledby="headingid"
+             data-parent="#accordionid">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#id" onclick="anchorLink('id')">id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Unique identifier within the parent pattern. Must match the filename (without .json extension) in the playlists/ directory. Referenced by the pattern meta's playlists array to control display order.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiondisplayName">
+    <div class="card">
+        <div class="card-header" id="headingdisplayName">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#displayName"
+                        aria-expanded="" aria-controls="displayName" onclick="setAnchor('#displayName')"><span class="property-name">displayName</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="displayName"
+             class="collapse property-definition-div" aria-labelledby="headingdisplayName"
+             data-parent="#accordiondisplayName">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#displayName" onclick="anchorLink('displayName')">displayName</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Human-readable playlist name shown in the app UI. For rss, year, and titleAppearanceOrder resolvers, this may be overridden per-group at runtime by titleExtractor output. For the category resolver, group-level display names come from static GroupDef entries.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionresolverType">
+    <div class="card">
+        <div class="card-header" id="headingresolverType">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#resolverType"
+                        aria-expanded="" aria-controls="resolverType" onclick="setAnchor('#resolverType')"><span class="property-name">resolverType</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="resolverType"
+             class="collapse property-definition-div" aria-labelledby="headingresolverType"
+             data-parent="#accordionresolverType">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a></div><br/>
+<span class="description"><p>Determines the algorithm used to group episodes into playlists. Each resolver interprets the episode data differently and supports different configuration fields.</p>
+</span><div class="one-of-value" id="resolverType_oneOf"><h2 class="handle">
+  <label>One of</label>
+</h2><ul class="nav nav-tabs" id="tabsresolverType_oneOf_oneOf" role="tablist"><li class="nav-item">
+            <a class="nav-link active oneOf-option"
+               id="resolverType_oneOf_i0" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i0" role="tab"
+               onclick="setAnchor('#resolverType_oneOf_i0')"
+            >Option 1</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="resolverType_oneOf_i1" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i1" role="tab"
+               onclick="setAnchor('#resolverType_oneOf_i1')"
+            >Option 2</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="resolverType_oneOf_i2" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i2" role="tab"
+               onclick="setAnchor('#resolverType_oneOf_i2')"
+            >Option 3</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="resolverType_oneOf_i3" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i3" role="tab"
+               onclick="setAnchor('#resolverType_oneOf_i3')"
+            >Option 4</a>
+        </li></ul>
+<div class="tab-content card"><div class="tab-pane fade card-body active show"
+             id="tab-pane_resolverType_oneOf_i0" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf" onclick="anchorLink('resolverType_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf_i0" onclick="anchorLink('resolverType_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Groups episodes by their iTunes season number from RSS feed metadata (itunes:season tag). Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts that properly tag seasons in their RSS feed. Supports: nullSeasonGroupKey, titleExtractor, episodeExtractor.</p>
+</span><span class="const-value" id="resolverType_oneOf_i0_const">Specific value: <code>"rss"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_resolverType_oneOf_i1" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf" onclick="anchorLink('resolverType_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf_i1" onclick="anchorLink('resolverType_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Groups episodes by matching their titles against regex patterns defined in the groups array. Groups are evaluated in order; the first matching pattern claims each episode. A group without a pattern acts as a catch-all for unmatched episodes. Best for podcasts with naming conventions like '[Series A] Episode 1' or 'Arc 1: Title'. Requires: groups. Does not use titleExtractor (group display names come from GroupDef.displayName).</p>
+</span><span class="const-value" id="resolverType_oneOf_i1_const">Specific value: <code>"category"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_resolverType_oneOf_i2" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf" onclick="anchorLink('resolverType_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf_i2" onclick="anchorLink('resolverType_oneOf_i2')">item 2</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Groups episodes by their publication year (publishedAt field). Each distinct year becomes a separate group, sorted by year descending by default (newest first). Best for long-running podcasts where yearly grouping provides natural navigation. Supports: titleExtractor, episodeExtractor.</p>
+</span><span class="const-value" id="resolverType_oneOf_i2_const">Specific value: <code>"year"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_resolverType_oneOf_i3" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf" onclick="anchorLink('resolverType_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf_i3" onclick="anchorLink('resolverType_oneOf_i3')">item 3</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Groups episodes by a recurring pattern extracted from their titles, ordered by when each unique pattern first appears in the feed (sorted by publication date). Uses titleExtractor or the first group's pattern to extract group names. Best for podcasts with titled story arcs or recurring series. Supports: titleExtractor (primary), groups[0].pattern (fallback for extraction).</p>
+</span><span class="const-value" id="resolverType_oneOf_i3_const">Specific value: <code>"titleAppearanceOrder"</code></span>
+        
+
+        
+        
+
+        
+        </div></div></div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpriority">
+    <div class="card">
+        <div class="card-header" id="headingpriority">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#priority"
+                        aria-expanded="" aria-controls="priority" onclick="setAnchor('#priority')"><span class="property-name">priority</span></button>
+            </h2>
+        </div>
+
+        <div id="priority"
+             class="collapse property-definition-div" aria-labelledby="headingpriority"
+             data-parent="#accordionpriority">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#priority" onclick="anchorLink('priority')">priority</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 0</span><br/>
+<span class="description"><p>Controls episode claiming order among sibling definitions within the same pattern. Processing order: (1) definitions with at least one filter are processed first, sorted by priority ascending; (2) definitions without any filters (fallbacks) are processed second, also sorted by priority ascending. Within each group, lower priority numbers claim matching episodes first. Once a filtered definition claims episodes, those episodes are unavailable to subsequent definitions.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="priority_number">Value must be greater or equal to <code>0</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionplaylistStructure">
+    <div class="card">
+        <div class="card-header" id="headingplaylistStructure">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#playlistStructure"
+                        aria-expanded="" aria-controls="playlistStructure" onclick="setAnchor('#playlistStructure')"><span class="property-name">playlistStructure</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="playlistStructure"
+             class="collapse property-definition-div" aria-labelledby="headingplaylistStructure"
+             data-parent="#accordionplaylistStructure">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#playlistStructure" onclick="anchorLink('playlistStructure')">playlistStructure</a></div><br/>
+<span class="description"><p>Determines how resolver results are organized into playlists.</p>
+</span><div class="one-of-value" id="playlistStructure_oneOf"><h2 class="handle">
+  <label>One of</label>
+</h2><ul class="nav nav-tabs" id="tabsplaylistStructure_oneOf_oneOf" role="tablist"><li class="nav-item">
+            <a class="nav-link active oneOf-option"
+               id="playlistStructure_oneOf_i0" data-toggle="tab" href="#tab-pane_playlistStructure_oneOf_i0" role="tab"
+               onclick="setAnchor('#playlistStructure_oneOf_i0')"
+            >Option 1</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="playlistStructure_oneOf_i1" data-toggle="tab" href="#tab-pane_playlistStructure_oneOf_i1" role="tab"
+               onclick="setAnchor('#playlistStructure_oneOf_i1')"
+            >Option 2</a>
+        </li></ul>
+<div class="tab-content card"><div class="tab-pane fade card-body active show"
+             id="tab-pane_playlistStructure_oneOf_i0" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#playlistStructure" onclick="anchorLink('playlistStructure')">playlistStructure</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#playlistStructure_oneOf" onclick="anchorLink('playlistStructure_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#playlistStructure_oneOf_i0" onclick="anchorLink('playlistStructure_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Each resolver result (season, year, category match) becomes a separate top-level smart playlist. One definition produces many playlists, each containing episodes that share the same grouping key. Tapping a playlist shows its episodes directly. Best when each group (e.g., a season or year) should stand alone as an independent playlist.</p>
+</span><span class="const-value" id="playlistStructure_oneOf_i0_const">Specific value: <code>"split"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_playlistStructure_oneOf_i1" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#playlistStructure" onclick="anchorLink('playlistStructure')">playlistStructure</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#playlistStructure_oneOf" onclick="anchorLink('playlistStructure_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#playlistStructure_oneOf_i1" onclick="anchorLink('playlistStructure_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>All resolver results are collected as groups inside a single parent playlist. One definition produces one playlist with sub-groups. Tapping the playlist shows group cards, and tapping a group card navigates to its episodes. Enables groupList settings (yearBinding, userSortable, showDateRange, sort). Best when groups should be browsed together under a unified playlist.</p>
+</span><span class="const-value" id="playlistStructure_oneOf_i1_const">Specific value: <code>"grouped"</code></span>
+        
+
+        
+        
+
+        
+        </div></div></div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeFilters">
+    <div class="card">
+        <div class="card-header" id="headingepisodeFilters">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeFilters"
+                        aria-expanded="" aria-controls="episodeFilters" onclick="setAnchor('#episodeFilters')"><span class="property-name">episodeFilters</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeFilters"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeFilters"
+             data-parent="#accordionepisodeFilters">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Episode filters applied before resolver processing. Having any filter makes this a 'filtered' definition, which is processed before filter-less fallback definitions. Matched episodes are claimed and unavailable to later definitions. Within each entry, all specified fields must match (AND). Across entries: require includes episodes matching any entry (OR); exclude rejects episodes matching any entry (OR).</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionepisodeFilters_require">
+    <div class="card">
+        <div class="card-header" id="headingepisodeFilters_require">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeFilters_require"
+                        aria-expanded="" aria-controls="episodeFilters_require" onclick="setAnchor('#episodeFilters_require')"><span class="property-name">require</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeFilters_require"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeFilters_require"
+             data-parent="#accordionepisodeFilters_require">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require" onclick="anchorLink('episodeFilters_require')">require</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
+<span class="description"><p>Inclusion filters (OR). An episode is included if it matches ANY entry. Within each entry, all specified fields must match (AND).</p>
+</span>
+        
+
+        
+        
+
+         <span class="badge badge-info no-additional">No Additional Items</span><h4>Each item of this array must be:</h4>
+    <div class="card">
+        <div class="card-body items-definition" id="episodeFilters_require_items">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require" onclick="anchorLink('episodeFilters_require')">require</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require_items" onclick="anchorLink('episodeFilters_require_items')">EpisodeFilterEntry</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>A single filter condition matched against episode fields. When multiple fields are specified, all must match (AND logic within an entry). At least one field must be specified.</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionepisodeFilters_require_items_title">
+    <div class="card">
+        <div class="card-header" id="headingepisodeFilters_require_items_title">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeFilters_require_items_title"
+                        aria-expanded="" aria-controls="episodeFilters_require_items_title" onclick="setAnchor('#episodeFilters_require_items_title')"><span class="property-name">title</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeFilters_require_items_title"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeFilters_require_items_title"
+             data-parent="#accordionepisodeFilters_require_items_title">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require" onclick="anchorLink('episodeFilters_require')">require</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require_items" onclick="anchorLink('episodeFilters_require_items')">require items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require_items_title" onclick="anchorLink('episodeFilters_require_items_title')">title</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Case-insensitive regex pattern matched against the episode title.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeFilters_require_items_description">
+    <div class="card">
+        <div class="card-header" id="headingepisodeFilters_require_items_description">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeFilters_require_items_description"
+                        aria-expanded="" aria-controls="episodeFilters_require_items_description" onclick="setAnchor('#episodeFilters_require_items_description')"><span class="property-name">description</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeFilters_require_items_description"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeFilters_require_items_description"
+             data-parent="#accordionepisodeFilters_require_items_description">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require" onclick="anchorLink('episodeFilters_require')">require</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require_items" onclick="anchorLink('episodeFilters_require_items')">require items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_require_items_description" onclick="anchorLink('episodeFilters_require_items_description')">description</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Case-insensitive regex pattern matched against the episode description/summary.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeFilters_exclude">
+    <div class="card">
+        <div class="card-header" id="headingepisodeFilters_exclude">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeFilters_exclude"
+                        aria-expanded="" aria-controls="episodeFilters_exclude" onclick="setAnchor('#episodeFilters_exclude')"><span class="property-name">exclude</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeFilters_exclude"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeFilters_exclude"
+             data-parent="#accordionepisodeFilters_exclude">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_exclude" onclick="anchorLink('episodeFilters_exclude')">exclude</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
+<span class="description"><p>Exclusion filters (OR). An episode is excluded if it matches ANY entry. Within each entry, all specified fields must match (AND).</p>
+</span>
+        
+
+        
+        
+
+         <span class="badge badge-info no-additional">No Additional Items</span><h4>Each item of this array must be:</h4>
+    <div class="card">
+        <div class="card-body items-definition" id="episodeFilters_exclude_items">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_exclude" onclick="anchorLink('episodeFilters_exclude')">exclude</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeFilters_exclude_items" onclick="anchorLink('episodeFilters_exclude_items')">EpisodeFilterEntry</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>A single filter condition matched against episode fields. When multiple fields are specified, all must match (AND logic within an entry). At least one field must be specified.</p>
+</span><a href="#episodeFilters_require_items" onclick="anchorLink('episodeFilters_require_items')" class="ref-link">Same definition as episodeFilters_require_items</a>
+        </div>
+    </div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionnullSeasonGroupKey">
+    <div class="card">
+        <div class="card-header" id="headingnullSeasonGroupKey">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#nullSeasonGroupKey"
+                        aria-expanded="" aria-controls="nullSeasonGroupKey" onclick="setAnchor('#nullSeasonGroupKey')"><span class="property-name">nullSeasonGroupKey</span></button>
+            </h2>
+        </div>
+
+        <div id="nullSeasonGroupKey"
+             class="collapse property-definition-div" aria-labelledby="headingnullSeasonGroupKey"
+             data-parent="#accordionnullSeasonGroupKey">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#nullSeasonGroupKey" onclick="anchorLink('nullSeasonGroupKey')">nullSeasonGroupKey</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Group key assigned to episodes that have a null or zero seasonNumber in RSS metadata. Used only by the rss resolver. When set, episodes without a valid season number are placed into a group with this key (e.g., 0 for a 'Specials' group). When omitted, such episodes are left ungrouped and may fall through to a fallback definition.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiontitleExtractor">
+    <div class="card">
+        <div class="card-header" id="headingtitleExtractor">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#titleExtractor"
+                        aria-expanded="" aria-controls="titleExtractor" onclick="setAnchor('#titleExtractor')"><span class="property-name">titleExtractor</span></button>
+            </h2>
+        </div>
+
+        <div id="titleExtractor"
+             class="collapse property-definition-div" aria-labelledby="headingtitleExtractor"
+             data-parent="#accordiontitleExtractor">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Configuration for extracting display names for resolver results (playlist titles in 'split' mode, group card titles in 'grouped' mode). Used by rss, year, and titleAppearanceOrder resolvers. Not used by the category resolver, which uses static display names from GroupDef entries. The extractor runs against a representative episode from each group (typically the first episode).</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiontitleExtractor_source">
+    <div class="card">
+        <div class="card-header" id="headingtitleExtractor_source">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#titleExtractor_source"
+                        aria-expanded="" aria-controls="titleExtractor_source" onclick="setAnchor('#titleExtractor_source')"><span class="property-name">source</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="titleExtractor_source"
+             class="collapse property-definition-div" aria-labelledby="headingtitleExtractor_source"
+             data-parent="#accordiontitleExtractor_source">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor_source" onclick="anchorLink('titleExtractor_source')">source</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Episode field to read the raw value from. 'title': the episode title string. 'description': the episode description/summary string. 'seasonNumber': the episode's season number as a string (from RSS itunes:season or episodeExtractor). 'episodeNumber': the episode number as a string (from RSS itunes:episode or episodeExtractor). For 'seasonNumber' and 'episodeNumber', the numeric value is converted to a string before pattern matching.</p>
+</span><div class="enum-value" id="titleExtractor_source_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"title"</li><li class="list-group-item enum-item">"description"</li><li class="list-group-item enum-item">"seasonNumber"</li><li class="list-group-item enum-item">"episodeNumber"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiontitleExtractor_pattern">
+    <div class="card">
+        <div class="card-header" id="headingtitleExtractor_pattern">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#titleExtractor_pattern"
+                        aria-expanded="" aria-controls="titleExtractor_pattern" onclick="setAnchor('#titleExtractor_pattern')"><span class="property-name">pattern</span></button>
+            </h2>
+        </div>
+
+        <div id="titleExtractor_pattern"
+             class="collapse property-definition-div" aria-labelledby="headingtitleExtractor_pattern"
+             data-parent="#accordiontitleExtractor_pattern">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor_pattern" onclick="anchorLink('titleExtractor_pattern')">pattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Regex pattern applied to the source value. When provided, the first match is used and the capture group specified by 'group' is extracted. When omitted, the raw source value is used directly (useful for 'seasonNumber' source with a template like 'Season {value}').</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiontitleExtractor_group">
+    <div class="card">
+        <div class="card-header" id="headingtitleExtractor_group">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#titleExtractor_group"
+                        aria-expanded="" aria-controls="titleExtractor_group" onclick="setAnchor('#titleExtractor_group')"><span class="property-name">group</span></button>
+            </h2>
+        </div>
+
+        <div id="titleExtractor_group"
+             class="collapse property-definition-div" aria-labelledby="headingtitleExtractor_group"
+             data-parent="#accordiontitleExtractor_group">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor_group" onclick="anchorLink('titleExtractor_group')">group</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 0</span><br/>
+<span class="description"><p>Capture group index to extract from the regex match. 0 returns the full match. 1+ returns the specified capture group. Only meaningful when pattern is set.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="titleExtractor_group_number">Value must be greater or equal to <code>0</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiontitleExtractor_template">
+    <div class="card">
+        <div class="card-header" id="headingtitleExtractor_template">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#titleExtractor_template"
+                        aria-expanded="" aria-controls="titleExtractor_template" onclick="setAnchor('#titleExtractor_template')"><span class="property-name">template</span></button>
+            </h2>
+        </div>
+
+        <div id="titleExtractor_template"
+             class="collapse property-definition-div" aria-labelledby="headingtitleExtractor_template"
+             data-parent="#accordiontitleExtractor_template">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor_template" onclick="anchorLink('titleExtractor_template')">template</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Format template applied after extraction. The placeholder {value} is replaced with the extracted value. Example: 'Season {value}' with extracted value '3' produces 'Season 3'. Applied after pattern matching (or raw source value if no pattern).</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiontitleExtractor_fallback">
+    <div class="card">
+        <div class="card-header" id="headingtitleExtractor_fallback">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#titleExtractor_fallback"
+                        aria-expanded="" aria-controls="titleExtractor_fallback" onclick="setAnchor('#titleExtractor_fallback')"><span class="property-name">fallback</span></button>
+            </h2>
+        </div>
+
+        <div id="titleExtractor_fallback"
+             class="collapse property-definition-div" aria-labelledby="headingtitleExtractor_fallback"
+             data-parent="#accordiontitleExtractor_fallback">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor_fallback" onclick="anchorLink('titleExtractor_fallback')">fallback</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Fallback extractor tried when this extractor fails to produce a value (source value is null, or pattern doesn't match). Supports arbitrary nesting for multi-tier fallback chains. Not tried when fallbackValue already returned a result.</p>
+</span><a href="#titleExtractor" onclick="anchorLink('titleExtractor')" class="ref-link">Same definition as titleExtractor</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiontitleExtractor_fallbackValue">
+    <div class="card">
+        <div class="card-header" id="headingtitleExtractor_fallbackValue">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#titleExtractor_fallbackValue"
+                        aria-expanded="" aria-controls="titleExtractor_fallbackValue" onclick="setAnchor('#titleExtractor_fallbackValue')"><span class="property-name">fallbackValue</span></button>
+            </h2>
+        </div>
+
+        <div id="titleExtractor_fallbackValue"
+             class="collapse property-definition-div" aria-labelledby="headingtitleExtractor_fallbackValue"
+             data-parent="#accordiontitleExtractor_fallbackValue">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#titleExtractor_fallbackValue" onclick="anchorLink('titleExtractor_fallbackValue')">fallbackValue</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Static string returned immediately when source is 'seasonNumber' or 'episodeNumber' and the numeric value is null or less than 1. Checked before any pattern matching. Has no effect when source is 'title' or 'description'. Useful for labeling special/ungrouped episodes (e.g., 'Extras' for season 0).</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionprependSeasonNumber">
+    <div class="card">
+        <div class="card-header" id="headingprependSeasonNumber">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#prependSeasonNumber"
+                        aria-expanded="" aria-controls="prependSeasonNumber" onclick="setAnchor('#prependSeasonNumber')"><span class="property-name">prependSeasonNumber</span></button>
+            </h2>
+        </div>
+
+        <div id="prependSeasonNumber"
+             class="collapse property-definition-div" aria-labelledby="headingprependSeasonNumber"
+             data-parent="#accordionprependSeasonNumber">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#prependSeasonNumber" onclick="anchorLink('prependSeasonNumber')">prependSeasonNumber</a></div><span class="badge badge-dark value-type">Type: boolean</span> <span class="badge badge-success default-value">Default: false</span><br/>
+<span class="description"><p>Prepend a season number label to resolver result names. When true, results with a sortKey greater than 0 are displayed as 'S{sortKey} {displayName}' (e.g., 'S13 Lincoln Arc'). Results with sortKey 0 (typically special/ungrouped episodes) are displayed without the prefix. Applies in both 'split' mode (playlist titles) and 'grouped' mode (group card titles).</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroupList">
+    <div class="card">
+        <div class="card-header" id="headinggroupList">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groupList"
+                        aria-expanded="" aria-controls="groupList" onclick="setAnchor('#groupList')"><span class="property-name">groupList</span></button>
+            </h2>
+        </div>
+
+        <div id="groupList"
+             class="collapse property-definition-div" aria-labelledby="headinggroupList"
+             data-parent="#accordiongroupList">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Settings for the group list view. Only meaningful when playlistStructure is 'grouped'. Controls how groups are displayed, sorted, and organized within the parent playlist.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongroupList_yearBinding">
+    <div class="card">
+        <div class="card-header" id="headinggroupList_yearBinding">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groupList_yearBinding"
+                        aria-expanded="" aria-controls="groupList_yearBinding" onclick="setAnchor('#groupList_yearBinding')"><span class="property-name">yearBinding</span></button>
+            </h2>
+        </div>
+
+        <div id="groupList_yearBinding"
+             class="collapse property-definition-div" aria-labelledby="headinggroupList_yearBinding"
+             data-parent="#accordiongroupList_yearBinding">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding" onclick="anchorLink('groupList_yearBinding')">yearBinding</a></div><span class="badge badge-dark value-type">Type: object</span> <span class="badge badge-success default-value">Default: "none"</span><br/>
+<span class="description"><p>Controls how groups relate to year headers in the group list view. Can be overridden per-group via GroupDef.display.yearBinding.</p>
+</span>
+
+    <div class="one-of-value" id="groupList_yearBinding_oneOf"><h2 class="handle">
+  <label>One of</label>
+</h2><ul class="nav nav-tabs" id="tabsgroupList_yearBinding_oneOf_oneOf" role="tablist"><li class="nav-item">
+            <a class="nav-link active oneOf-option"
+               id="groupList_yearBinding_oneOf_i0" data-toggle="tab" href="#tab-pane_groupList_yearBinding_oneOf_i0" role="tab"
+               onclick="setAnchor('#groupList_yearBinding_oneOf_i0')"
+            >Option 1</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="groupList_yearBinding_oneOf_i1" data-toggle="tab" href="#tab-pane_groupList_yearBinding_oneOf_i1" role="tab"
+               onclick="setAnchor('#groupList_yearBinding_oneOf_i1')"
+            >Option 2</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="groupList_yearBinding_oneOf_i2" data-toggle="tab" href="#tab-pane_groupList_yearBinding_oneOf_i2" role="tab"
+               onclick="setAnchor('#groupList_yearBinding_oneOf_i2')"
+            >Option 3</a>
+        </li></ul>
+<div class="tab-content card"><div class="tab-pane fade card-body active show"
+             id="tab-pane_groupList_yearBinding_oneOf_i0" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding" onclick="anchorLink('groupList_yearBinding')">yearBinding</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding_oneOf" onclick="anchorLink('groupList_yearBinding_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding_oneOf_i0" onclick="anchorLink('groupList_yearBinding_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>No year headers. Groups are displayed in a flat list without year structure.</p>
+</span><span class="const-value" id="groupList_yearBinding_oneOf_i0_const">Specific value: <code>"none"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_groupList_yearBinding_oneOf_i1" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding" onclick="anchorLink('groupList_yearBinding')">yearBinding</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding_oneOf" onclick="anchorLink('groupList_yearBinding_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding_oneOf_i1" onclick="anchorLink('groupList_yearBinding_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Year headers shown. Each group appears once, placed under the year of its earliest episode.</p>
+</span><span class="const-value" id="groupList_yearBinding_oneOf_i1_const">Specific value: <code>"pinToYear"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_groupList_yearBinding_oneOf_i2" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding" onclick="anchorLink('groupList_yearBinding')">yearBinding</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding_oneOf" onclick="anchorLink('groupList_yearBinding_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_yearBinding_oneOf_i2" onclick="anchorLink('groupList_yearBinding_oneOf_i2')">item 2</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Year headers shown. A group appears multiple times, once for each year it contains episodes. Tapping a group-year entry shows only that year's episodes from the group.</p>
+</span><span class="const-value" id="groupList_yearBinding_oneOf_i2_const">Specific value: <code>"splitByYear"</code></span>
+        
+
+        
+        
+
+        
+        </div></div></div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroupList_userSortable">
+    <div class="card">
+        <div class="card-header" id="headinggroupList_userSortable">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groupList_userSortable"
+                        aria-expanded="" aria-controls="groupList_userSortable" onclick="setAnchor('#groupList_userSortable')"><span class="property-name">userSortable</span></button>
+            </h2>
+        </div>
+
+        <div id="groupList_userSortable"
+             class="collapse property-definition-div" aria-labelledby="headinggroupList_userSortable"
+             data-parent="#accordiongroupList_userSortable">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_userSortable" onclick="anchorLink('groupList_userSortable')">userSortable</a></div><span class="badge badge-dark value-type">Type: boolean</span> <span class="badge badge-success default-value">Default: true</span><br/>
+<span class="description"><p>Allow users to change the sort order at runtime. When true, users can flip between ascending and descending order.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroupList_showDateRange">
+    <div class="card">
+        <div class="card-header" id="headinggroupList_showDateRange">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groupList_showDateRange"
+                        aria-expanded="" aria-controls="groupList_showDateRange" onclick="setAnchor('#groupList_showDateRange')"><span class="property-name">showDateRange</span></button>
+            </h2>
+        </div>
+
+        <div id="groupList_showDateRange"
+             class="collapse property-definition-div" aria-labelledby="headinggroupList_showDateRange"
+             data-parent="#accordiongroupList_showDateRange">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_showDateRange" onclick="anchorLink('groupList_showDateRange')">showDateRange</a></div><span class="badge badge-dark value-type">Type: boolean</span> <span class="badge badge-success default-value">Default: false</span><br/>
+<span class="description"><p>Show date range and total duration metadata on group cards. When true, each group card displays the date span of its episodes and total playback duration. Can be overridden per-group via GroupDef.display.showDateRange.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroupList_sort">
+    <div class="card">
+        <div class="card-header" id="headinggroupList_sort">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groupList_sort"
+                        aria-expanded="" aria-controls="groupList_sort" onclick="setAnchor('#groupList_sort')"><span class="property-name">sort</span></button>
+            </h2>
+        </div>
+
+        <div id="groupList_sort"
+             class="collapse property-definition-div" aria-labelledby="headinggroupList_sort"
+             data-parent="#accordiongroupList_sort">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort" onclick="anchorLink('groupList_sort')">sort</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Sort rule for ordering groups within the parent playlist. When omitted, groups are ordered by their natural resolver order.</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongroupList_sort_field">
+    <div class="card">
+        <div class="card-header" id="headinggroupList_sort_field">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groupList_sort_field"
+                        aria-expanded="" aria-controls="groupList_sort_field" onclick="setAnchor('#groupList_sort_field')"><span class="property-name">field</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="groupList_sort_field"
+             class="collapse property-definition-div" aria-labelledby="headinggroupList_sort_field"
+             data-parent="#accordiongroupList_sort_field">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort" onclick="anchorLink('groupList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field" onclick="anchorLink('groupList_sort_field')">field</a></div><br/>
+<span class="description"><p>The group attribute to compare when sorting.</p>
+</span><div class="one-of-value" id="groupList_sort_field_oneOf"><h2 class="handle">
+  <label>One of</label>
+</h2><ul class="nav nav-tabs" id="tabsgroupList_sort_field_oneOf_oneOf" role="tablist"><li class="nav-item">
+            <a class="nav-link active oneOf-option"
+               id="groupList_sort_field_oneOf_i0" data-toggle="tab" href="#tab-pane_groupList_sort_field_oneOf_i0" role="tab"
+               onclick="setAnchor('#groupList_sort_field_oneOf_i0')"
+            >Option 1</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="groupList_sort_field_oneOf_i1" data-toggle="tab" href="#tab-pane_groupList_sort_field_oneOf_i1" role="tab"
+               onclick="setAnchor('#groupList_sort_field_oneOf_i1')"
+            >Option 2</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="groupList_sort_field_oneOf_i2" data-toggle="tab" href="#tab-pane_groupList_sort_field_oneOf_i2" role="tab"
+               onclick="setAnchor('#groupList_sort_field_oneOf_i2')"
+            >Option 3</a>
+        </li></ul>
+<div class="tab-content card"><div class="tab-pane fade card-body active show"
+             id="tab-pane_groupList_sort_field_oneOf_i0" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort" onclick="anchorLink('groupList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field" onclick="anchorLink('groupList_sort_field')">field</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field_oneOf" onclick="anchorLink('groupList_sort_field_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field_oneOf_i0" onclick="anchorLink('groupList_sort_field_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Sort by the group's numeric sort key. For rss resolver, this is the season number. For year resolver, the publication year. For titleAppearanceOrder, the first-appearance index. For category, the group's position in the groups array.</p>
+</span><span class="const-value" id="groupList_sort_field_oneOf_i0_const">Specific value: <code>"playlistNumber"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_groupList_sort_field_oneOf_i1" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort" onclick="anchorLink('groupList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field" onclick="anchorLink('groupList_sort_field')">field</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field_oneOf" onclick="anchorLink('groupList_sort_field_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field_oneOf_i1" onclick="anchorLink('groupList_sort_field_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Sort by the publication date of the most recent episode in each group.</p>
+</span><span class="const-value" id="groupList_sort_field_oneOf_i1_const">Specific value: <code>"newestEpisodeDate"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_groupList_sort_field_oneOf_i2" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort" onclick="anchorLink('groupList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field" onclick="anchorLink('groupList_sort_field')">field</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field_oneOf" onclick="anchorLink('groupList_sort_field_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_field_oneOf_i2" onclick="anchorLink('groupList_sort_field_oneOf_i2')">item 2</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Sort alphabetically by the group's display name using locale-aware string comparison.</p>
+</span><span class="const-value" id="groupList_sort_field_oneOf_i2_const">Specific value: <code>"alphabetical"</code></span>
+        
+
+        
+        
+
+        
+        </div></div></div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroupList_sort_order">
+    <div class="card">
+        <div class="card-header" id="headinggroupList_sort_order">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groupList_sort_order"
+                        aria-expanded="" aria-controls="groupList_sort_order" onclick="setAnchor('#groupList_sort_order')"><span class="property-name">order</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="groupList_sort_order"
+             class="collapse property-definition-div" aria-labelledby="headinggroupList_sort_order"
+             data-parent="#accordiongroupList_sort_order">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList" onclick="anchorLink('groupList')">groupList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort" onclick="anchorLink('groupList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groupList_sort_order" onclick="anchorLink('groupList_sort_order')">order</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Sort direction. 'ascending': smallest/earliest/A-first values first. 'descending': largest/latest/Z-first values first.</p>
+</span>
+
+    <div class="enum-value" id="groupList_sort_order_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"ascending"</li><li class="list-group-item enum-item">"descending"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeList">
+    <div class="card">
+        <div class="card-header" id="headingepisodeList">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeList"
+                        aria-expanded="" aria-controls="episodeList" onclick="setAnchor('#episodeList')"><span class="property-name">episodeList</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeList"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeList"
+             data-parent="#accordionepisodeList">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Default display and ordering settings for episode lists within groups or playlists. Can be overridden per-group via GroupDef.episodeList.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionepisodeList_showYearHeaders">
+    <div class="card">
+        <div class="card-header" id="headingepisodeList_showYearHeaders">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeList_showYearHeaders"
+                        aria-expanded="" aria-controls="episodeList_showYearHeaders" onclick="setAnchor('#episodeList_showYearHeaders')"><span class="property-name">showYearHeaders</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeList_showYearHeaders"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeList_showYearHeaders"
+             data-parent="#accordionepisodeList_showYearHeaders">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_showYearHeaders" onclick="anchorLink('episodeList_showYearHeaders')">showYearHeaders</a></div><span class="badge badge-dark value-type">Type: boolean</span> <span class="badge badge-success default-value">Default: false</span><br/>
+<span class="description"><p>Show year separator headers within episode lists. When true, episodes are visually separated by publication year with sticky headers. This controls year headers at the episode level (inside a group), as opposed to groupList.yearBinding which controls year structure at the group list level.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeList_sort">
+    <div class="card">
+        <div class="card-header" id="headingepisodeList_sort">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeList_sort"
+                        aria-expanded="" aria-controls="episodeList_sort" onclick="setAnchor('#episodeList_sort')"><span class="property-name">sort</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeList_sort"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeList_sort"
+             data-parent="#accordionepisodeList_sort">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort" onclick="anchorLink('episodeList_sort')">sort</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Default sort rule for ordering episodes within a group or playlist. When omitted, episodes are ordered by publishedAt ascending. Can be overridden per-group via GroupDef.episodeList.sort. The mobile app may override this with user-specific sorting at runtime.</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionepisodeList_sort_field">
+    <div class="card">
+        <div class="card-header" id="headingepisodeList_sort_field">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeList_sort_field"
+                        aria-expanded="" aria-controls="episodeList_sort_field" onclick="setAnchor('#episodeList_sort_field')"><span class="property-name">field</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeList_sort_field"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeList_sort_field"
+             data-parent="#accordionepisodeList_sort_field">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort" onclick="anchorLink('episodeList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field" onclick="anchorLink('episodeList_sort_field')">field</a></div><br/>
+<span class="description"><p>The episode attribute to sort by.</p>
+</span><div class="one-of-value" id="episodeList_sort_field_oneOf"><h2 class="handle">
+  <label>One of</label>
+</h2><ul class="nav nav-tabs" id="tabsepisodeList_sort_field_oneOf_oneOf" role="tablist"><li class="nav-item">
+            <a class="nav-link active oneOf-option"
+               id="episodeList_sort_field_oneOf_i0" data-toggle="tab" href="#tab-pane_episodeList_sort_field_oneOf_i0" role="tab"
+               onclick="setAnchor('#episodeList_sort_field_oneOf_i0')"
+            >Option 1</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="episodeList_sort_field_oneOf_i1" data-toggle="tab" href="#tab-pane_episodeList_sort_field_oneOf_i1" role="tab"
+               onclick="setAnchor('#episodeList_sort_field_oneOf_i1')"
+            >Option 2</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="episodeList_sort_field_oneOf_i2" data-toggle="tab" href="#tab-pane_episodeList_sort_field_oneOf_i2" role="tab"
+               onclick="setAnchor('#episodeList_sort_field_oneOf_i2')"
+            >Option 3</a>
+        </li></ul>
+<div class="tab-content card"><div class="tab-pane fade card-body active show"
+             id="tab-pane_episodeList_sort_field_oneOf_i0" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort" onclick="anchorLink('episodeList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field" onclick="anchorLink('episodeList_sort_field')">field</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field_oneOf" onclick="anchorLink('episodeList_sort_field_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field_oneOf_i0" onclick="anchorLink('episodeList_sort_field_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Sort by episode publication date.</p>
+</span><span class="const-value" id="episodeList_sort_field_oneOf_i0_const">Specific value: <code>"publishedAt"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_episodeList_sort_field_oneOf_i1" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort" onclick="anchorLink('episodeList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field" onclick="anchorLink('episodeList_sort_field')">field</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field_oneOf" onclick="anchorLink('episodeList_sort_field_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field_oneOf_i1" onclick="anchorLink('episodeList_sort_field_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Sort by episode number (from RSS metadata or episodeExtractor).</p>
+</span><span class="const-value" id="episodeList_sort_field_oneOf_i1_const">Specific value: <code>"episodeNumber"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_episodeList_sort_field_oneOf_i2" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort" onclick="anchorLink('episodeList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field" onclick="anchorLink('episodeList_sort_field')">field</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field_oneOf" onclick="anchorLink('episodeList_sort_field_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_field_oneOf_i2" onclick="anchorLink('episodeList_sort_field_oneOf_i2')">item 2</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Sort alphabetically by episode title using locale-aware string comparison.</p>
+</span><span class="const-value" id="episodeList_sort_field_oneOf_i2_const">Specific value: <code>"title"</code></span>
+        
+
+        
+        
+
+        
+        </div></div></div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeList_sort_order">
+    <div class="card">
+        <div class="card-header" id="headingepisodeList_sort_order">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeList_sort_order"
+                        aria-expanded="" aria-controls="episodeList_sort_order" onclick="setAnchor('#episodeList_sort_order')"><span class="property-name">order</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeList_sort_order"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeList_sort_order"
+             data-parent="#accordionepisodeList_sort_order">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort" onclick="anchorLink('episodeList_sort')">sort</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_sort_order" onclick="anchorLink('episodeList_sort_order')">order</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Sort direction. 'ascending': smallest/earliest/A-first values first. 'descending': largest/latest/Z-first values first.</p>
+</span><a href="#groupList_sort_order" onclick="anchorLink('groupList_sort_order')" class="ref-link">Same definition as order</a>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeList_titleExtractor">
+    <div class="card">
+        <div class="card-header" id="headingepisodeList_titleExtractor">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeList_titleExtractor"
+                        aria-expanded="" aria-controls="episodeList_titleExtractor" onclick="setAnchor('#episodeList_titleExtractor')"><span class="property-name">titleExtractor</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeList_titleExtractor"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeList_titleExtractor"
+             data-parent="#accordionepisodeList_titleExtractor">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList" onclick="anchorLink('episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeList_titleExtractor" onclick="anchorLink('episodeList_titleExtractor')">titleExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Transform episode titles for display in the episode list. Strips redundant information (e.g., series name, group identifier) that is already conveyed by the group context. When omitted, episode titles are shown as-is. Can be overridden per-group via GroupDef.episodeList.titleExtractor.</p>
+</span><a href="#titleExtractor" onclick="anchorLink('titleExtractor')" class="ref-link">Same definition as titleExtractor</a>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor"
+                        aria-expanded="" aria-controls="episodeExtractor" onclick="setAnchor('#episodeExtractor')"><span class="property-name">episodeExtractor</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor"
+             data-parent="#accordionepisodeExtractor">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Default configuration for extracting season and episode numbers from episode title or description text. Overrides RSS metadata (itunes:season, itunes:episode) with values parsed from the episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be overridden per-group via GroupDef.episodeExtractor.</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionepisodeExtractor_source">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_source">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_source"
+                        aria-expanded="" aria-controls="episodeExtractor_source" onclick="setAnchor('#episodeExtractor_source')"><span class="property-name">source</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_source"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_source"
+             data-parent="#accordionepisodeExtractor_source">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_source" onclick="anchorLink('episodeExtractor_source')">source</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<span class="description"><p>Episode field to extract numbers from. 'title': the episode title (most common). 'description': the episode description/summary.</p>
+</span><div class="enum-value" id="episodeExtractor_source_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"title"</li><li class="list-group-item enum-item">"description"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor_pattern">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_pattern">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_pattern"
+                        aria-expanded="" aria-controls="episodeExtractor_pattern" onclick="setAnchor('#episodeExtractor_pattern')"><span class="property-name">pattern</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_pattern"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_pattern"
+             data-parent="#accordionepisodeExtractor_pattern">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_pattern" onclick="anchorLink('episodeExtractor_pattern')">pattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Primary regex pattern with capture groups for season and episode numbers. Must contain at least one capture group for the episode number (episodeGroup). Should contain a capture group for season (seasonGroup) unless seasonGroup is null. Example: '[(\d+)-(\d+)]' captures season from group 1 and episode from group 2.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor_seasonGroup">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_seasonGroup">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_seasonGroup"
+                        aria-expanded="" aria-controls="episodeExtractor_seasonGroup" onclick="setAnchor('#episodeExtractor_seasonGroup')"><span class="property-name">seasonGroup</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_seasonGroup"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_seasonGroup"
+             data-parent="#accordionepisodeExtractor_seasonGroup">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_seasonGroup" onclick="anchorLink('episodeExtractor_seasonGroup')">seasonGroup</a></div><span class="badge badge-dark value-type">Type: integer or null</span> <span class="badge badge-success default-value">Default: 1</span><br/>
+<span class="description"><p>Capture group index for the season number in the primary pattern. Default is 1. Set to null to skip season extraction entirely (episode-only mode), useful when only episode renumbering is needed without changing season grouping.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor_episodeGroup">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_episodeGroup">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_episodeGroup"
+                        aria-expanded="" aria-controls="episodeExtractor_episodeGroup" onclick="setAnchor('#episodeExtractor_episodeGroup')"><span class="property-name">episodeGroup</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_episodeGroup"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_episodeGroup"
+             data-parent="#accordionepisodeExtractor_episodeGroup">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_episodeGroup" onclick="anchorLink('episodeExtractor_episodeGroup')">episodeGroup</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 2</span><br/>
+<span class="description"><p>Capture group index for the episode number in the primary pattern. Default is 2. The extracted value is parsed as an integer and used for episode ordering within groups.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="episodeExtractor_episodeGroup_number">Value must be greater or equal to <code>1</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor_fallbackSeasonNumber">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_fallbackSeasonNumber">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackSeasonNumber"
+                        aria-expanded="" aria-controls="episodeExtractor_fallbackSeasonNumber" onclick="setAnchor('#episodeExtractor_fallbackSeasonNumber')"><span class="property-name">fallbackSeasonNumber</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_fallbackSeasonNumber"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackSeasonNumber"
+             data-parent="#accordionepisodeExtractor_fallbackSeasonNumber">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_fallbackSeasonNumber" onclick="anchorLink('episodeExtractor_fallbackSeasonNumber')">fallbackSeasonNumber</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Fixed season number assigned when the primary pattern fails but fallbackEpisodePattern matches. Typically 0 for special/bonus episodes that don't belong to a regular season. Only used in conjunction with fallbackEpisodePattern.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor_fallbackEpisodePattern">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_fallbackEpisodePattern">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackEpisodePattern"
+                        aria-expanded="" aria-controls="episodeExtractor_fallbackEpisodePattern" onclick="setAnchor('#episodeExtractor_fallbackEpisodePattern')"><span class="property-name">fallbackEpisodePattern</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_fallbackEpisodePattern"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackEpisodePattern"
+             data-parent="#accordionepisodeExtractor_fallbackEpisodePattern">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_fallbackEpisodePattern" onclick="anchorLink('episodeExtractor_fallbackEpisodePattern')">fallbackEpisodePattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Secondary regex pattern tried when the primary pattern does not match. Designed for special episodes with a different title format (e.g., bonus episodes, extras). The episode number is extracted from the capture group specified by fallbackEpisodeCaptureGroup, and the season is set to fallbackSeasonNumber.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor_fallbackEpisodeCaptureGroup">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_fallbackEpisodeCaptureGroup">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackEpisodeCaptureGroup"
+                        aria-expanded="" aria-controls="episodeExtractor_fallbackEpisodeCaptureGroup" onclick="setAnchor('#episodeExtractor_fallbackEpisodeCaptureGroup')"><span class="property-name">fallbackEpisodeCaptureGroup</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_fallbackEpisodeCaptureGroup"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackEpisodeCaptureGroup"
+             data-parent="#accordionepisodeExtractor_fallbackEpisodeCaptureGroup">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_fallbackEpisodeCaptureGroup" onclick="anchorLink('episodeExtractor_fallbackEpisodeCaptureGroup')">fallbackEpisodeCaptureGroup</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 1</span><br/>
+<span class="description"><p>Capture group index for the episode number in fallbackEpisodePattern. Default is 1.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="episodeExtractor_fallbackEpisodeCaptureGroup_number">Value must be greater or equal to <code>1</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionepisodeExtractor_fallbackToRss">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor_fallbackToRss">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackToRss"
+                        aria-expanded="" aria-controls="episodeExtractor_fallbackToRss" onclick="setAnchor('#episodeExtractor_fallbackToRss')"><span class="property-name">fallbackToRss</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor_fallbackToRss"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackToRss"
+             data-parent="#accordionepisodeExtractor_fallbackToRss">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor_fallbackToRss" onclick="anchorLink('episodeExtractor_fallbackToRss')">fallbackToRss</a></div><span class="badge badge-dark value-type">Type: boolean</span> <span class="badge badge-success default-value">Default: false</span><br/>
+<span class="description"><p>When true, fall back to the episode's RSS episodeNumber (itunes:episode) if neither the primary pattern nor the fallback pattern matched. This is the last resort in the three-tier extraction strategy. Season number is not set in this case (only episode number is used).</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups">
+    <div class="card">
+        <div class="card-header" id="headinggroups">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups"
+                        aria-expanded="" aria-controls="groups" onclick="setAnchor('#groups')"><span class="property-name">groups</span></button>
+            </h2>
+        </div>
+
+        <div id="groups"
+             class="collapse property-definition-div" aria-labelledby="headinggroups"
+             data-parent="#accordiongroups">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
+<span class="description"><p>Static group definitions, primarily used by the category resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleAppearanceOrder resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and episodeExtractor defaults.</p>
+</span>
+        
+
+        
+        
+
+         <span class="badge badge-info no-additional">No Additional Items</span><h4>Each item of this array must be:</h4>
+    <div class="card">
+        <div class="card-body items-definition" id="groups_items">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">GroupDef</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Static group definition. Groups with a pattern match episodes by title regex; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in definition order (first-match-wins). At most one catch-all group should exist and should be placed last. Groups can override definition-level defaults for display, episodeList, and episodeExtractor.</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongroups_items_id">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_id"
+                        aria-expanded="" aria-controls="groups_items_id" onclick="setAnchor('#groups_items_id')"><span class="property-name">id</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_id"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_id"
+             data-parent="#accordiongroups_items_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_id" onclick="anchorLink('groups_items_id')">id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Unique identifier within the parent playlist definition. Used internally for mapping episodes to groups and for cache storage keys.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_displayName">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_displayName">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_displayName"
+                        aria-expanded="" aria-controls="groups_items_displayName" onclick="setAnchor('#groups_items_displayName')"><span class="property-name">displayName</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_displayName"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_displayName"
+             data-parent="#accordiongroups_items_displayName">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_displayName" onclick="anchorLink('groups_items_displayName')">displayName</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Human-readable group name shown on the group card in the UI. For the category resolver this is always used as-is (not overridden by titleExtractor).</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_pattern">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_pattern">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_pattern"
+                        aria-expanded="" aria-controls="groups_items_pattern" onclick="setAnchor('#groups_items_pattern')"><span class="property-name">pattern</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_pattern"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_pattern"
+             data-parent="#accordiongroups_items_pattern">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_pattern" onclick="anchorLink('groups_items_pattern')">pattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Case-insensitive regex pattern matched against episode titles. When present, episodes whose title matches are assigned to this group. When omitted, this group acts as a catch-all that collects all episodes not matched by any preceding group's pattern.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_display">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_display">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_display"
+                        aria-expanded="" aria-controls="groups_items_display" onclick="setAnchor('#groups_items_display')"><span class="property-name">display</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_display"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_display"
+             data-parent="#accordiongroups_items_display">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_display" onclick="anchorLink('groups_items_display')">display</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Per-group display overrides for the group card. Omitted fields inherit from the definition-level groupList defaults.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongroups_items_display_showDateRange">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_display_showDateRange">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_display_showDateRange"
+                        aria-expanded="" aria-controls="groups_items_display_showDateRange" onclick="setAnchor('#groups_items_display_showDateRange')"><span class="property-name">showDateRange</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_display_showDateRange"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_display_showDateRange"
+             data-parent="#accordiongroups_items_display_showDateRange">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_display" onclick="anchorLink('groups_items_display')">display</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_display_showDateRange" onclick="anchorLink('groups_items_display_showDateRange')">showDateRange</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>Override whether date range and duration metadata are shown on this group's card. When omitted, inherits from groupList.showDateRange.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_display_yearBinding">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_display_yearBinding">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_display_yearBinding"
+                        aria-expanded="" aria-controls="groups_items_display_yearBinding" onclick="setAnchor('#groups_items_display_yearBinding')"><span class="property-name">yearBinding</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_display_yearBinding"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_display_yearBinding"
+             data-parent="#accordiongroups_items_display_yearBinding">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_display" onclick="anchorLink('groups_items_display')">display</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_display_yearBinding" onclick="anchorLink('groups_items_display_yearBinding')">yearBinding</a></div><span class="badge badge-dark value-type">Type: object</span> <span class="badge badge-success default-value">Default: "none"</span><br/>
+<span class="description"><p>Override the year binding mode for this group. When omitted, inherits from groupList.yearBinding.</p>
+</span><a href="#groupList_yearBinding" onclick="anchorLink('groupList_yearBinding')" class="ref-link">Same definition as yearBinding</a>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_episodeList">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_episodeList">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_episodeList"
+                        aria-expanded="" aria-controls="groups_items_episodeList" onclick="setAnchor('#groups_items_episodeList')"><span class="property-name">episodeList</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_episodeList"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_episodeList"
+             data-parent="#accordiongroups_items_episodeList">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeList" onclick="anchorLink('groups_items_episodeList')">episodeList</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Per-group override for episode list settings. Omitted fields inherit from the definition-level episodeList.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiongroups_items_episodeList_showYearHeaders">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_episodeList_showYearHeaders">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_episodeList_showYearHeaders"
+                        aria-expanded="" aria-controls="groups_items_episodeList_showYearHeaders" onclick="setAnchor('#groups_items_episodeList_showYearHeaders')"><span class="property-name">showYearHeaders</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_episodeList_showYearHeaders"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_episodeList_showYearHeaders"
+             data-parent="#accordiongroups_items_episodeList_showYearHeaders">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeList" onclick="anchorLink('groups_items_episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeList_showYearHeaders" onclick="anchorLink('groups_items_episodeList_showYearHeaders')">showYearHeaders</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>Override whether year separator headers are shown within this group's episode list. When omitted, inherits from the definition-level episodeList.showYearHeaders.</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_episodeList_sort">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_episodeList_sort">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_episodeList_sort"
+                        aria-expanded="" aria-controls="groups_items_episodeList_sort" onclick="setAnchor('#groups_items_episodeList_sort')"><span class="property-name">sort</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_episodeList_sort"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_episodeList_sort"
+             data-parent="#accordiongroups_items_episodeList_sort">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeList" onclick="anchorLink('groups_items_episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeList_sort" onclick="anchorLink('groups_items_episodeList_sort')">sort</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Override sort rule for episodes in this group. When omitted, inherits from the definition-level episodeList.sort.</p>
+</span><a href="#episodeList_sort" onclick="anchorLink('episodeList_sort')" class="ref-link">Same definition as sort</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_episodeList_titleExtractor">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_episodeList_titleExtractor">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_episodeList_titleExtractor"
+                        aria-expanded="" aria-controls="groups_items_episodeList_titleExtractor" onclick="setAnchor('#groups_items_episodeList_titleExtractor')"><span class="property-name">titleExtractor</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_episodeList_titleExtractor"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_episodeList_titleExtractor"
+             data-parent="#accordiongroups_items_episodeList_titleExtractor">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeList" onclick="anchorLink('groups_items_episodeList')">episodeList</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeList_titleExtractor" onclick="anchorLink('groups_items_episodeList_titleExtractor')">titleExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Override episode title transformation for this group. When omitted, inherits from the definition-level episodeList.titleExtractor.</p>
+</span><a href="#titleExtractor" onclick="anchorLink('titleExtractor')" class="ref-link">Same definition as titleExtractor</a>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordiongroups_items_episodeExtractor">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_episodeExtractor">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_episodeExtractor"
+                        aria-expanded="" aria-controls="groups_items_episodeExtractor" onclick="setAnchor('#groups_items_episodeExtractor')"><span class="property-name">episodeExtractor</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_episodeExtractor"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_episodeExtractor"
+             data-parent="#accordiongroups_items_episodeExtractor">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeExtractor" onclick="anchorLink('groups_items_episodeExtractor')">episodeExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Per-group override for episode number extraction. When omitted, inherits the definition-level episodeExtractor.</p>
+</span><a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')" class="ref-link">Same definition as episodeExtractor</a>
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-01 at 21:55:43 +0900</p>
+    </footer></body>
+</html>
