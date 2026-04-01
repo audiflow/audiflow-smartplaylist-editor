@@ -643,7 +643,7 @@ fn year_uses_title_extractor_for_display_names() {
 #[test]
 fn title_appearance_resolver_type() {
     let resolver = TitleAppearanceResolver;
-    assert_eq!(resolver.resolver_type(), "title_appearance");
+    assert_eq!(resolver.resolver_type(), "titleAppearanceOrder");
 }
 
 #[test]
@@ -666,7 +666,7 @@ fn title_appearance_returns_none_without_definition() {
 #[test]
 fn title_appearance_returns_none_without_extractor_or_pattern() {
     let resolver = TitleAppearanceResolver;
-    let def = minimal_definition("title_appearance");
+    let def = minimal_definition("titleAppearanceOrder");
     let episodes = vec![make_episode_with_date(1, "[Rome 1] First", 2024, 1, 1)];
     let refs = as_refs(&episodes);
     let result = resolver.resolve(&refs, Some(&def));
@@ -676,7 +676,7 @@ fn title_appearance_returns_none_without_extractor_or_pattern() {
 #[test]
 fn title_appearance_groups_by_first_appearance_using_pattern() {
     let resolver = TitleAppearanceResolver;
-    let mut def = minimal_definition("title_appearance");
+    let mut def = minimal_definition("titleAppearanceOrder");
     def.groups = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
@@ -720,7 +720,7 @@ fn title_appearance_groups_by_first_appearance_using_pattern() {
 #[test]
 fn title_appearance_non_matching_go_to_ungrouped() {
     let resolver = TitleAppearanceResolver;
-    let mut def = minimal_definition("title_appearance");
+    let mut def = minimal_definition("titleAppearanceOrder");
     def.groups = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
@@ -743,7 +743,7 @@ fn title_appearance_non_matching_go_to_ungrouped() {
 #[test]
 fn title_appearance_returns_none_when_no_matches() {
     let resolver = TitleAppearanceResolver;
-    let mut def = minimal_definition("title_appearance");
+    let mut def = minimal_definition("titleAppearanceOrder");
     def.groups = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
@@ -765,7 +765,7 @@ fn title_appearance_returns_none_when_no_matches() {
 #[test]
 fn title_appearance_episodes_without_date_appended_at_end() {
     let resolver = TitleAppearanceResolver;
-    let mut def = minimal_definition("title_appearance");
+    let mut def = minimal_definition("titleAppearanceOrder");
     def.groups = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
@@ -790,7 +790,7 @@ fn title_appearance_episodes_without_date_appended_at_end() {
 #[test]
 fn title_appearance_uses_title_extractor() {
     let resolver = TitleAppearanceResolver;
-    let mut def = minimal_definition("title_appearance");
+    let mut def = minimal_definition("titleAppearanceOrder");
     def.title_extractor = Some(TitleExtractor {
         source: "title".to_string(),
         pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
@@ -816,7 +816,7 @@ fn title_appearance_uses_title_extractor() {
 #[test]
 fn title_appearance_playlist_ids_use_appearance_prefix() {
     let resolver = TitleAppearanceResolver;
-    let mut def = minimal_definition("title_appearance");
+    let mut def = minimal_definition("titleAppearanceOrder");
     def.groups = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
@@ -874,7 +874,7 @@ fn year_empty_episodes_returns_none() {
 #[test]
 fn title_appearance_empty_episodes_returns_none() {
     let resolver = TitleAppearanceResolver;
-    let mut def = minimal_definition("title_appearance");
+    let mut def = minimal_definition("titleAppearanceOrder");
     def.groups = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
