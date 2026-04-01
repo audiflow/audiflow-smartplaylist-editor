@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SCHEMA_SRC="$REPO_ROOT/packages/sp_shared/assets/playlist-definition.schema.json"
+SCHEMA_SRC="$REPO_ROOT/crates/sp_core/assets/playlist-definition.schema.json"
 DOCS_DIR="$REPO_ROOT/packages/sp_react/public/docs"
 
 mkdir -p "$DOCS_DIR"

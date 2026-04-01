@@ -12,9 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Generated schema docs
-public/docs/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

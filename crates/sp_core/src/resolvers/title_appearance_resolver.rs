@@ -19,7 +19,7 @@ pub struct TitleAppearanceResolver;
 
 impl Resolver for TitleAppearanceResolver {
     fn resolver_type(&self) -> &str {
-        "title_appearance"
+        "titleAppearanceOrder"
     }
 
     fn default_sort(&self) -> SortRule {
