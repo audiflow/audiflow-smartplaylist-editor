@@ -1,7 +1,9 @@
+import { useRef, useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
-import { TriangleAlert } from 'lucide-react';
+import { Loader2, TriangleAlert } from 'lucide-react';
+import { useDerivedPatternId } from '@/hooks/use-derive-pattern-id.ts';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import {
   Card,
@@ -29,6 +31,20 @@ export function PatternSettingsCard({
   const feedUrls = useWatch({ control, name: 'feedUrls' });
   const conflicts = useDuplicateCheck(configId, podcastGuid, feedUrls);
 
+  const isNewConfig = configId === null;
+  const derived = useDerivedPatternId(
+    isNewConfig ? podcastGuid : undefined,
+    isNewConfig ? feedUrls : undefined,
+  );
+
+  // Auto-populate ID when derived value changes (new config only)
+  const prevDerivedId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isNewConfig || !derived.id || derived.id === prevDerivedId.current) return;
+    prevDerivedId.current = derived.id;
+    setValue('id', derived.id, { shouldDirty: true });
+  }, [isNewConfig, derived.id, setValue]);
+
   const guidConflicts = conflicts.filter((c) => c.field === 'podcastGuid');
   const feedUrlConflicts = conflicts.filter((c) => c.field === 'feedUrls');
 
@@ -43,11 +59,32 @@ export function PatternSettingsCard({
             <HintLabel htmlFor="config-id" hint="patternId">
               {t('configId')}
             </HintLabel>
-            <Input
-              id="config-id"
-              {...register('id')}
-              placeholder={t('placeholderPatternId')}
-            />
+            {isNewConfig ? (
+              <div className="relative">
+                <Input
+                  id="config-id"
+                  {...register('id')}
+                  readOnly
+                  className="bg-muted"
+                  placeholder={t('placeholderDerivedId')}
+                />
+                {derived.isLoading && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
+            ) : (
+              <Input
+                id="config-id"
+                {...register('id')}
+                readOnly
+                className="bg-muted"
+              />
+            )}
+            {isNewConfig && derived.source && (
+              <p className="text-xs text-muted-foreground">
+                {t('derivedFrom', { source: derived.source === 'podcastGuid' ? t('podcastGuid') : t('feedUrlsLabel') })}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <HintLabel htmlFor="config-displayName" hint="patternDisplayName">
