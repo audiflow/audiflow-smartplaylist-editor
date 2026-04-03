@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDerivePatternId } from '@/api/queries.ts';
 
 interface DeriveResult {
@@ -24,10 +24,17 @@ export function useDerivedPatternId(
     source: null,
   });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
 
   const hasInput =
     (podcastGuid != null && podcastGuid !== '') ||
     (feedUrls != null && 0 < feedUrls.filter(Boolean).length);
+
+  // Stable key for feedUrls to avoid JSON.stringify in deps
+  const feedUrlsKey = useMemo(
+    () => feedUrls?.filter(Boolean).join('\0') ?? '',
+    [feedUrls],
+  );
 
   useEffect(() => {
     if (timerRef.current) {
@@ -39,12 +46,23 @@ export function useDerivedPatternId(
       return;
     }
 
+    const currentRequestId = ++requestIdRef.current;
+
     timerRef.current = setTimeout(() => {
       mutation.mutate(
         { podcastGuid, feedUrls },
         {
-          onSuccess: (data) => setResult({ id: data.id, source: data.source }),
-          onError: () => setResult({ id: null, source: null }),
+          onSuccess: (data) => {
+            // Ignore stale responses from earlier requests
+            if (requestIdRef.current === currentRequestId) {
+              setResult({ id: data.id, source: data.source });
+            }
+          },
+          onError: () => {
+            if (requestIdRef.current === currentRequestId) {
+              setResult({ id: null, source: null });
+            }
+          },
         },
       );
     }, 300);
@@ -54,11 +72,11 @@ export function useDerivedPatternId(
         clearTimeout(timerRef.current);
       }
     };
-  }, [podcastGuid, JSON.stringify(feedUrls)]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [podcastGuid, feedUrlsKey, mutation]);
 
   return {
     id: result.id,
     source: result.source,
-    isLoading: mutation.isPending,
+    isLoading: hasInput && mutation.isPending,
   };
 }

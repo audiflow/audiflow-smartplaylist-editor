@@ -1,6 +1,6 @@
-/// Derives a semi-deterministic pattern ID from podcast identity.
+/// Derives a deterministic pattern ID from podcast identity.
 ///
-/// Priority: podcastGuid (if non-empty) > feedUrls[0].
+/// Priority: podcastGuid (if non-empty) > first non-empty feedUrl.
 /// Returns the first 12 hex characters of the MD5 digest, or `None`
 /// if no usable input is available.
 ///
@@ -10,7 +10,7 @@
 pub fn derive_pattern_id(podcast_guid: Option<&str>, feed_urls: &[String]) -> Option<String> {
     let input = podcast_guid
         .filter(|g| !g.is_empty())
-        .or_else(|| feed_urls.first().map(|s| s.as_str()))?;
+        .or_else(|| feed_urls.iter().find(|s| !s.is_empty()).map(|s| s.as_str()))?;
     let digest = md5::compute(input.as_bytes());
     Some(format!("{digest:x}")[..12].to_string())
 }
@@ -63,6 +63,20 @@ mod tests {
     fn returns_none_when_no_input() {
         assert!(derive_pattern_id(None, &[]).is_none());
         assert!(derive_pattern_id(Some(""), &[]).is_none());
+    }
+
+    #[test]
+    fn skips_empty_feed_urls() {
+        let urls = vec!["".to_string(), "https://example.com/feed.xml".to_string()];
+        let id = derive_pattern_id(None, &urls).unwrap();
+        let expected = derive_pattern_id(None, &["https://example.com/feed.xml".to_string().into()]).unwrap();
+        assert_eq!(id, expected);
+    }
+
+    #[test]
+    fn returns_none_when_all_feed_urls_empty() {
+        assert!(derive_pattern_id(None, &["".to_string()]).is_none());
+        assert!(derive_pattern_id(Some(""), &["".to_string()]).is_none());
     }
 
     #[test]

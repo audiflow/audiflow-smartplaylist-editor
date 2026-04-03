@@ -165,14 +165,22 @@ fn validate_pattern_id_integrity(patterns_dir: &Path) -> anyhow::Result<u32> {
             meta.podcast_guid.as_deref(),
             &meta.feed_urls,
         );
-        if let Some(expected_id) = expected
-            && meta.id != expected_id
-        {
-            println!(
-                "  FAIL: pattern \"{}\" -- ID mismatch: expected \"{expected_id}\"",
-                meta.id,
-            );
-            error_count += 1;
+        match expected {
+            Some(expected_id) if meta.id != expected_id => {
+                println!(
+                    "  FAIL: pattern \"{}\" -- ID mismatch: expected \"{expected_id}\"",
+                    meta.id,
+                );
+                error_count += 1;
+            }
+            None => {
+                println!(
+                    "  FAIL: pattern \"{}\" -- deterministic ID cannot be re-derived (missing podcastGuid and feedUrls)",
+                    meta.id,
+                );
+                error_count += 1;
+            }
+            _ => {}
         }
     }
 

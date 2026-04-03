@@ -58,13 +58,19 @@ pub async fn create_pattern(
         })
         .unwrap_or_default();
 
-    if let Some(expected_id) = derive_pattern_id(guid, &feed_urls)
-        && id != expected_id
-    {
-        return Err(AppError::bad_request(format!(
-            "Pattern ID must be \"{expected_id}\" (derived from {}). Got \"{id}\".",
-            if guid.is_some() { "podcastGuid" } else { "feedUrl" },
-        )));
+    match derive_pattern_id(guid, &feed_urls) {
+        Some(expected_id) if id != expected_id => {
+            return Err(AppError::bad_request(format!(
+                "Pattern ID must be \"{expected_id}\" (derived from {}). Got \"{id}\".",
+                if guid.is_some() { "podcastGuid" } else { "feedUrl" },
+            )));
+        }
+        None => {
+            return Err(AppError::bad_request(
+                "Cannot create pattern: at least one of podcastGuid or feedUrls is required to derive an ID",
+            ));
+        }
+        _ => {}
     }
 
     let display_name = obj
