@@ -41,24 +41,38 @@ pub async fn create_pattern(
         .and_then(|v| v.as_object())
         .ok_or_else(|| AppError::bad_request("Missing or invalid \"meta\" field"))?;
 
-    // Enforce deterministic ID for new patterns.
-    let guid = meta
-        .get("podcastGuid")
-        .and_then(|v| v.as_str())
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty());
-    let feed_urls: Vec<String> = meta
-        .get("feedUrls")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str())
-                .map(|s| s.trim())
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string())
-                .collect()
-        })
-        .unwrap_or_default();
+    // Validate and extract identity fields for deterministic ID derivation.
+    let guid = match meta.get("podcastGuid") {
+        None => None,
+        Some(value) => {
+            let s = value.as_str().ok_or_else(|| {
+                AppError::bad_request("\"podcastGuid\" must be a string")
+            })?;
+            let s = s.trim();
+            if s.is_empty() { None } else { Some(s) }
+        }
+    };
+    let feed_urls: Vec<String> = match meta.get("feedUrls") {
+        None => Vec::new(),
+        Some(value) => {
+            let arr = value.as_array().ok_or_else(|| {
+                AppError::bad_request("\"feedUrls\" must be an array of strings")
+            })?;
+
+            let mut urls = Vec::with_capacity(arr.len());
+            for entry in arr {
+                let url = entry.as_str().ok_or_else(|| {
+                    AppError::bad_request("\"feedUrls\" must be an array of strings")
+                })?;
+                let url = url.trim();
+                if !url.is_empty() {
+                    urls.push(url.to_string());
+                }
+            }
+
+            urls
+        }
+    };
 
     match derive_pattern_id(guid, &feed_urls) {
         Some(expected_id) if id != expected_id => {
