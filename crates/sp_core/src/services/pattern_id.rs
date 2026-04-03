@@ -5,8 +5,8 @@
 /// if no usable input is available.
 ///
 /// MD5 is chosen over SHA-256 because this is an opaque identifier,
-/// not a security digest. 12 hex chars = 48 bits; birthday collision
-/// probability exceeds 1% only at ~16M patterns, far beyond podcast scale.
+/// not a security digest. The returned 12 hex characters provide a
+/// compact 48-bit identifier.
 pub fn derive_pattern_id(podcast_guid: Option<&str>, feed_urls: &[String]) -> Option<String> {
     let input = podcast_guid
         .filter(|g| !g.is_empty())
