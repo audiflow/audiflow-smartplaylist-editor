@@ -18,11 +18,16 @@ pub async fn derive_pattern_id_handler(
         return Err(AppError::bad_request("Request body must be a JSON object"));
     }
 
-    let guid = body
-        .get("podcastGuid")
-        .and_then(|v| v.as_str())
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty());
+    let guid = match body.get("podcastGuid") {
+        None => None,
+        Some(value) => {
+            let s = value.as_str().ok_or_else(|| {
+                AppError::bad_request("\"podcastGuid\" must be a string")
+            })?;
+            let s = s.trim();
+            if s.is_empty() { None } else { Some(s) }
+        }
+    };
 
     let feed_urls: Vec<String> = match body.get("feedUrls") {
         None => Vec::new(),
