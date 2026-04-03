@@ -96,17 +96,22 @@ pub async fn create_pattern(
         *v = Value::String(s.trim().to_string());
     }
 
-    // Normalize feedUrls: trim each entry and drop empty/whitespace-only values.
-    if let Some(v) = normalized_meta.get_mut("feedUrls")
-        && let Some(arr) = v.as_array()
-    {
-        let cleaned: Vec<Value> = arr
-            .iter()
-            .filter_map(|item| item.as_str())
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .map(Value::String)
-            .collect();
+    // Normalize feedUrls: validate types, trim each entry, drop whitespace-only values.
+    if let Some(v) = normalized_meta.get_mut("feedUrls") {
+        let arr = v.as_array().ok_or_else(|| {
+            AppError::bad_request("\"feedUrls\" must be an array of strings")
+        })?;
+
+        let mut cleaned = Vec::with_capacity(arr.len());
+        for entry in arr {
+            let url = entry.as_str().ok_or_else(|| {
+                AppError::bad_request("\"feedUrls\" must be an array of strings")
+            })?;
+            let url = url.trim();
+            if !url.is_empty() {
+                cleaned.push(Value::String(url.to_string()));
+            }
+        }
         *v = Value::Array(cleaned);
     }
 
