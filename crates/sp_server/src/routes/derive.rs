@@ -14,6 +14,10 @@ use crate::app::AppError;
 pub async fn derive_pattern_id_handler(
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, AppError> {
+    if !body.is_object() {
+        return Err(AppError::bad_request("Request body must be a JSON object"));
+    }
+
     let guid = body
         .get("podcastGuid")
         .and_then(|v| v.as_str())

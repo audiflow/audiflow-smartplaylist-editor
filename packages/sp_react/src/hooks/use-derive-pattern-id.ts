@@ -19,6 +19,10 @@ export function useDerivedPatternId(
   feedUrls: string[] | null | undefined,
 ): DeriveResult {
   const mutation = useDerivePatternId();
+  // Store mutate in a ref to avoid re-triggering the effect when
+  // TanStack Query's mutation object changes identity on state updates.
+  const mutateRef = useRef(mutation.mutate);
+  mutateRef.current = mutation.mutate;
   const [result, setResult] = useState<{ id: string | null; source: string | null }>({
     id: null,
     source: null,
@@ -52,7 +56,7 @@ export function useDerivedPatternId(
     const currentRequestId = ++requestIdRef.current;
 
     timerRef.current = setTimeout(() => {
-      mutation.mutate(
+      mutateRef.current(
         { podcastGuid, feedUrls },
         {
           onSuccess: (data) => {
@@ -75,7 +79,7 @@ export function useDerivedPatternId(
         clearTimeout(timerRef.current);
       }
     };
-  }, [podcastGuid, feedUrlsKey, mutation]);
+  }, [podcastGuid, feedUrlsKey, hasInput]);
 
   return {
     id: result.id,
