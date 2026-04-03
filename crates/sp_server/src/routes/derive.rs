@@ -10,7 +10,7 @@ use crate::app::AppError;
 /// Returns the derived ID and which source field was used.
 ///
 /// Request:  `{ "podcastGuid": "...", "feedUrls": ["..."] }`
-/// Response: `{ "id": "a1b2c3d4e5f6", "source": "podcastGuid" | "feedUrl" }`
+/// Response: `{ "id": "a1b2c3d4e5f6", "source": "podcastGuid" | "feedUrls" }`
 pub async fn derive_pattern_id_handler(
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, AppError> {
@@ -34,11 +34,11 @@ pub async fn derive_pattern_id_handler(
     let has_guid = guid.is_some();
     let id = derive_pattern_id(guid, &feed_urls).ok_or_else(|| {
         AppError::bad_request(
-            "Cannot derive pattern ID: provide a non-empty podcastGuid or at least one feedUrl",
+            "Cannot derive pattern ID: provide a non-empty podcastGuid or at least one feedUrls entry",
         )
     })?;
 
-    let source = if has_guid { "podcastGuid" } else { "feedUrl" };
+    let source = if has_guid { "podcastGuid" } else { "feedUrls" };
 
     Ok(Json(serde_json::json!({
         "id": id,

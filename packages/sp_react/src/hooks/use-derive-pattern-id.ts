@@ -42,6 +42,9 @@ export function useDerivedPatternId(
     }
 
     if (!hasInput) {
+      // Invalidate any in-flight request so stale callbacks cannot
+      // repopulate state after the inputs have been cleared.
+      requestIdRef.current += 1;
       setResult({ id: null, source: null });
       return;
     }

@@ -62,7 +62,7 @@ pub async fn create_pattern(
         Some(expected_id) if id != expected_id => {
             return Err(AppError::bad_request(format!(
                 "Pattern ID must be \"{expected_id}\" (derived from {}). Got \"{id}\".",
-                if guid.is_some() { "podcastGuid" } else { "feedUrl" },
+                if guid.is_some() { "podcastGuid" } else { "feedUrls" },
             )));
         }
         None => {

@@ -40,7 +40,16 @@ export function PatternSettingsCard({
   // Auto-populate ID when derived value changes (new config only)
   const prevDerivedId = useRef<string | null>(null);
   useEffect(() => {
-    if (!isNewConfig || !derived.id || derived.id === prevDerivedId.current) return;
+    if (!isNewConfig) return;
+    if (!derived.id) {
+      // Clear stale ID when inputs are emptied
+      if (prevDerivedId.current !== null) {
+        prevDerivedId.current = null;
+        setValue('id', '', { shouldDirty: true });
+      }
+      return;
+    }
+    if (derived.id === prevDerivedId.current) return;
     prevDerivedId.current = derived.id;
     setValue('id', derived.id, { shouldDirty: true });
   }, [isNewConfig, derived.id, setValue]);
