@@ -30,9 +30,10 @@ export function useDerivedPatternId(
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
 
+  const trimmedGuid = podcastGuid?.trim() ?? '';
   const hasInput =
-    (podcastGuid != null && podcastGuid !== '') ||
-    (feedUrls != null && 0 < feedUrls.filter(Boolean).length);
+    trimmedGuid !== '' ||
+    (feedUrls != null && 0 < feedUrls.filter((u) => u.trim()).length);
 
   // Stable key for feedUrls to avoid JSON.stringify in deps
   const feedUrlsKey = useMemo(

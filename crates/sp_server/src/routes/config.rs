@@ -45,6 +45,7 @@ pub async fn create_pattern(
     let guid = meta
         .get("podcastGuid")
         .and_then(|v| v.as_str())
+        .map(|s| s.trim())
         .filter(|s| !s.is_empty());
     let feed_urls: Vec<String> = meta
         .get("feedUrls")
@@ -52,6 +53,7 @@ pub async fn create_pattern(
         .map(|arr| {
             arr.iter()
                 .filter_map(|v| v.as_str())
+                .map(|s| s.trim())
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string())
                 .collect()

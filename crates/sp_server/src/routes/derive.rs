@@ -21,6 +21,7 @@ pub async fn derive_pattern_id_handler(
     let guid = body
         .get("podcastGuid")
         .and_then(|v| v.as_str())
+        .map(|s| s.trim())
         .filter(|s| !s.is_empty());
 
     let feed_urls: Vec<String> = body
@@ -29,6 +30,7 @@ pub async fn derive_pattern_id_handler(
         .map(|arr| {
             arr.iter()
                 .filter_map(|v| v.as_str())
+                .map(|s| s.trim())
                 .filter(|s| !s.is_empty())
                 .map(|s| s.to_string())
                 .collect()
