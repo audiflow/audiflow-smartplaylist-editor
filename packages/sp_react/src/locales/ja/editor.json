@@ -46,6 +46,8 @@
   "previewSectionTitle": "プレビュー",
   "tabPreviewEmpty": "プレビューを実行して、このプレイリストの結果を確認してください。",
   "placeholderPatternId": "pattern-id",
+  "placeholderDerivedId": "GUID またはフィード URL から自動生成",
+  "derivedFrom": "{{source}} から生成",
   "placeholderGuid": "任意の GUID",
   "placeholderFeedUrls": "https://example.com/feed1.xml, https://example.com/feed2.xml",
   "duplicateGuid": "この GUID は既に「{{patternId}}」で使用されています。",
