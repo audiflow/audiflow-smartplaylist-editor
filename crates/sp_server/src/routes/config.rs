@@ -87,7 +87,30 @@ pub async fn create_pattern(
         )));
     }
 
-    let mut meta_with_version = Value::Object(meta.clone());
+    let mut normalized_meta = meta.clone();
+
+    // Normalize podcastGuid: trim whitespace.
+    if let Some(v) = normalized_meta.get_mut("podcastGuid")
+        && let Some(s) = v.as_str()
+    {
+        *v = Value::String(s.trim().to_string());
+    }
+
+    // Normalize feedUrls: trim each entry and drop empty/whitespace-only values.
+    if let Some(v) = normalized_meta.get_mut("feedUrls")
+        && let Some(arr) = v.as_array()
+    {
+        let cleaned: Vec<Value> = arr
+            .iter()
+            .filter_map(|item| item.as_str())
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .map(Value::String)
+            .collect();
+        *v = Value::Array(cleaned);
+    }
+
+    let mut meta_with_version = Value::Object(normalized_meta);
     meta_with_version["dataVersion"] = Value::from(1);
     meta_with_version["id"] = Value::String(id.clone());
 
@@ -120,7 +143,7 @@ pub async fn create_pattern(
         .and_then(|v| v.as_array())
         .map_or(0, |a| a.len());
 
-    let feed_url_hint = meta
+    let feed_url_hint = meta_with_version
         .get("feedUrls")
         .and_then(|v| v.as_array())
         .and_then(|a| a.first())

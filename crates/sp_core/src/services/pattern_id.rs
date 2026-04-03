@@ -9,8 +9,14 @@
 /// compact 48-bit identifier.
 pub fn derive_pattern_id(podcast_guid: Option<&str>, feed_urls: &[String]) -> Option<String> {
     let input = podcast_guid
+        .map(|g| g.trim())
         .filter(|g| !g.is_empty())
-        .or_else(|| feed_urls.iter().find(|s| !s.is_empty()).map(|s| s.as_str()))?;
+        .or_else(|| {
+            feed_urls
+                .iter()
+                .map(|s| s.trim())
+                .find(|s| !s.is_empty())
+        })?;
     let digest = md5::compute(input.as_bytes());
     Some(format!("{digest:x}")[..12].to_string())
 }
@@ -94,6 +100,36 @@ mod tests {
         assert!(!is_deterministic_id("a1b2c3d4e5g6"));
         assert!(!is_deterministic_id("A1B2C3D4E5F6"));
         assert!(!is_deterministic_id(""));
+    }
+
+    #[test]
+    fn trims_whitespace_from_guid() {
+        let trimmed = derive_pattern_id(Some("abcdef-1234"), &[]).unwrap();
+        let padded = derive_pattern_id(Some("  abcdef-1234  "), &[]).unwrap();
+        assert_eq!(trimmed, padded);
+    }
+
+    #[test]
+    fn trims_whitespace_from_feed_urls() {
+        let trimmed_urls = vec!["https://example.com/feed.xml".to_string()];
+        let padded_urls = vec!["  https://example.com/feed.xml  ".to_string()];
+        let trimmed = derive_pattern_id(None, &trimmed_urls).unwrap();
+        let padded = derive_pattern_id(None, &padded_urls).unwrap();
+        assert_eq!(trimmed, padded);
+    }
+
+    #[test]
+    fn whitespace_only_guid_falls_through() {
+        let urls = vec!["https://example.com/feed.xml".to_string()];
+        let from_ws_guid = derive_pattern_id(Some("   "), &urls).unwrap();
+        let from_none_guid = derive_pattern_id(None, &urls).unwrap();
+        assert_eq!(from_ws_guid, from_none_guid);
+    }
+
+    #[test]
+    fn returns_none_when_all_inputs_whitespace() {
+        assert!(derive_pattern_id(Some("   "), &[]).is_none());
+        assert!(derive_pattern_id(Some("   "), &["   ".to_string()]).is_none());
     }
 
     #[test]
