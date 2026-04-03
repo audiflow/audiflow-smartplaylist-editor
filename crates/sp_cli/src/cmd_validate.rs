@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use sp_core::models::PatternMeta;
 use sp_core::schema::{SchemaType, Validator};
-use sp_core::services::check_uniqueness;
+use sp_core::services::{check_uniqueness, derive_pattern_id, is_deterministic_id};
 
 use crate::config_walker;
 
@@ -38,6 +38,7 @@ fn validate_all(patterns_dir: &Path, validator: &Validator) -> anyhow::Result<i3
     })?;
 
     error_count += validate_cross_pattern_uniqueness(patterns_dir)?;
+    error_count += validate_pattern_id_integrity(patterns_dir)?;
 
     println!("Validated {file_count} file(s).");
     if 0 < error_count {
@@ -74,6 +75,7 @@ fn validate_files(data_dir: &str, files: &[String], validator: &Validator) -> an
                 Ok(())
             })?;
             error_count += validate_cross_pattern_uniqueness(&patterns_dir)?;
+            error_count += validate_pattern_id_integrity(&patterns_dir)?;
         } else {
             let schema_type = config_walker::detect_schema_type(&path);
             error_count += validate_file(&path, schema_type, validator)?;
@@ -147,6 +149,34 @@ fn validate_cross_pattern_uniqueness(patterns_dir: &Path) -> anyhow::Result<u32>
     }
 
     Ok(conflict_count)
+}
+
+/// Checks that deterministic pattern IDs match their expected derivation.
+/// Grandfathered (non-12-hex) IDs are skipped.
+fn validate_pattern_id_integrity(patterns_dir: &Path) -> anyhow::Result<u32> {
+    let metas = load_pattern_metas(patterns_dir)?;
+    let mut error_count = 0u32;
+
+    for meta in &metas {
+        if !is_deterministic_id(&meta.id) {
+            continue; // grandfathered
+        }
+        let expected = derive_pattern_id(
+            meta.podcast_guid.as_deref(),
+            &meta.feed_urls,
+        );
+        if let Some(expected_id) = expected
+            && meta.id != expected_id
+        {
+            println!(
+                "  FAIL: pattern \"{}\" -- ID mismatch: expected \"{expected_id}\"",
+                meta.id,
+            );
+            error_count += 1;
+        }
+    }
+
+    Ok(error_count)
 }
 
 /// Reads pattern meta.json files from subdirectories of patterns_dir.
