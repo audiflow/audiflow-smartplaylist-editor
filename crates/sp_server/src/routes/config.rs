@@ -6,7 +6,7 @@ use crate::app::{AppError, SharedState};
 use crate::services::local_config_repository::Error as RepoError;
 use sp_core::models::{PatternMeta, PlaylistDefinition};
 use sp_core::schema::SchemaType;
-use sp_core::services::check_uniqueness;
+use sp_core::services::{check_uniqueness, derive_pattern_id};
 
 /// GET /api/configs/patterns -- returns pattern summaries.
 pub async fn list_patterns(
@@ -40,6 +40,32 @@ pub async fn create_pattern(
         .get("meta")
         .and_then(|v| v.as_object())
         .ok_or_else(|| AppError::bad_request("Missing or invalid \"meta\" field"))?;
+
+    // Enforce deterministic ID for new patterns.
+    let guid = meta
+        .get("podcastGuid")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty());
+    let feed_urls: Vec<String> = meta
+        .get("feedUrls")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string())
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if let Some(expected_id) = derive_pattern_id(guid, &feed_urls)
+        && id != expected_id
+    {
+        return Err(AppError::bad_request(format!(
+            "Pattern ID must be \"{expected_id}\" (derived from {}). Got \"{id}\".",
+            if guid.is_some() { "podcastGuid" } else { "feedUrl" },
+        )));
+    }
 
     let display_name = obj
         .get("displayName")
