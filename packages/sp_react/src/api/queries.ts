@@ -116,6 +116,23 @@ export function useCreatePattern() {
   });
 }
 
+export function useDerivePatternId() {
+  const client = useApiClient();
+  return useMutation({
+    mutationFn: (params: {
+      podcastGuid?: string | null;
+      feedUrls?: string[] | null;
+    }) =>
+      client.post<{ id: string; source: string }>(
+        '/api/configs/derive-pattern-id',
+        {
+          podcastGuid: params.podcastGuid ?? null,
+          feedUrls: params.feedUrls ?? [],
+        },
+      ),
+  });
+}
+
 export function useDeletePlaylist() {
   const client = useApiClient();
   const queryClient = useQueryClient();
