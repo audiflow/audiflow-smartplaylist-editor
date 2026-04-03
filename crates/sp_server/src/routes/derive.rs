@@ -24,18 +24,27 @@ pub async fn derive_pattern_id_handler(
         .map(|s| s.trim())
         .filter(|s| !s.is_empty());
 
-    let feed_urls: Vec<String> = body
-        .get("feedUrls")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str())
-                .map(|s| s.trim())
-                .filter(|s| !s.is_empty())
-                .map(|s| s.to_string())
-                .collect()
-        })
-        .unwrap_or_default();
+    let feed_urls: Vec<String> = match body.get("feedUrls") {
+        None => Vec::new(),
+        Some(value) => {
+            let arr = value.as_array().ok_or_else(|| {
+                AppError::bad_request("\"feedUrls\" must be an array of strings")
+            })?;
+
+            let mut urls = Vec::with_capacity(arr.len());
+            for entry in arr {
+                let url = entry.as_str().ok_or_else(|| {
+                    AppError::bad_request("\"feedUrls\" must be an array of strings")
+                })?;
+                let url = url.trim();
+                if !url.is_empty() {
+                    urls.push(url.to_string());
+                }
+            }
+
+            urls
+        }
+    };
 
     let has_guid = guid.is_some();
     let id = derive_pattern_id(guid, &feed_urls).ok_or_else(|| {
