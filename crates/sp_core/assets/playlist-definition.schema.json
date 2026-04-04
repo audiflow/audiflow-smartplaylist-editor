@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://audiflow.app/schema/v2/playlist-definition.json",
+  "$id": "https://audiflow.app/schema/v3/playlist-definition.json",
   "title": "SmartPlaylist Definition",
   "description": "Defines how a smart playlist groups, filters, sorts, and displays episodes for a specific podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same pattern share the podcast's episode pool and claim episodes through a priority-based system.",
   "type": "object",

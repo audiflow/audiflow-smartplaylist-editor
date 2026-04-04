@@ -633,7 +633,7 @@ fn pattern_meta_defaults() {
 fn root_meta_round_trip() {
     let json_val = json!({
         "dataVersion": 1,
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "patterns": [
             {
                 "id": "coten",
@@ -647,12 +647,12 @@ fn root_meta_round_trip() {
 
     let meta: RootMeta = serde_json::from_value(json_val).unwrap();
     assert_eq!(meta.data_version, 1);
-    assert_eq!(meta.schema_version, 2);
+    assert_eq!(meta.schema_version, 3);
     assert_eq!(meta.patterns.len(), 1);
     assert_eq!(meta.patterns[0].display_name, "COTEN RADIO");
 
     let serialized = serde_json::to_value(&meta).unwrap();
-    assert_eq!(serialized["schemaVersion"], 2);
+    assert_eq!(serialized["schemaVersion"], 3);
     assert_eq!(serialized["patterns"][0]["displayName"], "COTEN RADIO");
 }
 

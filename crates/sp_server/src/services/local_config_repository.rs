@@ -274,7 +274,7 @@ mod tests {
 
         let root_meta = json!({
             "dataVersion": 1,
-            "schemaVersion": 2,
+            "schemaVersion": 3,
             "patterns": [
                 {
                     "id": "test-pattern",
@@ -518,7 +518,7 @@ mod tests {
         let repo = LocalConfigRepository::new(tmp.path());
 
         let json = repo.get_root_meta_json().unwrap();
-        assert_eq!(json["schemaVersion"], 2);
+        assert_eq!(json["schemaVersion"], 3);
         assert!(json["patterns"].is_array());
     }
 
@@ -528,10 +528,10 @@ mod tests {
         let repo = LocalConfigRepository::new(tmp.path());
 
         let mut json = repo.get_root_meta_json().unwrap();
-        json["schemaVersion"] = json!(3);
+        json["schemaVersion"] = json!(4);
         repo.save_root_meta(&json).unwrap();
 
         let reloaded = repo.get_root_meta_json().unwrap();
-        assert_eq!(reloaded["schemaVersion"], 3);
+        assert_eq!(reloaded["schemaVersion"], 4);
     }
 }

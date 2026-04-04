@@ -406,7 +406,7 @@ mod tests {
         // Root meta
         std::fs::write(
             patterns.join("meta.json"),
-            r#"{"dataVersion": 1, "schemaVersion": 2, "patterns": [{"id": "show_a", "dataVersion": 1, "displayName": "Show A", "feedUrlHint": "https://example.com", "playlistCount": 1}]}"#,
+            r#"{"dataVersion": 1, "schemaVersion": 3, "patterns": [{"id": "show_a", "dataVersion": 1, "displayName": "Show A", "feedUrlHint": "https://example.com", "playlistCount": 1}]}"#,
         )
         .unwrap();
 
@@ -499,7 +499,7 @@ mod tests {
 
         std::fs::write(
             patterns.join("meta.json"),
-            r#"{"dataVersion": 1, "schemaVersion": 2, "patterns": [{"id": "show_a", "dataVersion": 1, "displayName": "Show A", "feedUrlHint": "https://example.com", "playlistCount": 1}]}"#,
+            r#"{"dataVersion": 1, "schemaVersion": 3, "patterns": [{"id": "show_a", "dataVersion": 1, "displayName": "Show A", "feedUrlHint": "https://example.com", "playlistCount": 1}]}"#,
         )
         .unwrap();
 
