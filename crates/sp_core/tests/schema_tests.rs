@@ -62,7 +62,7 @@ fn valid_pattern_index_passes() {
     let v = test_validator();
     let index = json!({
         "dataVersion": 1,
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "patterns": [{
             "id": "test",
             "dataVersion": 1,
