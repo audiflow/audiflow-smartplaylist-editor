@@ -46,6 +46,8 @@
   "previewSectionTitle": "Preview",
   "tabPreviewEmpty": "Run preview to see results for this playlist.",
   "placeholderPatternId": "pattern-id",
+  "placeholderDerivedId": "Auto-generated from GUID or feed URL",
+  "derivedFrom": "Derived from {{source}}",
   "placeholderGuid": "Optional GUID",
   "placeholderFeedUrls": "https://example.com/feed1.xml, https://example.com/feed2.xml",
   "duplicateGuid": "This GUID is already used by \"{{patternId}}\".",

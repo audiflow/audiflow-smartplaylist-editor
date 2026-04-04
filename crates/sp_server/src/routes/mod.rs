@@ -1,4 +1,5 @@
 pub mod config;
+pub mod derive;
 pub mod events;
 pub mod feed;
 pub mod health;
@@ -37,6 +38,10 @@ pub fn create_router(state: SharedState) -> Router {
         .route(
             "/configs/patterns/identifiers",
             get(identifiers::list_pattern_identifiers),
+        )
+        .route(
+            "/configs/derive-pattern-id",
+            post(derive::derive_pattern_id_handler),
         )
         .route(
             "/configs/patterns/{id}",

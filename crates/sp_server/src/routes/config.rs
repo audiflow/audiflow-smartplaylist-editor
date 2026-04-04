@@ -6,7 +6,7 @@ use crate::app::{AppError, SharedState};
 use crate::services::local_config_repository::Error as RepoError;
 use sp_core::models::{PatternMeta, PlaylistDefinition};
 use sp_core::schema::SchemaType;
-use sp_core::services::check_uniqueness;
+use sp_core::services::{check_uniqueness, derive_pattern_id};
 
 /// GET /api/configs/patterns -- returns pattern summaries.
 pub async fn list_patterns(
@@ -41,6 +41,54 @@ pub async fn create_pattern(
         .and_then(|v| v.as_object())
         .ok_or_else(|| AppError::bad_request("Missing or invalid \"meta\" field"))?;
 
+    // Validate and extract identity fields for deterministic ID derivation.
+    let guid = match meta.get("podcastGuid") {
+        None => None,
+        Some(value) => {
+            let s = value.as_str().ok_or_else(|| {
+                AppError::bad_request("\"podcastGuid\" must be a string")
+            })?;
+            let s = s.trim();
+            if s.is_empty() { None } else { Some(s) }
+        }
+    };
+    let feed_urls: Vec<String> = match meta.get("feedUrls") {
+        None => Vec::new(),
+        Some(value) => {
+            let arr = value.as_array().ok_or_else(|| {
+                AppError::bad_request("\"feedUrls\" must be an array of strings")
+            })?;
+
+            let mut urls = Vec::with_capacity(arr.len());
+            for entry in arr {
+                let url = entry.as_str().ok_or_else(|| {
+                    AppError::bad_request("\"feedUrls\" must be an array of strings")
+                })?;
+                let url = url.trim();
+                if !url.is_empty() {
+                    urls.push(url.to_string());
+                }
+            }
+
+            urls
+        }
+    };
+
+    match derive_pattern_id(guid, &feed_urls) {
+        Some(expected_id) if id != expected_id => {
+            return Err(AppError::bad_request(format!(
+                "Pattern ID must be \"{expected_id}\" (derived from {}). Got \"{id}\".",
+                if guid.is_some() { "podcastGuid" } else { "feedUrls" },
+            )));
+        }
+        None => {
+            return Err(AppError::bad_request(
+                "Cannot create pattern: at least one of podcastGuid or feedUrls is required to derive an ID",
+            ));
+        }
+        _ => {}
+    }
+
     let display_name = obj
         .get("displayName")
         .and_then(|v| v.as_str())
@@ -53,7 +101,35 @@ pub async fn create_pattern(
         )));
     }
 
-    let mut meta_with_version = Value::Object(meta.clone());
+    let mut normalized_meta = meta.clone();
+
+    // Normalize podcastGuid: trim whitespace.
+    if let Some(v) = normalized_meta.get_mut("podcastGuid")
+        && let Some(s) = v.as_str()
+    {
+        *v = Value::String(s.trim().to_string());
+    }
+
+    // Normalize feedUrls: validate types, trim each entry, drop whitespace-only values.
+    if let Some(v) = normalized_meta.get_mut("feedUrls") {
+        let arr = v.as_array().ok_or_else(|| {
+            AppError::bad_request("\"feedUrls\" must be an array of strings")
+        })?;
+
+        let mut cleaned = Vec::with_capacity(arr.len());
+        for entry in arr {
+            let url = entry.as_str().ok_or_else(|| {
+                AppError::bad_request("\"feedUrls\" must be an array of strings")
+            })?;
+            let url = url.trim();
+            if !url.is_empty() {
+                cleaned.push(Value::String(url.to_string()));
+            }
+        }
+        *v = Value::Array(cleaned);
+    }
+
+    let mut meta_with_version = Value::Object(normalized_meta);
     meta_with_version["dataVersion"] = Value::from(1);
     meta_with_version["id"] = Value::String(id.clone());
 
@@ -86,7 +162,7 @@ pub async fn create_pattern(
         .and_then(|v| v.as_array())
         .map_or(0, |a| a.len());
 
-    let feed_url_hint = meta
+    let feed_url_hint = meta_with_version
         .get("feedUrls")
         .and_then(|v| v.as_array())
         .and_then(|a| a.first())
