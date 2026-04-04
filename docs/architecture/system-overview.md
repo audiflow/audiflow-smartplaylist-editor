@@ -8,15 +8,15 @@ Provide a local web editor that lets users create and manage smart playlist conf
 
 This repository is part of the audiflow podcast ecosystem:
 - **audiflow** (Flutter app): Consumes configs from hosted mirrors (GitHub Pages)
-- **audiflow-smartplaylist** (data repo): Static JSON files for all environments (prod/staging/dev), deployed to GitHub Pages from different branches
+- **audiflow-smartplaylist** (data repo): Static JSON files for all environments (prod/staging/dev), deployed to GitHub Pages from versioned branches
 - **This repo** (editor): Reads/writes config files in a locally cloned data repo
 
 ## High-level structure
 
-- **sp_core**: Pure Rust domain library. Models, resolvers, schema validation, services, cross-pattern uniqueness. No framework dependencies.
-- **sp_server**: Axum-based local API server. Config CRUD, feed caching, file watching, SSE, static file serving, pattern identifiers endpoint.
+- **sp_core**: Pure Rust domain library. Models, resolvers, schema validation, services, cross-pattern uniqueness, deterministic pattern ID derivation. No framework dependencies.
+- **sp_server**: Axum-based local API server. Config CRUD, feed caching, file watching, SSE, static file serving, pattern identifiers endpoint, pattern ID derivation endpoint.
 - **sp_cli**: CLI binary wrapping sp_server. Subcommands: `serve`, `validate`, `format`, `bump-versions`.
-- **sp_react**: React 19 SPA. Pattern browsing, config editing with forms, live preview, SSE-driven cache invalidation, inline duplicate detection.
+- **sp_react**: React 19 SPA. Pattern browsing, config editing with forms, live preview, SSE-driven cache invalidation, inline duplicate detection, auto-derived pattern IDs.
 
 ## Main data flow
 
@@ -25,10 +25,11 @@ This repository is part of the audiflow podcast ecosystem:
 3. `sp_server` reads split config files from the data directory via `LocalConfigRepository`
 4. `sp_react` SPA loads in the browser, fetches config data via REST API
 5. User edits configs through forms; `sp_server` writes changes atomically to disk
-6. `FileWatcherService` detects file changes (including external edits) and broadcasts SSE events
-7. `sp_react` receives SSE events and invalidates TanStack Query cache for real-time updates
-8. For preview: `sp_server` fetches/caches RSS feeds, runs resolver chain, returns grouped episodes
-9. User commits and pushes changes to the data repo themselves
+6. For new patterns, the editor auto-derives a deterministic ID from podcastGuid or feedUrls via `POST /api/configs/derive-pattern-id`
+7. `FileWatcherService` detects file changes (including external edits) and broadcasts SSE events
+8. `sp_react` receives SSE events and invalidates TanStack Query cache for real-time updates
+9. For preview: `sp_server` fetches/caches RSS feeds, runs resolver chain, returns grouped episodes
+10. User commits and pushes changes to the data repo themselves
 
 ## Primary interfaces
 
@@ -46,6 +47,7 @@ This repository is part of the audiflow podcast ecosystem:
 - **Feed URL restriction**: Only `http://` and `https://` URLs accepted for feed fetching
 - **Embedded assets**: JSON Schemas embedded via `include_str!`; SPA assets via `rust-embed` (with `--static-dir` override)
 - **Cross-pattern uniqueness**: Server enforces that no two patterns share the same podcastGuid or feedUrl on create/update
+- **Deterministic IDs**: New patterns receive a 12-hex-char ID derived from podcast identity; legacy IDs are grandfathered
 
 ## When to update
 

@@ -14,6 +14,7 @@ operations (commit, push, PR) themselves.
 - Define and enforce JSON Schema for all config files (three schemas)
 - Implement episode resolver logic that groups episodes into playlists
 - Serve a local API for config CRUD, RSS feed fetching/caching, and live preview
+- Derive deterministic pattern IDs from podcast identity (podcastGuid or feedUrls)
 - Provide CLI tools for validation (`validate`), formatting (`format`), serving (`serve`), and version bumping (`bump-versions`)
 - Watch the local data directory for external changes and notify the browser via SSE
 - Enforce cross-pattern uniqueness of podcast identifiers (podcastGuid, feedUrls)
@@ -28,6 +29,7 @@ operations (commit, push, PR) themselves.
 ## Main concepts
 
 - **Pattern**: A podcast-specific configuration identified by a unique ID. Contains feed URLs, podcast GUID, flags, and playlist definitions.
+- **Deterministic pattern ID**: A 12-character hex string derived from podcast identity (podcastGuid or first feedUrl) via MD5. New patterns use deterministic IDs; legacy IDs are grandfathered.
 - **Playlist definition**: A JSON config describing how episodes are grouped, filtered, sorted, and displayed.
 - **Resolver**: A strategy that groups episodes into playlists. Types: `rss`, `category`, `year`, `titleAppearanceOrder`.
 - **Split config**: The three-level file hierarchy (`patterns/meta.json` -> `{id}/meta.json` -> `{id}/playlists/{pid}.json`).
@@ -45,7 +47,7 @@ operations (commit, push, PR) themselves.
 
 ## Key dependencies
 
-- **Rust**: serde, jsonschema, axum 0.8, tokio, reqwest, feed-rs, notify 7, clap, rust-embed, chrono, regex
+- **Rust**: serde, jsonschema, axum 0.8, tokio, reqwest, feed-rs, notify 7, clap, rust-embed, chrono, regex, md5
 - **React**: React 19, TanStack Query/Router, Zustand, React Hook Form, Zod 4, CodeMirror 6, Tailwind v4, shadcn/ui, dnd-kit, i18next
 
 ## Read next

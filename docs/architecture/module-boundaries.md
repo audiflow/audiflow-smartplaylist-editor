@@ -9,6 +9,7 @@
 - Implement resolver trait and concrete resolvers (rss, category, year, titleAppearanceOrder)
 - Provide schema validation via embedded JSON Schema files
 - Implement services: ResolverService, ConfigAssembler, sorting utilities
+- Derive deterministic pattern IDs from podcast identity (`derive_pattern_id`, `is_deterministic_id`)
 - Provide EpisodeData trait abstraction for episode data
 - Cross-pattern uniqueness validation (`check_uniqueness` for podcastGuid and feedUrl conflicts)
 
@@ -19,16 +20,18 @@
 - Feed fetching or caching
 
 #### Depends on
-- External crates: serde, jsonschema, regex, chrono
+- External crates: serde, jsonschema, regex, chrono, md5
 
 #### Used by
-- sp_server (models, resolvers, schema validation, services, uniqueness)
-- sp_cli (schema validation via sp_core::schema, uniqueness validation)
+- sp_server (models, resolvers, schema validation, services, uniqueness, pattern ID derivation)
+- sp_cli (schema validation via sp_core::schema, uniqueness validation, deterministic ID validation)
 
 ### Module: sp_server
 
 #### Responsibilities
-- Axum REST API: config CRUD, preview, feed proxy, schema endpoint, health check, pattern identifiers
+- Axum REST API: config CRUD, preview, feed proxy, schema endpoint, health check, pattern identifiers, pattern ID derivation
+- `POST /api/configs/derive-pattern-id`: derive deterministic pattern ID from podcastGuid/feedUrls
+- Enforce deterministic ID on pattern creation
 - LocalConfigRepository: read/write split config files with atomic writes
 - DiskFeedCacheService: disk-based RSS feed caching with SHA-256 hashing and TTL
 - FileWatcherService: watch data directory, debounce events, broadcast via SSE
@@ -44,7 +47,7 @@
 - Frontend rendering
 
 #### Depends on
-- sp_core (models, resolvers, schema, services, uniqueness)
+- sp_core (models, resolvers, schema, services, uniqueness, pattern_id)
 - External crates: axum 0.8, tokio, reqwest, feed-rs, notify 7, rust-embed, tower-http
 
 #### Used by
@@ -55,8 +58,8 @@
 #### Responsibilities
 - CLI argument parsing via clap (serve, validate, format, bump-versions subcommands)
 - `serve`: start sp_server with --data-dir, --host, --port, --static-dir flags
-- `validate`: walk config files and validate against JSON Schema; check cross-pattern uniqueness (exit codes: 0/1/2)
-- `format`: normalize JSON files with --check mode for CI
+- `validate`: walk config files and validate against JSON Schema; check cross-pattern uniqueness; verify deterministic pattern ID integrity (exit codes: 0/1/2)
+- `format`: normalize JSON files with --check mode for CI; supports directory arguments
 - `bump-versions`: detect changed patterns via git diff and increment their dataVersion fields (CI use)
 - `config_walker`: walk pattern directory tree with schema type detection
 
@@ -65,7 +68,7 @@
 - Frontend concerns
 
 #### Depends on
-- sp_core (schema validation, models, uniqueness)
+- sp_core (schema validation, models, uniqueness, pattern_id)
 - sp_server (app construction for serve command)
 - External crates: clap, anyhow
 
@@ -77,6 +80,7 @@
 #### Responsibilities
 - Web editor UI: pattern browsing, config editing forms, live preview
 - API client: HTTP wrapper for sp_server REST endpoints
+- Auto-derive read-only pattern ID for new configs via `useDerivedPatternId` hook (debounced, calls derive endpoint)
 - State management: Zustand for editor UI state, TanStack Query for server state
 - Form validation: React Hook Form + Zod 4 schemas mirroring JSON Schema
 - SSE hook (`useFileEvents`): invalidate TanStack Query cache on file changes

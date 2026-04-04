@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Documents the file structure and format contract between this editor and the smart playlist data repository (`audiflow-smartplaylist`), which holds config data for all environments (prod, staging, dev) on separate branches.
+Documents the file structure and format contract between this editor and the smart playlist data repository (`audiflow-smartplaylist`), which holds config data for all environments (prod, staging, dev) on separate versioned branches.
 
 ## Scope
 
@@ -18,8 +18,8 @@ This document covers:
 - Enforce JSON Schema validation on all written files
 - Use atomic writes (`.tmp` then rename) to prevent partial reads
 - Validate path segments to prevent directory traversal
-- Provide `format` CLI command for JSON normalization
-- Provide `validate` CLI command for schema validation and cross-pattern uniqueness (usable in data repo CI)
+- Provide `format` CLI command for JSON normalization (supports directory arguments)
+- Provide `validate` CLI command for schema validation, cross-pattern uniqueness, and deterministic pattern ID integrity (usable in data repo CI)
 - Provide `bump-versions` CLI command for CI-driven dataVersion increments
 
 ## Non-responsibilities
@@ -52,7 +52,7 @@ patterns/
 
 ### Naming rules
 
-- `patternId`: string identifier, used as directory name (alphanumeric, hyphens, underscores only)
+- `patternId`: string identifier, used as directory name. New patterns use a deterministic 12-hex-char ID derived from podcast identity; legacy human-readable IDs are grandfathered.
 - `playlistId`: string identifier, used as filename without extension (alphanumeric, hyphens, underscores only)
 - All JSON files use 2-space indentation with trailing newline
 
@@ -67,9 +67,15 @@ patterns/
 Editor writes -> Local data repo clone -> User pushes -> CI deploys -> GitHub Pages -> App fetches
 ```
 
-- Production: `main` branch -> GitHub Pages `/assets/`
-- Staging: `staging` branch -> GitHub Pages `/assets-stg/`
-- Dev: `dev` branch -> GitHub Pages `/assets-dev/`
+The `main` branch holds infrastructure only. Data and vendored schemas live on env/version branches:
+
+| Branch | Deploy path |
+|--------|------------|
+| `prod/v{N}` | `/assets/v{N}/` |
+| `stg/v{N}` | `/assets-stg/v{N}/` |
+| `dev/v{N}` | `/assets-dev/v{N}/` |
+
+Branch flow per version: `dev/v{N}` -> PR -> `stg/v{N}` -> PR -> `prod/v{N}`
 
 ## Integration assumptions
 
