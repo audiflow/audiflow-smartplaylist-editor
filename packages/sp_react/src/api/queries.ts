@@ -5,6 +5,7 @@ import type {
   PatternIdentifiers,
   FeedEpisode,
   PreviewResult,
+  PodcastSearchResponse,
 } from '../schemas/api-schema.ts';
 import type { PatternConfig } from '../schemas/config-schema.ts';
 
@@ -146,6 +147,19 @@ export function useDeletePlaylist() {
         queryKey: ['assembledConfig', variables.patternId],
       });
     },
+  });
+}
+
+export function useSearchPodcasts(term: string) {
+  const client = useApiClient();
+  return useQuery({
+    queryKey: ['podcastSearch', term],
+    queryFn: () =>
+      client.get<PodcastSearchResponse>(
+        `/api/podcasts/search?term=${encodeURIComponent(term)}&limit=25`,
+      ),
+    enabled: 0 < term.length,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
