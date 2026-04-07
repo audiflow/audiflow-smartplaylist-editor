@@ -75,4 +75,26 @@ export const handlers = [
   http.post(`${BASE}/api/configs/validate`, () =>
     HttpResponse.json({ valid: true }),
   ),
+
+  // -- Podcast search --
+  http.get(`${BASE}/api/podcasts/search`, ({ request }) => {
+    const url = new URL(request.url);
+    const term = url.searchParams.get('term');
+    if (!term) {
+      return HttpResponse.json({ error: 'Missing required query parameter: term' }, { status: 400 });
+    }
+    return HttpResponse.json({
+      resultCount: 1,
+      results: [
+        {
+          trackName: `Test Podcast for ${term}`,
+          artistName: 'Test Author',
+          artworkUrl100: 'https://example.com/art.jpg',
+          feedUrl: 'https://example.com/feed.xml',
+          trackCount: 100,
+          primaryGenreName: 'Technology',
+        },
+      ],
+    });
+  }),
 ];
