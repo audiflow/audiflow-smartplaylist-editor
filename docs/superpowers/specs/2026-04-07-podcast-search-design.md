@@ -13,7 +13,7 @@ Add a podcast search feature to the browse page. Users click a "Search Podcasts"
 - Uses existing `reqwest::Client` from `AppState.http_client`
 - Validates `term` is non-empty (400 if empty)
 - iTunes errors returned as 502 (Bad Gateway)
-- Returns normalized response:
+- Passes through the iTunes JSON response as-is:
 
 ```json
 {
@@ -37,7 +37,7 @@ Add a podcast search feature to the browse page. Users click a "Search Podcasts"
 - Modal component: `packages/sp_react/src/components/podcast-search/search-dialog.tsx`
 - Debounced input (300ms) triggers `useSearchPodcasts(term)` query hook
 - Results displayed as compact list: artwork (48px) + name + author + genre
-- Clicking a result closes the modal and navigates to `/editor?feedUrl=<encodedUrl>`
+- Clicking a result closes the modal and navigates to `/editor?feedUrl=<encodedUrl>&displayName=<trackName>`
 - Loading and empty states handled
 - 25 results max
 
@@ -50,8 +50,8 @@ Add a podcast search feature to the browse page. Users click a "Search Podcasts"
 5. sp_server proxies to iTunes Search API
 6. Results rendered as list in modal
 7. User clicks a result
-8. Modal closes, navigates to `/editor?feedUrl=<url>`
-9. Editor page reads `feedUrl` from search params and pre-fills feed URL input
+8. Modal closes, navigates to `/editor?feedUrl=<url>&displayName=<name>`
+9. Editor page reads `feedUrl` and `displayName` from search params and pre-fills the config
 
 ### Integration with Editor
 
