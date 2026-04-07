@@ -4,6 +4,7 @@ pub mod events;
 pub mod feed;
 pub mod health;
 pub mod identifiers;
+pub mod podcast;
 pub mod preview;
 pub mod schema;
 
@@ -64,6 +65,7 @@ pub fn create_router(state: SharedState) -> Router {
         .route("/configs/validate", post(config::validate_config))
         .route("/configs/preview", post(preview::preview_config))
         .route("/feeds", get(feed::fetch_feed))
+        .route("/podcasts/search", get(podcast::search_podcasts))
         .route("/events", get(events::sse_events))
         .fallback(api_fallback);
 
