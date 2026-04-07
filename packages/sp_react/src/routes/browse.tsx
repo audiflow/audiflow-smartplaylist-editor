@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { usePatterns } from '@/api/queries.ts';
@@ -9,7 +10,8 @@ import {
   CardDescription,
 } from '@/components/ui/card.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
-import { Plus, Loader2 } from 'lucide-react';
+import { SearchDialog, type PodcastSelection } from '@/components/podcast-search/search-dialog.tsx';
+import { Plus, Loader2, Search } from 'lucide-react';
 
 export const Route = createFileRoute('/browse')({
   component: BrowseScreen,
@@ -18,10 +20,30 @@ export const Route = createFileRoute('/browse')({
 function BrowseScreen() {
   const navigate = useNavigate();
   const { data: patterns, isLoading, error } = usePatterns();
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const handleSearchSelect = (selection: PodcastSelection) => {
+    void navigate({
+      to: '/editor',
+      search: {
+        feedUrl: selection.feedUrl,
+        displayName: selection.trackName,
+      },
+    });
+  };
 
   return (
     <div className="container mx-auto max-w-4xl p-6">
-      <BrowseHeader navigate={navigate} />
+      <BrowseHeader
+        navigate={navigate}
+        onSearchOpen={() => setSearchOpen(true)}
+      />
+
+      <SearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        onSelect={handleSearchSelect}
+      />
 
       {isLoading && <LoadingState />}
       {error && <ErrorState message={error.message} />}
@@ -35,8 +57,10 @@ function BrowseScreen() {
 
 function BrowseHeader({
   navigate,
+  onSearchOpen,
 }: {
   navigate: ReturnType<typeof useNavigate>;
+  onSearchOpen: () => void;
 }) {
   const { t } = useTranslation('common');
 
@@ -44,6 +68,10 @@ function BrowseHeader({
     <div className="flex items-center justify-between mb-6">
       <h1 className="text-2xl font-bold">{t('appTitle')}</h1>
       <div className="flex gap-2">
+        <Button variant="outline" onClick={onSearchOpen}>
+          <Search className="mr-2 h-4 w-4" />
+          {t('searchPodcasts')}
+        </Button>
         <Button onClick={() => void navigate({ to: '/editor' })}>
           <Plus className="mr-2 h-4 w-4" />
           {t('createNew')}

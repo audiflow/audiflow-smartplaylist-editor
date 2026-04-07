@@ -101,6 +101,22 @@ export const previewResultSchema = z.object({
   debug: previewDebugSchema.optional(),
 });
 
+// -- Podcast search --
+
+export const podcastSearchResultSchema = z.object({
+  trackName: z.string(),
+  artistName: z.string(),
+  artworkUrl100: z.string().optional(),
+  feedUrl: z.string().optional(),
+  trackCount: z.number().optional(),
+  primaryGenreName: z.string().optional(),
+});
+
+export const podcastSearchResponseSchema = z.object({
+  resultCount: z.number(),
+  results: z.array(podcastSearchResultSchema),
+});
+
 // -- Inferred types --
 
 export type PatternSummary = z.infer<typeof patternSummarySchema>;
@@ -113,3 +129,5 @@ export type ClaimedEpisode = z.infer<typeof claimedEpisodeSchema>;
 export type PlaylistDebug = z.infer<typeof playlistDebugSchema>;
 export type PreviewDebug = z.infer<typeof previewDebugSchema>;
 export type PreviewResult = z.infer<typeof previewResultSchema>;
+export type PodcastSearchResult = z.infer<typeof podcastSearchResultSchema>;
+export type PodcastSearchResponse = z.infer<typeof podcastSearchResponseSchema>;
