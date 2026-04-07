@@ -74,7 +74,7 @@ Create `crates/sp_core/src/services/pattern_id.rs` with tests only:
 ```rust
 /// Derives a semi-deterministic pattern ID from podcast identity.
 ///
-/// Priority: podcastGuid (if non-empty) > feedUrls[0].
+/// Priority: podcastGuid (if non-empty, trimmed) > first non-empty trimmed feedUrl.
 /// Returns the first 12 hex characters of the MD5 digest, or `None`
 /// if no usable input is available.
 pub fn derive_pattern_id(podcast_guid: Option<&str>, feed_urls: &[String]) -> Option<String> {
@@ -170,8 +170,14 @@ Replace the `todo!()` bodies in `crates/sp_core/src/services/pattern_id.rs`:
 ```rust
 pub fn derive_pattern_id(podcast_guid: Option<&str>, feed_urls: &[String]) -> Option<String> {
     let input = podcast_guid
+        .map(|g| g.trim())
         .filter(|g| !g.is_empty())
-        .or_else(|| feed_urls.first().map(|s| s.as_str()))?;
+        .or_else(|| {
+            feed_urls
+                .iter()
+                .map(|s| s.trim())
+                .find(|s| !s.is_empty())
+        })?;
     let digest = md5::compute(input.as_bytes());
     Some(format!("{digest:x}")[..12].to_string())
 }

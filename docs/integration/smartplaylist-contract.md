@@ -52,7 +52,7 @@ patterns/
 
 ### Naming rules
 
-- `patternId`: string identifier, used as directory name. New patterns use a deterministic 12-hex-char ID derived from podcast identity; legacy human-readable IDs are grandfathered.
+- `patternId`: string identifier, used as directory name (alphanumeric, hyphens, underscores only -- enforced by `validate_path_segment`). New patterns use a deterministic 12-hex-char ID derived from podcast identity; legacy human-readable IDs are grandfathered.
 - `playlistId`: string identifier, used as filename without extension (alphanumeric, hyphens, underscores only)
 - All JSON files use 2-space indentation with trailing newline
 
