@@ -18,5 +18,6 @@
   "searchPodcastsPlaceholder": "ポッドキャスト名で検索...",
   "searchPodcastsHint": "ポッドキャスト名を入力して検索",
   "noSearchResults": "ポッドキャストが見つかりません",
+  "searchError": "ポッドキャストの検索に失敗しました。もう一度お試しください。",
   "episodeCount": "{{count}} エピソード"
 }

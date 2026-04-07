@@ -18,6 +18,7 @@
   "searchPodcastsPlaceholder": "Search by podcast name...",
   "searchPodcastsHint": "Type a podcast name to search",
   "noSearchResults": "No podcasts found",
+  "searchError": "Failed to search podcasts. Please try again.",
   "episodeCount_one": "{{count}} episode",
   "episodeCount_other": "{{count}} episodes"
 }

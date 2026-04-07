@@ -24,7 +24,7 @@ pub async fn search_podcasts(
         .filter(|t| !t.is_empty())
         .ok_or_else(|| AppError::bad_request("Missing required query parameter: term"))?;
 
-    let limit = query.limit.unwrap_or(25).min(200);
+    let limit = query.limit.unwrap_or(25).clamp(1, 200);
 
     let encoded_term: String = form_urlencoded::byte_serialize(term.as_bytes()).collect();
     let url = format!(

@@ -10,7 +10,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import { Loader2, Search } from 'lucide-react';
+import { AlertCircle, Loader2, Search } from 'lucide-react';
+import { Label } from '@/components/ui/label.tsx';
 
 export interface PodcastSelection {
   feedUrl: string;
@@ -34,7 +35,7 @@ export function SearchDialog({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const effectiveTerm = open ? debouncedTerm : '';
-  const { data, isLoading } = useSearchPodcasts(effectiveTerm);
+  const { data, isLoading, isError } = useSearchPodcasts(effectiveTerm);
 
   // Filter results to only those with a feedUrl
   const results = data?.results.filter((r) => r.feedUrl) ?? [];
@@ -68,8 +69,12 @@ export function SearchDialog({
         </DialogHeader>
 
         <div className="relative">
+          <Label htmlFor="podcast-search-input" className="sr-only">
+            {t('searchPodcasts')}
+          </Label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            id="podcast-search-input"
             ref={inputRef}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -85,13 +90,20 @@ export function SearchDialog({
             </div>
           )}
 
-          {!isLoading && 0 < effectiveTerm.length && results.length === 0 && (
+          {isError && (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              <span>{t('searchError')}</span>
+            </div>
+          )}
+
+          {!isLoading && !isError && 0 < effectiveTerm.length && results.length === 0 && (
             <p className="text-center py-8 text-sm text-muted-foreground">
               {t('noSearchResults')}
             </p>
           )}
 
-          {!isLoading && 0 < results.length && (
+          {!isLoading && !isError && 0 < results.length && (
             <div className="flex flex-col gap-1">
               {results.map((result) => (
                 <SearchResultItem
@@ -103,7 +115,7 @@ export function SearchDialog({
             </div>
           )}
 
-          {!isLoading && effectiveTerm.length < 1 && (
+          {!isLoading && !isError && effectiveTerm.length < 1 && (
             <p className="text-center py-8 text-sm text-muted-foreground">
               {t('searchPodcastsHint')}
             </p>
