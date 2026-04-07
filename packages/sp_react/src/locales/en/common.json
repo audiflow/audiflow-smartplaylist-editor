@@ -13,5 +13,9 @@
   "httpError": "HTTP {{status}}: {{text}}",
   "loadPatternsFailed": "Failed to load patterns: {{error}}",
   "noPatternsFound": "No patterns found. Create your first one!",
-  "confirm": "Confirm"
+  "confirm": "Confirm",
+  "searchPodcasts": "Search Podcasts",
+  "searchPodcastsPlaceholder": "Search by podcast name...",
+  "searchPodcastsHint": "Type a podcast name to search",
+  "noSearchResults": "No podcasts found"
 }

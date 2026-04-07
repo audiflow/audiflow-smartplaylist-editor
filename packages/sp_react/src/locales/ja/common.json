@@ -13,5 +13,9 @@
   "httpError": "HTTP {{status}}: {{text}}",
   "loadPatternsFailed": "パターンの読み込みに失敗しました: {{error}}",
   "noPatternsFound": "パターンが見つかりません。最初のパターンを作成してください！",
-  "confirm": "確認"
+  "confirm": "確認",
+  "searchPodcasts": "ポッドキャスト検索",
+  "searchPodcastsPlaceholder": "ポッドキャスト名で検索...",
+  "searchPodcastsHint": "ポッドキャスト名を入力して検索",
+  "noSearchResults": "ポッドキャストが見つかりません"
 }
