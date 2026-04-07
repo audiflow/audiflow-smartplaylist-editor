@@ -25,7 +25,7 @@ This repository is part of the audiflow podcast ecosystem:
 3. `sp_server` reads split config files from the data directory via `LocalConfigRepository`
 4. `sp_react` SPA loads in the browser, fetches config data via REST API
 5. User edits configs through forms; `sp_server` writes changes atomically to disk
-6. For new patterns, the editor auto-derives a deterministic ID from podcastGuid or feedUrls via `POST /api/configs/derive-pattern-id`
+6. For new patterns, the editor auto-derives a deterministic ID from podcastGuid or first non-empty trimmed feedUrl via `POST /api/configs/derive-pattern-id`
 7. `FileWatcherService` detects file changes (including external edits) and broadcasts SSE events
 8. `sp_react` receives SSE events and invalidates TanStack Query cache for real-time updates
 9. For preview: `sp_server` fetches/caches RSS feeds, runs resolver chain, returns grouped episodes

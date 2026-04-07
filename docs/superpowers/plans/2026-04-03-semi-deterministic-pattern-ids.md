@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make pattern IDs semi-deterministic -- computed at creation time from podcast identity (MD5 of podcastGuid or feedUrls[0]) to prevent duplicate configs.
+**Goal:** Make pattern IDs semi-deterministic -- computed at creation time from podcast identity (MD5 of podcastGuid or first non-empty feedUrl) to prevent duplicate configs.
 
 **Architecture:** A `pattern_id` service in sp_core derives IDs via MD5. The server enforces deterministic IDs on creation and exposes a derivation endpoint. The CLI validates deterministic IDs match their source. The frontend auto-populates a read-only ID field from the derivation endpoint.
 
@@ -245,7 +245,7 @@ use crate::app::AppError;
 /// Returns the derived ID and which source field was used.
 ///
 /// Request:  `{ "podcastGuid": "...", "feedUrls": ["..."] }`
-/// Response: `{ "id": "a1b2c3d4e5f6", "source": "podcastGuid" | "feedUrl" }`
+/// Response: `{ "id": "a1b2c3d4e5f6", "source": "podcastGuid" | "feedUrls" }`
 pub async fn derive_pattern_id_handler(
     Json(body): Json<Value>,
 ) -> Result<Json<Value>, AppError> {
@@ -269,11 +269,11 @@ pub async fn derive_pattern_id_handler(
     let has_guid = guid.is_some();
     let id = derive_pattern_id(guid, &feed_urls).ok_or_else(|| {
         AppError::bad_request(
-            "Cannot derive pattern ID: provide a non-empty podcastGuid or at least one feedUrl",
+            "Cannot derive pattern ID: provide a non-empty podcastGuid or at least one feedUrls entry",
         )
     })?;
 
-    let source = if has_guid { "podcastGuid" } else { "feedUrl" };
+    let source = if has_guid { "podcastGuid" } else { "feedUrls" };
 
     Ok(Json(serde_json::json!({
         "id": id,
@@ -357,7 +357,7 @@ Then, in the `create_pattern` function, add validation after the `id` extraction
         if id != expected_id {
             return Err(AppError::bad_request(format!(
                 "Pattern ID must be \"{expected_id}\" (derived from {}). Got \"{id}\".",
-                if guid.is_some() { "podcastGuid" } else { "feedUrl" },
+                if guid.is_some() { "podcastGuid" } else { "feedUrls" },
             )));
         }
     }
