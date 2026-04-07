@@ -152,13 +152,14 @@ export function useDeletePlaylist() {
 
 export function useSearchPodcasts(term: string) {
   const client = useApiClient();
+  const trimmed = term.trim();
   return useQuery({
-    queryKey: ['podcastSearch', term],
+    queryKey: ['podcastSearch', trimmed],
     queryFn: () =>
       client.get<PodcastSearchResponse>(
-        `/api/podcasts/search?term=${encodeURIComponent(term)}&limit=25`,
+        `/api/podcasts/search?term=${encodeURIComponent(trimmed)}&limit=25`,
       ),
-    enabled: 0 < term.length,
+    enabled: 0 < trimmed.length,
     staleTime: 5 * 60 * 1000,
   });
 }

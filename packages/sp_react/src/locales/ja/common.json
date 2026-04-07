@@ -17,5 +17,6 @@
   "searchPodcasts": "ポッドキャスト検索",
   "searchPodcastsPlaceholder": "ポッドキャスト名で検索...",
   "searchPodcastsHint": "ポッドキャスト名を入力して検索",
-  "noSearchResults": "ポッドキャストが見つかりません"
+  "noSearchResults": "ポッドキャストが見つかりません",
+  "episodeCount": "{{count}} エピソード"
 }

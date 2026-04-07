@@ -17,6 +17,7 @@ Add a podcast search feature to the browse page. Users click a "Search Podcasts"
 
 ```json
 {
+  "resultCount": 1,
   "results": [
     {
       "trackName": "Podcast Name",

@@ -26,7 +26,7 @@ describe('useSearchPodcasts', () => {
     expect(result.current.fetchStatus).toBe('idle');
   });
 
-  it('fetches results when term has 3+ characters', async () => {
+  it('fetches results when term is non-empty', async () => {
     const { result } = renderHook(() => useSearchPodcasts('test'), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.results).toHaveLength(1);

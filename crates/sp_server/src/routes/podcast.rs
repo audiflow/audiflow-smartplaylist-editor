@@ -20,6 +20,7 @@ pub async fn search_podcasts(
 ) -> Result<Json<serde_json::Value>, AppError> {
     let term = query
         .term
+        .map(|t| t.trim().to_string())
         .filter(|t| !t.is_empty())
         .ok_or_else(|| AppError::bad_request("Missing required query parameter: term"))?;
 

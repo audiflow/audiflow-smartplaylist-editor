@@ -33,7 +33,8 @@ export function SearchDialog({
   const debouncedTerm = useDebounce(searchTerm, 300);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data, isLoading } = useSearchPodcasts(debouncedTerm);
+  const effectiveTerm = open ? debouncedTerm : '';
+  const { data, isLoading } = useSearchPodcasts(effectiveTerm);
 
   // Filter results to only those with a feedUrl
   const results = data?.results.filter((r) => r.feedUrl) ?? [];
@@ -84,7 +85,7 @@ export function SearchDialog({
             </div>
           )}
 
-          {!isLoading && 0 < debouncedTerm.length && results.length === 0 && (
+          {!isLoading && 0 < effectiveTerm.length && results.length === 0 && (
             <p className="text-center py-8 text-sm text-muted-foreground">
               {t('noSearchResults')}
             </p>
@@ -92,9 +93,9 @@ export function SearchDialog({
 
           {!isLoading && 0 < results.length && (
             <div className="flex flex-col gap-1">
-              {results.map((result, index) => (
+              {results.map((result) => (
                 <SearchResultItem
-                  key={`${result.trackName}-${index}`}
+                  key={result.feedUrl}
                   result={result}
                   onSelect={handleSelect}
                 />
@@ -102,7 +103,7 @@ export function SearchDialog({
             </div>
           )}
 
-          {!isLoading && debouncedTerm.length < 1 && (
+          {!isLoading && effectiveTerm.length < 1 && (
             <p className="text-center py-8 text-sm text-muted-foreground">
               {t('searchPodcastsHint')}
             </p>

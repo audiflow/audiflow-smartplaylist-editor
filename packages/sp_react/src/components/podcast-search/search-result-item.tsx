@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { PodcastSearchResult } from '@/schemas/api-schema.ts';
 import type { PodcastSelection } from './search-dialog.tsx';
 
@@ -7,6 +8,7 @@ interface SearchResultItemProps {
 }
 
 export function SearchResultItem({ result, onSelect }: SearchResultItemProps) {
+  const { t } = useTranslation('common');
   if (!result.feedUrl) return null;
 
   return (
@@ -31,7 +33,8 @@ export function SearchResultItem({ result, onSelect }: SearchResultItemProps) {
         <p className="text-xs text-muted-foreground truncate">
           {result.artistName}
           {result.primaryGenreName && ` · ${result.primaryGenreName}`}
-          {result.trackCount != null && ` · ${result.trackCount} episodes`}
+          {result.trackCount != null &&
+            ` · ${t('episodeCount', { count: result.trackCount })}`}
         </p>
       </div>
     </button>

@@ -20,9 +20,7 @@ function EditorIndex() {
   const setFeedUrl = useEditorStore((s) => s.setFeedUrl);
 
   useEffect(() => {
-    if (feedUrl) {
-      setFeedUrl(feedUrl);
-    }
+    setFeedUrl(feedUrl ?? '');
   }, [feedUrl, setFeedUrl]);
 
   const initialConfig = useMemo<PatternConfig | undefined>(() => {
