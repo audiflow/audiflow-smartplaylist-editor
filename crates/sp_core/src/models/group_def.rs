@@ -20,7 +20,8 @@ pub struct GroupDef {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub episode_list: Option<GroupDefEpisodeList>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Accepts legacy `episodeExtractor` key for v3 backward compatibility.
+    #[serde(skip_serializing_if = "Option::is_none", alias = "episodeExtractor")]
     pub numbering_extractor: Option<NumberingExtractor>,
 }
 

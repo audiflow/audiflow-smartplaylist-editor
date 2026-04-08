@@ -6,7 +6,7 @@ import {
   playlistDefinitionSchema,
   playlistStructureSchema,
   yearBindingSchema,
-  resolverTypeSchema,
+  resolverTypeValues,
   sortFieldSchema,
   sortOrderSchema,
   episodeSortFieldSchema,
@@ -44,7 +44,7 @@ function createValidator() {
 describe('Zod enums match vendored playlist-definition schema', () => {
   it('resolverTypes match schema', () => {
     const schemaValues = extractEnum(topProps.resolverType);
-    expect(resolverTypeSchema.options).toEqual(schemaValues);
+    expect([...resolverTypeValues]).toEqual(schemaValues);
   });
 
   it('playlistStructure values match schema', () => {

@@ -44,7 +44,8 @@ pub struct PlaylistDefinition {
     pub episode_list: Option<EpisodeListSettings>,
 
     /// Configuration for extracting season and episode numbers.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Accepts legacy `episodeExtractor` key for v3 backward compatibility.
+    #[serde(skip_serializing_if = "Option::is_none", alias = "episodeExtractor")]
     pub numbering_extractor: Option<NumberingExtractor>,
 
     /// Static group definitions for category-based grouping.
