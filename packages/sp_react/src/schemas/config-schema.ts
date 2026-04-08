@@ -21,10 +21,10 @@ export const playlistStructureSchema = z.enum(['split', 'grouped']);
 export const yearBindingSchema = z.enum(['none', 'pinToYear', 'splitByYear']);
 
 export const resolverTypeSchema = z.enum([
-  'rss',
-  'category',
+  'seasonNumber',
+  'titleClassifier',
   'year',
-  'titleAppearanceOrder',
+  'titleDiscovery',
 ]);
 
 // -- Sort types --
@@ -90,7 +90,7 @@ export const titleExtractorSchema: z.ZodType<TitleExtractorInput> = z.lazy(
     }),
 );
 
-export const episodeExtractorSchema = z.object({
+export const numberingExtractorSchema = z.object({
   source: z.string(),
   pattern: z.string(),
   seasonGroup: z.number().nullish(),
@@ -120,7 +120,7 @@ export const groupDefSchema = z.object({
       titleExtractor: titleExtractorSchema.optional(),
     })
     .optional(),
-  episodeExtractor: episodeExtractorSchema.optional(),
+  numberingExtractor: numberingExtractorSchema.optional(),
 });
 
 // -- Playlist definition --
@@ -141,7 +141,7 @@ export const playlistDefinitionSchema = z.object({
   groupList: groupListSettingsSchema.nullish(),
   episodeList: episodeListSettingsSchema.nullish(),
   titleExtractor: titleExtractorSchema.nullish(),
-  episodeExtractor: episodeExtractorSchema.nullish(),
+  numberingExtractor: numberingExtractorSchema.nullish(),
 });
 
 // -- Pattern config --
@@ -171,6 +171,6 @@ export type GroupListSettings = z.infer<typeof groupListSettingsSchema>;
 export type EpisodeListSettings = z.infer<typeof episodeListSettingsSchema>;
 export type GroupDef = z.infer<typeof groupDefSchema>;
 export type TitleExtractor = z.infer<typeof titleExtractorSchema>;
-export type EpisodeExtractor = z.infer<typeof episodeExtractorSchema>;
+export type NumberingExtractor = z.infer<typeof numberingExtractorSchema>;
 export type PlaylistDefinition = z.infer<typeof playlistDefinitionSchema>;
 export type PatternConfig = z.infer<typeof patternConfigSchema>;
