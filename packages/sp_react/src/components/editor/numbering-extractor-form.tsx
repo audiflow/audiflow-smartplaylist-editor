@@ -31,7 +31,7 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
   if (!extractor) {
     return (
       <div className="space-y-2">
-        <h4 className="text-sm font-medium">{t('episodeExtractor')}</h4>
+        <h4 className="text-sm font-medium">{t('numberingExtractor')}</h4>
         <Button
           type="button"
           variant="outline"
@@ -57,7 +57,7 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
   return (
     <div className="space-y-3">
       <h4 className="text-sm font-medium">
-        <HintLabel hint="episodeExtractor">{t('episodeExtractor')}</HintLabel>
+        <HintLabel hint="numberingExtractor">{t('numberingExtractor')}</HintLabel>
       </h4>
 
       <Card className="py-4">
@@ -84,9 +84,9 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
             <div className="space-y-1.5">
               <HintLabel
                 htmlFor={`${idPrefix}-source`}
-                hint="episodeExtractorSource"
+                hint="numberingExtractorSource"
               >
-                {t('episodeExtractorSource')}
+                {t('numberingExtractorSource')}
               </HintLabel>
               <Select
                 value={watch(`${fieldPath}.source` as any) ?? 'title'}
@@ -108,9 +108,9 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
             <div className="space-y-1.5">
               <HintLabel
                 htmlFor={`${idPrefix}-pattern`}
-                hint="episodeExtractorPattern"
+                hint="numberingExtractorPattern"
               >
-                {t('episodeExtractorPattern')}
+                {t('numberingExtractorPattern')}
               </HintLabel>
               <Input
                 id={`${idPrefix}-pattern`}
@@ -122,9 +122,9 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
             <div className="space-y-1.5">
               <HintLabel
                 htmlFor={`${idPrefix}-seasonGroup`}
-                hint="episodeExtractorSeasonGroup"
+                hint="numberingExtractorSeasonGroup"
               >
-                {t('episodeExtractorSeasonGroup')}
+                {t('numberingExtractorSeasonGroup')}
               </HintLabel>
               <Input
                 id={`${idPrefix}-seasonGroup`}
@@ -141,9 +141,9 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
             <div className="space-y-1.5">
               <HintLabel
                 htmlFor={`${idPrefix}-episodeGroup`}
-                hint="episodeExtractorEpisodeGroup"
+                hint="numberingExtractorEpisodeGroup"
               >
-                {t('episodeExtractorEpisodeGroup')}
+                {t('numberingExtractorEpisodeGroup')}
               </HintLabel>
               <Input
                 id={`${idPrefix}-episodeGroup`}
@@ -168,24 +168,24 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
             />
             <HintLabel
               htmlFor={`${idPrefix}-fallbackToRss`}
-              hint="episodeExtractorFallbackToRss"
+              hint="numberingExtractorFallbackToRss"
             >
-              {t('episodeExtractorFallbackToRss')}
+              {t('numberingExtractorFallbackToRss')}
             </HintLabel>
           </div>
 
           <div className="space-y-3 border-t pt-3">
             <p className="text-xs text-muted-foreground font-medium">
-              {t('episodeExtractorFallbackSeason')}
+              {t('numberingExtractorFallbackSeason')}
             </p>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <HintLabel
                   htmlFor={`${idPrefix}-fallbackSeasonNumber`}
-                  hint="episodeExtractorFallbackSeason"
+                  hint="numberingExtractorFallbackSeason"
                 >
-                  {t('episodeExtractorFallbackSeason')}
+                  {t('numberingExtractorFallbackSeason')}
                 </HintLabel>
                 <Input
                   id={`${idPrefix}-fallbackSeasonNumber`}
@@ -202,9 +202,9 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
               <div className="space-y-1.5">
                 <HintLabel
                   htmlFor={`${idPrefix}-fallbackEpisodeCaptureGroup`}
-                  hint="episodeExtractorFallbackCaptureGroup"
+                  hint="numberingExtractorFallbackCaptureGroup"
                 >
-                  {t('episodeExtractorFallbackCaptureGroup')}
+                  {t('numberingExtractorFallbackCaptureGroup')}
                 </HintLabel>
                 <Input
                   id={`${idPrefix}-fallbackEpisodeCaptureGroup`}
@@ -222,9 +222,9 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
             <div className="space-y-1.5">
               <HintLabel
                 htmlFor={`${idPrefix}-fallbackEpisodePattern`}
-                hint="episodeExtractorFallbackPattern"
+                hint="numberingExtractorFallbackPattern"
               >
-                {t('episodeExtractorFallbackPattern')}
+                {t('numberingExtractorFallbackPattern')}
               </HintLabel>
               <Input
                 id={`${idPrefix}-fallbackEpisodePattern`}
