@@ -42,9 +42,12 @@ function createValidator() {
 }
 
 describe('Zod enums match vendored playlist-definition schema', () => {
-  it('resolverTypes match schema', () => {
+  it('resolverTypes match schema (v4 values present, legacy aliases allowed)', () => {
     const schemaValues = extractEnum(topProps.resolverType);
-    expect([...resolverTypeValues]).toEqual(schemaValues);
+    // Schema includes both v4 and deprecated v3 aliases; Zod only declares v4 values.
+    const legacyAliases = ['rss', 'category', 'titleAppearanceOrder'];
+    const v4Only = schemaValues.filter((v: string) => !legacyAliases.includes(v));
+    expect([...resolverTypeValues]).toEqual(v4Only);
   });
 
   it('playlistStructure values match schema', () => {
