@@ -31,7 +31,7 @@ operations (commit, push, PR) themselves.
 - **Pattern**: A podcast-specific configuration identified by a unique ID. Contains feed URLs, podcast GUID, flags, and playlist definitions.
 - **Deterministic pattern ID**: A 12-character hex string derived from podcast identity (podcastGuid or first non-empty trimmed feedUrl) via MD5. New patterns use deterministic IDs; legacy IDs are grandfathered.
 - **Playlist definition**: A JSON config describing how episodes are grouped, filtered, sorted, and displayed.
-- **Resolver**: A strategy that groups episodes into playlists. Types: `rss`, `category`, `year`, `titleAppearanceOrder`.
+- **Resolver**: A strategy that groups episodes into playlists. Types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`.
 - **Split config**: The three-level file hierarchy (`patterns/meta.json` -> `{id}/meta.json` -> `{id}/playlists/{pid}.json`).
 - **Schema**: Three JSON Schema files in `crates/sp_core/assets/` that validate each level of the split config.
 - **Claiming**: Higher-priority playlist definitions claim episodes during preview, preventing duplicates in lower-priority definitions.

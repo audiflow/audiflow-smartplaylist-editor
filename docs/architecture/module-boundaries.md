@@ -6,7 +6,7 @@
 
 #### Responsibilities
 - Define all domain models (PatternConfig, PlaylistDefinition, Playlist, GroupDef, etc.)
-- Implement resolver trait and concrete resolvers (rss, category, year, titleAppearanceOrder)
+- Implement resolver trait and concrete resolvers (seasonNumber, titleClassifier, year, titleDiscovery)
 - Provide schema validation via embedded JSON Schema files
 - Implement services: ResolverService, ConfigAssembler, sorting utilities
 - Derive deterministic pattern IDs from podcast identity (`derive_pattern_id`, `is_deterministic_id`)

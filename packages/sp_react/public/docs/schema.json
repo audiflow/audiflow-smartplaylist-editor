@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://audiflow.app/schema/v3/playlist-definition.json",
+  "$id": "https://audiflow.app/schema/v4/playlist-definition.json",
   "title": "SmartPlaylist Definition",
   "description": "Defines how a smart playlist groups, filters, sorts, and displays episodes for a specific podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same pattern share the podcast's episode pool and claim episodes through a priority-based system.",
   "type": "object",
@@ -24,20 +24,20 @@
       "description": "Determines the algorithm used to group episodes into playlists. Each resolver interprets the episode data differently and supports different configuration fields.",
       "oneOf": [
         {
-          "const": "rss",
-          "description": "Groups episodes by their iTunes season number from RSS feed metadata (itunes:season tag). Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts that properly tag seasons in their RSS feed. Supports: nullSeasonGroupKey, titleExtractor, episodeExtractor."
-        },
-        {
-          "const": "category",
-          "description": "Groups episodes by matching their titles against regex patterns defined in the groups array. Groups are evaluated in order; the first matching pattern claims each episode. A group without a pattern acts as a catch-all for unmatched episodes. Best for podcasts with naming conventions like '[Series A] Episode 1' or 'Arc 1: Title'. Requires: groups. Does not use titleExtractor (group display names come from GroupDef.displayName)."
+          "const": "seasonNumber",
+          "description": "Groups episodes by season number. The season number is determined by numberingExtractor (parsing from title or description) if configured, falling back to RSS metadata (itunes:season tag). Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts with season-based structure, whether seasons are encoded in titles or tagged in RSS. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor."
         },
         {
           "const": "year",
-          "description": "Groups episodes by their publication year (publishedAt field). Each distinct year becomes a separate group, sorted by year descending by default (newest first). Best for long-running podcasts where yearly grouping provides natural navigation. Supports: titleExtractor, episodeExtractor."
+          "description": "Groups episodes by their publication year (publishedAt field). Each distinct year becomes a separate group, sorted by year descending by default (newest first). Best for long-running podcasts where yearly grouping provides natural navigation. Supports: titleExtractor, numberingExtractor."
         },
         {
-          "const": "titleAppearanceOrder",
+          "const": "titleDiscovery",
           "description": "Groups episodes by a recurring pattern extracted from their titles, ordered by when each unique pattern first appears in the feed (sorted by publication date). Uses titleExtractor or the first group's pattern to extract group names. Best for podcasts with titled story arcs or recurring series. Supports: titleExtractor (primary), groups[0].pattern (fallback for extraction)."
+        },
+        {
+          "const": "titleClassifier",
+          "description": "Groups episodes by matching their titles against regex patterns defined in the groups array. Groups are evaluated in order; the first matching pattern claims each episode. A group without a pattern acts as a catch-all for unmatched episodes. Best for podcasts with naming conventions like '[Series A] Episode 1' or 'Arc 1: Title'. Requires: groups. Does not use titleExtractor (group display names come from GroupDef.displayName)."
         }
       ]
     },
@@ -139,13 +139,13 @@
         }
       }
     },
-    "episodeExtractor": {
-      "$ref": "#/$defs/EpisodeExtractor",
-      "description": "Default configuration for extracting season and episode numbers from episode title or description text. Overrides RSS metadata (itunes:season, itunes:episode) with values parsed from the episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be overridden per-group via GroupDef.episodeExtractor."
+    "numberingExtractor": {
+      "$ref": "#/$defs/NumberingExtractor",
+      "description": "Default configuration for extracting season and episode numbers from episode title or description text. Overrides RSS metadata (itunes:season, itunes:episode) with values parsed from the episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be overridden per-group via GroupDef.numberingExtractor."
     },
     "groups": {
       "type": "array",
-      "description": "Static group definitions, primarily used by the category resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleAppearanceOrder resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and episodeExtractor defaults.",
+      "description": "Static group definitions, primarily used by the category resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleAppearanceOrder resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and numberingExtractor defaults.",
       "items": {
         "$ref": "#/$defs/GroupDef"
       }
@@ -154,7 +154,7 @@
   "if": {
     "properties": {
       "resolverType": {
-        "const": "category"
+        "const": "titleClassifier"
       }
     },
     "required": [
@@ -203,7 +203,7 @@
     },
     "GroupDef": {
       "type": "object",
-      "description": "Static group definition. Groups with a pattern match episodes by title regex; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in definition order (first-match-wins). At most one catch-all group should exist and should be placed last. Groups can override definition-level defaults for display, episodeList, and episodeExtractor.",
+      "description": "Static group definition. Groups with a pattern match episodes by title regex; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in definition order (first-match-wins). At most one catch-all group should exist and should be placed last. Groups can override definition-level defaults for display, episodeList, and numberingExtractor.",
       "required": [
         "id",
         "displayName"
@@ -256,9 +256,9 @@
             }
           }
         },
-        "episodeExtractor": {
-          "$ref": "#/$defs/EpisodeExtractor",
-          "description": "Per-group override for episode number extraction. When omitted, inherits the definition-level episodeExtractor."
+        "numberingExtractor": {
+          "$ref": "#/$defs/NumberingExtractor",
+          "description": "Per-group override for episode number extraction. When omitted, inherits the definition-level numberingExtractor."
         }
       }
     },
@@ -319,7 +319,7 @@
             },
             {
               "const": "episodeNumber",
-              "description": "Sort by episode number (from RSS metadata or episodeExtractor)."
+              "description": "Sort by episode number (from RSS metadata or numberingExtractor)."
             },
             {
               "const": "title",
@@ -348,7 +348,7 @@
             "seasonNumber",
             "episodeNumber"
           ],
-          "description": "Episode field to read the raw value from. 'title': the episode title string. 'description': the episode description/summary string. 'seasonNumber': the episode's season number as a string (from RSS itunes:season or episodeExtractor). 'episodeNumber': the episode number as a string (from RSS itunes:episode or episodeExtractor). For 'seasonNumber' and 'episodeNumber', the numeric value is converted to a string before pattern matching."
+          "description": "Episode field to read the raw value from. 'title': the episode title string. 'description': the episode description/summary string. 'seasonNumber': the episode's season number as a string (from RSS itunes:season or numberingExtractor). 'episodeNumber': the episode number as a string (from RSS itunes:episode or numberingExtractor). For 'seasonNumber' and 'episodeNumber', the numeric value is converted to a string before pattern matching."
         },
         "pattern": {
           "type": "string",
@@ -374,7 +374,7 @@
         }
       }
     },
-    "EpisodeExtractor": {
+    "NumberingExtractor": {
       "type": "object",
       "description": "Extracts season and episode numbers from episode text, overriding unreliable RSS metadata. Uses a three-tier fallback strategy: (1) primary pattern with separate capture groups for season and episode; (2) fallback pattern for special episodes with a fixed season number; (3) RSS episodeNumber as last resort. Essential for podcasts that encode numbering in titles like '[62-15] Title' rather than using standard RSS tags.",
       "required": [

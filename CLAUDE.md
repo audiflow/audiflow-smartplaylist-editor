@@ -15,7 +15,7 @@ deployed via GitHub Pages). The `audiflow` Flutter app consumes configs from hos
 
 - Web-based editing of smart playlist configurations
 - JSON Schema validation (three schemas in `crates/sp_core/assets/`)
-- Episode resolver logic (rss, category, year, titleAppearanceOrder)
+- Episode resolver logic (seasonNumber, titleClassifier, year, titleDiscovery)
 - Local API server for config CRUD, feed fetching, and live preview
 - CLI tools for validation, formatting, serving, and version bumping
 - Cross-pattern uniqueness enforcement (podcastGuid, feedUrls)

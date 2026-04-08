@@ -75,7 +75,7 @@ Core types use Rust structs with `serde::Serialize`/`Deserialize`. Custom serial
 | `GroupListSettings` | year_binding, user_sortable, show_date_range, sort rule |
 | `EpisodeListSettings` | show_year_headers, sort rule, title_extractor |
 | `TitleExtractor` | Regex-based display name extraction with source, pattern, group, template, fallback chain |
-| `EpisodeExtractor` | Season/episode number extraction with primary/fallback patterns and RSS fallback |
+| `NumberingExtractor` | Season/episode number extraction with primary/fallback patterns and RSS fallback |
 | `SortRule` / `SortField` / `SortOrder` | Group-level sorting (PlaylistNumber, NewestEpisodeDate, Alphabetical) |
 | `EpisodeSortRule` / `EpisodeSortField` | Episode-level sorting (PublishedAt, EpisodeNumber, Title) |
 | `PlaylistPreviewResult` | Preview output: definition_id, playlist, claimed_by_others map |
@@ -95,10 +95,10 @@ trait Resolver {
 
 | Resolver | Strategy |
 |----------|----------|
-| `RssResolver` | Groups by `seasonNumber` RSS field |
-| `CategoryResolver` | Groups by regex patterns against group definitions |
+| `SeasonNumberResolver` | Groups by `seasonNumber` (from RSS or numberingExtractor) |
+| `TitleClassifierResolver` | Groups by regex patterns against group definitions |
 | `YearResolver` | Groups by publication year |
-| `TitleAppearanceResolver` | Groups by title pattern, ordered by first appearance |
+| `TitleDiscoveryResolver` | Groups by title pattern, ordered by first appearance |
 
 `ResolverService` orchestrates the chain:
 
