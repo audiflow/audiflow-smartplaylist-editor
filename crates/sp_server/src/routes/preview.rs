@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
 use sp_core::models::{
-    EpisodeData, EpisodeExtractor, PatternConfig, Playlist, PlaylistGroup, PlaylistPreviewResult,
+    EpisodeData, NumberingExtractor, PatternConfig, Playlist, PlaylistGroup, PlaylistPreviewResult,
     PreviewGrouping, SimpleEpisodeData,
 };
 use sp_core::resolvers::{CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver};
@@ -188,7 +188,7 @@ fn compute_enriched_episodes(
         let mut map = HashMap::new();
 
         // Definition-level extractor: applies to all episodes (skip already-enriched)
-        if let Some(ext) = &definition.episode_extractor {
+        if let Some(ext) = &definition.numbering_extractor {
             enrich_with_extractor(ext, episodes, &mut map, false);
         }
 
@@ -198,7 +198,7 @@ fn compute_enriched_episodes(
             && let Some(def_groups) = group_episode_ids.get(definition.id.as_str())
         {
             for group in groups {
-                if let Some(ext) = &group.episode_extractor
+                if let Some(ext) = &group.numbering_extractor
                     && let Some(ep_ids) = def_groups.get(group.id.as_str())
                 {
                     let group_episodes: Vec<&SimpleEpisodeData> = episodes
@@ -218,7 +218,7 @@ fn compute_enriched_episodes(
 }
 
 fn enrich_with_extractor(
-    extractor: &EpisodeExtractor,
+    extractor: &NumberingExtractor,
     episodes: &[SimpleEpisodeData],
     map: &mut HashMap<i64, SimpleEpisodeData>,
     allow_overwrite: bool,
@@ -249,7 +249,7 @@ fn enrich_with_extractor(
 /// Like `enrich_with_extractor` but takes a pre-filtered slice of episode
 /// references and always overwrites existing entries.
 fn enrich_group_episodes(
-    extractor: &EpisodeExtractor,
+    extractor: &NumberingExtractor,
     episodes: &[&SimpleEpisodeData],
     map: &mut HashMap<i64, SimpleEpisodeData>,
 ) {
@@ -292,7 +292,7 @@ fn compute_extracted_display_names(
         // (mirrors what the resolver does) so title extraction sees
         // the same season/episode numbers the resolver used.
         let enriched: Option<Vec<SimpleEpisodeData>> =
-            definition.episode_extractor.as_ref().map(|ext| {
+            definition.numbering_extractor.as_ref().map(|ext| {
                 let compiled_ep = ext.compile();
                 episodes
                     .iter()

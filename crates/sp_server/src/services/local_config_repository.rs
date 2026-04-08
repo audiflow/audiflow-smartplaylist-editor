@@ -310,7 +310,7 @@ mod tests {
         let playlist = json!({
             "id": "playlist-1",
             "displayName": "Playlist One",
-            "resolverType": "rss",
+            "resolverType": "seasonNumber",
             "playlistStructure": "groups"
         });
         std::fs::write(
@@ -352,7 +352,7 @@ mod tests {
         let playlist = repo.get_playlist("test-pattern", "playlist-1").unwrap();
         assert_eq!(playlist.id, "playlist-1");
         assert_eq!(playlist.display_name, "Playlist One");
-        assert_eq!(playlist.resolver_type, "rss");
+        assert_eq!(playlist.resolver_type, "seasonNumber");
     }
 
     #[test]
@@ -378,7 +378,7 @@ mod tests {
         let new_playlist = json!({
             "id": "playlist-2",
             "displayName": "Playlist Two",
-            "resolverType": "category",
+            "resolverType": "titleClassifier",
             "playlistStructure": "groups"
         });
 
@@ -402,7 +402,7 @@ mod tests {
         let tmp = setup_test_dir();
         let repo = LocalConfigRepository::new(tmp.path());
 
-        let playlist = json!({"id": "fmt-test", "displayName": "Fmt", "resolverType": "rss", "playlistStructure": "groups"});
+        let playlist = json!({"id": "fmt-test", "displayName": "Fmt", "resolverType": "seasonNumber", "playlistStructure": "groups"});
         repo.save_playlist("test-pattern", "fmt-test", &playlist)
             .unwrap();
 
