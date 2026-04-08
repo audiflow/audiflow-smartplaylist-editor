@@ -696,7 +696,7 @@ impl ResolverService {
         definition: &PlaylistDefinition,
         episodes: &[&dyn EpisodeData],
     ) -> Option<Vec<SimpleEpisodeData>> {
-        let extractor = definition.episode_extractor.as_ref()?;
+        let extractor = definition.numbering_extractor.as_ref()?;
 
         let compiled = extractor.compile();
         Some(
