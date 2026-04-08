@@ -298,7 +298,7 @@ fn make_definition(id: &str) -> PlaylistDefinition {
     PlaylistDefinition {
         id: id.to_string(),
         display_name: id.to_string(),
-        resolver_type: "rss".to_string(),
+        resolver_type: "seasonNumber".to_string(),
         playlist_structure: "split".to_string(),
         priority: 0,
         episode_filters: None,
@@ -307,7 +307,7 @@ fn make_definition(id: &str) -> PlaylistDefinition {
         prepend_season_number: false,
         group_list: None,
         episode_list: None,
-        episode_extractor: None,
+        numbering_extractor: None,
         groups: None,
     }
 }
@@ -436,7 +436,7 @@ fn resolver_uses_first_successful_resolver() {
 
     let result = service.resolve_smart_playlists(None, "https://example.com/feed", &refs);
     assert!(result.is_some());
-    assert_eq!(result.unwrap().resolver_type, "rss");
+    assert_eq!(result.unwrap().resolver_type, "seasonNumber");
 }
 
 #[test]
@@ -466,7 +466,7 @@ fn resolver_matches_config_by_feed_url() {
         playlists: vec![PlaylistDefinition {
             id: "main".to_string(),
             display_name: "Main".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "split".to_string(),
             priority: 0,
             episode_filters: None,
@@ -475,7 +475,7 @@ fn resolver_matches_config_by_feed_url() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -489,7 +489,7 @@ fn resolver_matches_config_by_feed_url() {
 
     let result = service.resolve_smart_playlists(None, "https://example.com/feed.rss", &refs);
     assert!(result.is_some());
-    assert_eq!(result.unwrap().resolver_type, "rss");
+    assert_eq!(result.unwrap().resolver_type, "seasonNumber");
 }
 
 #[test]
@@ -502,7 +502,7 @@ fn resolver_matches_config_by_guid() {
         playlists: vec![PlaylistDefinition {
             id: "main".to_string(),
             display_name: "Main".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "split".to_string(),
             priority: 0,
             episode_filters: None,
@@ -511,7 +511,7 @@ fn resolver_matches_config_by_guid() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -529,7 +529,7 @@ fn resolver_matches_config_by_guid() {
         &refs,
     );
     assert!(result.is_some());
-    assert_eq!(result.unwrap().resolver_type, "rss");
+    assert_eq!(result.unwrap().resolver_type, "seasonNumber");
 }
 
 #[test]
@@ -558,7 +558,7 @@ fn resolver_filters_by_require_regex() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
             PlaylistDefinition {
@@ -579,7 +579,7 @@ fn resolver_filters_by_require_regex() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
         ],
@@ -637,7 +637,7 @@ fn resolver_filter_regex_is_case_insensitive() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -679,7 +679,7 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
             PlaylistDefinition {
@@ -700,7 +700,7 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
         ],
@@ -737,7 +737,7 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
         playlists: vec![PlaylistDefinition {
             id: "regular".to_string(),
             display_name: "Regular Series".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "grouped".to_string(),
             priority: 0,
             episode_filters: None,
@@ -751,7 +751,7 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
                 sort: None,
             }),
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -799,7 +799,7 @@ fn resolver_split_structure_produces_multiple_playlists() {
         playlists: vec![PlaylistDefinition {
             id: "all".to_string(),
             display_name: "All".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "split".to_string(),
             priority: 0,
             episode_filters: None,
@@ -808,7 +808,7 @@ fn resolver_split_structure_produces_multiple_playlists() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -839,7 +839,7 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
         playlists: vec![PlaylistDefinition {
             id: "all".to_string(),
             display_name: "All".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "split".to_string(),
             priority: 0,
             episode_filters: None,
@@ -848,7 +848,7 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -880,7 +880,7 @@ fn resolver_sorts_ungrouped_episode_ids() {
         playlists: vec![PlaylistDefinition {
             id: "series".to_string(),
             display_name: "Series".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "split".to_string(),
             priority: 0,
             episode_filters: None,
@@ -889,7 +889,7 @@ fn resolver_sorts_ungrouped_episode_ids() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -971,7 +971,7 @@ fn preview_returns_preview_grouping_with_single_playlist() {
         playlists: vec![PlaylistDefinition {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "grouped".to_string(),
             priority: 0,
             episode_filters: None,
@@ -980,7 +980,7 @@ fn preview_returns_preview_grouping_with_single_playlist() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -1000,7 +1000,7 @@ fn preview_returns_preview_grouping_with_single_playlist() {
     assert_eq!(result.playlist_results.len(), 1);
     assert_eq!(result.playlist_results[0].definition_id, "seasons");
     assert!(result.playlist_results[0].claimed_by_others.is_empty());
-    assert_eq!(result.resolver_type, "rss");
+    assert_eq!(result.resolver_type, "seasonNumber");
 }
 
 #[test]
@@ -1029,7 +1029,7 @@ fn preview_tracks_claimed_by_others() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
             PlaylistDefinition {
@@ -1050,7 +1050,7 @@ fn preview_tracks_claimed_by_others() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
         ],
@@ -1102,7 +1102,7 @@ fn preview_sorts_episode_ids_by_published_at() {
         playlists: vec![PlaylistDefinition {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
-            resolver_type: "rss".to_string(),
+            resolver_type: "seasonNumber".to_string(),
             playlist_structure: "grouped".to_string(),
             priority: 0,
             episode_filters: None,
@@ -1111,7 +1111,7 @@ fn preview_sorts_episode_ids_by_published_at() {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         }],
     }]);
@@ -1159,7 +1159,7 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
             PlaylistDefinition {
@@ -1174,7 +1174,7 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 prepend_season_number: false,
                 group_list: None,
                 episode_list: None,
-                episode_extractor: None,
+                numbering_extractor: None,
                 groups: None,
             },
         ],

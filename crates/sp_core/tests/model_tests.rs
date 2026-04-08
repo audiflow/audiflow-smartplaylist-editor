@@ -8,7 +8,7 @@ fn playlist_definition_full_round_trip() {
     let json_val = json!({
         "id": "main",
         "displayName": "Main Episodes",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "grouped",
         "priority": 1,
         "episodeFilters": {
@@ -37,7 +37,7 @@ fn playlist_definition_full_round_trip() {
                 "order": "ascending"
             }
         },
-        "episodeExtractor": {
+        "numberingExtractor": {
             "source": "title",
             "pattern": "\\[(\\d+)-(\\d+)\\]"
         },
@@ -69,7 +69,7 @@ fn playlist_definition_minimal_round_trip() {
     let json_val = json!({
         "id": "simple",
         "displayName": "Simple Playlist",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "split"
     });
 
@@ -232,11 +232,11 @@ fn title_extractor_no_match_no_fallback() {
     assert_eq!(extractor.extract(&ep), None);
 }
 
-// --- EpisodeExtractor::extract() tests ---
+// --- NumberingExtractor::extract() tests ---
 
 #[test]
 fn episode_extractor_primary_pattern() {
-    let extractor: EpisodeExtractor = serde_json::from_value(json!({
+    let extractor: NumberingExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(\\d+)-(\\d+)\\]"
     }))
@@ -250,7 +250,7 @@ fn episode_extractor_primary_pattern() {
 
 #[test]
 fn episode_extractor_fallback_pattern() {
-    let extractor: EpisodeExtractor = serde_json::from_value(json!({
+    let extractor: NumberingExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(\\d+)-(\\d+)\\]",
         "fallbackSeasonNumber": 0,
@@ -267,7 +267,7 @@ fn episode_extractor_fallback_pattern() {
 
 #[test]
 fn episode_extractor_rss_fallback() {
-    let extractor: EpisodeExtractor = serde_json::from_value(json!({
+    let extractor: NumberingExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(\\d+)-(\\d+)\\]",
         "fallbackToRss": true
@@ -282,7 +282,7 @@ fn episode_extractor_rss_fallback() {
 
 #[test]
 fn episode_extractor_no_match_no_fallback() {
-    let extractor: EpisodeExtractor = serde_json::from_value(json!({
+    let extractor: NumberingExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(\\d+)-(\\d+)\\]"
     }))
@@ -297,7 +297,7 @@ fn episode_extractor_no_match_no_fallback() {
 
 #[test]
 fn episode_extractor_null_season_group() {
-    let extractor: EpisodeExtractor = serde_json::from_value(json!({
+    let extractor: NumberingExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "#(\\d+)",
         "seasonGroup": null,
@@ -320,7 +320,7 @@ fn has_filters_with_require() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "split",
         "episodeFilters": {
             "require": [{"title": "pattern"}]
@@ -335,7 +335,7 @@ fn has_filters_with_exclude() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "split",
         "episodeFilters": {
             "exclude": [{"title": "bonus"}]
@@ -350,7 +350,7 @@ fn has_filters_empty() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "split",
         "episodeFilters": {}
     }))
@@ -363,7 +363,7 @@ fn has_filters_none() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "split"
     }))
     .unwrap();
@@ -410,7 +410,7 @@ mod filter_semantics {
             prepend_season_number: false,
             group_list: None,
             episode_list: None,
-            episode_extractor: None,
+            numbering_extractor: None,
             groups: None,
         };
 
@@ -677,11 +677,11 @@ fn pattern_summary_round_trip() {
     assert_eq!(serialized["feedUrlHint"], "https://feed.example.com/rss");
 }
 
-// --- EpisodeExtractor JSON serialization ---
+// --- NumberingExtractor JSON serialization ---
 
 #[test]
 fn episode_extractor_serialization_omits_defaults() {
-    let extractor: EpisodeExtractor = serde_json::from_value(json!({
+    let extractor: NumberingExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(\\d+)-(\\d+)\\]"
     }))
@@ -702,7 +702,7 @@ fn episode_extractor_serialization_omits_defaults() {
 
 #[test]
 fn episode_extractor_serialization_includes_non_defaults() {
-    let extractor: EpisodeExtractor = serde_json::from_value(json!({
+    let extractor: NumberingExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(\\d+)-(\\d+)\\]",
         "seasonGroup": null,
@@ -805,7 +805,7 @@ fn pattern_config_round_trip() {
             {
                 "id": "main",
                 "displayName": "Main",
-                "resolverType": "rss",
+                "resolverType": "seasonNumber",
                 "playlistStructure": "split"
             }
         ]
