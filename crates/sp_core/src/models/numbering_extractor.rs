@@ -38,12 +38,12 @@ fn default_season_group() -> Option<i32> {
 
 /// Result of extracting season and episode numbers from episode data.
 #[derive(Debug, Clone, Default)]
-pub struct EpisodeExtractionResult {
+pub struct NumberingExtractionResult {
     pub season_number: Option<i32>,
     pub episode_number: Option<i32>,
 }
 
-impl EpisodeExtractionResult {
+impl NumberingExtractionResult {
     /// Returns true if at least one value was extracted.
     pub fn has_values(&self) -> bool {
         self.season_number.is_some() || self.episode_number.is_some()
@@ -53,7 +53,7 @@ impl EpisodeExtractionResult {
 /// Extracts both season and episode numbers from episode title.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct EpisodeExtractor {
+pub struct NumberingExtractor {
     /// Episode field to extract from ("title" or "description").
     pub source: String,
 
@@ -100,26 +100,26 @@ fn default_fallback_capture_group() -> i32 {
     1
 }
 
-/// An `EpisodeExtractor` with precompiled regex patterns.
+/// A `NumberingExtractor` with precompiled regex patterns.
 ///
-/// Use `EpisodeExtractor::compile()` to build one before iterating
+/// Use `NumberingExtractor::compile()` to build one before iterating
 /// over episodes, avoiding per-episode regex compilation.
-pub struct CompiledEpisodeExtractor<'a> {
-    extractor: &'a EpisodeExtractor,
+pub struct CompiledNumberingExtractor<'a> {
+    extractor: &'a NumberingExtractor,
     primary_regex: Option<Regex>,
     fallback_regex: Option<Regex>,
 }
 
-impl EpisodeExtractor {
+impl NumberingExtractor {
     /// Precompiles the primary and fallback regex patterns for reuse
     /// across many episodes.
-    pub fn compile(&self) -> CompiledEpisodeExtractor<'_> {
+    pub fn compile(&self) -> CompiledNumberingExtractor<'_> {
         let primary_regex = Regex::new(&self.pattern).ok();
         let fallback_regex = self
             .fallback_episode_pattern
             .as_ref()
             .and_then(|p| Regex::new(p).ok());
-        CompiledEpisodeExtractor {
+        CompiledNumberingExtractor {
             extractor: self,
             primary_regex,
             fallback_regex,
@@ -129,8 +129,8 @@ impl EpisodeExtractor {
     /// Extracts season and episode numbers from episode data.
     ///
     /// Compiles regexes on every call. For batch use, prefer
-    /// `compile()` + `CompiledEpisodeExtractor::extract()`.
-    pub fn extract(&self, episode: &dyn EpisodeData) -> EpisodeExtractionResult {
+    /// `compile()` + `CompiledNumberingExtractor::extract()`.
+    pub fn extract(&self, episode: &dyn EpisodeData) -> NumberingExtractionResult {
         self.compile().extract(episode)
     }
 
@@ -143,9 +143,9 @@ impl EpisodeExtractor {
     }
 }
 
-impl<'a> CompiledEpisodeExtractor<'a> {
+impl<'a> CompiledNumberingExtractor<'a> {
     /// Extracts season and episode numbers using precompiled regexes.
-    pub fn extract(&self, episode: &dyn EpisodeData) -> EpisodeExtractionResult {
+    pub fn extract(&self, episode: &dyn EpisodeData) -> NumberingExtractionResult {
         let ext = self.extractor;
         let source_value = ext.get_source_value(episode);
         let source_value = match source_value {
@@ -170,25 +170,25 @@ impl<'a> CompiledEpisodeExtractor<'a> {
         self.rss_fallback(episode)
     }
 
-    fn rss_fallback(&self, episode: &dyn EpisodeData) -> EpisodeExtractionResult {
+    fn rss_fallback(&self, episode: &dyn EpisodeData) -> NumberingExtractionResult {
         if !self.extractor.fallback_to_rss {
-            return EpisodeExtractionResult::default();
+            return NumberingExtractionResult::default();
         }
-        EpisodeExtractionResult {
+        NumberingExtractionResult {
             season_number: None,
             episode_number: episode.episode_number(),
         }
     }
 
-    fn extract_from_primary(&self, value: &str) -> EpisodeExtractionResult {
+    fn extract_from_primary(&self, value: &str) -> NumberingExtractionResult {
         let ext = self.extractor;
         let regex = match &self.primary_regex {
             Some(r) => r,
-            None => return EpisodeExtractionResult::default(),
+            None => return NumberingExtractionResult::default(),
         };
         let captures = match regex.captures(value) {
             Some(c) => c,
-            None => return EpisodeExtractionResult::default(),
+            None => return NumberingExtractionResult::default(),
         };
 
         let season = ext.season_group.and_then(|sg| {
@@ -211,21 +211,21 @@ impl<'a> CompiledEpisodeExtractor<'a> {
             None
         };
 
-        EpisodeExtractionResult {
+        NumberingExtractionResult {
             season_number: season,
             episode_number: episode,
         }
     }
 
-    fn extract_from_fallback(&self, value: &str) -> EpisodeExtractionResult {
+    fn extract_from_fallback(&self, value: &str) -> NumberingExtractionResult {
         let ext = self.extractor;
         let regex = match &self.fallback_regex {
             Some(r) => r,
-            None => return EpisodeExtractionResult::default(),
+            None => return NumberingExtractionResult::default(),
         };
         let captures = match regex.captures(value) {
             Some(c) => c,
-            None => return EpisodeExtractionResult::default(),
+            None => return NumberingExtractionResult::default(),
         };
 
         let capture_group = ext.fallback_episode_capture_group as usize;
@@ -237,7 +237,7 @@ impl<'a> CompiledEpisodeExtractor<'a> {
             None
         };
 
-        EpisodeExtractionResult {
+        NumberingExtractionResult {
             season_number: ext.fallback_season_number,
             episode_number: episode,
         }

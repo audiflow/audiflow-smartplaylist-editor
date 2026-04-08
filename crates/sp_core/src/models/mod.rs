@@ -1,5 +1,5 @@
 pub mod episode_data;
-pub mod episode_extractor;
+pub mod numbering_extractor;
 pub mod group_def;
 pub mod pattern_config;
 pub mod pattern_meta;
@@ -20,7 +20,7 @@ pub(crate) fn is_zero(v: &i32) -> bool {
 }
 
 pub use episode_data::{EpisodeData, SimpleEpisodeData};
-pub use episode_extractor::{CompiledEpisodeExtractor, EpisodeExtractionResult, EpisodeExtractor};
+pub use numbering_extractor::{CompiledNumberingExtractor, NumberingExtractionResult, NumberingExtractor};
 pub use group_def::{GroupDef, GroupDefDisplay, GroupDefEpisodeList};
 pub use pattern_config::PatternConfig;
 pub use pattern_meta::PatternMeta;
