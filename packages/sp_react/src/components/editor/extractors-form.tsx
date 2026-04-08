@@ -2,7 +2,7 @@ import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
-import { EpisodeExtractorForm } from '@/components/editor/episode-extractor-form.tsx';
+import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
 
 interface ExtractorsFormProps {
   index: number;
@@ -21,8 +21,8 @@ export function ExtractorsForm({ index }: ExtractorsFormProps) {
         resolverType={watch(`playlists.${index}.resolverType`)}
         showCategoryNote
       />
-      <EpisodeExtractorForm
-        fieldPath={`playlists.${index}.episodeExtractor`}
+      <NumberingExtractorForm
+        fieldPath={`playlists.${index}.numberingExtractor`}
         idPrefix={`ep-ext-${index}`}
       />
     </div>
