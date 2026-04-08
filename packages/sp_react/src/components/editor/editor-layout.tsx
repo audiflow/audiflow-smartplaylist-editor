@@ -80,11 +80,19 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const [jsonText, setJsonText] = useState('');
   const [activeTab, setActiveTab] = useState('tab-0');
 
+  // Normalize legacy v3 field names (e.g. episodeExtractor, rss resolver type)
+  // through the Zod schema before seeding the form.
+  const normalizedInitialConfig = useMemo(() => {
+    if (!initialConfig) return undefined;
+    const parsed = patternConfigSchema.safeParse(initialConfig);
+    return parsed.success ? parsed.data : initialConfig;
+  }, [initialConfig]);
+
   const form = useForm<PatternConfig>({
     // Cast needed: zodResolver infers the Zod input type (with optional defaults),
     // but the form operates on the output type where defaults are applied.
     resolver: zodResolver(patternConfigSchema) as Resolver<PatternConfig>,
-    defaultValues: initialConfig ?? DEFAULT_CONFIG,
+    defaultValues: normalizedInitialConfig ?? DEFAULT_CONFIG,
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -127,7 +135,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [formFeedUrls, jsonText, isJsonMode, feedUrl, setFeedUrl]);
 
   // Track the config snapshot that was last loaded/saved for conflict detection
-  const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(initialConfig);
+  const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(normalizedInitialConfig);
 
   // Watch the assembled config query for external changes
   const assembledConfigQuery = useAssembledConfig(configId);
@@ -167,7 +175,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         setDirty(!!values.id);
         return;
       }
-      if (!initialConfig || normalizedLastLoaded === undefined) {
+      if (!normalizedInitialConfig || normalizedLastLoaded === undefined) {
         setDirty(true);
         return;
       }
@@ -180,7 +188,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       setDirty(current !== normalizedLastLoaded);
     });
     return () => subscription.unsubscribe();
-  }, [form, normalizedLastLoaded, setDirty, initialConfig, isNewConfig]);
+  }, [form, normalizedLastLoaded, setDirty, normalizedInitialConfig, isNewConfig]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -362,12 +370,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // fire's mutation becomes orphaned; the second fire attaches properly.
   const hasAutoPreviewedRef = useRef(false);
   useEffect(() => {
-    if (hasAutoPreviewedRef.current || !configId || !initialConfig) return;
-    const url = initialConfig.feedUrls?.[0];
+    if (hasAutoPreviewedRef.current || !configId || !normalizedInitialConfig) return;
+    const url = normalizedInitialConfig.feedUrls?.[0];
     if (!url) return;
     hasAutoPreviewedRef.current = true;
     previewMutationRef.current.mutate(
-      { config: sanitizeConfig(initialConfig), feedUrl: url },
+      { config: sanitizeConfig(normalizedInitialConfig), feedUrl: url },
       {
         onError: (error) => {
           toast.error(t('toastPreviewError', {
@@ -380,7 +388,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     return () => {
       hasAutoPreviewedRef.current = false;
     };
-  }, [configId, initialConfig, t]);
+  }, [configId, normalizedInitialConfig, t]);
 
   // Conflict resolution: reload from disk
   const handleReload = useCallback(() => {
