@@ -148,10 +148,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Detect external changes while user has unsaved edits (conflict detection)
+  // Detect external changes while user has unsaved edits (conflict detection).
+  // Normalize the server payload through Zod so v3 legacy naming differences
+  // don't trigger false conflict warnings.
   useEffect(() => {
     if (!assembledConfigQuery.data || !isDirty || isSaving) return;
-    if (JSON.stringify(assembledConfigQuery.data) !== JSON.stringify(lastLoadedConfig)) {
+    const parsed = patternConfigSchema.safeParse(assembledConfigQuery.data);
+    const normalizedServer = parsed.success ? parsed.data : assembledConfigQuery.data;
+    if (JSON.stringify(normalizedServer) !== JSON.stringify(lastLoadedConfig)) {
       setConflict(`patterns/${configId}`);
     }
   }, [assembledConfigQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -390,24 +394,31 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     };
   }, [configId, normalizedInitialConfig, t]);
 
+  // Normalize server payload through Zod for consistent v3-to-v4 migration.
+  const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
+    const parsed = patternConfigSchema.safeParse(raw);
+    return parsed.success ? parsed.data : raw;
+  }, []);
+
   // Conflict resolution: reload from disk
   const handleReload = useCallback(() => {
     if (assembledConfigQuery.data) {
-      form.reset(assembledConfigQuery.data);
-      setLastLoadedConfig(assembledConfigQuery.data);
+      const normalized = normalizeServerConfig(assembledConfigQuery.data);
+      form.reset(normalized);
+      setLastLoadedConfig(normalized);
       setDirty(false);
     }
     clearConflict();
-  }, [assembledConfigQuery.data, form, setDirty, clearConflict]);
+  }, [assembledConfigQuery.data, form, setDirty, clearConflict, normalizeServerConfig]);
 
   // Conflict resolution: keep current changes
   const handleKeepChanges = useCallback(() => {
     clearConflict();
     // Update lastLoadedConfig so we don't re-trigger conflict
     if (assembledConfigQuery.data) {
-      setLastLoadedConfig(assembledConfigQuery.data);
+      setLastLoadedConfig(normalizeServerConfig(assembledConfigQuery.data));
     }
-  }, [assembledConfigQuery.data, clearConflict]);
+  }, [assembledConfigQuery.data, clearConflict, normalizeServerConfig]);
 
   return (
     <div className="container mx-auto max-w-7xl p-6">
