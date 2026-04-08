@@ -26,9 +26,9 @@ const SORT_ORDERS = ['ascending', 'descending'] as const;
 
 const RESOLVER_TYPES = [
   'seasonNumber',
-  'titleClassifier',
   'year',
   'titleDiscovery',
+  'titleClassifier',
 ] as const;
 
 const PLAYLIST_STRUCTURES = ['split', 'grouped'] as const;

@@ -22,9 +22,9 @@ export const yearBindingSchema = z.enum(['none', 'pinToYear', 'splitByYear']);
 
 export const resolverTypeSchema = z.enum([
   'seasonNumber',
-  'titleClassifier',
   'year',
   'titleDiscovery',
+  'titleClassifier',
 ]);
 
 // -- Sort types --
