@@ -23,7 +23,7 @@ struct PatternGroup {
 
 impl Resolver for CategoryResolver {
     fn resolver_type(&self) -> &str {
-        "category"
+        "titleClassifier"
     }
 
     fn default_sort(&self) -> SortRule {
