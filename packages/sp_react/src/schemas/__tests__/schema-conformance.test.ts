@@ -94,7 +94,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
     const parsed = playlistDefinitionSchema.parse({
       id: 'main',
       displayName: 'Main Episodes',
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       playlistStructure: 'grouped',
     });
     const valid = validate(parsed);
@@ -106,7 +106,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
     const parsed = playlistDefinitionSchema.parse({
       id: 'seasons',
       displayName: 'Seasons',
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       playlistStructure: 'grouped',
       priority: 100,
       prependSeasonNumber: true,
@@ -135,7 +135,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
         group: 1,
         template: 'Season {value}',
       },
-      episodeExtractor: {
+      numberingExtractor: {
         source: 'title',
         pattern: '\\[(\\d+)-(\\d+)\\]',
         seasonGroup: 1,

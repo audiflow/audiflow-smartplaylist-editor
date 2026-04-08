@@ -15,7 +15,7 @@ const DEFAULT_CONFIG: PatternConfig = {
     {
       id: 'playlist-1',
       displayName: 'Test Playlist',
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       playlistStructure: 'grouped',
       priority: 0,
       prependSeasonNumber: false,
@@ -89,20 +89,20 @@ describe('PlaylistForm', () => {
       expect(screen.getByText(/playlist structure/i)).toBeInTheDocument();
     });
 
-    it('shows nullSeasonGroupKey when resolverType is rss', () => {
+    it('shows nullSeasonGroupKey when resolverType is seasonNumber', () => {
       renderPlaylistForm();
       expect(
         screen.getByLabelText(/null season group key/i),
       ).toBeInTheDocument();
     });
 
-    it('hides nullSeasonGroupKey when resolverType is not rss', () => {
+    it('hides nullSeasonGroupKey when resolverType is not seasonNumber', () => {
       const config: PatternConfig = {
         ...DEFAULT_CONFIG,
         playlists: [
           {
             ...DEFAULT_CONFIG.playlists[0],
-            resolverType: 'category',
+            resolverType: 'titleClassifier',
           },
         ],
       };

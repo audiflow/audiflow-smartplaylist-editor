@@ -40,7 +40,7 @@ export const PATTERN_IDENTIFIERS: PatternIdentifiers[] = [
 export const PLAYLIST_SEASON: PlaylistDefinition = {
   id: 'seasons',
   displayName: 'By Season',
-  resolverType: 'rss',
+  resolverType: 'seasonNumber',
   playlistStructure: 'split',
   priority: 0,
   prependSeasonNumber: false,
@@ -56,7 +56,7 @@ export const PLAYLIST_SEASON: PlaylistDefinition = {
 export const PLAYLIST_CATEGORY: PlaylistDefinition = {
   id: 'topics',
   displayName: 'By Topic',
-  resolverType: 'category',
+  resolverType: 'titleClassifier',
   playlistStructure: 'grouped',
   priority: 1,
   prependSeasonNumber: false,
@@ -114,7 +114,7 @@ export const PREVIEW_RESULT: PreviewResult = {
       id: 'seasons',
       displayName: 'By Season',
       sortKey: 0,
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       episodeCount: 7,
       yearBinding: 'none',
       groups: [
