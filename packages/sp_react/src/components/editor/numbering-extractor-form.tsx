@@ -17,12 +17,12 @@ import {
 
 const SOURCE_OPTIONS = ['title', 'description'] as const;
 
-interface EpisodeExtractorFormProps {
+interface NumberingExtractorFormProps {
   fieldPath: string;
   idPrefix: string;
 }
 
-export function EpisodeExtractorForm({ fieldPath, idPrefix }: EpisodeExtractorFormProps) {
+export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtractorFormProps) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
