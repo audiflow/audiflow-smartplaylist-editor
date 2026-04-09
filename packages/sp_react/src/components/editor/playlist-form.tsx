@@ -30,7 +30,7 @@ function ErrorDot({ visible }: { visible: boolean }) {
   );
 }
 
-const RESOLVERS_WITH_GROUPS = new Set(['seasonNumber', 'titleClassifier']);
+const RESOLVERS_WITH_GROUPS = new Set(['titleClassifier']);
 
 export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormProps) {
   const { t } = useTranslation('editor');
