@@ -46,7 +46,7 @@ function renderPlaylistForm(
     onRemove,
     ...renderWithProviders(
       <FormWrapper defaultValues={config}>
-        <PlaylistForm index={index} onRemove={onRemove} />
+        <PlaylistForm index={index} playlistCount={config.playlists.length} onRemove={onRemove} />
       </FormWrapper>,
     ),
   };
@@ -92,7 +92,7 @@ describe('PlaylistForm', () => {
 
     it('renders priority input with current value', () => {
       renderPlaylistForm();
-      const input = screen.getByLabelText(/priority/i);
+      const input = screen.getByLabelText(/claim priority/i);
       expect(input).toHaveValue(0);
     });
   });
@@ -101,23 +101,23 @@ describe('PlaylistForm', () => {
     it('renders resolver type select', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
-      await switchToTab(user, /resolver/i);
-      expect(screen.getByText(/resolver type/i)).toBeInTheDocument();
+      await switchToTab(user, /organize/i);
+      expect(screen.getByText(/how to organize/i)).toBeInTheDocument();
     });
 
     it('renders presentation radio cards', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
-      await switchToTab(user, /resolver/i);
+      await switchToTab(user, /organize/i);
       expect(screen.getByText(/how groups appear/i)).toBeInTheDocument();
     });
 
     it('shows nullSeasonGroupKey when resolverType is seasonNumber', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
-      await switchToTab(user, /resolver/i);
+      await switchToTab(user, /organize/i);
       expect(
-        screen.getByLabelText(/null season group key/i),
+        screen.getByLabelText(/group key for episodes without a season/i),
       ).toBeInTheDocument();
     });
 
@@ -133,9 +133,9 @@ describe('PlaylistForm', () => {
         ],
       };
       renderPlaylistForm({ config });
-      await switchToTab(user, /resolver/i);
+      await switchToTab(user, /organize/i);
       expect(
-        screen.queryByLabelText(/null season group key/i),
+        screen.queryByLabelText(/group key for episodes without a season/i),
       ).not.toBeInTheDocument();
     });
   });
@@ -145,21 +145,21 @@ describe('PlaylistForm', () => {
       const user = userEvent.setup();
       renderPlaylistForm();
       await switchToTab(user, /display/i);
-      expect(screen.getByText(/show year headers/i)).toBeInTheDocument();
+      expect(screen.getByText(/year dividers/i)).toBeInTheDocument();
     });
 
     it('renders showDateRange checkbox', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
       await switchToTab(user, /display/i);
-      expect(screen.getByText(/show date range/i)).toBeInTheDocument();
+      expect(screen.getByText(/date range/i)).toBeInTheDocument();
     });
 
     it('renders userSortable checkbox', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
       await switchToTab(user, /display/i);
-      expect(screen.getByText(/user sortable/i)).toBeInTheDocument();
+      expect(screen.getByText(/change sort order/i)).toBeInTheDocument();
     });
 
     it('renders prependSeasonNumber checkbox', async () => {
@@ -167,7 +167,7 @@ describe('PlaylistForm', () => {
       renderPlaylistForm();
       await switchToTab(user, /display/i);
       expect(
-        screen.getByText(/prepend season number/i),
+        screen.getByText(/season number to group/i),
       ).toBeInTheDocument();
     });
   });
@@ -185,28 +185,28 @@ describe('PlaylistForm', () => {
   });
 
   describe('FilterSettings', () => {
-    it('renders require and exclude filter sections', async () => {
+    it('renders include and exclude filter sections', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
       await switchToTab(user, /filters/i);
-      expect(screen.getByText(/require filters/i)).toBeInTheDocument();
-      expect(screen.getByText(/exclude filters/i)).toBeInTheDocument();
+      expect(screen.getByText(/include episodes/i)).toBeInTheDocument();
+      expect(screen.getByText(/exclude episodes/i)).toBeInTheDocument();
     });
 
-    it('adds a require filter entry when add button is clicked', async () => {
+    it('adds an include filter entry when add button is clicked', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
       await switchToTab(user, /filters/i);
 
-      const requireSection = screen
-        .getByText(/require filters/i)
+      const includeSection = screen
+        .getByText(/include episodes/i)
         .closest('div.rounded-lg')!;
-      const addButton = within(requireSection).getByText(/add filter/i);
+      const addButton = within(includeSection).getByText(/add rule/i);
 
       await user.click(addButton);
 
-      const inputs = within(requireSection).getAllByPlaceholderText(
-        /regex pattern/i,
+      const inputs = within(includeSection).getAllByPlaceholderText(
+        /text pattern/i,
       );
       expect(1 <= inputs.length).toBe(true);
     });
@@ -217,14 +217,14 @@ describe('PlaylistForm', () => {
       await switchToTab(user, /filters/i);
 
       const excludeSection = screen
-        .getByText(/exclude filters/i)
+        .getByText(/exclude episodes/i)
         .closest('div.rounded-lg')!;
-      const addButton = within(excludeSection).getByText(/add filter/i);
+      const addButton = within(excludeSection).getByText(/add rule/i);
 
       await user.click(addButton);
 
       const inputs = within(excludeSection).getAllByPlaceholderText(
-        /regex pattern/i,
+        /text pattern/i,
       );
       expect(1 <= inputs.length).toBe(true);
     });
