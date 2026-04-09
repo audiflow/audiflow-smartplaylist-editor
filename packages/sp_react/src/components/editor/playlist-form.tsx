@@ -99,7 +99,7 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
         </TabsContent>
       </Tabs>
 
-      <Accordion type="single" collapsible>
+      <Accordion type="single" collapsible className="mt-8">
         <AccordionItem value="danger-zone" className="border-destructive/30">
           <AccordionTrigger className="text-sm text-destructive hover:text-destructive">
             {t('dangerZone')}
