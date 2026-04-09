@@ -117,9 +117,6 @@ export function PlaylistTabContent({
 
         {/* Preview side */}
         <div className="rounded-lg border bg-muted/30 p-4 space-y-3 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
-          <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {t('previewSectionTitle')}
-          </h4>
           <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
             <TabsList>
               <TabsTrigger value="filtered">
