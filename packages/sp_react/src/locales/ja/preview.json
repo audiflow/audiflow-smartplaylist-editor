@@ -30,5 +30,8 @@
   "season": "シーズン",
   "episode": "エピソード",
   "yearHeader": "{{year}}",
-  "yearUnknown": "年不明"
+  "yearUnknown": "年不明",
+  "tabFiltered": "フィルタ済みエピソード",
+  "emptyFiltered": "現在のフィルタに一致するエピソードはありません。",
+  "filteredCount": "{{total}}件中{{filtered}}件のエピソードがフィルタを通過"
 }
