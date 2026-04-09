@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, PlaylistStructure, ResolverType, YearBinding, EpisodeSortField, SortOrder } from '@/schemas/config-schema.ts';
+import type { PatternConfig, Presentation, ResolverType, YearBinding, EpisodeSortField, SortOrder } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Input } from '@/components/ui/input.tsx';
@@ -31,7 +31,7 @@ const RESOLVER_TYPES = [
   'titleClassifier',
 ] as const;
 
-const PLAYLIST_STRUCTURES = ['split', 'grouped'] as const;
+const PRESENTATIONS = ['separate', 'combined'] as const;
 
 interface PlaylistFormProps {
   index: number;
@@ -293,20 +293,20 @@ function StructureSettings({
         </div>
 
         <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-playlistStructure`} hint="playlistStructure">
-            {t('playlistStructure')}
+          <HintLabel htmlFor={`playlist-${index}-presentation`} hint="presentation">
+            {t('presentation')}
           </HintLabel>
           <Select
-            value={watch(`${prefix}.playlistStructure`) ?? 'grouped'}
-            onValueChange={(val) => setValue(`${prefix}.playlistStructure`, val as PlaylistStructure, { shouldDirty: true })}
+            value={watch(`${prefix}.presentation`) ?? 'combined'}
+            onValueChange={(val) => setValue(`${prefix}.presentation`, val as Presentation, { shouldDirty: true })}
           >
-            <SelectTrigger id={`playlist-${index}-playlistStructure`} className="w-full">
-              <SelectValue placeholder={t('playlistStructure_grouped')} />
+            <SelectTrigger id={`playlist-${index}-presentation`} className="w-full">
+              <SelectValue placeholder={t('presentation_combined')} />
             </SelectTrigger>
             <SelectContent>
-              {PLAYLIST_STRUCTURES.map((type) => (
+              {PRESENTATIONS.map((type) => (
                 <SelectItem key={type} value={type}>
-                  {t(`playlistStructure_${type}`)}
+                  {t(`presentation_${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>

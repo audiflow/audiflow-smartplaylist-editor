@@ -41,7 +41,7 @@ export const PLAYLIST_SEASON: PlaylistDefinition = {
   id: 'seasons',
   displayName: 'By Season',
   resolverType: 'seasonNumber',
-  playlistStructure: 'split',
+  presentation: 'separate',
   priority: 0,
   prependSeasonNumber: false,
   groups: [
@@ -57,7 +57,7 @@ export const PLAYLIST_CATEGORY: PlaylistDefinition = {
   id: 'topics',
   displayName: 'By Topic',
   resolverType: 'titleClassifier',
-  playlistStructure: 'grouped',
+  presentation: 'combined',
   priority: 1,
   prependSeasonNumber: false,
   groups: [

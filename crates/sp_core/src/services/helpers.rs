@@ -1,11 +1,11 @@
-use crate::models::{PlaylistStructure, YearBinding};
+use crate::models::{Presentation, YearBinding};
 
-/// Parses a playlist structure string into the enum value.
-/// Defaults to Split for unrecognized values.
-pub fn parse_playlist_structure(value: &str) -> PlaylistStructure {
+/// Parses a presentation string into the enum value.
+/// Defaults to Separate for unrecognized values.
+pub fn parse_presentation(value: &str) -> Presentation {
     match value {
-        "grouped" => PlaylistStructure::Grouped,
-        _ => PlaylistStructure::Split,
+        "combined" | "grouped" => Presentation::Combined,
+        _ => Presentation::Separate,
     }
 }
 

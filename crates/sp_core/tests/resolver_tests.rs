@@ -77,7 +77,7 @@ fn minimal_definition(resolver_type: &str) -> PlaylistDefinition {
         id: "test".to_string(),
         display_name: "Test".to_string(),
         resolver_type: resolver_type.to_string(),
-        playlist_structure: "split".to_string(),
+        presentation: "separate".to_string(),
         priority: 0,
         episode_filters: None,
         null_season_group_key: None,

@@ -4,7 +4,7 @@ import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
-  playlistStructureSchema,
+  presentationSchema,
   yearBindingSchema,
   resolverTypeValues,
   sortFieldSchema,
@@ -50,9 +50,9 @@ describe('Zod enums match vendored playlist-definition schema', () => {
     expect([...resolverTypeValues]).toEqual(v4Only);
   });
 
-  it('playlistStructure values match schema', () => {
-    const schemaValues = extractEnum(topProps.playlistStructure);
-    expect(playlistStructureSchema.options).toEqual(schemaValues);
+  it('presentation values match schema', () => {
+    const schemaValues = extractEnum(topProps.presentation);
+    expect(presentationSchema.options).toEqual(schemaValues);
   });
 
   it('yearBinding values match schema', () => {
@@ -98,7 +98,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
       id: 'main',
       displayName: 'Main Episodes',
       resolverType: 'seasonNumber',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
     });
     const valid = validate(parsed);
     expect(validate.errors).toBeNull();
@@ -110,7 +110,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
       id: 'seasons',
       displayName: 'Seasons',
       resolverType: 'seasonNumber',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
       priority: 100,
       prependSeasonNumber: true,
       episodeFilters: {

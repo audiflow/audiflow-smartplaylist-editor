@@ -25,7 +25,7 @@ pub use group_def::{GroupDef, GroupDefDisplay, GroupDefEpisodeList};
 pub use pattern_config::PatternConfig;
 pub use pattern_meta::PatternMeta;
 pub use pattern_summary::PatternSummary;
-pub use playlist::{Grouping, Playlist, PlaylistGroup, PlaylistStructure, YearBinding};
+pub use playlist::{Grouping, Playlist, PlaylistGroup, Presentation, YearBinding};
 pub use playlist_definition::{
     EpisodeFilterEntry, EpisodeFilters, EpisodeListSettings, GroupListSettings,
     PlaylistDefinition,

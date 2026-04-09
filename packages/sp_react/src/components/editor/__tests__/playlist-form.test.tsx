@@ -16,7 +16,7 @@ const DEFAULT_CONFIG: PatternConfig = {
       id: 'playlist-1',
       displayName: 'Test Playlist',
       resolverType: 'seasonNumber',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
       priority: 0,
       prependSeasonNumber: false,
       groups: [],
@@ -84,9 +84,9 @@ describe('PlaylistForm', () => {
       expect(screen.getByText(/resolver type/i)).toBeInTheDocument();
     });
 
-    it('renders playlist structure select', () => {
+    it('renders presentation select', () => {
       renderPlaylistForm();
-      expect(screen.getByText(/playlist structure/i)).toBeInTheDocument();
+      expect(screen.getByText(/presentation/i)).toBeInTheDocument();
     });
 
     it('shows nullSeasonGroupKey when resolverType is seasonNumber', () => {

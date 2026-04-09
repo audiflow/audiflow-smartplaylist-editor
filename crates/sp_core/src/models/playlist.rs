@@ -3,13 +3,13 @@ use serde::{Deserialize, Serialize};
 
 use super::is_zero;
 
-/// Whether a smart playlist directly contains episodes or groups.
+/// How resolver results are presented to the user.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum PlaylistStructure {
+pub enum Presentation {
     #[default]
-    Split,
-    Grouped,
+    Separate,
+    Combined,
 }
 
 /// How year headers are applied to groups or episodes.
@@ -22,8 +22,8 @@ pub enum YearBinding {
     SplitByYear,
 }
 
-fn is_default_playlist_structure(v: &PlaylistStructure) -> bool {
-    *v == PlaylistStructure::Split
+fn is_default_presentation(v: &Presentation) -> bool {
+    *v == Presentation::Separate
 }
 
 fn is_default_year_binding(v: &YearBinding) -> bool {
@@ -82,8 +82,8 @@ pub struct Playlist {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thumbnail_url: Option<String>,
 
-    #[serde(default, skip_serializing_if = "is_default_playlist_structure")]
-    pub playlist_structure: PlaylistStructure,
+    #[serde(default, skip_serializing_if = "is_default_presentation")]
+    pub presentation: Presentation,
 
     #[serde(default, skip_serializing_if = "is_default_year_binding")]
     pub year_binding: YearBinding,
@@ -106,7 +106,7 @@ impl Playlist {
             sort_key,
             episode_ids,
             thumbnail_url: None,
-            playlist_structure: PlaylistStructure::default(),
+            presentation: Presentation::default(),
             year_binding: YearBinding::default(),
             show_year_headers: false,
             show_date_range: false,

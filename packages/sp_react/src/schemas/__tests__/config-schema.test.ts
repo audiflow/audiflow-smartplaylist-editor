@@ -19,13 +19,13 @@ describe('playlistDefinitionSchema', () => {
       id: 'main',
       displayName: 'Main Episodes',
       resolverType: 'seasonNumber',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
     };
     const result = playlistDefinitionSchema.parse(input);
     expect(result.id).toBe('main');
     expect(result.displayName).toBe('Main Episodes');
     expect(result.resolverType).toBe('seasonNumber');
-    expect(result.playlistStructure).toBe('grouped');
+    expect(result.presentation).toBe('combined');
     expect(result.priority).toBe(0);
     expect(result.prependSeasonNumber).toBe(false);
   });
@@ -35,7 +35,7 @@ describe('playlistDefinitionSchema', () => {
       id: 'bonus',
       displayName: 'Bonus Content',
       resolverType: 'titleClassifier',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
       priority: 5,
       prependSeasonNumber: true,
       episodeFilters: {
@@ -72,7 +72,7 @@ describe('playlistDefinitionSchema', () => {
     const result = playlistDefinitionSchema.parse(input);
     expect(result.id).toBe('bonus');
     expect(result.priority).toBe(5);
-    expect(result.playlistStructure).toBe('grouped');
+    expect(result.presentation).toBe('combined');
     expect(result.prependSeasonNumber).toBe(true);
     expect(result.episodeFilters).toEqual({
       require: [{ title: 'Episode' }],
@@ -110,7 +110,7 @@ describe('playlistDefinitionSchema', () => {
       id: 'main',
       displayName: 'Main Episodes',
       resolverType: 'seasonNumber',
-      playlistStructure: 'split',
+      presentation: 'separate',
       priority: null,
     };
     const result = playlistDefinitionSchema.parse(input);
@@ -151,7 +151,7 @@ describe('patternConfigSchema', () => {
           id: 'main',
           displayName: 'Main',
           resolverType: 'seasonNumber',
-          playlistStructure: 'grouped',
+          presentation: 'combined',
         },
       ],
     };
@@ -378,13 +378,71 @@ describe('resolverTypeSchema (legacy v3 migration)', () => {
   });
 });
 
-describe('migrateExtractorKey (episodeExtractor -> numberingExtractor)', () => {
-  it('migrates episodeExtractor at playlist level', () => {
+describe('migrateLegacyKeys (playlistStructure -> presentation)', () => {
+  it('migrates playlistStructure "grouped" to presentation "combined"', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      playlistStructure: 'grouped',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('combined');
+    expect((result as Record<string, unknown>)['playlistStructure']).toBeUndefined();
+  });
+
+  it('migrates playlistStructure "split" to presentation "separate"', () => {
     const input = {
       id: 'test',
       displayName: 'Test',
       resolverType: 'seasonNumber',
       playlistStructure: 'split',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('separate');
+  });
+
+  it('preserves existing presentation (no double-migration)', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      presentation: 'combined',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('combined');
+  });
+
+  it('normalizes legacy value "grouped" even when key is already "presentation"', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      presentation: 'grouped',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('combined');
+  });
+
+  it('normalizes legacy value "split" even when key is already "presentation"', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      presentation: 'split',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('separate');
+  });
+});
+
+describe('migrateLegacyKeys (episodeExtractor -> numberingExtractor)', () => {
+  it('migrates episodeExtractor at playlist level', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      presentation: 'separate',
       episodeExtractor: {
         source: 'title',
         pattern: '\\[(\\d+)-(\\d+)\\]',
@@ -417,7 +475,7 @@ describe('migrateExtractorKey (episodeExtractor -> numberingExtractor)', () => {
       id: 'test',
       displayName: 'Test',
       resolverType: 'seasonNumber',
-      playlistStructure: 'split',
+      presentation: 'separate',
       numberingExtractor: {
         source: 'title',
         pattern: 'S(\\d+)E(\\d+)',

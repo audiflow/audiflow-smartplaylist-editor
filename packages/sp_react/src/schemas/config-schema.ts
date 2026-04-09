@@ -16,7 +16,7 @@ export const episodeSortFieldSchema = z.enum([
 
 export const sortOrderSchema = z.enum(['ascending', 'descending']);
 
-export const playlistStructureSchema = z.enum(['split', 'grouped']);
+export const presentationSchema = z.enum(['separate', 'combined']);
 
 export const yearBindingSchema = z.enum(['none', 'pinToYear', 'splitByYear']);
 
@@ -113,21 +113,49 @@ export const numberingExtractorSchema = z.object({
   fallbackToRss: z.boolean().nullish().transform((v) => v ?? false),
 });
 
-// Migrate legacy v3 `episodeExtractor` key to v4 `numberingExtractor`.
-function migrateExtractorKey(val: unknown): unknown {
+// Legacy v3 presentation value strings mapped to v4 equivalents.
+const legacyPresentationMap: Record<string, string> = {
+  grouped: 'combined',
+  split: 'separate',
+};
+
+// Migrate legacy v3 keys and values to v4 equivalents.
+// - `episodeExtractor` -> `numberingExtractor`
+// - `playlistStructure` -> `presentation` (with value mapping)
+function migrateLegacyKeys(val: unknown): unknown {
   if (val == null || typeof val !== 'object' || Array.isArray(val)) return val;
   const obj = val as Record<string, unknown>;
-  if ('episodeExtractor' in obj && !('numberingExtractor' in obj)) {
-    const { episodeExtractor, ...rest } = obj;
-    return { ...rest, numberingExtractor: episodeExtractor };
+  let result: Record<string, unknown> = { ...obj };
+
+  // Migrate episodeExtractor -> numberingExtractor
+  if ('episodeExtractor' in result && !('numberingExtractor' in result)) {
+    const { episodeExtractor, ...rest } = result;
+    result = { ...rest, numberingExtractor: episodeExtractor };
   }
-  return val;
+
+  // Migrate playlistStructure -> presentation (with value mapping)
+  if ('playlistStructure' in result && !('presentation' in result)) {
+    const { playlistStructure, ...rest } = result;
+    const mapped =
+      typeof playlistStructure === 'string' && Object.hasOwn(legacyPresentationMap, playlistStructure)
+        ? legacyPresentationMap[playlistStructure]
+        : playlistStructure;
+    result = { ...rest, presentation: mapped };
+  }
+
+  // Normalize legacy presentation values even when key is already `presentation`
+  // (e.g., backend may return `presentation: "grouped"` after alias deserialization)
+  if ('presentation' in result && typeof result.presentation === 'string' && Object.hasOwn(legacyPresentationMap, result.presentation)) {
+    result = { ...result, presentation: legacyPresentationMap[result.presentation] };
+  }
+
+  return result;
 }
 
 // -- Group definition --
 
 export const groupDefSchema = z.preprocess(
-  migrateExtractorKey,
+  migrateLegacyKeys,
   z.object({
     id: z.string(),
     displayName: z.string(),
@@ -152,12 +180,12 @@ export const groupDefSchema = z.preprocess(
 // -- Playlist definition --
 
 export const playlistDefinitionSchema = z.preprocess(
-  migrateExtractorKey,
+  migrateLegacyKeys,
   z.object({
     id: z.string(),
     displayName: z.string(),
     resolverType: resolverTypeSchema,
-    playlistStructure: playlistStructureSchema,
+    presentation: presentationSchema,
     priority: z
       .number()
       .nullish()
@@ -189,7 +217,7 @@ export const patternConfigSchema = z.object({
 export type SortField = z.infer<typeof sortFieldSchema>;
 export type EpisodeSortField = z.infer<typeof episodeSortFieldSchema>;
 export type SortOrder = z.infer<typeof sortOrderSchema>;
-export type PlaylistStructure = z.infer<typeof playlistStructureSchema>;
+export type Presentation = z.infer<typeof presentationSchema>;
 export type YearBinding = z.infer<typeof yearBindingSchema>;
 export type ResolverType = z.infer<typeof resolverTypeSchema>;
 export type SortRule = z.infer<typeof sortRuleSchema>;

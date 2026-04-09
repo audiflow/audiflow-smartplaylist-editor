@@ -15,7 +15,7 @@ const CONFIG_WITH_GROUPS: PatternConfig = {
       id: 'playlist-1',
       displayName: 'Test Playlist',
       resolverType: 'category',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
       priority: 0,
       prependSeasonNumber: false,
       groups: [
