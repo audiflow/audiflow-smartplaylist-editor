@@ -43,7 +43,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const hasBasicError = !!(errors?.id || errors?.displayName || errors?.priority);
   const hasFilterError = !!errors?.episodeFilters;
   const hasEpisodeListError = !!(errors?.episodeList?.sort || errors?.episodeList?.titleExtractor);
-  const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.nullSeasonGroupKey || errors?.numberingExtractor);
+  const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.nullSeasonGroupKey || errors?.numberingExtractor || errors?.titleExtractor);
   const hasGroupsError = !!(errors?.groups || errors?.groupList);
   const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders || errors?.groupList?.yearBinding || errors?.groupList?.showDateRange || errors?.groupList?.userSortable);
 

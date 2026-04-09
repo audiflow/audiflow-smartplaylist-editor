@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select.tsx';
+import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
 
@@ -107,6 +108,15 @@ export function ResolverTab({ index }: ResolverTabProps) {
           </div>
         )}
       </div>
+
+      <InteractionNote i18nKey="interactionNote.resolver.titleExtractor" />
+
+      <TitleExtractorForm
+        fieldPath={`playlists.${index}.titleExtractor`}
+        idPrefix={`title-ext-${index}`}
+        resolverType={resolverType}
+        showCategoryNote
+      />
 
       {resolverType === 'seasonNumber' && (
         <>

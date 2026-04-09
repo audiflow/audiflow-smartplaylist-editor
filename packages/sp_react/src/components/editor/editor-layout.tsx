@@ -568,7 +568,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
                   excludedEpisodes={previewMutation.data?.excluded ?? []}
                   globalDebug={previewMutation.data?.debug}
                   playlistCount={fields.length}
-                  isNewPlaylist={isNewConfig}
                   onRemove={() => {
                     remove(index);
                     const lastIndex = fields.length - 2;

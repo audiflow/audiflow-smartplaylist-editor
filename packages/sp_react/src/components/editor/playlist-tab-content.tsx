@@ -33,7 +33,6 @@ interface PlaylistTabContentProps {
   excludedEpisodes: PreviewEpisode[];
   globalDebug: PreviewDebug | undefined;
   playlistCount: number;
-  isNewPlaylist: boolean;
   onRemove: () => void;
 }
 
@@ -44,7 +43,6 @@ export function PlaylistTabContent({
   excludedEpisodes,
   globalDebug,
   playlistCount,
-  isNewPlaylist,
   onRemove,
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
@@ -54,7 +52,6 @@ export function PlaylistTabContent({
   const feedQuery = useFeed(feedUrl || null);
 
   const episodeFilters = watch(`playlists.${index}.episodeFilters`);
-  const resolverType = watch(`playlists.${index}.resolverType`);
   const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
   const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
   const groupDefs = watch(`playlists.${index}.groups`);
@@ -67,17 +64,26 @@ export function PlaylistTabContent({
     [feedEpisodes, episodeFilters],
   );
 
-  const defaultPreviewTab = isNewPlaylist ? 'filtered' : 'groups';
-  const [activePreviewTab, setActivePreviewTab] = useState(defaultPreviewTab);
+  // Default to 'filtered' (always rendered) then auto-switch to 'groups' once
+  // preview data arrives, regardless of whether this is a new or existing playlist.
+  const [activePreviewTab, setActivePreviewTab] = useState('filtered');
   const hasAutoSwitchedRef = useRef(false);
 
   useEffect(() => {
-    if (hasAutoSwitchedRef.current || !isNewPlaylist) return;
-    if (resolverType && previewPlaylist) {
+    if (hasAutoSwitchedRef.current) return;
+    if (previewPlaylist) {
       hasAutoSwitchedRef.current = true;
       setActivePreviewTab('groups');
     }
-  }, [resolverType, previewPlaylist, isNewPlaylist]);
+  }, [previewPlaylist]);
+
+  // Fall back to 'filtered' when the active tab requires preview data that
+  // is no longer available (e.g. after a preview error or config change).
+  useEffect(() => {
+    if (activePreviewTab !== 'filtered' && !previewPlaylist) {
+      setActivePreviewTab('filtered');
+    }
+  }, [activePreviewTab, previewPlaylist]);
   const groupYearBindingOverrides = useMemo(() => {
     const map = new Map<string, YearBinding>();
     if (!groupDefs) return map;
