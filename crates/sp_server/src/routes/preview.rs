@@ -32,9 +32,12 @@ pub async fn preview_config(
         .filter(|s| !s.is_empty())
         .ok_or_else(|| AppError::bad_request("Missing or invalid \"feedUrl\" field"))?;
 
-    let config: PatternConfig =
+    let mut config: PatternConfig =
         serde_json::from_value(Value::Object(config_json.clone()))
             .map_err(|e| AppError::bad_request(format!("Invalid config: {e}")))?;
+    for playlist in &mut config.playlists {
+        playlist.strip_conditional_fields();
+    }
 
     let episode_maps = state
         .feed_cache

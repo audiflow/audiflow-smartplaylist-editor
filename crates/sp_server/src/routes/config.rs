@@ -353,6 +353,7 @@ pub async fn save_playlist(
     let mut definition: PlaylistDefinition = serde_json::from_value(sanitized)
         .map_err(|e| AppError::bad_request(format!("Invalid playlist definition: {e}")))?;
     definition.id = pid.clone();
+    definition.strip_conditional_fields();
     let normalized = serde_json::to_value(&definition)
         .map_err(|e| AppError::internal(format!("Serialization error: {e}")))?;
 

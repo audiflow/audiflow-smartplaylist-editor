@@ -15,7 +15,7 @@ import {
   useCreatePattern,
 } from '@/api/queries.ts';
 import { useStorePreview } from '@/hooks/use-store-preview.ts';
-import { sanitizeConfig } from '@/lib/sanitize-config.ts';
+import { sanitizeConfig, stripConditionalFields } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
@@ -233,7 +233,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         return;
       }
     } else {
-      config = form.getValues();
+      config = stripConditionalFields(form.getValues());
     }
     storePreviewRef.current.mutate(
       { config: sanitizeConfig(config), feedUrl },
@@ -265,9 +265,10 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
     // Snapshot immediately: form.getValues() returns mutable references to RHF
     // internal state, so clone before any awaits to avoid mid-save mutations.
-    const snapshot = structuredClone(
-      isJsonMode && parsedJsonConfig ? parsedJsonConfig : form.getValues(),
-    );
+    // stripConditionalFields removes fields hidden by the current resolverType
+    // so they don't get persisted (form state retains them for undo).
+    const raw = isJsonMode && parsedJsonConfig ? parsedJsonConfig : form.getValues();
+    const snapshot = structuredClone(isJsonMode ? raw : stripConditionalFields(raw));
 
     setSaving(true);
     try {
@@ -370,9 +371,10 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     if (!url) return;
     hasAutoPreviewedRef.current = true;
     // Record the initial serialization so the debounced effect skips its first tick
-    lastPreviewedValuesRef.current = `${url}\0${JSON.stringify(normalizedInitialConfig)}`;
+    const stripped = stripConditionalFields(normalizedInitialConfig);
+    lastPreviewedValuesRef.current = `${url}\0${JSON.stringify(stripped)}`;
     storePreviewRef.current.mutate(
-      { config: sanitizeConfig(normalizedInitialConfig), feedUrl: url },
+      { config: sanitizeConfig(stripped), feedUrl: url },
       {
         onError: (error) => {
           toast.error(t('toastPreviewError', {
@@ -397,9 +399,10 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       timer = setTimeout(() => {
         if (!feedUrl || isJsonMode) return;
         if (configId !== null && !hasAutoPreviewedRef.current) return;
-        const config = form.getValues();
-        const parsed = patternConfigSchema.safeParse(config);
+        const raw = form.getValues();
+        const parsed = patternConfigSchema.safeParse(raw);
         if (!parsed.success) return;
+        const config = stripConditionalFields(raw);
         const key = `${feedUrl}\0${JSON.stringify(config)}`;
         if (key === lastPreviewedValuesRef.current) return;
         lastPreviewedValuesRef.current = key;
