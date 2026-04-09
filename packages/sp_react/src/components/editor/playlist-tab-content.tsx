@@ -58,7 +58,9 @@ export function PlaylistTabContent({
   const defaultSortOrder = useWatch({ control, name: `playlists.${index}.episodeList.sort.order` as const });
 
   // Retain previous preview data to avoid unmount/remount flicker during updates.
+  // Reset when playlistId changes so stale data from a different playlist is not shown.
   const lastPreviewRef = useRef<{
+    playlistId: string;
     playlist: PreviewPlaylist;
     ungrouped: PreviewEpisode[];
     excluded: PreviewEpisode[];
@@ -67,11 +69,14 @@ export function PlaylistTabContent({
 
   if (previewPlaylist) {
     lastPreviewRef.current = {
+      playlistId,
       playlist: previewPlaylist,
       ungrouped: ungroupedEpisodes,
       excluded: excludedEpisodes,
       debug: globalDebug,
     };
+  } else if (lastPreviewRef.current && lastPreviewRef.current.playlistId !== playlistId) {
+    lastPreviewRef.current = null;
   }
 
   const stablePreview = lastPreviewRef.current;

@@ -23,33 +23,28 @@ function tryCompileRegex(pattern: string): RegExp | null {
   }
 }
 
+// Precompiled filter entry with regexes compiled once.
+// Invalid regexes become null (skipped), matching the server's
+// CompiledFilterEntry behavior where None fields are skipped.
+interface CompiledEntry {
+  title: RegExp | null;
+  description: RegExp | null;
+}
+
+function compileEntry(entry: FilterEntry): CompiledEntry {
+  return {
+    title: isNonEmpty(entry.title) ? tryCompileRegex(entry.title) : null,
+    description: isNonEmpty(entry.description) ? tryCompileRegex(entry.description) : null,
+  };
+}
+
 // An entry matches when every compiled regex field matches.
-// Invalid regexes and empty fields are treated as no-ops (always pass),
-// matching the server's CompiledFilterEntry::matches behavior where
-// None fields are skipped and the entry returns true by default.
-function matchesEntry(episode: FeedEpisode, entry: FilterEntry): boolean {
-  if (isNonEmpty(entry.title)) {
-    const re = tryCompileRegex(entry.title);
-    // Invalid regex = no-op for this field (matches server behavior)
-    if (re !== null && !re.test(episode.title)) return false;
-  }
-  if (isNonEmpty(entry.description)) {
-    const re = tryCompileRegex(entry.description);
-    if (re !== null && !re.test(episode.description ?? '')) return false;
-  }
+// Null fields are no-ops (always pass), matching the server's
+// CompiledFilterEntry::matches behavior.
+function matchesCompiled(episode: FeedEpisode, compiled: CompiledEntry): boolean {
+  if (compiled.title !== null && !compiled.title.test(episode.title)) return false;
+  if (compiled.description !== null && !compiled.description.test(episode.description ?? '')) return false;
   return true;
-}
-
-// Require entries use AND semantics: episode must match ALL entries.
-// Mirrors the server's `self.require.iter().all(|f| f.matches(episode))`.
-function matchesAllEntries(episode: FeedEpisode, entries: FilterEntry[]): boolean {
-  return entries.every((entry) => matchesEntry(episode, entry));
-}
-
-// Exclude entries use OR semantics: episode is excluded if ANY entry matches.
-// Mirrors the server's `self.exclude.iter().any(|f| f.matches(episode))`.
-function matchesAnyEntry(episode: FeedEpisode, entries: FilterEntry[]): boolean {
-  return entries.some((entry) => matchesEntry(episode, entry));
 }
 
 export function filterEpisodes(
@@ -58,23 +53,28 @@ export function filterEpisodes(
 ): FeedEpisode[] {
   if (!filters) return [...episodes];
 
-  const requireEntries =
-    filters.require?.filter(
-      (e) => isNonEmpty(e.title) || isNonEmpty(e.description),
-    ) ?? [];
-  const excludeEntries =
-    filters.exclude?.filter(
-      (e) => isNonEmpty(e.title) || isNonEmpty(e.description),
-    ) ?? [];
+  // Precompile regexes once before iterating over episodes.
+  const requireCompiled =
+    filters.require
+      ?.filter((e) => isNonEmpty(e.title) || isNonEmpty(e.description))
+      .map(compileEntry) ?? [];
+  const excludeCompiled =
+    filters.exclude
+      ?.filter((e) => isNonEmpty(e.title) || isNonEmpty(e.description))
+      .map(compileEntry) ?? [];
 
   let result = [...episodes];
 
-  if (0 < requireEntries.length) {
-    result = result.filter((ep) => matchesAllEntries(ep, requireEntries));
+  // Require entries use AND semantics: episode must match ALL entries.
+  // Mirrors the server's `self.require.iter().all(|f| f.matches(episode))`.
+  if (0 < requireCompiled.length) {
+    result = result.filter((ep) => requireCompiled.every((c) => matchesCompiled(ep, c)));
   }
 
-  if (0 < excludeEntries.length) {
-    result = result.filter((ep) => !matchesAnyEntry(ep, excludeEntries));
+  // Exclude entries use OR semantics: episode is excluded if ANY entry matches.
+  // Mirrors the server's `self.exclude.iter().any(|f| f.matches(episode))`.
+  if (0 < excludeCompiled.length) {
+    result = result.filter((ep) => !excludeCompiled.some((c) => matchesCompiled(ep, c)));
   }
 
   return result;
