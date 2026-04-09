@@ -90,11 +90,6 @@ describe('PlaylistForm', () => {
       expect(input).toHaveValue('Test Playlist');
     });
 
-    it('renders priority input with current value', () => {
-      renderPlaylistForm();
-      const input = screen.getByLabelText(/claim priority/i);
-      expect(input).toHaveValue(0);
-    });
   });
 
   describe('StructureSettings', () => {

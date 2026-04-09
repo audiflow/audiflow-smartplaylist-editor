@@ -35,19 +35,6 @@ export function BasicSettingsTab({ index }: BasicSettingsTabProps) {
             placeholder={t('placeholderDisplayName')}
           />
         </div>
-        <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-priority`} hint="priority">{t('priority')}</HintLabel>
-          <Input
-            id={`playlist-${index}-priority`}
-            type="number"
-            {...register(`${prefix}.priority`, {
-              setValueAs: (v) =>
-                v === '' || v === null || v === undefined
-                  ? null
-                  : Number(v),
-            })}
-          />
-        </div>
       </div>
     </div>
   );

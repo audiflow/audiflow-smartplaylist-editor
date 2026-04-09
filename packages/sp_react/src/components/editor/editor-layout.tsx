@@ -24,6 +24,7 @@ import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { ConflictDialog } from '@/components/editor/conflict-dialog.tsx';
 import { FeedUrlInput } from '@/components/editor/feed-url-input.tsx';
+import { PlaylistReorderDialog } from '@/components/editor/playlist-reorder-dialog.tsx';
 import { DebugInfoPanel } from '@/components/preview/debug-info-panel.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -35,6 +36,7 @@ import {
 import { Badge } from '@/components/ui/badge.tsx';
 import {
   ArrowLeft,
+  ArrowUpDown,
   BookOpen,
   Code,
   ExternalLink,
@@ -80,6 +82,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   } = useEditorStore();
   const [jsonText, setJsonText] = useState('');
   const [activeTab, setActiveTab] = useState('tab-0');
+  const [reorderOpen, setReorderOpen] = useState(false);
 
   // Normalize legacy v3 field names (e.g. episodeExtractor, rss resolver type)
   // through the Zod schema before seeding the form.
@@ -556,6 +559,17 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
                   />
                 ))}
               </TabsList>
+              {2 <= fields.length && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReorderOpen(true)}
+                >
+                  <ArrowUpDown className="mr-1 h-3 w-3" />
+                  {t('reorderPlaylists')}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -606,6 +620,22 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         filePath={conflictPath}
         onReload={handleReload}
         onKeepChanges={handleKeepChanges}
+      />
+
+      <PlaylistReorderDialog
+        open={reorderOpen}
+        onOpenChange={setReorderOpen}
+        items={fields.map((field, index) => ({
+          id: field.id,
+          displayName: form.getValues(`playlists.${index}.displayName`) || t('playlistFallbackName', { number: index + 1 }),
+        }))}
+        onConfirm={(reordered) => {
+          const currentPlaylists = form.getValues('playlists');
+          const idToIndex = new Map(fields.map((f, i) => [f.id, i]));
+          const newPlaylists = reordered.map((item) => currentPlaylists[idToIndex.get(item.id)!]);
+          form.setValue('playlists', newPlaylists, { shouldDirty: true });
+          setActiveTab('tab-0');
+        }}
       />
     </div>
   );

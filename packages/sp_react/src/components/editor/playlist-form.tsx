@@ -42,7 +42,7 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
   );
 
   const errors = formState.errors.playlists?.[index];
-  const hasBasicError = !!(errors?.id || errors?.displayName || errors?.priority);
+  const hasBasicError = !!(errors?.id || errors?.displayName);
   const hasFilterError = !!errors?.episodeFilters;
   const hasEpisodeListError = !!(errors?.episodeList?.sort || errors?.episodeList?.titleExtractor);
   const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.nullSeasonGroupKey || errors?.numberingExtractor || errors?.titleExtractor);

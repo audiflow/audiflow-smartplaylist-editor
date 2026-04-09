@@ -1,5 +1,5 @@
 {
-  "sectionNote.basicSettings": "Identity and priority settings for this playlist. The ID must be unique within the config. Claim priority controls which playlist gets an episode first when multiple playlists could match it.",
+  "sectionNote.basicSettings": "Identity settings for this playlist. The ID must be unique within the config. When multiple playlists exist, their order determines which one claims an episode first — use the Reorder button to adjust.",
   "sectionNote.episodeFilters": "Control which episodes from the feed are included in this playlist. Define text patterns to match against episode titles and descriptions.",
   "sectionNote.episodeList": "Default settings for how episodes appear within each group. These can be customized per group in the Groups tab.",
   "sectionNote.resolver": "Choose how episodes are organized into groups. The organization method determines the grouping logic, and the presentation controls how groups appear in the app.",
