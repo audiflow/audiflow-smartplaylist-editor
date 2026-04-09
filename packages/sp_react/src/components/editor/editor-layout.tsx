@@ -409,18 +409,18 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [configId, normalizedInitialConfig, t]);
 
   // Debounced auto-preview: re-run preview when form values change.
-  // Strip client-side-only fields (sort, display options) from the trigger key
-  // so changes to them don't cause a server roundtrip and UI flicker.
+  // Strip client-side-only fields from the trigger key so changes to them
+  // don't cause a server roundtrip and UI flicker. Client-side-only:
+  // - episodeFilters (applied client-side in FilteredEpisodesPanel)
+  // - sort/display options (applied client-side in PlaylistTree)
   const formValues = useWatch({ control: form.control });
   const previewRelevantValues = useMemo(() => {
     if (!formValues) return '';
     const stripped = {
       ...formValues,
       playlists: formValues.playlists?.map((p) => {
-        const { episodeList, groupList, prependSeasonNumber, ...rest } = p ?? {};
-        // Keep episodeList but without sort/showYearHeaders (client-side only)
+        const { episodeFilters: _ef, episodeList, groupList, prependSeasonNumber, ...rest } = p ?? {};
         const { sort: _sort, showYearHeaders: _syh, ...episodeListRest } = episodeList ?? {};
-        // Keep groupList but without sort/yearBinding/showDateRange/userSortable (client-side only)
         const { sort: _gsort, yearBinding: _yb, showDateRange: _sdr, userSortable: _us, ...groupListRest } = groupList ?? {};
         return {
           ...rest,
