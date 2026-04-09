@@ -17,6 +17,7 @@ import {
   useCreatePattern,
 } from '@/api/queries.ts';
 import { sanitizeConfig } from '@/lib/sanitize-config.ts';
+import { useDebounce } from '@/hooks/use-debounce.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
@@ -394,6 +395,32 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     };
   }, [configId, normalizedInitialConfig, t]);
 
+  // Debounced auto-preview: re-run preview when form values change
+  const formValues = useWatch({ control: form.control });
+  const serializedValues = useMemo(
+    () => JSON.stringify(formValues),
+    [formValues],
+  );
+  const debouncedValues = useDebounce(serializedValues, 400);
+
+  useEffect(() => {
+    if (!feedUrl || isJsonMode) return;
+    // Skip until initial auto-preview has run
+    if (!hasAutoPreviewedRef.current) return;
+    const config = form.getValues();
+    previewMutationRef.current.mutate(
+      { config: sanitizeConfig(config), feedUrl },
+      {
+        onError: (error) => {
+          toast.error(t('toastPreviewError', {
+            error: error instanceof Error ? error.message : 'Preview failed',
+            defaultValue: 'Preview failed: {{error}}',
+          }));
+        },
+      },
+    );
+  }, [debouncedValues, feedUrl, isJsonMode, form, t]);
+
   // Normalize server payload through Zod for consistent v3-to-v4 migration.
   const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
     const parsed = patternConfigSchema.safeParse(raw);
@@ -532,6 +559,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
                   excludedEpisodes={previewMutation.data?.excluded ?? []}
                   globalDebug={previewMutation.data?.debug}
                   playlistCount={fields.length}
+                  isNewPlaylist={isNewConfig}
                   onRemove={() => {
                     remove(index);
                     const lastIndex = fields.length - 2;

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import type {
@@ -8,10 +8,14 @@ import type {
 } from '@/schemas/api-schema.ts';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import type { EpisodeSortRule } from '@/components/preview/episode-sort-utils.ts';
+import { useEditorStore } from '@/stores/editor-store.ts';
+import { useFeed } from '@/api/queries.ts';
+import { filterEpisodes } from '@/lib/episode-filter.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
 import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
 import { UngroupedEpisodesPanel } from '@/components/preview/ungrouped-episodes-panel.tsx';
+import { FilteredEpisodesPanel } from '@/components/preview/filtered-episodes-panel.tsx';
 import { PlaylistTree } from '@/components/preview/playlist-tree.tsx';
 import { ExtractionPreview } from '@/components/preview/extraction-preview.tsx';
 import {
@@ -29,6 +33,7 @@ interface PlaylistTabContentProps {
   excludedEpisodes: PreviewEpisode[];
   globalDebug: PreviewDebug | undefined;
   playlistCount: number;
+  isNewPlaylist: boolean;
   onRemove: () => void;
 }
 
@@ -39,16 +44,40 @@ export function PlaylistTabContent({
   excludedEpisodes,
   globalDebug,
   playlistCount,
+  isNewPlaylist,
   onRemove,
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
   const { watch } = useFormContext<PatternConfig>();
+  const { feedUrl } = useEditorStore();
+  const feedQuery = useFeed(feedUrl || null);
+
+  const episodeFilters = watch(`playlists.${index}.episodeFilters`);
+  const resolverType = watch(`playlists.${index}.resolverType`);
   const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
   const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
   const groupDefs = watch(`playlists.${index}.groups`);
   const defaultSortField = watch(`playlists.${index}.episodeList.sort.field`);
   const defaultSortOrder = watch(`playlists.${index}.episodeList.sort.order`);
+
+  const feedEpisodes = feedQuery.data ?? [];
+  const filteredEpisodes = useMemo(
+    () => filterEpisodes(feedEpisodes, episodeFilters ?? undefined),
+    [feedEpisodes, episodeFilters],
+  );
+
+  const defaultPreviewTab = isNewPlaylist ? 'filtered' : 'groups';
+  const [activePreviewTab, setActivePreviewTab] = useState(defaultPreviewTab);
+  const hasAutoSwitchedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasAutoSwitchedRef.current || !isNewPlaylist) return;
+    if (resolverType && previewPlaylist) {
+      hasAutoSwitchedRef.current = true;
+      setActivePreviewTab('groups');
+    }
+  }, [resolverType, previewPlaylist, isNewPlaylist]);
   const groupYearBindingOverrides = useMemo(() => {
     const map = new Map<string, YearBinding>();
     if (!groupDefs) return map;
@@ -94,95 +123,117 @@ export function PlaylistTabContent({
           <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {t('previewSectionTitle')}
           </h4>
-          {previewPlaylist ? (
-            <>
-              {globalDebug && (
-                <div className="border rounded-md px-3 py-1.5">
-                  <DebugInfoStats debug={globalDebug} />
-                </div>
-              )}
-              <Tabs defaultValue="groups">
-                <TabsList>
-                  <TabsTrigger value="groups">
-                    {tp('tabGroups')}
-                    <Badge variant="secondary" className="ml-1.5">
-                      {previewPlaylist.episodeCount}
-                    </Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="ungrouped">
-                    {tp('tabUngrouped')}
-                    {0 < ungroupedCount && (
-                      <Badge variant="secondary" className="ml-1.5">
-                        {ungroupedCount}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="excluded">
-                    {tp('tabExcluded')}
-                    {0 < excludedCount && (
-                      <Badge variant="secondary" className="ml-1.5">
-                        {excludedCount}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="extraction">
-                    {tp('tabExtraction')}
-                  </TabsTrigger>
-                  {showClaimedTab && (
-                    <TabsTrigger value="claimed">
-                      {tp('tabClaimed')}
-                      {0 < claimedCount && (
-                        <Badge variant="secondary" className="ml-1.5">
-                          {claimedCount}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  )}
-                </TabsList>
-                <TabsContent value="groups">
-                  <PlaylistTree playlists={[previewPlaylist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
-                </TabsContent>
-                <TabsContent value="ungrouped">
-                  {0 < ungroupedCount ? (
-                    <UngroupedEpisodesPanel episodes={ungroupedEpisodes} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-4 text-center">
-                      {tp('emptyUngrouped')}
-                    </p>
-                  )}
-                </TabsContent>
-                <TabsContent value="excluded">
-                  {0 < excludedCount ? (
-                    <UngroupedEpisodesPanel episodes={excludedEpisodes} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-4 text-center">
-                      {tp('emptyExcluded')}
-                    </p>
-                  )}
-                </TabsContent>
-                <TabsContent value="extraction">
-                  <ExtractionPreview playlist={previewPlaylist} />
-                </TabsContent>
-                {showClaimedTab && (
-                  <TabsContent value="claimed">
-                    {0 < claimedCount ? (
-                      <ClaimedEpisodesSection
-                        episodes={previewPlaylist.claimedByOthers ?? []}
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground py-4 text-center">
-                        {tp('emptyClaimed')}
-                      </p>
-                    )}
-                  </TabsContent>
-                )}
-              </Tabs>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              {t('tabPreviewEmpty')}
-            </p>
+          {globalDebug && previewPlaylist && (
+            <div className="border rounded-md px-3 py-1.5">
+              <DebugInfoStats debug={globalDebug} />
+            </div>
           )}
+          <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
+            <TabsList>
+              <TabsTrigger value="filtered">
+                {tp('tabFiltered')}
+                {0 < filteredEpisodes.length && (
+                  <Badge variant="secondary" className="ml-1.5">
+                    {filteredEpisodes.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              {previewPlaylist && (
+                <TabsTrigger value="groups">
+                  {tp('tabGroups')}
+                  <Badge variant="secondary" className="ml-1.5">
+                    {previewPlaylist.episodeCount}
+                  </Badge>
+                </TabsTrigger>
+              )}
+              {previewPlaylist && (
+                <TabsTrigger value="ungrouped">
+                  {tp('tabUngrouped')}
+                  {0 < ungroupedCount && (
+                    <Badge variant="secondary" className="ml-1.5">
+                      {ungroupedCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              )}
+              {previewPlaylist && (
+                <TabsTrigger value="excluded">
+                  {tp('tabExcluded')}
+                  {0 < excludedCount && (
+                    <Badge variant="secondary" className="ml-1.5">
+                      {excludedCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              )}
+              {previewPlaylist && (
+                <TabsTrigger value="extraction">
+                  {tp('tabExtraction')}
+                </TabsTrigger>
+              )}
+              {previewPlaylist && showClaimedTab && (
+                <TabsTrigger value="claimed">
+                  {tp('tabClaimed')}
+                  {0 < claimedCount && (
+                    <Badge variant="secondary" className="ml-1.5">
+                      {claimedCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              )}
+            </TabsList>
+            <TabsContent value="filtered">
+              <FilteredEpisodesPanel
+                episodes={filteredEpisodes}
+                totalCount={feedEpisodes.length}
+              />
+            </TabsContent>
+            {previewPlaylist && (
+              <TabsContent value="groups">
+                <PlaylistTree playlists={[previewPlaylist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
+              </TabsContent>
+            )}
+            {previewPlaylist && (
+              <TabsContent value="ungrouped">
+                {0 < ungroupedCount ? (
+                  <UngroupedEpisodesPanel episodes={ungroupedEpisodes} />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    {tp('emptyUngrouped')}
+                  </p>
+                )}
+              </TabsContent>
+            )}
+            {previewPlaylist && (
+              <TabsContent value="excluded">
+                {0 < excludedCount ? (
+                  <UngroupedEpisodesPanel episodes={excludedEpisodes} />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    {tp('emptyExcluded')}
+                  </p>
+                )}
+              </TabsContent>
+            )}
+            {previewPlaylist && (
+              <TabsContent value="extraction">
+                <ExtractionPreview playlist={previewPlaylist} />
+              </TabsContent>
+            )}
+            {previewPlaylist && showClaimedTab && (
+              <TabsContent value="claimed">
+                {0 < claimedCount ? (
+                  <ClaimedEpisodesSection
+                    episodes={previewPlaylist.claimedByOthers ?? []}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    {tp('emptyClaimed')}
+                  </p>
+                )}
+              </TabsContent>
+            )}
+          </Tabs>
         </div>
       </div>
     </div>
