@@ -155,5 +155,11 @@
   "episodeSortOrder": "Order",
   "episodeSortField_publishedAt": "Published Date",
   "episodeSortField_episodeNumber": "Episode Number",
-  "episodeSortField_title": "Title"
+  "episodeSortField_title": "Title",
+  "tab.basicSettings": "Basic",
+  "tab.episodeFilters": "Filters",
+  "tab.episodeList": "Episode List",
+  "tab.resolver": "Resolver",
+  "tab.groups": "Groups",
+  "tab.displaySettings": "Display"
 }

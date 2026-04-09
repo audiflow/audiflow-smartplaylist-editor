@@ -52,9 +52,28 @@ function renderPlaylistForm(
   };
 }
 
+async function switchToTab(user: ReturnType<typeof userEvent.setup>, tabName: RegExp) {
+  const tab = screen.getByRole('tab', { name: tabName });
+  await user.click(tab);
+}
+
 describe('PlaylistForm', () => {
   beforeEach(() => {
     useEditorStore.getState().reset();
+  });
+
+  describe('Tabs', () => {
+    it('renders all 6 tab triggers', () => {
+      renderPlaylistForm();
+      const tabs = screen.getAllByRole('tab');
+      expect(tabs.length).toBe(6);
+    });
+
+    it('shows Basic tab as default active tab', () => {
+      renderPlaylistForm();
+      const basicTab = screen.getByRole('tab', { name: /basic/i });
+      expect(basicTab).toHaveAttribute('data-state', 'active');
+    });
   });
 
   describe('BasicSettings', () => {
@@ -79,24 +98,31 @@ describe('PlaylistForm', () => {
   });
 
   describe('StructureSettings', () => {
-    it('renders resolver type select', () => {
+    it('renders resolver type select', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /resolver/i);
       expect(screen.getByText(/resolver type/i)).toBeInTheDocument();
     });
 
-    it('renders presentation select', () => {
+    it('renders presentation select', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /resolver/i);
       expect(screen.getByText(/presentation/i)).toBeInTheDocument();
     });
 
-    it('shows nullSeasonGroupKey when resolverType is seasonNumber', () => {
+    it('shows nullSeasonGroupKey when resolverType is seasonNumber', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /resolver/i);
       expect(
         screen.getByLabelText(/null season group key/i),
       ).toBeInTheDocument();
     });
 
-    it('hides nullSeasonGroupKey when resolverType is not seasonNumber', () => {
+    it('hides nullSeasonGroupKey when resolverType is not seasonNumber', async () => {
+      const user = userEvent.setup();
       const config: PatternConfig = {
         ...DEFAULT_CONFIG,
         playlists: [
@@ -107,6 +133,7 @@ describe('PlaylistForm', () => {
         ],
       };
       renderPlaylistForm({ config });
+      await switchToTab(user, /resolver/i);
       expect(
         screen.queryByLabelText(/null season group key/i),
       ).not.toBeInTheDocument();
@@ -114,23 +141,31 @@ describe('PlaylistForm', () => {
   });
 
   describe('DisplayOptions', () => {
-    it('renders showYearHeaders checkbox', () => {
+    it('renders showYearHeaders checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /display/i);
       expect(screen.getByText(/show year headers/i)).toBeInTheDocument();
     });
 
-    it('renders showDateRange checkbox', () => {
+    it('renders showDateRange checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /display/i);
       expect(screen.getByText(/show date range/i)).toBeInTheDocument();
     });
 
-    it('renders userSortable checkbox', () => {
+    it('renders userSortable checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /display/i);
       expect(screen.getByText(/user sortable/i)).toBeInTheDocument();
     });
 
-    it('renders prependSeasonNumber checkbox', () => {
+    it('renders prependSeasonNumber checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /display/i);
       expect(
         screen.getByText(/prepend season number/i),
       ).toBeInTheDocument();
@@ -149,8 +184,10 @@ describe('PlaylistForm', () => {
   });
 
   describe('FilterSettings', () => {
-    it('renders require and exclude filter sections', () => {
+    it('renders require and exclude filter sections', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /filters/i);
       expect(screen.getByText(/require filters/i)).toBeInTheDocument();
       expect(screen.getByText(/exclude filters/i)).toBeInTheDocument();
     });
@@ -158,6 +195,7 @@ describe('PlaylistForm', () => {
     it('adds a require filter entry when add button is clicked', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /filters/i);
 
       const requireSection = screen
         .getByText(/require filters/i)
@@ -175,6 +213,7 @@ describe('PlaylistForm', () => {
     it('adds an exclude filter entry when add button is clicked', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /filters/i);
 
       const excludeSection = screen
         .getByText(/exclude filters/i)

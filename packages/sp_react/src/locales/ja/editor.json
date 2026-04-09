@@ -155,5 +155,11 @@
   "episodeSortOrder": "順序",
   "episodeSortField_publishedAt": "公開日",
   "episodeSortField_episodeNumber": "エピソード番号",
-  "episodeSortField_title": "タイトル"
+  "episodeSortField_title": "タイトル",
+  "tab.basicSettings": "基本設定",
+  "tab.episodeFilters": "エピソードフィルタ",
+  "tab.episodeList": "エピソードリスト",
+  "tab.resolver": "リゾルバー",
+  "tab.groups": "グループ",
+  "tab.displaySettings": "表示設定"
 }
