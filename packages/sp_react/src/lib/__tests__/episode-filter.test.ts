@@ -25,7 +25,7 @@ describe('filterEpisodes', () => {
     expect(result).toHaveLength(5);
   });
 
-  it('applies require filter on title (OR across entries)', () => {
+  it('applies require filter on title (AND across entries)', () => {
     const result = filterEpisodes(episodes, {
       require: [{ title: 'Season 1' }],
     });
@@ -61,10 +61,19 @@ describe('filterEpisodes', () => {
     expect(result.map((e) => e.id)).toEqual([1]);
   });
 
-  it('handles invalid regex gracefully', () => {
+  it('treats invalid regex as no-op (matches server behavior)', () => {
     const result = filterEpisodes(episodes, {
       require: [{ title: '[invalid' }],
     });
-    expect(result).toHaveLength(0);
+    // Invalid regex compiles to null; entry matches everything (server parity)
+    expect(result).toHaveLength(5);
+  });
+
+  it('applies require entries with AND semantics across multiple entries', () => {
+    const result = filterEpisodes(episodes, {
+      require: [{ title: 'Season' }, { title: 'Episode 1' }],
+    });
+    // Must match BOTH: "Season" AND "Episode 1"
+    expect(result.map((e) => e.id)).toEqual([1, 4]);
   });
 });

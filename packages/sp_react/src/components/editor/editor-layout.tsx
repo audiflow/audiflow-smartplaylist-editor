@@ -416,8 +416,13 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     // Skip if neither form values nor feed URL changed since the last preview
     const deduplicationKey = `${feedUrl}\0${debouncedValues}`;
     if (deduplicationKey === lastPreviewedValuesRef.current) return;
-    lastPreviewedValuesRef.current = deduplicationKey;
     const config = form.getValues();
+    // Skip when required fields are still incomplete (e.g. user is typing a
+    // new playlist's id/displayName). This prevents 400 errors from the server
+    // while the form is being filled in.
+    const parsed = patternConfigSchema.safeParse(config);
+    if (!parsed.success) return;
+    lastPreviewedValuesRef.current = deduplicationKey;
     previewMutationRef.current.mutate(
       { config: sanitizeConfig(config), feedUrl },
       {
