@@ -26,7 +26,7 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
       <SectionNote i18nKey="sectionNote.displaySettings" />
 
       <div className="space-y-4">
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-wrap">
           <div className="flex items-center gap-2">
             <Checkbox
               id={`playlist-${index}-showYearHeaders`}

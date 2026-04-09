@@ -42,10 +42,10 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const errors = formState.errors.playlists?.[index];
   const hasBasicError = !!(errors?.id || errors?.displayName || errors?.priority);
   const hasFilterError = !!errors?.episodeFilters;
-  const hasEpisodeListError = !!errors?.episodeList;
+  const hasEpisodeListError = !!(errors?.episodeList?.sort || errors?.episodeList?.titleExtractor);
   const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.nullSeasonGroupKey || errors?.numberingExtractor);
   const hasGroupsError = !!(errors?.groups || errors?.groupList);
-  const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders);
+  const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders || errors?.groupList?.yearBinding || errors?.groupList?.showDateRange || errors?.groupList?.userSortable);
 
   return (
     <div className="space-y-4">

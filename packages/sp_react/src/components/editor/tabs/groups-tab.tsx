@@ -9,8 +9,8 @@ export function GroupsTab({ index }: GroupsTabProps) {
   return (
     <div className="space-y-4">
       <SectionNote i18nKey="sectionNote.groups" />
-      <GroupsForm index={index} />
       <InteractionNote i18nKey="interactionNote.groups.overrides" />
+      <GroupsForm index={index} />
     </div>
   );
 }
