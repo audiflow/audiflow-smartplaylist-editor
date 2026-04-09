@@ -47,6 +47,6 @@
   "episodeSortOrder": "Ascending (oldest first, lowest number first) or descending (newest first, highest number first).",
   "groupEpisodeSort": "Override the default episode sort order for this specific group. When unset, inherits the playlist-level episode sort.",
   "groupTitleExtractor": "Override the playlist-level title extractor for this group. Extracts display names from episode data.",
-  "groupNumberingExtractor": "Override the playlist-level episode extractor for this group. Extracts season/episode numbers from titles.",
+  "groupNumberingExtractor": "Override the playlist-level numbering extractor for this group. Extracts season/episode numbers from titles.",
   "groupYearBinding": "Override the playlist-level year binding for this group. Controls how this group relates to year headers."
 }
