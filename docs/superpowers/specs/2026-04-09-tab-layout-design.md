@@ -148,8 +148,8 @@ Add a second tab to the preview panel alongside the existing preview:
 
 | Tab | Content |
 |-----|---------|
-| Preview (existing) | Live playlist preview as it appears in the app |
 | Filtered Episodes (new) | List of episodes that passed include/exclude filters |
+| Preview (existing) | Live playlist preview as it appears in the app |
 
 The filtered episodes tab shows the result of applying the current require/exclude
 filters against the loaded feed. This gives immediate feedback on whether filters
