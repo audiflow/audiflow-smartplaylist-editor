@@ -131,6 +131,30 @@ Show a small error dot/badge on tab labels when that tab contains validation err
 This prevents the "did I fill everything?" confusion when errors are hidden in
 non-active tabs.
 
+## Live Preview Enhancements
+
+### Auto-update with debounce
+
+The preview panel auto-updates as the user edits form fields, debounced to avoid
+excessive re-renders. No manual refresh button needed.
+
+- Watch form values via React Hook Form's `watch()` or `useWatch()`
+- Debounce interval: ~300-500ms after last keystroke
+- Preview reflects current form state, not last-saved state
+
+### Filtered Episodes tab
+
+Add a second tab to the preview panel alongside the existing preview:
+
+| Tab | Content |
+|-----|---------|
+| Preview (existing) | Live playlist preview as it appears in the app |
+| Filtered Episodes (new) | List of episodes that passed include/exclude filters |
+
+The filtered episodes tab shows the result of applying the current require/exclude
+filters against the loaded feed. This gives immediate feedback on whether filters
+are working as intended. Updates with the same debounce as the main preview.
+
 ## Form State
 
 React Hook Form state persists across tab switches naturally (components are not
@@ -139,6 +163,5 @@ unmounted). No additional state management needed.
 ## Out of Scope
 
 - Changing the pattern-level settings card (stays above tabs as-is)
-- Modifying the live preview panel
 - Changing the JSON mode editor
 - Rewriting tooltip content (existing HintLabel hints remain)
