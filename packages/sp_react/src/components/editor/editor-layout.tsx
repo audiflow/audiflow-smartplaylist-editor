@@ -17,7 +17,6 @@ import {
   useCreatePattern,
 } from '@/api/queries.ts';
 import { sanitizeConfig } from '@/lib/sanitize-config.ts';
-import { useDebounce } from '@/hooks/use-debounce.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
@@ -408,58 +407,40 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     };
   }, [configId, normalizedInitialConfig, t]);
 
-  // Debounced auto-preview: re-run preview when form values change.
-  // Strip client-side-only fields from the trigger key so changes to them
-  // don't cause a server roundtrip and UI flicker. Client-side-only:
-  // - episodeFilters (applied client-side in FilteredEpisodesPanel)
-  // - sort/display options (applied client-side in PlaylistTree)
-  const formValues = useWatch({ control: form.control });
-  const previewRelevantValues = useMemo(() => {
-    if (!formValues) return '';
-    const stripped = {
-      ...formValues,
-      playlists: formValues.playlists?.map((p) => {
-        const { episodeList, groupList, prependSeasonNumber, ...rest } = p ?? {};
-        const { sort: _sort, showYearHeaders: _syh, ...episodeListRest } = episodeList ?? {};
-        const { sort: _gsort, yearBinding: _yb, showDateRange: _sdr, userSortable: _us, ...groupListRest } = groupList ?? {};
-        return {
-          ...rest,
-          episodeList: episodeListRest,
-          groupList: groupListRest,
-        };
-      }),
-    };
-    return JSON.stringify(stripped);
-  }, [formValues]);
-  const debouncedValues = useDebounce(previewRelevantValues, 400);
-
+  // Debounced auto-preview via form.watch() subscription.
+  // Uses a subscription + setTimeout instead of useWatch to avoid re-rendering
+  // the entire editor on every keystroke.
   useEffect(() => {
-    if (!feedUrl || isJsonMode) return;
-    // For existing configs, wait until initial auto-preview has run.
-    // For new configs (no configId), allow debounced preview immediately.
-    if (configId !== null && !hasAutoPreviewedRef.current) return;
-    // Skip if neither form values nor feed URL changed since the last preview
-    const deduplicationKey = `${feedUrl}\0${debouncedValues}`;
-    if (deduplicationKey === lastPreviewedValuesRef.current) return;
-    const config = form.getValues();
-    // Skip when required fields are still incomplete (e.g. user is typing a
-    // new playlist's id/displayName). This prevents 400 errors from the server
-    // while the form is being filled in.
-    const parsed = patternConfigSchema.safeParse(config);
-    if (!parsed.success) return;
-    lastPreviewedValuesRef.current = deduplicationKey;
-    previewMutationRef.current.mutate(
-      { config: sanitizeConfig(config), feedUrl },
-      {
-        onError: (error) => {
-          toast.error(t('toastPreviewError', {
-            error: error instanceof Error ? error.message : 'Preview failed',
-            defaultValue: 'Preview failed: {{error}}',
-          }));
-        },
-      },
-    );
-  }, [debouncedValues, feedUrl, isJsonMode, form, t, configId]);
+    let timer: ReturnType<typeof setTimeout>;
+    const subscription = form.watch(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!feedUrl || isJsonMode) return;
+        if (configId !== null && !hasAutoPreviewedRef.current) return;
+        const config = form.getValues();
+        const parsed = patternConfigSchema.safeParse(config);
+        if (!parsed.success) return;
+        const key = `${feedUrl}\0${JSON.stringify(config)}`;
+        if (key === lastPreviewedValuesRef.current) return;
+        lastPreviewedValuesRef.current = key;
+        previewMutationRef.current.mutate(
+          { config: sanitizeConfig(config), feedUrl },
+          {
+            onError: (error) => {
+              toast.error(t('toastPreviewError', {
+                error: error instanceof Error ? error.message : 'Preview failed',
+                defaultValue: 'Preview failed: {{error}}',
+              }));
+            },
+          },
+        );
+      }, 400);
+    });
+    return () => {
+      clearTimeout(timer);
+      subscription.unsubscribe();
+    };
+  }, [form, feedUrl, isJsonMode, configId, t]);
 
   // Normalize server payload through Zod for consistent v3-to-v4 migration.
   const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
