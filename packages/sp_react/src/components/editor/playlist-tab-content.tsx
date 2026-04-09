@@ -131,6 +131,14 @@ export function PlaylistTabContent({
               <TabsTrigger value="filtered">
                 {tp('tabFiltered')}
               </TabsTrigger>
+              <TabsTrigger value="excluded">
+                {tp('tabExcluded')}
+                {0 < stableExcludedCount && (
+                  <Badge variant="secondary" className="ml-1.5">
+                    {stableExcludedCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="preview">
                 {tp('tabPreview')}
                 {sp && (
@@ -142,6 +150,21 @@ export function PlaylistTabContent({
             </TabsList>
             <TabsContent value="filtered">
               <LiveFilteredEpisodes index={index} feedEpisodes={feedQuery.data ?? []} />
+            </TabsContent>
+            <TabsContent value="excluded">
+              {sp ? (
+                0 < stableExcludedCount ? (
+                  <UngroupedEpisodesPanel episodes={sp.excluded} />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    {tp('emptyExcluded')}
+                  </p>
+                )
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  {t('tabPreviewEmpty')}
+                </p>
+              )}
             </TabsContent>
             <TabsContent value="preview">
               {sp ? (
@@ -167,14 +190,6 @@ export function PlaylistTabContent({
                           </Badge>
                         )}
                       </TabsTrigger>
-                      <TabsTrigger value="excluded">
-                        {tp('tabExcluded')}
-                        {0 < stableExcludedCount && (
-                          <Badge variant="secondary" className="ml-1.5">
-                            {stableExcludedCount}
-                          </Badge>
-                        )}
-                      </TabsTrigger>
                     </TabsList>
                     <TabsContent value="groups">
                       <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
@@ -185,15 +200,6 @@ export function PlaylistTabContent({
                       ) : (
                         <p className="text-sm text-muted-foreground py-4 text-center">
                           {tp('emptyUngrouped')}
-                        </p>
-                      )}
-                    </TabsContent>
-                    <TabsContent value="excluded">
-                      {0 < stableExcludedCount ? (
-                        <UngroupedEpisodesPanel episodes={sp.excluded} />
-                      ) : (
-                        <p className="text-sm text-muted-foreground py-4 text-center">
-                          {tp('emptyExcluded')}
                         </p>
                       )}
                     </TabsContent>
