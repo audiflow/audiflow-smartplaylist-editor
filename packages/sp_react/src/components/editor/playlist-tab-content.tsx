@@ -48,15 +48,15 @@ export function PlaylistTabContent({
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
-  const { watch } = useFormContext<PatternConfig>();
+  const { control } = useFormContext<PatternConfig>();
   const { feedUrl } = useEditorStore();
   const feedQuery = useFeed(feedUrl || null);
 
-  const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
-  const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
-  const groupDefs = watch(`playlists.${index}.groups`);
-  const defaultSortField = watch(`playlists.${index}.episodeList.sort.field`);
-  const defaultSortOrder = watch(`playlists.${index}.episodeList.sort.order`);
+  const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.prependSeasonNumber` as const }) ?? false;
+  const yearBinding = (useWatch({ control, name: `playlists.${index}.groupList.yearBinding` as const }) ?? 'none') as YearBinding;
+  const groupDefs = useWatch({ control, name: `playlists.${index}.groups` as const });
+  const defaultSortField = useWatch({ control, name: `playlists.${index}.episodeList.sort.field` as const });
+  const defaultSortOrder = useWatch({ control, name: `playlists.${index}.episodeList.sort.order` as const });
 
   // Retain previous preview data to avoid unmount/remount flicker during updates.
   const lastPreviewRef = useRef<{
