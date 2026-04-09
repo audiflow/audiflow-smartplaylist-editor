@@ -6,6 +6,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import commonEn from '@/locales/en/common.json';
 import editorEn from '@/locales/en/editor.json';
 import hintsEn from '@/locales/en/hints.json';
+import notesEn from '@/locales/en/notes.json';
 import previewEn from '@/locales/en/preview.json';
 import settingsEn from '@/locales/en/settings.json';
 import feedEn from '@/locales/en/feed.json';
@@ -14,6 +15,7 @@ import feedEn from '@/locales/en/feed.json';
 import commonJa from '@/locales/ja/common.json';
 import editorJa from '@/locales/ja/editor.json';
 import hintsJa from '@/locales/ja/hints.json';
+import notesJa from '@/locales/ja/notes.json';
 import previewJa from '@/locales/ja/preview.json';
 import settingsJa from '@/locales/ja/settings.json';
 import feedJa from '@/locales/ja/feed.json';
@@ -27,6 +29,7 @@ void i18n
         common: commonEn,
         editor: editorEn,
         hints: hintsEn,
+        notes: notesEn,
         preview: previewEn,
         settings: settingsEn,
         feed: feedEn,
@@ -35,6 +38,7 @@ void i18n
         common: commonJa,
         editor: editorJa,
         hints: hintsJa,
+        notes: notesJa,
         preview: previewJa,
         settings: settingsJa,
         feed: feedJa,

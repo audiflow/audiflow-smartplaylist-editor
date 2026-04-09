@@ -1,0 +1,14 @@
+{
+  "sectionNote.basicSettings": "Identity and priority settings for this playlist. The ID must be unique within the pattern. Priority controls the order playlists claim episodes — lower numbers are processed first.",
+  "sectionNote.episodeFilters": "Control which episodes from the feed are included in this playlist using regex patterns matched against episode titles and descriptions.",
+  "sectionNote.episodeList": "Default settings for how episodes appear within each group or playlist. These can be overridden per group in the Groups tab.",
+  "sectionNote.resolver": "Choose how episodes are classified into groups. The resolver type determines the grouping strategy, and the presentation mode controls whether groups become separate playlists or stay nested under one parent.",
+  "sectionNote.groups": "Define and order groups for this playlist. Groups are meaningful when the presentation is set to 'Combined'. Each group can override episode list and display defaults.",
+  "sectionNote.displaySettings": "Visual presentation options that control how episode lists and groups appear in the app. These can be overridden per group.",
+  "interactionNote.episodeFilters.requireExclude": "When both require and exclude filters are set, require filters are applied first to select matching episodes, then exclude filters remove any matches from that set. If no require filters are set, all episodes are candidates and only exclude filters apply.",
+  "interactionNote.episodeList.titleExtractorChain": "The title extractor tries each step in order. If a step's regex doesn't match, it falls through to the next step. If all steps fail, the fallback value is used.",
+  "interactionNote.resolver.resolverStructure": "With 'Separate' presentation, each resolver group becomes a separate top-level playlist. With 'Combined' presentation, all groups are collected inside a single parent playlist. The resolver type determines what groups are created.",
+  "interactionNote.resolver.numberingExtractor": "The numbering extractor is used by the Season Number resolver to extract season and episode numbers from titles. Configure the regex pattern and capture groups to match your podcast's title format.",
+  "interactionNote.groups.overrides": "Group-level overrides take precedence over playlist-level defaults set in the Episode List and Display Settings tabs. Leave overrides unset to inherit the defaults.",
+  "interactionNote.displaySettings.yearBindingHeaders": "Year Binding controls how groups relate to year sections. 'Show Year Headers' adds year separators within episode lists. These are independent — you can have year headers without year binding, or vice versa."
+}

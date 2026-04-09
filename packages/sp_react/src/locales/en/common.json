@@ -20,5 +20,7 @@
   "noSearchResults": "No podcasts found",
   "searchError": "Failed to search podcasts. Please try again.",
   "episodeCount_one": "{{count}} episode",
-  "episodeCount_other": "{{count}} episodes"
+  "episodeCount_other": "{{count}} episodes",
+  "noteLabel.section": "About this section",
+  "noteLabel.interaction": "How these interact"
 }
