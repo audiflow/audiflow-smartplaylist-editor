@@ -48,7 +48,7 @@ export function PlaylistTabContent({
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
   const { control } = useFormContext<PatternConfig>();
-  const { feedUrl } = useEditorStore();
+  const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
 
   const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.prependSeasonNumber` as const }) ?? false;

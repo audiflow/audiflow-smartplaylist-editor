@@ -16,32 +16,33 @@ around how field combinations interact.
 
 ## Tab Structure
 
-6 horizontal tabs within the playlist form area. The existing form|preview split
+5 horizontal tabs within the playlist form area. The existing form|preview split
 layout is preserved — tabs replace the single scrolling form on the left side.
+Groups are nested inside the Resolver tab since they only apply to the
+`titleClassifier` resolver type.
 
 | Order | Tab Name | Fields | Accordions |
 |-------|----------|--------|------------|
 | 1 | 基本設定 | Playlist ID, Display Name, Priority | None |
 | 2 | エピソードフィルタ | Require Filters, Exclude Filters | None |
 | 3 | エピソードリスト | Episode Sort, Title Extractor | None |
-| 4 | リゾルバー | Resolver Type, Presentation, Numbering Extractor (conditional), Null Season Group Key (conditional) | Conditional sections use accordion |
-| 5 | グループ | Group Sort, Group definition cards with override accordions | Existing accordion overrides preserved |
-| 6 | 表示設定 | Show Year Headers, Show Date Range, User Sortable, Prepend Season Number, Year Binding | None |
+| 4 | リゾルバー | Resolver Type, Presentation, Numbering Extractor (conditional), Null Season Group Key (conditional), Groups (conditional, titleClassifier only) | Conditional sections use accordion |
+| 5 | 表示設定 | Show Year Headers, Show Date Range, User Sortable, Prepend Season Number, Year Binding | None |
 
 ### Tab order rationale
 
 - Identity first (基本設定)
 - Which episodes to include (エピソードフィルタ)
 - How to display/sort episodes by default (エピソードリスト)
-- How to classify episodes into groups (リゾルバー)
-- Group definitions, informed by resolver choice (グループ)
+- How to classify episodes into groups, with group definitions nested inside (リゾルバー)
 - Visual presentation tweaks last, fine-tuning after structure is set (表示設定)
 
 ### Key grouping decisions
 
 - **エピソードリスト is independent** of resolver type. It contains defaults (sort,
   title extractor) that can be overridden per group.
-- **グループ and conditional fields in リゾルバー** relate to specific resolver types.
+- **Groups are nested inside リゾルバー** since they only apply to the `titleClassifier`
+  resolver type, reducing tab count and keeping related fields together.
 - **表示設定** is last because it's fine-tuning after the structural decisions are made.
 
 ## Notes & Instructions System

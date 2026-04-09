@@ -34,8 +34,8 @@ export function useStorePreview() {
         .catch((error) => {
           if (id === inflightRef.current) {
             useEditorStore.getState().setPreviewPending(false);
+            options?.onError?.(error);
           }
-          options?.onError?.(error);
         });
     },
     [client],

@@ -703,7 +703,10 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
         onConfirm={(reordered) => {
           const currentPlaylists = form.getValues('playlists');
           const idToIndex = new Map(fields.map((f, i) => [f.id, i]));
-          const newPlaylists = reordered.map((item) => currentPlaylists[idToIndex.get(item.id)!]);
+          const newPlaylists = reordered.map((item, newIndex) => ({
+            ...currentPlaylists[idToIndex.get(item.id)!],
+            priority: newIndex,
+          }));
           form.setValue('playlists', newPlaylists, { shouldDirty: true });
           setActiveTab('tab-0');
         }}

@@ -89,6 +89,7 @@ function ToggleGroup({
         <button
           key={opt.value}
           type="button"
+          aria-pressed={value === opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
             'px-3 py-1.5 text-sm transition-colors',
