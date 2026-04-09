@@ -162,7 +162,7 @@ are working as intended. Updates with the same debounce as the main preview.
   becomes available, the preview panel automatically switches to the Preview tab.
   This happens only once — subsequent edits to the resolver do not trigger another
   auto-switch.
-- **Existing playlist:** Preserve last-used tab (or Filtered Episodes as default).
+- **Existing playlist:** Preview tab shown by default.
 
 ## Form State
 
