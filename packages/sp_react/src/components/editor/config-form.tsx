@@ -2,7 +2,7 @@ export const DEFAULT_PLAYLIST = {
   id: '',
   displayName: '',
   resolverType: 'seasonNumber',
-  playlistStructure: 'grouped',
+  presentation: 'combined',
   priority: 0,
   prependSeasonNumber: false,
 } as const;

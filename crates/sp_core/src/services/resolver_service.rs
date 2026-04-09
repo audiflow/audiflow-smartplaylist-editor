@@ -4,7 +4,7 @@ use regex::{Regex, RegexBuilder};
 
 use crate::models::{
     EpisodeData, EpisodeFilterEntry, Grouping, PatternConfig, Playlist, PlaylistDefinition,
-    PlaylistGroup, PlaylistPreviewResult, PlaylistStructure, PreviewGrouping, SimpleEpisodeData,
+    PlaylistGroup, PlaylistPreviewResult, Presentation, PreviewGrouping, SimpleEpisodeData,
 };
 
 /// Precompiled filter entry for efficient per-episode matching.
@@ -80,7 +80,7 @@ impl CompiledFilters {
 use crate::resolvers::Resolver;
 use crate::services::episode_sorter::sort_episode_ids_by_published_at;
 use crate::services::group_sorter::sort_groups;
-use crate::services::helpers::{parse_playlist_structure, parse_year_binding};
+use crate::services::helpers::{parse_presentation, parse_year_binding};
 
 /// Service that orchestrates the smart playlist resolver chain.
 ///
@@ -188,9 +188,9 @@ impl ResolverService {
                 resolver_type = Some(result.resolver_type.clone());
             }
 
-            let structure = parse_playlist_structure(&definition.playlist_structure);
+            let presentation = parse_presentation(&definition.presentation);
 
-            if structure == PlaylistStructure::Grouped {
+            if presentation == Presentation::Combined {
                 self.add_grouped_playlist(
                     &mut all_playlists,
                     definition,
@@ -373,7 +373,7 @@ impl ResolverService {
         sort_key: i32,
         episode_by_id: &HashMap<i64, &dyn EpisodeData>,
     ) -> Playlist {
-        let structure = parse_playlist_structure(&definition.playlist_structure);
+        let presentation = parse_presentation(&definition.presentation);
         let year_binding = parse_year_binding(
             definition
                 .group_list
@@ -412,7 +412,7 @@ impl ResolverService {
             sort_key,
             episode_ids: all_episode_ids,
             thumbnail_url: None,
-            playlist_structure: structure,
+            presentation,
             year_binding,
             show_year_headers: definition
                 .episode_list
@@ -450,7 +450,7 @@ impl ResolverService {
         result: &Grouping,
         episode_by_id: &HashMap<i64, &dyn EpisodeData>,
     ) {
-        let structure = parse_playlist_structure(&definition.playlist_structure);
+        let presentation = parse_presentation(&definition.presentation);
         let year_binding = parse_year_binding(
             definition
                 .group_list
@@ -507,7 +507,7 @@ impl ResolverService {
             sort_key: all_playlists.len() as i32,
             episode_ids: all_episode_ids,
             thumbnail_url: None,
-            playlist_structure: structure.clone(),
+            presentation: presentation.clone(),
             year_binding: year_binding.clone(),
             show_year_headers: definition
                 .episode_list
@@ -528,7 +528,7 @@ impl ResolverService {
         definition: &PlaylistDefinition,
         result: &Grouping,
     ) {
-        let structure = parse_playlist_structure(&definition.playlist_structure);
+        let presentation = parse_presentation(&definition.presentation);
         let year_binding = parse_year_binding(
             definition
                 .group_list
@@ -545,7 +545,7 @@ impl ResolverService {
                 sort_key: playlist.sort_key,
                 episode_ids: playlist.episode_ids.clone(),
                 thumbnail_url: playlist.thumbnail_url.clone(),
-                playlist_structure: structure.clone(),
+                presentation: presentation.clone(),
                 year_binding: year_binding.clone(),
                 show_year_headers: definition
                     .episode_list

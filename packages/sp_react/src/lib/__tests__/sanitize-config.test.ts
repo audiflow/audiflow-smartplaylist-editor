@@ -7,7 +7,7 @@ describe('sanitizeConfig', () => {
       id: 'test',
       displayName: 'Test',
       resolverType: 'year',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
       episodeFilters: {
         require: [{ title: '' }],
       },
@@ -18,7 +18,7 @@ describe('sanitizeConfig', () => {
     expect(result.id).toBe('test');
     expect(result.displayName).toBe('Test');
     expect(result.resolverType).toBe('year');
-    expect(result.playlistStructure).toBe('grouped');
+    expect(result.presentation).toBe('combined');
     expect(result).not.toHaveProperty('episodeFilters');
   });
 
@@ -58,7 +58,7 @@ describe('sanitizeConfig', () => {
   it('preserves non-empty strings', () => {
     const config = {
       id: 'test',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
       episodeFilters: {
         require: [{ title: '^\\d+' }],
         exclude: [{ title: 'bonus' }],
@@ -67,7 +67,7 @@ describe('sanitizeConfig', () => {
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    expect(result.playlistStructure).toBe('grouped');
+    expect(result.presentation).toBe('combined');
     expect(result.episodeFilters).toBeDefined();
   });
 
@@ -79,13 +79,13 @@ describe('sanitizeConfig', () => {
           id: 'pl-1',
           displayName: 'Main',
           resolverType: 'year',
-          playlistStructure: 'grouped',
+          presentation: 'combined',
         },
         {
           id: 'pl-2',
           displayName: 'Bonus',
           resolverType: 'year',
-          playlistStructure: 'split',
+          presentation: 'separate',
         },
       ],
     };
@@ -95,8 +95,8 @@ describe('sanitizeConfig', () => {
     };
 
     expect(result.playlists).toHaveLength(2);
-    expect(result.playlists[0].playlistStructure).toBe('grouped');
-    expect(result.playlists[1].playlistStructure).toBe('split');
+    expect(result.playlists[0].presentation).toBe('combined');
+    expect(result.playlists[1].presentation).toBe('separate');
   });
 
   it('strips nested objects with only empty values', () => {
