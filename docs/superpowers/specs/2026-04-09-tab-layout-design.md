@@ -24,7 +24,7 @@ layout is preserved — tabs replace the single scrolling form on the left side.
 | 1 | 基本設定 | Playlist ID, Display Name, Priority | None |
 | 2 | エピソードフィルタ | Require Filters, Exclude Filters | None |
 | 3 | エピソードリスト | Episode Sort, Title Extractor | None |
-| 4 | リゾルバー | Resolver Type, Playlist Structure, Numbering Extractor (conditional), Null Season Group Key (conditional) | Conditional sections use accordion |
+| 4 | リゾルバー | Resolver Type, Presentation, Numbering Extractor (conditional), Null Season Group Key (conditional) | Conditional sections use accordion |
 | 5 | グループ | Group Sort, Group definition cards with override accordions | Existing accordion overrides preserved |
 | 6 | 表示設定 | Show Year Headers, Show Date Range, User Sortable, Prepend Season Number, Year Binding | None |
 

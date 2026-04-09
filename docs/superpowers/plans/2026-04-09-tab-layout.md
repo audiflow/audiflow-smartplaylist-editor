@@ -24,12 +24,12 @@
   "sectionNote.basicSettings": "Identity and priority settings for this playlist. The ID must be unique within the pattern. Priority controls the order playlists claim episodes — lower numbers are processed first.",
   "sectionNote.episodeFilters": "Control which episodes from the feed are included in this playlist using regex patterns matched against episode titles and descriptions.",
   "sectionNote.episodeList": "Default settings for how episodes appear within each group or playlist. These can be overridden per group in the Groups tab.",
-  "sectionNote.resolver": "Choose how episodes are classified into groups. The resolver type determines the grouping strategy, and playlist structure controls whether groups become separate playlists or stay nested under one parent.",
-  "sectionNote.groups": "Define and order groups for this playlist. Groups are meaningful when the playlist structure is set to 'Grouped'. Each group can override episode list and display defaults.",
+  "sectionNote.resolver": "Choose how episodes are classified into groups. The resolver type determines the grouping strategy, and the presentation mode controls whether groups become separate playlists or stay nested under one parent.",
+  "sectionNote.groups": "Define and order groups for this playlist. Groups are meaningful when the presentation is set to 'Combined'. Each group can override episode list and display defaults.",
   "sectionNote.displaySettings": "Visual presentation options that control how episode lists and groups appear in the app. These can be overridden per group.",
   "interactionNote.episodeFilters.requireExclude": "When both require and exclude filters are set, require filters are applied first to select matching episodes, then exclude filters remove any matches from that set. If no require filters are set, all episodes are candidates and only exclude filters apply.",
   "interactionNote.episodeList.titleExtractorChain": "The title extractor tries each step in order. If a step's regex doesn't match, it falls through to the next step. If all steps fail, the fallback value is used.",
-  "interactionNote.resolver.resolverStructure": "With 'Split' structure, each resolver group becomes a separate top-level playlist. With 'Grouped' structure, all groups are collected inside a single parent playlist. The resolver type determines what groups are created.",
+  "interactionNote.resolver.resolverStructure": "With 'Separate' presentation, each resolver group becomes a separate top-level playlist. With 'Combined' presentation, all groups are collected inside a single parent playlist. The resolver type determines what groups are created.",
   "interactionNote.resolver.numberingExtractor": "The numbering extractor is used by the Season Number resolver to extract season and episode numbers from titles. Configure the regex pattern and capture groups to match your podcast's title format.",
   "interactionNote.groups.overrides": "Group-level overrides take precedence over playlist-level defaults set in the Episode List and Display Settings tabs. Leave overrides unset to inherit the defaults.",
   "interactionNote.displaySettings.yearBindingHeaders": "Year Binding controls how groups relate to year sections. 'Show Year Headers' adds year separators within episode lists. These are independent — you can have year headers without year binding, or vice versa."
@@ -43,12 +43,12 @@
   "sectionNote.basicSettings": "プレイリストの識別情報と優先度の設定です。IDはパターン内で一意である必要があります。優先度はエピソードの取得順序を制御します。数値が小さいほど先に処理されます。",
   "sectionNote.episodeFilters": "フィードのどのエピソードをこのプレイリストに含めるかを、タイトルや説明文に対する正規表現パターンで制御します。",
   "sectionNote.episodeList": "グループやプレイリスト内でのエピソードの表示方法のデフォルト設定です。グループタブで個別にオーバーライドできます。",
-  "sectionNote.resolver": "エピソードをグループに分類する方法を選択します。リゾルバータイプがグループ化の戦略を決定し、プレイリスト構造がグループの表示方法を制御します。",
-  "sectionNote.groups": "プレイリストのグループを定義・並び替えます。プレイリスト構造が「グループ」の場合に意味を持ちます。各グループでエピソードリストや表示設定のデフォルトをオーバーライドできます。",
+  "sectionNote.resolver": "エピソードをグループに分類する方法を選択します。リゾルバータイプがグループ化の戦略を決定し、表示モードがグループの表示方法を制御します。",
+  "sectionNote.groups": "プレイリストのグループを定義・並び替えます。表示モードが「結合」の場合に意味を持ちます。各グループでエピソードリストや表示設定のデフォルトをオーバーライドできます。",
   "sectionNote.displaySettings": "アプリ内でのエピソードリストやグループの表示オプションです。グループごとにオーバーライドできます。",
   "interactionNote.episodeFilters.requireExclude": "RequireとExcludeの両方が設定されている場合、まずRequireに一致するエピソードが選択され、その中からExcludeに一致するものが除外されます。Requireが未設定の場合、全エピソードが対象となりExcludeのみが適用されます。",
   "interactionNote.episodeList.titleExtractorChain": "タイトル抽出器は各ステップを順番に試行します。あるステップの正規表現がマッチしない場合、次のステップにフォールバックします。すべて失敗した場合、フォールバック値が使用されます。",
-  "interactionNote.resolver.resolverStructure": "「スプリット」構造では、リゾルバーの各グループが独立したプレイリストになります。「グループ」構造では、すべてのグループが1つの親プレイリストの中にまとめられます。",
+  "interactionNote.resolver.resolverStructure": "「セパレート」表示では、リゾルバーの各グループが独立したプレイリストになります。「コンバインド」表示では、すべてのグループが1つの親プレイリストの中にまとめられます。",
   "interactionNote.resolver.numberingExtractor": "ナンバリング抽出器はシーズンナンバーリゾルバーがタイトルからシーズン番号とエピソード番号を抽出するために使用します。ポッドキャストのタイトル形式に合わせて正規表現パターンとキャプチャグループを設定してください。",
   "interactionNote.groups.overrides": "グループレベルのオーバーライドは、エピソードリストタブと表示設定タブで設定したデフォルトより優先されます。オーバーライドを未設定にするとデフォルト値が継承されます。",
   "interactionNote.displaySettings.yearBindingHeaders": "年バインディングはグループと年セクションの関係を制御します。「年ヘッダー表示」はエピソードリスト内に年区切りを追加します。これらは独立した設定です。"
@@ -863,7 +863,7 @@ Extract `StructureSettings` into `tabs/resolver-tab.tsx`, adding notes and movin
 ```tsx
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, ResolverType, PlaylistStructure } from '@/schemas/config-schema.ts';
+import type { PatternConfig, ResolverType, Presentation } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -879,7 +879,7 @@ const RESOLVER_TYPES = [
   'titleClassifier',
 ] as const;
 
-const PLAYLIST_STRUCTURES = ['split', 'grouped'] as const;
+const PRESENTATIONS = ['separate', 'combined'] as const;
 
 interface ResolverTabProps {
   index: number;
@@ -923,20 +923,20 @@ export function ResolverTab({ index }: ResolverTabProps) {
         </div>
 
         <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-playlistStructure`} hint="playlistStructure">
-            {t('playlistStructure')}
+          <HintLabel htmlFor={`playlist-${index}-presentation`} hint="presentation">
+            {t('presentation')}
           </HintLabel>
           <Select
-            value={watch(`${prefix}.playlistStructure`) ?? 'grouped'}
-            onValueChange={(val) => setValue(`${prefix}.playlistStructure`, val as PlaylistStructure, { shouldDirty: true })}
+            value={watch(`${prefix}.presentation`) ?? 'combined'}
+            onValueChange={(val) => setValue(`${prefix}.presentation`, val as Presentation, { shouldDirty: true })}
           >
-            <SelectTrigger id={`playlist-${index}-playlistStructure`} className="w-full">
-              <SelectValue placeholder={t('playlistStructure_grouped')} />
+            <SelectTrigger id={`playlist-${index}-presentation`} className="w-full">
+              <SelectValue placeholder={t('presentation_combined')} />
             </SelectTrigger>
             <SelectContent>
-              {PLAYLIST_STRUCTURES.map((type) => (
+              {PRESENTATIONS.map((type) => (
                 <SelectItem key={type} value={type}>
-                  {t(`playlistStructure_${type}`)}
+                  {t(`presentation_${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -1152,7 +1152,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
   const hasBasicError = !!(errors?.id || errors?.displayName || errors?.priority);
   const hasFilterError = !!errors?.episodeFilters;
   const hasEpisodeListError = !!errors?.episodeList;
-  const hasResolverError = !!(errors?.resolverType || errors?.playlistStructure || errors?.nullSeasonGroupKey || errors?.numberingExtractor);
+  const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.nullSeasonGroupKey || errors?.numberingExtractor);
   const hasGroupsError = !!(errors?.groups || errors?.groupList);
   const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders);
 
