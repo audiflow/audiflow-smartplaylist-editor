@@ -4,6 +4,7 @@ import type { PatternConfig, Presentation, ResolverType } from '@/schemas/config
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
+import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
@@ -24,7 +25,7 @@ interface ResolverTabProps {
 
 export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
   const prefix = `playlists.${index}` as const;
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue, register } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
   const resolverType = watch(`${prefix}.resolverType`);
@@ -87,6 +88,21 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
 
         {resolverType === 'seasonNumber' && (
           <>
+            <div className="space-y-2">
+              <HintLabel htmlFor={`playlist-${index}-nullSeasonGroupKey`} hint="nullSeasonGroupKey">
+                {t('nullSeasonGroupKey')}
+              </HintLabel>
+              <Input
+                id={`playlist-${index}-nullSeasonGroupKey`}
+                type="number" className="w-24"
+                {...register(`playlists.${index}.nullSeasonGroupKey`, {
+                  setValueAs: (v: string | null | undefined) =>
+                    v === '' || v === null || v === undefined
+                      ? null
+                      : Number(v),
+                })}
+              />
+            </div>
             <InteractionNote i18nKey="interactionNote.resolver.numberingExtractor" />
             <NumberingExtractorForm
               fieldPath={`playlists.${index}.numberingExtractor`}

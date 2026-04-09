@@ -81,9 +81,12 @@ export function PlaylistTabContent({
 
   const stablePreview = lastPreviewRef.current;
 
-  // Default to 'filtered' then auto-switch to 'preview' once preview data arrives.
-  const [activePreviewTab, setActivePreviewTab] = useState('filtered');
-  const hasAutoSwitchedRef = useRef(false);
+  // New configs: start on 'filtered', auto-switch to 'preview' once data arrives.
+  // Existing configs: start directly on 'preview'.
+  const [activePreviewTab, setActivePreviewTab] = useState(
+    isNewConfig ? 'filtered' : 'preview',
+  );
+  const hasAutoSwitchedRef = useRef(!isNewConfig);
 
   useEffect(() => {
     if (hasAutoSwitchedRef.current) return;

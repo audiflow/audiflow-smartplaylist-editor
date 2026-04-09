@@ -99,8 +99,9 @@ impl PlaylistDefinition {
             }
         }
 
-        // groups: only titleClassifier
-        if rt != "titleClassifier" {
+        // groups: titleClassifier uses full group definitions;
+        // titleDiscovery uses groups[0].pattern as a fallback extraction pattern
+        if rt != "titleClassifier" && rt != "titleDiscovery" {
             self.groups = None;
         }
     }
@@ -225,14 +226,14 @@ mod tests {
     }
 
     #[test]
-    fn title_discovery_keeps_title_extractor_only() {
+    fn title_discovery_keeps_title_extractor_and_groups() {
         let mut def = make_definition("titleDiscovery");
         def.strip_conditional_fields();
 
         assert!(def.numbering_extractor.is_none());
         assert!(def.null_season_group_key.is_none());
         assert!(def.title_extractor.is_some());
-        assert!(def.groups.is_none());
+        assert!(def.groups.is_some());
     }
 
     #[test]

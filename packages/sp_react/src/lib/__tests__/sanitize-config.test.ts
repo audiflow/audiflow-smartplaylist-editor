@@ -204,11 +204,12 @@ describe('stripConditionalFields', () => {
     expect(pl.titleExtractor).toBeUndefined();
   });
 
-  it('keeps titleExtractor but strips numberingExtractor for titleDiscovery', () => {
+  it('keeps titleExtractor and groups but strips numberingExtractor for titleDiscovery', () => {
     const config = makeConfig({
       resolverType: 'titleDiscovery',
       numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
       titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      groups: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
     });
 
     const result = stripConditionalFields(config);
@@ -216,6 +217,7 @@ describe('stripConditionalFields', () => {
 
     expect(pl.numberingExtractor).toBeUndefined();
     expect(pl.titleExtractor).toBeDefined();
+    expect(pl.groups).toHaveLength(1);
   });
 
   it('keeps groups only for titleClassifier', () => {

@@ -7,7 +7,7 @@ import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
  *
  * Conditional fields by resolverType:
  * - seasonNumber:      numberingExtractor, titleExtractor, nullSeasonGroupKey
- * - titleDiscovery:    titleExtractor
+ * - titleDiscovery:    titleExtractor, groups (groups[0].pattern used as fallback)
  * - titleClassifier:   groups
  * - year:              (none)
  */
@@ -34,8 +34,9 @@ export function stripConditionalFields(config: PatternConfig): PatternConfig {
         }
       }
 
-      // groups: only titleClassifier
-      if (rt !== 'titleClassifier') {
+      // groups: titleClassifier uses full group definitions;
+      // titleDiscovery uses groups[0].pattern as a fallback extraction pattern
+      if (rt !== 'titleClassifier' && rt !== 'titleDiscovery') {
         delete stripped.groups;
       }
 

@@ -605,7 +605,7 @@ interface PlaylistTabTriggerProps {
 function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
   const { t } = useTranslation('editor');
   const form = useFormContext<PatternConfig>();
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: 'playlists',
   });
@@ -707,7 +707,7 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
             ...currentPlaylists[idToIndex.get(item.id)!],
             priority: newIndex,
           }));
-          form.setValue('playlists', newPlaylists, { shouldDirty: true });
+          replace(newPlaylists);
           setActiveTab('tab-0');
         }}
       />
