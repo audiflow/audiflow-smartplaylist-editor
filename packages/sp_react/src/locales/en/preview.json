@@ -32,7 +32,7 @@
   "yearHeader": "{{year}}",
   "yearUnknown": "Unknown Year",
   "tabPreview": "Preview",
-  "tabFiltered": "Episode Filter Results",
+  "tabFiltered": "Filtered Episodes",
   "emptyFiltered": "No episodes match the current filters.",
   "filteredCount": "{{filtered}} of {{total}} episodes passed filters"
 }
