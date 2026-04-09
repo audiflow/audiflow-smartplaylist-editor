@@ -31,7 +31,7 @@ const RESOLVER_TYPES = [
   'titleClassifier',
 ] as const;
 
-const PLAYLIST_STRUCTURES = ['separate', 'combined'] as const;
+const PRESENTATIONS = ['separate', 'combined'] as const;
 
 interface PlaylistFormProps {
   index: number;
@@ -304,7 +304,7 @@ function StructureSettings({
               <SelectValue placeholder={t('presentation_combined')} />
             </SelectTrigger>
             <SelectContent>
-              {PLAYLIST_STRUCTURES.map((type) => (
+              {PRESENTATIONS.map((type) => (
                 <SelectItem key={type} value={type}>
                   {t(`presentation_${type}`)}
                 </SelectItem>

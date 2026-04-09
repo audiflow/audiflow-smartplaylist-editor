@@ -13,6 +13,7 @@ pub struct PlaylistDefinition {
     pub id: String,
     pub display_name: String,
     pub resolver_type: String,
+    #[serde(alias = "playlistStructure")]
     pub presentation: String,
 
     /// Episode claiming order among siblings (lower = first, default: 0).

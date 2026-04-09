@@ -378,7 +378,43 @@ describe('resolverTypeSchema (legacy v3 migration)', () => {
   });
 });
 
-describe('migrateExtractorKey (episodeExtractor -> numberingExtractor)', () => {
+describe('migrateLegacyKeys (playlistStructure -> presentation)', () => {
+  it('migrates playlistStructure "grouped" to presentation "combined"', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      playlistStructure: 'grouped',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('combined');
+    expect((result as Record<string, unknown>)['playlistStructure']).toBeUndefined();
+  });
+
+  it('migrates playlistStructure "split" to presentation "separate"', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      playlistStructure: 'split',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('separate');
+  });
+
+  it('preserves existing presentation (no double-migration)', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      presentation: 'combined',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('combined');
+  });
+});
+
+describe('migrateLegacyKeys (episodeExtractor -> numberingExtractor)', () => {
   it('migrates episodeExtractor at playlist level', () => {
     const input = {
       id: 'test',

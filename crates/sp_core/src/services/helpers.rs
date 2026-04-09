@@ -4,7 +4,7 @@ use crate::models::{Presentation, YearBinding};
 /// Defaults to Separate for unrecognized values.
 pub fn parse_presentation(value: &str) -> Presentation {
     match value {
-        "combined" => Presentation::Combined,
+        "combined" | "grouped" => Presentation::Combined,
         _ => Presentation::Separate,
     }
 }

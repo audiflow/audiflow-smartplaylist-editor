@@ -113,21 +113,43 @@ export const numberingExtractorSchema = z.object({
   fallbackToRss: z.boolean().nullish().transform((v) => v ?? false),
 });
 
-// Migrate legacy v3 `episodeExtractor` key to v4 `numberingExtractor`.
-function migrateExtractorKey(val: unknown): unknown {
+// Legacy v3 presentation value strings mapped to v4 equivalents.
+const legacyPresentationMap: Record<string, string> = {
+  grouped: 'combined',
+  split: 'separate',
+};
+
+// Migrate legacy v3 keys and values to v4 equivalents.
+// - `episodeExtractor` -> `numberingExtractor`
+// - `playlistStructure` -> `presentation` (with value mapping)
+function migrateLegacyKeys(val: unknown): unknown {
   if (val == null || typeof val !== 'object' || Array.isArray(val)) return val;
   const obj = val as Record<string, unknown>;
-  if ('episodeExtractor' in obj && !('numberingExtractor' in obj)) {
-    const { episodeExtractor, ...rest } = obj;
-    return { ...rest, numberingExtractor: episodeExtractor };
+  let result: Record<string, unknown> = { ...obj };
+
+  // Migrate episodeExtractor -> numberingExtractor
+  if ('episodeExtractor' in result && !('numberingExtractor' in result)) {
+    const { episodeExtractor, ...rest } = result;
+    result = { ...rest, numberingExtractor: episodeExtractor };
   }
-  return val;
+
+  // Migrate playlistStructure -> presentation (with value mapping)
+  if ('playlistStructure' in result && !('presentation' in result)) {
+    const { playlistStructure, ...rest } = result;
+    const mapped =
+      typeof playlistStructure === 'string' && Object.hasOwn(legacyPresentationMap, playlistStructure)
+        ? legacyPresentationMap[playlistStructure]
+        : playlistStructure;
+    result = { ...rest, presentation: mapped };
+  }
+
+  return result;
 }
 
 // -- Group definition --
 
 export const groupDefSchema = z.preprocess(
-  migrateExtractorKey,
+  migrateLegacyKeys,
   z.object({
     id: z.string(),
     displayName: z.string(),
@@ -152,7 +174,7 @@ export const groupDefSchema = z.preprocess(
 // -- Playlist definition --
 
 export const playlistDefinitionSchema = z.preprocess(
-  migrateExtractorKey,
+  migrateLegacyKeys,
   z.object({
     id: z.string(),
     displayName: z.string(),
