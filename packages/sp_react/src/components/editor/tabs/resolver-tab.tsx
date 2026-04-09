@@ -99,6 +99,7 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
             <Input
               id={`playlist-${index}-nullSeasonGroupKey`}
               type="number"
+              className="w-24"
               {...register(`${prefix}.nullSeasonGroupKey`, {
                 setValueAs: (v) =>
                   v === '' || v === null || v === undefined
