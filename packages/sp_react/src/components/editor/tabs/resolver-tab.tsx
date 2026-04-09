@@ -2,11 +2,13 @@ import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, Presentation, ResolverType } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
-import { cn } from '@/lib/utils.ts';
 
 const RESOLVER_TYPES = [
   'seasonNumber',
@@ -35,62 +37,53 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <HintLabel hint="resolverType">
+          <HintLabel htmlFor={`playlist-${index}-resolverType`} hint="resolverType">
             {t('resolverType')}
           </HintLabel>
-          <div className="grid gap-2">
-            {RESOLVER_TYPES.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setValue(`${prefix}.resolverType`, type as ResolverType, { shouldDirty: true })}
-                className={cn(
-                  'flex items-start gap-3 rounded-lg border p-3 text-left transition-colors',
-                  resolverType === type
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-muted-foreground/50',
-                )}
-              >
-                <div
-                  className={cn(
-                    'mt-0.5 h-4 w-4 shrink-0 rounded-full border-2',
-                    resolverType === type ? 'border-primary bg-primary' : 'border-muted-foreground/40',
-                  )}
+          <Select
+            value={resolverType ?? ''}
+            onValueChange={(val) => setValue(`${prefix}.resolverType`, val as ResolverType, { shouldDirty: true })}
+          >
+            <SelectTrigger id={`playlist-${index}-resolverType`}>
+              <SelectValue placeholder={t('selectResolver')} />
+            </SelectTrigger>
+            <SelectContent className="min-w-[280px]">
+              {RESOLVER_TYPES.map((type) => (
+                <SelectItem
+                  key={type}
+                  value={type}
+                  description={t(`resolverDesc_${type}`)}
                 >
-                  {resolverType === type && (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-medium">{t(`resolverLabel_${type}`)}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t(`resolverDesc_${type}`)}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+                  {t(`resolverLabel_${type}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="space-y-2">
-          <HintLabel hint="presentation">
+        <div className="space-y-1.5">
+          <HintLabel htmlFor={`playlist-${index}-presentation`} hint="presentation">
             {t('presentation')}
           </HintLabel>
-          <div className="grid gap-2">
-            <PresentationOption
-              selected={presentation === 'combined'}
-              label={t('presentationLabel_combined')}
-              description={t('presentationDesc_combined')}
-              onSelect={() => setValue(`${prefix}.presentation`, 'combined' as Presentation, { shouldDirty: true })}
-            />
-            <PresentationOption
-              selected={presentation === 'separate'}
-              disabled={isSeparateDisabled}
-              label={t('presentationLabel_separate')}
-              description={isSeparateDisabled ? t('presentationDesc_separate_disabled') : t('presentationDesc_separate')}
-              onSelect={() => setValue(`${prefix}.presentation`, 'separate' as Presentation, { shouldDirty: true })}
-            />
-          </div>
+          <Select
+            value={presentation}
+            onValueChange={(val) => setValue(`${prefix}.presentation`, val as Presentation, { shouldDirty: true })}
+          >
+            <SelectTrigger id={`playlist-${index}-presentation`} className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="combined">
+                {t('presentationLabel_combined')}
+              </SelectItem>
+              <SelectItem value="separate" disabled={isSeparateDisabled}>
+                {t('presentationLabel_separate')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          {isSeparateDisabled && (
+            <p className="text-xs text-muted-foreground">{t('presentationDesc_separate_disabled')}</p>
+          )}
         </div>
 
         <InteractionNote i18nKey="interactionNote.resolver.resolverStructure" />
@@ -136,50 +129,5 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
         </>
       )}
     </div>
-  );
-}
-
-function PresentationOption({
-  selected,
-  disabled,
-  label,
-  description,
-  onSelect,
-}: {
-  selected: boolean;
-  disabled?: boolean;
-  label: string;
-  description: string;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onSelect}
-      className={cn(
-        'flex items-start gap-3 rounded-lg border p-3 text-left transition-colors',
-        selected && 'border-primary bg-primary/5',
-        !selected && !disabled && 'border-border hover:border-muted-foreground/50',
-        disabled && 'cursor-not-allowed opacity-50',
-      )}
-    >
-      <div
-        className={cn(
-          'mt-0.5 h-4 w-4 shrink-0 rounded-full border-2',
-          selected ? 'border-primary bg-primary' : 'border-muted-foreground/40',
-        )}
-      >
-        {selected && (
-          <div className="flex h-full w-full items-center justify-center">
-            <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
-          </div>
-        )}
-      </div>
-      <div>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-      </div>
-    </button>
   );
 }
