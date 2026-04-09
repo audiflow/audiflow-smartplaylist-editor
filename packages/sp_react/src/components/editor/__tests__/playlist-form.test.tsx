@@ -107,33 +107,7 @@ describe('PlaylistForm', () => {
       expect(screen.getByText(/how groups appear/i)).toBeInTheDocument();
     });
 
-    it('shows nullSeasonGroupKey when resolverType is seasonNumber', async () => {
-      const user = userEvent.setup();
-      renderPlaylistForm();
-      await switchToTab(user, /organize/i);
-      expect(
-        screen.getByLabelText(/group key for episodes without a season/i),
-      ).toBeInTheDocument();
-    });
-
-    it('hides nullSeasonGroupKey when resolverType is not seasonNumber', async () => {
-      const user = userEvent.setup();
-      const config: PatternConfig = {
-        ...DEFAULT_CONFIG,
-        playlists: [
-          {
-            ...DEFAULT_CONFIG.playlists[0],
-            resolverType: 'titleClassifier',
-          },
-        ],
-      };
-      renderPlaylistForm({ config });
-      await switchToTab(user, /organize/i);
-      expect(
-        screen.queryByLabelText(/group key for episodes without a season/i),
-      ).not.toBeInTheDocument();
-    });
-  });
+});
 
   describe('DisplayOptions', () => {
     it('renders showYearHeaders checkbox', async () => {

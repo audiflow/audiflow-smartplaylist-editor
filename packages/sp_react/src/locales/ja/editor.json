@@ -87,7 +87,7 @@
   "presentationDesc_combined": "アプリのプレイリスト一覧に1つのエントリとして表示されます。タップするとグループカードの一覧が表示されます。",
   "presentationLabel_separate": "グループごとに独立したプレイリストにする",
   "presentationDesc_separate": "各グループがアプリのプレイリスト一覧に個別のエントリとして並びます。",
-  "presentationDesc_separate_disabled": "プレイリスト定義が複数あるため選択できません。この設定ではグループごとにプレイリスト一覧のエントリが増えるため、他の定義と混在すると一覧が分かりにくくなります。",
+  "presentationDesc_separate_disabled": "プレイリスト定義が1つの場合のみ選択できます。",
   "addDisabledSeparate": "「グループごとに独立したプレイリストにする」を選択中は、プレイリスト定義を追加できません",
   "nullSeasonGroupKey": "シーズン番号がないエピソードの振り分け先",
   "addGroup": "グループを追加",

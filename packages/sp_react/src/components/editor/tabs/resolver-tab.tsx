@@ -1,7 +1,6 @@
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, Presentation, ResolverType } from '@/schemas/config-schema.ts';
-import { Input } from '@/components/ui/input.tsx';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
@@ -25,7 +24,7 @@ interface ResolverTabProps {
 
 export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
   const prefix = `playlists.${index}` as const;
-  const { register, watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
   const resolverType = watch(`${prefix}.resolverType`);
@@ -62,6 +61,8 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
           </Select>
         </div>
 
+        <InteractionNote i18nKey="interactionNote.resolver.resolverStructure" />
+
         <div className="space-y-1.5">
           <HintLabel htmlFor={`playlist-${index}-presentation`} hint="presentation">
             {t('presentation')}
@@ -82,33 +83,16 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
               </SelectItem>
             </SelectContent>
           </Select>
-          {isSeparateDisabled && (
-            <p className="text-xs text-muted-foreground">{t('presentationDesc_separate_disabled')}</p>
-          )}
         </div>
 
-        <InteractionNote i18nKey="interactionNote.resolver.resolverStructure" />
-
         {resolverType === 'seasonNumber' && (
-          <div className="space-y-1.5">
-            <HintLabel
-              htmlFor={`playlist-${index}-nullSeasonGroupKey`}
-              hint="nullSeasonGroupKey"
-            >
-              {t('nullSeasonGroupKey')}
-            </HintLabel>
-            <Input
-              id={`playlist-${index}-nullSeasonGroupKey`}
-              type="number"
-              className="w-24"
-              {...register(`${prefix}.nullSeasonGroupKey`, {
-                setValueAs: (v) =>
-                  v === '' || v === null || v === undefined
-                    ? null
-                    : Number(v),
-              })}
+          <>
+            <InteractionNote i18nKey="interactionNote.resolver.numberingExtractor" />
+            <NumberingExtractorForm
+              fieldPath={`playlists.${index}.numberingExtractor`}
+              idPrefix={`ep-ext-${index}`}
             />
-          </div>
+          </>
         )}
       </div>
 
@@ -119,16 +103,6 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
             fieldPath={`playlists.${index}.titleExtractor`}
             idPrefix={`title-ext-${index}`}
             resolverType={resolverType}
-          />
-        </>
-      )}
-
-      {resolverType === 'seasonNumber' && (
-        <>
-          <InteractionNote i18nKey="interactionNote.resolver.numberingExtractor" />
-          <NumberingExtractorForm
-            fieldPath={`playlists.${index}.numberingExtractor`}
-            idPrefix={`ep-ext-${index}`}
           />
         </>
       )}
