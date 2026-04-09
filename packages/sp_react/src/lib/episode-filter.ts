@@ -10,8 +10,12 @@ interface EpisodeFilters {
   exclude?: FilterEntry[];
 }
 
+function isNonEmpty(value: string | undefined): value is string {
+  return value !== undefined && value !== '';
+}
+
 function matchesEntry(episode: FeedEpisode, entry: FilterEntry): boolean {
-  if (entry.title !== undefined) {
+  if (isNonEmpty(entry.title)) {
     try {
       const re = new RegExp(entry.title, 'i');
       if (!re.test(episode.title)) return false;
@@ -19,7 +23,7 @@ function matchesEntry(episode: FeedEpisode, entry: FilterEntry): boolean {
       return false;
     }
   }
-  if (entry.description !== undefined) {
+  if (isNonEmpty(entry.description)) {
     try {
       const re = new RegExp(entry.description, 'i');
       if (!re.test(episode.description ?? '')) return false;
@@ -27,7 +31,7 @@ function matchesEntry(episode: FeedEpisode, entry: FilterEntry): boolean {
       return false;
     }
   }
-  return entry.title !== undefined || entry.description !== undefined;
+  return isNonEmpty(entry.title) || isNonEmpty(entry.description);
 }
 
 function matchesAnyEntry(episode: FeedEpisode, entries: FilterEntry[]): boolean {
@@ -42,11 +46,11 @@ export function filterEpisodes(
 
   const requireEntries =
     filters.require?.filter(
-      (e) => e.title !== undefined || e.description !== undefined,
+      (e) => isNonEmpty(e.title) || isNonEmpty(e.description),
     ) ?? [];
   const excludeEntries =
     filters.exclude?.filter(
-      (e) => e.title !== undefined || e.description !== undefined,
+      (e) => isNonEmpty(e.title) || isNonEmpty(e.description),
     ) ?? [];
 
   let result = [...episodes];

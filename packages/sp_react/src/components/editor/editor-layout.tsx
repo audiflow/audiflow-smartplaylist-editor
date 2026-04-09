@@ -374,11 +374,16 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // StrictMode detaches the mutation observer during cleanup, so the first
   // fire's mutation becomes orphaned; the second fire attaches properly.
   const hasAutoPreviewedRef = useRef(false);
+  // Tracks the last-previewed form serialization so the debounced effect can
+  // skip duplicate requests (e.g. the initial auto-preview's first tick).
+  const lastPreviewedValuesRef = useRef<string | null>(null);
   useEffect(() => {
     if (hasAutoPreviewedRef.current || !configId || !normalizedInitialConfig) return;
     const url = normalizedInitialConfig.feedUrls?.[0];
     if (!url) return;
     hasAutoPreviewedRef.current = true;
+    // Record the initial serialization so the debounced effect skips its first tick
+    lastPreviewedValuesRef.current = JSON.stringify(normalizedInitialConfig);
     previewMutationRef.current.mutate(
       { config: sanitizeConfig(normalizedInitialConfig), feedUrl: url },
       {
@@ -395,7 +400,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     };
   }, [configId, normalizedInitialConfig, t]);
 
-  // Debounced auto-preview: re-run preview when form values change
+  // Debounced auto-preview: re-run preview when form values change.
   const formValues = useWatch({ control: form.control });
   const serializedValues = useMemo(
     () => JSON.stringify(formValues),
@@ -405,8 +410,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   useEffect(() => {
     if (!feedUrl || isJsonMode) return;
-    // Skip until initial auto-preview has run
-    if (!hasAutoPreviewedRef.current) return;
+    // For existing configs, wait until initial auto-preview has run.
+    // For new configs (no configId), allow debounced preview immediately.
+    if (configId !== null && !hasAutoPreviewedRef.current) return;
+    // Skip if form values haven't changed since the last preview
+    if (debouncedValues === lastPreviewedValuesRef.current) return;
+    lastPreviewedValuesRef.current = debouncedValues;
     const config = form.getValues();
     previewMutationRef.current.mutate(
       { config: sanitizeConfig(config), feedUrl },
@@ -419,7 +428,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         },
       },
     );
-  }, [debouncedValues, feedUrl, isJsonMode, form, t]);
+  }, [debouncedValues, feedUrl, isJsonMode, form, t, configId]);
 
   // Normalize server payload through Zod for consistent v3-to-v4 migration.
   const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
