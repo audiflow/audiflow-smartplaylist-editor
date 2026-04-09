@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reorganize the playlist editor form into 6 tabbed categories with always-visible instructional notes, add a client-side filtered episodes preview tab, and enable debounced auto-preview.
+**Goal:** Reorganize the playlist editor form into 5 tabbed categories with always-visible instructional notes, add a client-side filtered episodes preview tab, and enable debounced auto-preview.
 
-**Architecture:** Extract the monolithic `PlaylistForm` into 6 tab panel components rendered inside shadcn/ui `Tabs`. Add `SectionNote` and `InteractionNote` components backed by a new `notes` i18n namespace. Add client-side episode filtering and debounced auto-preview in `editor-layout.tsx`.
+**Architecture:** Extract the monolithic `PlaylistForm` into 5 tab panel components rendered inside shadcn/ui `Tabs` (Groups nested inside Resolver tab since they only apply to `titleClassifier`). Add `SectionNote` and `InteractionNote` components backed by a new `notes` i18n namespace. Add client-side episode filtering and debounced auto-preview in `editor-layout.tsx`.
 
 **Tech Stack:** React 19, React Hook Form, shadcn/ui Tabs, i18next, Vitest, existing `useDebounce` hook.
 

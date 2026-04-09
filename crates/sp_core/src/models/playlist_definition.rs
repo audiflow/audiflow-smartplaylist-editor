@@ -78,7 +78,7 @@ impl PlaylistDefinition {
     ///
     /// Conditional fields by resolver_type:
     /// - `seasonNumber`:      numberingExtractor, titleExtractor, nullSeasonGroupKey
-    /// - `titleDiscovery`:    titleExtractor
+    /// - `titleDiscovery`:    titleExtractor, groups (groups[0].pattern used as fallback)
     /// - `titleClassifier`:   groups
     /// - others (e.g. year):  none of the above
     pub fn strip_conditional_fields(&mut self) {
