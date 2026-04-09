@@ -1,10 +1,24 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use super::numbering_extractor::NumberingExtractor;
 use super::group_def::GroupDef;
 use super::is_zero;
 use super::sort::{EpisodeSortRule, SortRule};
 use super::title_extractor::TitleExtractor;
+
+/// Deserializes the presentation field, normalizing legacy values.
+/// Maps "grouped" -> "combined" and "split" -> "separate".
+fn deserialize_presentation<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let raw = String::deserialize(deserializer)?;
+    Ok(match raw.as_str() {
+        "grouped" => "combined".to_owned(),
+        "split" => "separate".to_owned(),
+        _ => raw,
+    })
+}
 
 /// Unified per-playlist definition with all fields strongly typed.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,7 +27,9 @@ pub struct PlaylistDefinition {
     pub id: String,
     pub display_name: String,
     pub resolver_type: String,
-    #[serde(alias = "playlistStructure")]
+    /// Accepts legacy `playlistStructure` key and normalizes legacy values
+    /// (`grouped` -> `combined`, `split` -> `separate`).
+    #[serde(alias = "playlistStructure", deserialize_with = "deserialize_presentation")]
     pub presentation: String,
 
     /// Episode claiming order among siblings (lower = first, default: 0).

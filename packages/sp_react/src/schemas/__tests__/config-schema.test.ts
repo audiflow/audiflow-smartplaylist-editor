@@ -412,6 +412,28 @@ describe('migrateLegacyKeys (playlistStructure -> presentation)', () => {
     const result = playlistDefinitionSchema.parse(input);
     expect(result.presentation).toBe('combined');
   });
+
+  it('normalizes legacy value "grouped" even when key is already "presentation"', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      presentation: 'grouped',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('combined');
+  });
+
+  it('normalizes legacy value "split" even when key is already "presentation"', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      presentation: 'split',
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.presentation).toBe('separate');
+  });
 });
 
 describe('migrateLegacyKeys (episodeExtractor -> numberingExtractor)', () => {

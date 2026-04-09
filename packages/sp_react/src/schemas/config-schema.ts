@@ -143,6 +143,12 @@ function migrateLegacyKeys(val: unknown): unknown {
     result = { ...rest, presentation: mapped };
   }
 
+  // Normalize legacy presentation values even when key is already `presentation`
+  // (e.g., backend may return `presentation: "grouped"` after alias deserialization)
+  if ('presentation' in result && typeof result.presentation === 'string' && Object.hasOwn(legacyPresentationMap, result.presentation)) {
+    result = { ...result, presentation: legacyPresentationMap[result.presentation] };
+  }
+
   return result;
 }
 
