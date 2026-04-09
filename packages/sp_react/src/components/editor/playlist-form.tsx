@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
@@ -11,7 +11,6 @@ import { BasicSettingsTab } from '@/components/editor/tabs/basic-settings-tab.ts
 import { EpisodeFilterTab } from '@/components/editor/tabs/episode-filter-tab.tsx';
 import { EpisodeListTab } from '@/components/editor/tabs/episode-list-tab.tsx';
 import { ResolverTab } from '@/components/editor/tabs/resolver-tab.tsx';
-import { GroupsTab } from '@/components/editor/tabs/groups-tab.tsx';
 import { DisplaySettingsTab } from '@/components/editor/tabs/display-settings-tab.tsx';
 import { Trash2 } from 'lucide-react';
 
@@ -30,12 +29,9 @@ function ErrorDot({ visible }: { visible: boolean }) {
   );
 }
 
-const RESOLVERS_WITH_GROUPS = new Set(['titleClassifier']);
-
 export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormProps) {
   const { t } = useTranslation('editor');
-  const { formState, control } = useFormContext<PatternConfig>();
-  const resolverType = useWatch({ control, name: `playlists.${index}.resolverType` as const });
+  const { formState } = useFormContext<PatternConfig>();
 
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
@@ -49,7 +45,6 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
   const hasFilterError = !!errors?.episodeFilters;
   const hasEpisodeListError = !!(errors?.episodeList?.sort || errors?.episodeList?.titleExtractor);
   const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.nullSeasonGroupKey || errors?.numberingExtractor || errors?.titleExtractor);
-  const hasGroupsError = !!(errors?.groups || errors?.groupList);
   const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders || errors?.groupList?.yearBinding || errors?.groupList?.showDateRange || errors?.groupList?.userSortable);
 
   return (
@@ -72,12 +67,6 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
             {t('tab.resolver')}
             <ErrorDot visible={hasResolverError} />
           </TabsTrigger>
-          {RESOLVERS_WITH_GROUPS.has(resolverType ?? '') && (
-            <TabsTrigger value="groups">
-              {t('tab.groups')}
-              <ErrorDot visible={hasGroupsError} />
-            </TabsTrigger>
-          )}
           <TabsTrigger value="display">
             {t('tab.displaySettings')}
             <ErrorDot visible={hasDisplayError} />
@@ -96,11 +85,6 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
         <TabsContent value="resolver">
           <ResolverTab index={index} playlistCount={playlistCount} />
         </TabsContent>
-        {RESOLVERS_WITH_GROUPS.has(resolverType ?? '') && (
-          <TabsContent value="groups">
-            <GroupsTab index={index} />
-          </TabsContent>
-        )}
         <TabsContent value="display">
           <DisplaySettingsTab index={index} />
         </TabsContent>

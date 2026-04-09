@@ -8,6 +8,7 @@ import {
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
+import { GroupsForm } from '@/components/editor/groups-form.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
 
 const RESOLVER_TYPES = [
@@ -111,14 +112,16 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
         )}
       </div>
 
-      <InteractionNote i18nKey="interactionNote.resolver.titleExtractor" />
-
-      <TitleExtractorForm
-        fieldPath={`playlists.${index}.titleExtractor`}
-        idPrefix={`title-ext-${index}`}
-        resolverType={resolverType}
-        showCategoryNote
-      />
+      {(resolverType === 'seasonNumber' || resolverType === 'titleDiscovery') && (
+        <>
+          <InteractionNote i18nKey="interactionNote.resolver.titleExtractor" />
+          <TitleExtractorForm
+            fieldPath={`playlists.${index}.titleExtractor`}
+            idPrefix={`title-ext-${index}`}
+            resolverType={resolverType}
+          />
+        </>
+      )}
 
       {resolverType === 'seasonNumber' && (
         <>
@@ -127,6 +130,14 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
             fieldPath={`playlists.${index}.numberingExtractor`}
             idPrefix={`ep-ext-${index}`}
           />
+        </>
+      )}
+
+      {resolverType === 'titleClassifier' && (
+        <>
+          <hr className="border-border" />
+          <SectionNote i18nKey="sectionNote.groups" />
+          <GroupsForm index={index} />
         </>
       )}
     </div>

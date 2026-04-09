@@ -63,22 +63,10 @@ describe('PlaylistForm', () => {
   });
 
   describe('Tabs', () => {
-    it('hides Groups tab for non-titleClassifier resolvers', () => {
+    it('renders 5 tabs (no separate Groups tab)', () => {
       renderPlaylistForm();
       const tabs = screen.getAllByRole('tab');
       expect(tabs.length).toBe(5);
-      expect(screen.queryByRole('tab', { name: /groups/i })).not.toBeInTheDocument();
-    });
-
-    it('shows Groups tab for titleClassifier resolver', () => {
-      const config: PatternConfig = {
-        ...DEFAULT_CONFIG,
-        playlists: [{ ...DEFAULT_CONFIG.playlists[0], resolverType: 'titleClassifier' }],
-      };
-      renderPlaylistForm({ config });
-      const tabs = screen.getAllByRole('tab');
-      expect(tabs.length).toBe(6);
-      expect(screen.getByRole('tab', { name: /groups/i })).toBeInTheDocument();
     });
 
     it('shows Basic tab as default active tab', () => {
