@@ -29,8 +29,8 @@ export function SortForm({ index }: SortFormProps) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const playlistStructure = watch(`playlists.${index}.playlistStructure`);
-  const isGroupedMode = playlistStructure === 'grouped';
+  const presentation = watch(`playlists.${index}.presentation`);
+  const isCombinedMode = presentation === 'combined';
   const sort = watch(`playlists.${index}.groupList.sort`);
 
   const isEnabled = sort != null;
@@ -47,7 +47,7 @@ export function SortForm({ index }: SortFormProps) {
     <div className="rounded-lg border border-border p-4 space-y-3">
       <div className="flex items-center justify-between">
         <HintLabel hint="groupListSort">{t('sortToggle')}</HintLabel>
-        {isGroupedMode && (
+        {isCombinedMode && (
           <Button
             type="button"
             variant={isEnabled ? 'default' : 'outline'}
@@ -59,7 +59,7 @@ export function SortForm({ index }: SortFormProps) {
         )}
       </div>
 
-      {!isGroupedMode ? (
+      {!isCombinedMode ? (
         <p className="text-muted-foreground text-sm">{t('sortDisabledNote')}</p>
       ) : isEnabled ? (
         <div className="grid grid-cols-2 gap-3">

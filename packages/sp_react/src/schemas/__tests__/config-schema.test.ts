@@ -19,13 +19,13 @@ describe('playlistDefinitionSchema', () => {
       id: 'main',
       displayName: 'Main Episodes',
       resolverType: 'seasonNumber',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
     };
     const result = playlistDefinitionSchema.parse(input);
     expect(result.id).toBe('main');
     expect(result.displayName).toBe('Main Episodes');
     expect(result.resolverType).toBe('seasonNumber');
-    expect(result.playlistStructure).toBe('grouped');
+    expect(result.presentation).toBe('combined');
     expect(result.priority).toBe(0);
     expect(result.prependSeasonNumber).toBe(false);
   });
@@ -35,7 +35,7 @@ describe('playlistDefinitionSchema', () => {
       id: 'bonus',
       displayName: 'Bonus Content',
       resolverType: 'titleClassifier',
-      playlistStructure: 'grouped',
+      presentation: 'combined',
       priority: 5,
       prependSeasonNumber: true,
       episodeFilters: {
@@ -72,7 +72,7 @@ describe('playlistDefinitionSchema', () => {
     const result = playlistDefinitionSchema.parse(input);
     expect(result.id).toBe('bonus');
     expect(result.priority).toBe(5);
-    expect(result.playlistStructure).toBe('grouped');
+    expect(result.presentation).toBe('combined');
     expect(result.prependSeasonNumber).toBe(true);
     expect(result.episodeFilters).toEqual({
       require: [{ title: 'Episode' }],
@@ -110,7 +110,7 @@ describe('playlistDefinitionSchema', () => {
       id: 'main',
       displayName: 'Main Episodes',
       resolverType: 'seasonNumber',
-      playlistStructure: 'split',
+      presentation: 'separate',
       priority: null,
     };
     const result = playlistDefinitionSchema.parse(input);
@@ -151,7 +151,7 @@ describe('patternConfigSchema', () => {
           id: 'main',
           displayName: 'Main',
           resolverType: 'seasonNumber',
-          playlistStructure: 'grouped',
+          presentation: 'combined',
         },
       ],
     };
@@ -384,7 +384,7 @@ describe('migrateExtractorKey (episodeExtractor -> numberingExtractor)', () => {
       id: 'test',
       displayName: 'Test',
       resolverType: 'seasonNumber',
-      playlistStructure: 'split',
+      presentation: 'separate',
       episodeExtractor: {
         source: 'title',
         pattern: '\\[(\\d+)-(\\d+)\\]',
@@ -417,7 +417,7 @@ describe('migrateExtractorKey (episodeExtractor -> numberingExtractor)', () => {
       id: 'test',
       displayName: 'Test',
       resolverType: 'seasonNumber',
-      playlistStructure: 'split',
+      presentation: 'separate',
       numberingExtractor: {
         source: 'title',
         pattern: 'S(\\d+)E(\\d+)',

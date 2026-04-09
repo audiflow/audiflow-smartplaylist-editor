@@ -9,7 +9,7 @@ fn playlist_definition_full_round_trip() {
         "id": "main",
         "displayName": "Main Episodes",
         "resolverType": "seasonNumber",
-        "playlistStructure": "grouped",
+        "presentation": "combined",
         "priority": 1,
         "episodeFilters": {
             "require": [{"title": "^\\[\\d+"}],
@@ -70,7 +70,7 @@ fn playlist_definition_minimal_round_trip() {
         "id": "simple",
         "displayName": "Simple Playlist",
         "resolverType": "seasonNumber",
-        "playlistStructure": "split"
+        "presentation": "separate"
     });
 
     let def: PlaylistDefinition = serde_json::from_value(json_val).unwrap();
@@ -321,7 +321,7 @@ fn has_filters_with_require() {
         "id": "test",
         "displayName": "Test",
         "resolverType": "seasonNumber",
-        "playlistStructure": "split",
+        "presentation": "separate",
         "episodeFilters": {
             "require": [{"title": "pattern"}]
         }
@@ -336,7 +336,7 @@ fn has_filters_with_exclude() {
         "id": "test",
         "displayName": "Test",
         "resolverType": "seasonNumber",
-        "playlistStructure": "split",
+        "presentation": "separate",
         "episodeFilters": {
             "exclude": [{"title": "bonus"}]
         }
@@ -351,7 +351,7 @@ fn has_filters_empty() {
         "id": "test",
         "displayName": "Test",
         "resolverType": "seasonNumber",
-        "playlistStructure": "split",
+        "presentation": "separate",
         "episodeFilters": {}
     }))
     .unwrap();
@@ -364,7 +364,7 @@ fn has_filters_none() {
         "id": "test",
         "displayName": "Test",
         "resolverType": "seasonNumber",
-        "playlistStructure": "split"
+        "presentation": "separate"
     }))
     .unwrap();
     assert!(!def.has_filters());
@@ -402,7 +402,7 @@ mod filter_semantics {
             id: "test".to_string(),
             display_name: "Test".to_string(),
             resolver_type: "year".to_string(),
-            playlist_structure: "split".to_string(),
+            presentation: "separate".to_string(),
             priority: 0,
             episode_filters: Some(EpisodeFilters { require, exclude }),
             null_season_group_key: None,
@@ -542,7 +542,7 @@ fn playlist_definition_deserializes_legacy_episode_extractor_alias() {
         "id": "legacy",
         "displayName": "Legacy Playlist",
         "resolverType": "seasonNumber",
-        "playlistStructure": "split",
+        "presentation": "separate",
         "episodeExtractor": {
             "source": "title",
             "pattern": "\\[(\\d+)-(\\d+)\\]"
@@ -803,14 +803,14 @@ fn title_extractor_omits_defaults() {
 // --- Playlist and PlaylistGroup output model tests ---
 
 #[test]
-fn playlist_structure_enum_serialization() {
+fn presentation_enum_serialization() {
     assert_eq!(
-        serde_json::to_value(PlaylistStructure::Split).unwrap(),
-        json!("split")
+        serde_json::to_value(Presentation::Separate).unwrap(),
+        json!("separate")
     );
     assert_eq!(
-        serde_json::to_value(PlaylistStructure::Grouped).unwrap(),
-        json!("grouped")
+        serde_json::to_value(Presentation::Combined).unwrap(),
+        json!("combined")
     );
 }
 
@@ -844,7 +844,7 @@ fn pattern_config_round_trip() {
                 "id": "main",
                 "displayName": "Main",
                 "resolverType": "seasonNumber",
-                "playlistStructure": "split"
+                "presentation": "separate"
             }
         ]
     });

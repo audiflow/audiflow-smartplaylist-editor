@@ -4,7 +4,7 @@ use chrono::{TimeZone, Utc};
 
 use sp_core::models::{
     EpisodeFilterEntry, EpisodeFilters, GroupListSettings, PatternConfig, PatternMeta,
-    PlaylistDefinition, PlaylistGroup, PlaylistStructure, SimpleEpisodeData, SortField, SortOrder,
+    PlaylistDefinition, PlaylistGroup, Presentation, SimpleEpisodeData, SortField, SortOrder,
     SortRule, YearBinding,
 };
 use sp_core::resolvers::{RssResolver, YearResolver};
@@ -299,7 +299,7 @@ fn make_definition(id: &str) -> PlaylistDefinition {
         id: id.to_string(),
         display_name: id.to_string(),
         resolver_type: "seasonNumber".to_string(),
-        playlist_structure: "split".to_string(),
+        presentation: "separate".to_string(),
         priority: 0,
         episode_filters: None,
         null_season_group_key: None,
@@ -467,7 +467,7 @@ fn resolver_matches_config_by_feed_url() {
             id: "main".to_string(),
             display_name: "Main".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "split".to_string(),
+            presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -503,7 +503,7 @@ fn resolver_matches_config_by_guid() {
             id: "main".to_string(),
             display_name: "Main".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "split".to_string(),
+            presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -544,7 +544,7 @@ fn resolver_filters_by_require_regex() {
                 id: "bonus".to_string(),
                 display_name: "Bonus".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -565,7 +565,7 @@ fn resolver_filters_by_require_regex() {
                 id: "main".to_string(),
                 display_name: "Main".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 0,
                 episode_filters: Some(EpisodeFilters {
                     require: None,
@@ -623,7 +623,7 @@ fn resolver_filter_regex_is_case_insensitive() {
             id: "bonus".to_string(),
             display_name: "Bonus".to_string(),
             resolver_type: "year".to_string(),
-            playlist_structure: "split".to_string(),
+            presentation: "separate".to_string(),
             priority: 0,
             episode_filters: Some(EpisodeFilters {
                 require: Some(vec![EpisodeFilterEntry {
@@ -671,7 +671,7 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 id: "all".to_string(),
                 display_name: "All".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 0,
                 episode_filters: None,
                 null_season_group_key: None,
@@ -686,7 +686,7 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 id: "bonus".to_string(),
                 display_name: "Bonus".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -738,7 +738,7 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
             id: "regular".to_string(),
             display_name: "Regular Series".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "grouped".to_string(),
+            presentation: "combined".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -774,7 +774,7 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
     let playlist = &result.playlists[0];
     assert_eq!(playlist.id, "regular");
     assert_eq!(playlist.display_name, "Regular Series");
-    assert_eq!(playlist.playlist_structure, PlaylistStructure::Grouped);
+    assert_eq!(playlist.presentation, Presentation::Combined);
     assert_eq!(playlist.year_binding, YearBinding::PinToYear);
 
     let mut ep_ids_sorted = playlist.episode_ids.clone();
@@ -800,7 +800,7 @@ fn resolver_split_structure_produces_multiple_playlists() {
             id: "all".to_string(),
             display_name: "All".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "split".to_string(),
+            presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -840,7 +840,7 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
             id: "all".to_string(),
             display_name: "All".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "split".to_string(),
+            presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -881,7 +881,7 @@ fn resolver_sorts_ungrouped_episode_ids() {
             id: "series".to_string(),
             display_name: "Series".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "split".to_string(),
+            presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -972,7 +972,7 @@ fn preview_returns_preview_grouping_with_single_playlist() {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "grouped".to_string(),
+            presentation: "combined".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -1015,7 +1015,7 @@ fn preview_tracks_claimed_by_others() {
                 id: "priority-a".to_string(),
                 display_name: "Priority A".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -1036,7 +1036,7 @@ fn preview_tracks_claimed_by_others() {
                 id: "priority-b".to_string(),
                 display_name: "Priority B".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 5,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -1103,7 +1103,7 @@ fn preview_sorts_episode_ids_by_published_at() {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
             resolver_type: "seasonNumber".to_string(),
-            playlist_structure: "grouped".to_string(),
+            presentation: "combined".to_string(),
             priority: 0,
             episode_filters: None,
             null_season_group_key: None,
@@ -1145,7 +1145,7 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 id: "bonus".to_string(),
                 display_name: "Bonus".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -1166,7 +1166,7 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 id: "all".to_string(),
                 display_name: "All".to_string(),
                 resolver_type: "year".to_string(),
-                playlist_structure: "split".to_string(),
+                presentation: "separate".to_string(),
                 priority: 0,
                 episode_filters: None, // fallback
                 null_season_group_key: None,

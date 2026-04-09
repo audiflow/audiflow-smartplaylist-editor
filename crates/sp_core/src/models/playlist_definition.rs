@@ -13,7 +13,7 @@ pub struct PlaylistDefinition {
     pub id: String,
     pub display_name: String,
     pub resolver_type: String,
-    pub playlist_structure: String,
+    pub presentation: String,
 
     /// Episode claiming order among siblings (lower = first, default: 0).
     #[serde(default, skip_serializing_if = "is_zero")]

@@ -16,7 +16,7 @@ export const episodeSortFieldSchema = z.enum([
 
 export const sortOrderSchema = z.enum(['ascending', 'descending']);
 
-export const playlistStructureSchema = z.enum(['split', 'grouped']);
+export const presentationSchema = z.enum(['separate', 'combined']);
 
 export const yearBindingSchema = z.enum(['none', 'pinToYear', 'splitByYear']);
 
@@ -157,7 +157,7 @@ export const playlistDefinitionSchema = z.preprocess(
     id: z.string(),
     displayName: z.string(),
     resolverType: resolverTypeSchema,
-    playlistStructure: playlistStructureSchema,
+    presentation: presentationSchema,
     priority: z
       .number()
       .nullish()
@@ -189,7 +189,7 @@ export const patternConfigSchema = z.object({
 export type SortField = z.infer<typeof sortFieldSchema>;
 export type EpisodeSortField = z.infer<typeof episodeSortFieldSchema>;
 export type SortOrder = z.infer<typeof sortOrderSchema>;
-export type PlaylistStructure = z.infer<typeof playlistStructureSchema>;
+export type Presentation = z.infer<typeof presentationSchema>;
 export type YearBinding = z.infer<typeof yearBindingSchema>;
 export type ResolverType = z.infer<typeof resolverTypeSchema>;
 export type SortRule = z.infer<typeof sortRuleSchema>;
