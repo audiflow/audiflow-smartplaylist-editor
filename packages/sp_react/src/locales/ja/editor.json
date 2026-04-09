@@ -148,7 +148,7 @@
   "reorderGroupsDescription": "ドラッグしてグループの順序を変更します。上にあるグループが先にエピソードを取得します。",
   "reorderPlaylists": "並べ替え",
   "reorderPlaylistsTitle": "プレイリストの並べ替え",
-  "reorderPlaylistsDescription": "ドラッグしてプレイリストの順序を変更します。上にあるプレイリストが先にエピソードを取得します。",
+  "reorderPlaylistsDescription": "ドラッグしてプレイリストのタブ順を変更します。",
   "moveGroupUp": "グループを上に移動",
   "moveGroupDown": "グループを下に移動",
   "structureSettings": "分類設定",

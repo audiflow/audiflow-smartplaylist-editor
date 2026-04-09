@@ -148,7 +148,7 @@
   "reorderGroupsDescription": "Drag groups to change their order. Order determines which group claims an episode first.",
   "reorderPlaylists": "Reorder",
   "reorderPlaylistsTitle": "Reorder Playlists",
-  "reorderPlaylistsDescription": "Drag playlists to change their order. Order determines which playlist claims episodes first.",
+  "reorderPlaylistsDescription": "Drag playlists to change their tab order.",
   "moveGroupUp": "Move group up",
   "moveGroupDown": "Move group down",
   "structureSettings": "Organization",
