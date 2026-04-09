@@ -48,7 +48,7 @@ pub struct PlaylistDefinition {
     #[serde(skip_serializing_if = "Option::is_none", alias = "episodeExtractor")]
     pub numbering_extractor: Option<NumberingExtractor>,
 
-    /// Static group definitions for category-based grouping.
+    /// Static group definitions for titleClassifier-based grouping.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub groups: Option<Vec<GroupDef>>,
 }

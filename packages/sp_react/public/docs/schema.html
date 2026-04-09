@@ -279,7 +279,7 @@
             />
         </svg>
     <a href="#resolverType_oneOf_i0" onclick="anchorLink('resolverType_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Groups episodes by their iTunes season number from RSS feed metadata (itunes:season tag). Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts that properly tag seasons in their RSS feed. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor.</p>
+<span class="description"><p>Groups episodes by season number, using numberingExtractor when configured and falling back to RSS feed metadata (itunes:season tag) when needed. Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts that expose season numbering either in titles or RSS metadata. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor.</p>
 </span><span class="const-value" id="resolverType_oneOf_i0_const">Specific value: <code>"seasonNumber"</code></span>
         
 
@@ -2590,7 +2590,7 @@
             />
         </svg>
     <a href="#groups" onclick="anchorLink('groups')">groups</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
-<span class="description"><p>Static group definitions, primarily used by the titleClassifier resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleAppearanceOrder resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and numberingExtractor defaults.</p>
+<span class="description"><p>Static group definitions, primarily used by the titleClassifier resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleDiscovery resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and numberingExtractor defaults.</p>
 </span>
         
 
