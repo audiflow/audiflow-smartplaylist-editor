@@ -3,15 +3,9 @@ import { useTranslation } from 'react-i18next';
 import type { PatternConfig, EpisodeSortField, SortOrder } from '@/schemas/config-schema.ts';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
+import { cn } from '@/lib/utils.ts';
 
 const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
 const SORT_ORDERS = ['ascending', 'descending'] as const;
@@ -56,47 +50,22 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
         </div>
 
         {isSortEnabled && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <div className="space-y-1.5">
               <HintLabel hint="episodeSortField">{t('episodeSortField')}</HintLabel>
-              <Select
+              <ToggleGroup
+                options={EPISODE_SORT_FIELDS.map((f) => ({ value: f, label: t(`episodeSortField_${f}`) }))}
                 value={sort?.field ?? 'publishedAt'}
-                onValueChange={(val) =>
-                  setValue(`${prefix}.episodeList.sort.field`, val as EpisodeSortField, { shouldDirty: true })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {EPISODE_SORT_FIELDS.map((f) => (
-                    <SelectItem key={f} value={f}>
-                      {t(`episodeSortField_${f}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(val) => setValue(`${prefix}.episodeList.sort.field`, val as EpisodeSortField, { shouldDirty: true })}
+              />
             </div>
-
             <div className="space-y-1.5">
               <HintLabel hint="episodeSortOrder">{t('episodeSortOrder')}</HintLabel>
-              <Select
+              <ToggleGroup
+                options={SORT_ORDERS.map((o) => ({ value: o, label: t(`sortOrder_${o}`) }))}
                 value={sort?.order ?? 'ascending'}
-                onValueChange={(val) =>
-                  setValue(`${prefix}.episodeList.sort.order`, val as SortOrder, { shouldDirty: true })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SORT_ORDERS.map((o) => (
-                    <SelectItem key={o} value={o}>
-                      {t(`sortOrder_${o}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(val) => setValue(`${prefix}.episodeList.sort.order`, val as SortOrder, { shouldDirty: true })}
+              />
             </div>
           </div>
         )}
@@ -108,6 +77,37 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
         fieldPath={`playlists.${index}.episodeList.titleExtractor`}
         idPrefix={`ep-list-title-ext-${index}`}
       />
+    </div>
+  );
+}
+
+function ToggleGroup({
+  options,
+  value,
+  onChange,
+}: {
+  options: ReadonlyArray<{ value: string; label: string }>;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="inline-flex rounded-lg border border-border">
+      {options.map((opt, i) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            'px-3 py-1.5 text-sm transition-colors',
+            value === opt.value
+              ? 'bg-primary text-primary-foreground'
+              : 'hover:bg-muted',
+            0 < i && 'border-l border-border',
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }
