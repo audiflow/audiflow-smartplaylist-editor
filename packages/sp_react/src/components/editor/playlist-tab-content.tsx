@@ -29,12 +29,14 @@ interface PlaylistTabContentProps {
   index: number;
   playlistCount: number;
   onRemove: () => void;
+  isNewConfig?: boolean;
 }
 
 export function PlaylistTabContent({
   index,
   playlistCount,
   onRemove,
+  isNewConfig,
 }: PlaylistTabContentProps) {
   // Read preview data from Zustand store (isolated re-renders)
   const previewData = useEditorStore((s) => s.previewData);
@@ -121,7 +123,7 @@ export function PlaylistTabContent({
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Config side */}
         <div className="space-y-4 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
-          <PlaylistForm index={index} playlistCount={playlistCount} onRemove={onRemove} />
+          <PlaylistForm index={index} playlistCount={playlistCount} onRemove={onRemove} isNewConfig={isNewConfig} />
         </div>
 
         {/* Preview side */}

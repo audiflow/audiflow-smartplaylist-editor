@@ -1,10 +1,10 @@
 {
   "sectionNote.basicSettings": "The ID is used as the filename when saving and must be unique within this config.",
   "sectionNote.episodeFilters": "Control which episodes from the feed are included in this playlist. Define text patterns to match against episode titles and descriptions.",
-  "sectionNote.episodeList": "Default settings for how episodes appear within each group. These can be customized per group in the Groups tab.",
+  "sectionNote.episodeList": "Default settings for how episodes appear within each group. When using 'By title pattern matching', these can be customized per group.",
   "sectionNote.resolver": "Choose how episodes are organized into groups. The organization method determines the grouping logic, and the presentation controls how groups appear in the app.",
   "sectionNote.groups": "Define and arrange groups for this playlist. Groups are used when presentation is set to 'Collect into one playlist'. Each group can have its own episode list and display settings.",
-  "sectionNote.displaySettings": "Visual options that control how episode lists and groups appear in the app. These can be customized per group.",
+  "sectionNote.displaySettings": "Visual options that control how episode lists and groups appear in the app. When using 'By title pattern matching', these can be customized per group.",
   "interactionNote.episodeFilters.requireExclude": "When both include and exclude rules are set, include rules run first to select matching episodes, then exclude rules remove any matches from that set. If no include rules are set, all episodes are candidates and only exclude rules apply.",
   "interactionNote.episodeList.titleExtractorChain": "The group name rule tries each step in order. If a step's pattern doesn't match, it moves to the next step. If all steps fail, the default name is used.",
   "interactionNote.resolver.resolverStructure": "· Collect into one playlist: all groups live inside one playlist entry in the app\n· Make each group its own playlist: each group becomes its own entry (only available with a single playlist definition)",

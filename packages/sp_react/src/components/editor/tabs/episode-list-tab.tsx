@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { PatternConfig, EpisodeSortField, SortOrder } from '@/schemas/config-schema.ts';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { Button } from '@/components/ui/button.tsx';
-import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
-import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
+import { SectionNote } from '@/components/editor/note-blocks.tsx';
 import { cn } from '@/lib/utils.ts';
 
 const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
@@ -71,12 +70,6 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
         )}
       </div>
 
-      <InteractionNote i18nKey="interactionNote.episodeList.titleExtractorChain" />
-
-      <TitleExtractorForm
-        fieldPath={`playlists.${index}.episodeList.titleExtractor`}
-        idPrefix={`ep-list-title-ext-${index}`}
-      />
     </div>
   );
 }

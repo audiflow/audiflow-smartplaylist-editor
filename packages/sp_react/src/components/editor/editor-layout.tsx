@@ -512,7 +512,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       ) : (
         <FormProvider {...form}>
           <PatternSettingsCard configId={configId} />
-          <PlaylistSection />
+          <PlaylistSection isNewConfig={isNewConfig} />
         </FormProvider>
       )}
 
@@ -602,7 +602,7 @@ interface PlaylistTabTriggerProps {
 // -- Playlist section (owns useFieldArray — isolated so nested field changes
 //    don't re-render EditorLayout) --
 
-function PlaylistSection() {
+function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
   const { t } = useTranslation('editor');
   const form = useFormContext<PatternConfig>();
   const { fields, append, remove } = useFieldArray({
@@ -674,6 +674,7 @@ function PlaylistSection() {
             <PlaylistTabContent
               index={index}
               playlistCount={fields.length}
+              isNewConfig={isNewConfig}
               onRemove={() => {
                 remove(index);
                 const lastIndex = fields.length - 2;

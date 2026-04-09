@@ -18,6 +18,7 @@ interface PlaylistFormProps {
   index: number;
   playlistCount: number;
   onRemove: () => void;
+  isNewConfig?: boolean;
 }
 
 const EMPTY_TITLES: readonly string[] = [];
@@ -29,7 +30,7 @@ function ErrorDot({ visible }: { visible: boolean }) {
   );
 }
 
-export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormProps) {
+export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: PlaylistFormProps) {
   const { t } = useTranslation('editor');
   const { formState } = useFormContext<PatternConfig>();
 
@@ -49,7 +50,7 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue="basic">
+      <Tabs defaultValue={isNewConfig ? 'basic' : 'resolver'}>
         <TabsList className="w-full">
           <TabsTrigger value="basic">
             {t('tab.basicSettings')}

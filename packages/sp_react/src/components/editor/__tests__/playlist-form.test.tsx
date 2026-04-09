@@ -36,17 +36,18 @@ function FormWrapper({
 }
 
 function renderPlaylistForm(
-  overrides?: Partial<{ index: number; onRemove: () => void; config: PatternConfig }>,
+  overrides?: Partial<{ index: number; onRemove: () => void; config: PatternConfig; isNewConfig: boolean }>,
 ) {
   const index = overrides?.index ?? 0;
   const onRemove = overrides?.onRemove ?? vi.fn();
   const config = overrides?.config ?? DEFAULT_CONFIG;
+  const isNewConfig = overrides?.isNewConfig;
 
   return {
     onRemove,
     ...renderWithProviders(
       <FormWrapper defaultValues={config}>
-        <PlaylistForm index={index} playlistCount={config.playlists.length} onRemove={onRemove} />
+        <PlaylistForm index={index} playlistCount={config.playlists.length} onRemove={onRemove} isNewConfig={isNewConfig} />
       </FormWrapper>,
     ),
   };
@@ -69,23 +70,33 @@ describe('PlaylistForm', () => {
       expect(tabs.length).toBe(5);
     });
 
-    it('shows Basic tab as default active tab', () => {
+    it('shows Organize tab as default for saved playlists', () => {
       renderPlaylistForm();
+      const resolverTab = screen.getByRole('tab', { name: /organize/i });
+      expect(resolverTab).toHaveAttribute('data-state', 'active');
+    });
+
+    it('shows Basic tab as default for new configs', () => {
+      renderPlaylistForm({ isNewConfig: true });
       const basicTab = screen.getByRole('tab', { name: /basic/i });
       expect(basicTab).toHaveAttribute('data-state', 'active');
     });
   });
 
   describe('BasicSettings', () => {
-    it('renders id input with current value', () => {
+    it('renders id input with current value', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /basic/i);
       const input = screen.getByLabelText(/^id$/i);
       expect(input).toBeInTheDocument();
       expect(input).toHaveValue('playlist-1');
     });
 
-    it('renders display name input with current value', () => {
+    it('renders display name input with current value', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /basic/i);
       const input = screen.getByLabelText(/display name/i);
       expect(input).toHaveValue('Test Playlist');
     });
