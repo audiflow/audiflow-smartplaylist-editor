@@ -5,6 +5,7 @@ import type {
   PreviewPlaylist,
   PreviewEpisode,
   PreviewDebug,
+  FeedEpisode,
 } from '@/schemas/api-schema.ts';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import type { EpisodeSortRule } from '@/components/preview/episode-sort-utils.ts';
@@ -47,22 +48,15 @@ export function PlaylistTabContent({
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
-  const { watch, control } = useFormContext<PatternConfig>();
+  const { watch } = useFormContext<PatternConfig>();
   const { feedUrl } = useEditorStore();
   const feedQuery = useFeed(feedUrl || null);
 
-  const episodeFilters = useWatch({ control, name: `playlists.${index}.episodeFilters` as const });
   const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
   const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
   const groupDefs = watch(`playlists.${index}.groups`);
   const defaultSortField = watch(`playlists.${index}.episodeList.sort.field`);
   const defaultSortOrder = watch(`playlists.${index}.episodeList.sort.order`);
-
-  const feedEpisodes = feedQuery.data ?? [];
-  const filteredEpisodes = useMemo(
-    () => filterEpisodes(feedEpisodes, episodeFilters ?? undefined),
-    [feedEpisodes, episodeFilters],
-  );
 
   // Retain previous preview data to avoid unmount/remount flicker during updates.
   const lastPreviewRef = useRef<{
@@ -141,11 +135,6 @@ export function PlaylistTabContent({
             <TabsList>
               <TabsTrigger value="filtered">
                 {tp('tabFiltered')}
-                {0 < filteredEpisodes.length && (
-                  <Badge variant="secondary" className="ml-1.5">
-                    {filteredEpisodes.length}
-                  </Badge>
-                )}
               </TabsTrigger>
               <TabsTrigger value="preview">
                 {tp('tabPreview')}
@@ -157,10 +146,7 @@ export function PlaylistTabContent({
               </TabsTrigger>
             </TabsList>
             <TabsContent value="filtered">
-              <FilteredEpisodesPanel
-                episodes={filteredEpisodes}
-                totalCount={feedEpisodes.length}
-              />
+              <LiveFilteredEpisodes index={index} feedEpisodes={feedQuery.data ?? []} />
             </TabsContent>
             <TabsContent value="preview">
               {sp ? (
@@ -257,5 +243,29 @@ export function PlaylistTabContent({
         </div>
       </div>
     </div>
+  );
+}
+
+// Isolated component so useWatch on episodeFilters doesn't re-render the whole tree.
+function LiveFilteredEpisodes({
+  index,
+  feedEpisodes,
+}: {
+  index: number;
+  feedEpisodes: readonly FeedEpisode[];
+}) {
+  const { control } = useFormContext<PatternConfig>();
+  const episodeFilters = useWatch({ control, name: `playlists.${index}.episodeFilters` as const });
+
+  const filtered = useMemo(
+    () => filterEpisodes(feedEpisodes, episodeFilters ?? undefined),
+    [feedEpisodes, episodeFilters],
+  );
+
+  return (
+    <FilteredEpisodesPanel
+      episodes={filtered}
+      totalCount={feedEpisodes.length}
+    />
   );
 }

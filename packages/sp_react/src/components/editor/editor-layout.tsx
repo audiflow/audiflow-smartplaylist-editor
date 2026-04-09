@@ -419,7 +419,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     const stripped = {
       ...formValues,
       playlists: formValues.playlists?.map((p) => {
-        const { episodeFilters: _ef, episodeList, groupList, prependSeasonNumber, ...rest } = p ?? {};
+        const { episodeList, groupList, prependSeasonNumber, ...rest } = p ?? {};
         const { sort: _sort, showYearHeaders: _syh, ...episodeListRest } = episodeList ?? {};
         const { sort: _gsort, yearBinding: _yb, showDateRange: _sdr, userSortable: _us, ...groupListRest } = groupList ?? {};
         return {
