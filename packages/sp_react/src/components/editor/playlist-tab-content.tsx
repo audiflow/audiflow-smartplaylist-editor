@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import type {
   PreviewPlaylist,
   PreviewEpisode,
@@ -47,11 +47,11 @@ export function PlaylistTabContent({
 }: PlaylistTabContentProps) {
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
-  const { watch } = useFormContext<PatternConfig>();
+  const { watch, control } = useFormContext<PatternConfig>();
   const { feedUrl } = useEditorStore();
   const feedQuery = useFeed(feedUrl || null);
 
-  const episodeFilters = watch(`playlists.${index}.episodeFilters`);
+  const episodeFilters = useWatch({ control, name: `playlists.${index}.episodeFilters` as const });
   const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
   const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
   const groupDefs = watch(`playlists.${index}.groups`);
