@@ -29,23 +29,22 @@ import { Badge } from '@/components/ui/badge.tsx';
 
 interface PlaylistTabContentProps {
   index: number;
-  previewPlaylist: PreviewPlaylist | null;
-  ungroupedEpisodes: PreviewEpisode[];
-  excludedEpisodes: PreviewEpisode[];
-  globalDebug: PreviewDebug | undefined;
   playlistCount: number;
   onRemove: () => void;
 }
 
 export function PlaylistTabContent({
   index,
-  previewPlaylist,
-  ungroupedEpisodes,
-  excludedEpisodes,
-  globalDebug,
   playlistCount,
   onRemove,
 }: PlaylistTabContentProps) {
+  // Read preview data from Zustand store (isolated re-renders)
+  const previewData = useEditorStore((s) => s.previewData);
+  const playlistId = useWatch({ control: useFormContext<PatternConfig>().control, name: `playlists.${index}.id` as const });
+  const previewPlaylist = previewData?.playlists.find((p) => p.id === playlistId) ?? null;
+  const ungroupedEpisodes = previewData?.ungrouped ?? [];
+  const excludedEpisodes = previewData?.excluded ?? [];
+  const globalDebug = previewData?.debug;
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
   const { control } = useFormContext<PatternConfig>();

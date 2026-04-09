@@ -1,21 +1,20 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useForm, useFieldArray, useWatch, FormProvider, type Resolver, type Control } from 'react-hook-form';
+import { useForm, useFieldArray, useFormContext, useWatch, FormProvider, type Resolver, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   patternConfigSchema,
   type PatternConfig,
 } from '@/schemas/config-schema.ts';
-import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import {
-  usePreviewMutation,
   useFeed,
   useAssembledConfig,
   useSavePlaylist,
   useSavePatternMeta,
   useCreatePattern,
 } from '@/api/queries.ts';
+import { useStorePreview } from '@/hooks/use-store-preview.ts';
 import { sanitizeConfig } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
@@ -63,13 +62,16 @@ interface EditorLayoutProps {
 export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const { t } = useTranslation('editor');
   const navigate = useNavigate();
+  // Use individual selectors to avoid re-rendering on unrelated store changes
+  // (e.g., previewData updates should not re-render EditorLayout).
+  const isJsonMode = useEditorStore((s) => s.isJsonMode);
+  const feedUrl = useEditorStore((s) => s.feedUrl);
+  const isDirty = useEditorStore((s) => s.isDirty);
+  const isSaving = useEditorStore((s) => s.isSaving);
+  const conflictDetected = useEditorStore((s) => s.conflictDetected);
+  const conflictPath = useEditorStore((s) => s.conflictPath);
+  // Actions are stable — read once via getState, no subscription needed
   const {
-    isJsonMode,
-    feedUrl,
-    isDirty,
-    isSaving,
-    conflictDetected,
-    conflictPath,
     toggleJsonMode,
     setFeedUrl,
     setDirty,
@@ -78,10 +80,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     setConflict,
     clearConflict,
     reset: resetEditorStore,
-  } = useEditorStore();
+  } = useMemo(() => useEditorStore.getState(), []);
   const [jsonText, setJsonText] = useState('');
-  const [activeTab, setActiveTab] = useState('tab-0');
-  const [reorderOpen, setReorderOpen] = useState(false);
 
   // Normalize legacy v3 field names (e.g. episodeExtractor, rss resolver type)
   // through the Zod schema before seeding the form.
@@ -98,16 +98,11 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     defaultValues: normalizedInitialConfig ?? DEFAULT_CONFIG,
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: 'playlists',
-  });
 
-  const previewMutation = usePreviewMutation();
-  // Ref avoids `handleRunPreview` changing every render (useMutation returns
-  // a new object each render), which would destabilise the auto-preview effect.
-  const previewMutationRef = useRef(previewMutation);
-  previewMutationRef.current = previewMutation;
+  const storePreview = useStorePreview();
+  const storePreviewRef = useRef(storePreview);
+  storePreviewRef.current = storePreview;
+  // Read preview state only where needed (via selectors), not here.
 
   const feedQuery = useFeed(feedUrl || null);
   const savePlaylistMutation = useSavePlaylist();
@@ -120,21 +115,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const isNewConfig = configId === null;
   const effectiveId = isNewConfig ? formId : configId;
 
-  // Disable "Add Playlist" when any playlist uses "separate" presentation.
-  // Uses subscription instead of useWatch to avoid re-rendering on every
-  // form change — only re-renders when the flag actually flips.
-  const [hasSeparatePresentation, setHasSeparatePresentation] = useState(() =>
-    form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false,
-  );
-  useEffect(() => {
-    const subscription = form.watch((_values, { name }) => {
-      if (!name || name.includes('presentation') || name === 'playlists') {
-        const has = form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false;
-        setHasSeparatePresentation(has);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
 
   // Auto-populate feed URL input from feedUrls when the input is empty.
   // In form mode, watch the form field; in JSON mode, parse from jsonText.
@@ -255,7 +235,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } else {
       config = form.getValues();
     }
-    previewMutationRef.current.mutate(
+    storePreviewRef.current.mutate(
       { config: sanitizeConfig(config), feedUrl },
       {
         onError: (error) => {
@@ -268,17 +248,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     );
   }, [isJsonMode, jsonText, form, feedUrl, t]);
 
-  const findPreviewPlaylist = useCallback(
-    (index: number): PreviewPlaylist | null => {
-      if (!previewMutation.data) return null;
-      const definitionId = form.getValues(`playlists.${index}.id`);
-      return (
-        previewMutation.data.playlists.find((p) => p.id === definitionId) ??
-        null
-      );
-    },
-    [previewMutation.data, form],
-  );
 
   // Safe JSON parse for render-time props (avoids throwing during render)
   const parsedJsonConfig = useMemo(() => {
@@ -402,7 +371,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     hasAutoPreviewedRef.current = true;
     // Record the initial serialization so the debounced effect skips its first tick
     lastPreviewedValuesRef.current = `${url}\0${JSON.stringify(normalizedInitialConfig)}`;
-    previewMutationRef.current.mutate(
+    storePreviewRef.current.mutate(
       { config: sanitizeConfig(normalizedInitialConfig), feedUrl: url },
       {
         onError: (error) => {
@@ -434,7 +403,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         const key = `${feedUrl}\0${JSON.stringify(config)}`;
         if (key === lastPreviewedValuesRef.current) return;
         lastPreviewedValuesRef.current = key;
-        previewMutationRef.current.mutate(
+        storePreviewRef.current.mutate(
           { config: sanitizeConfig(config), feedUrl },
           {
             onError: (error) => {
@@ -496,11 +465,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         />
 
         <div className="flex items-center justify-between">
-          <div className={previewMutation.data?.debug ? undefined : 'invisible'}>
-            {previewMutation.data?.debug && (
-              <DebugInfoPanel debug={previewMutation.data.debug} />
-            )}
-          </div>
+          <PreviewDebugPanel />
           <div className="flex items-center gap-2">
             <Button
               onClick={() => void handleSave()}
@@ -514,14 +479,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
               )}
               {t('save', 'Save')}
             </Button>
-            <Button onClick={handleRunPreview} disabled={previewMutation.isPending}>
-              {previewMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Play className="mr-2 h-4 w-4" />
-              )}
-              {t('runPreview')}
-            </Button>
+            <PreviewButton onClick={handleRunPreview} />
           </div>
         </div>
       </div>
@@ -551,77 +509,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       ) : (
         <FormProvider {...form}>
           <PatternSettingsCard configId={configId} />
-
-          {/* Playlist Tabs */}
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="mt-6"
-          >
-            <div className="flex items-center gap-2">
-              <TabsList>
-                {fields.map((field, index) => (
-                  <PlaylistTabTrigger
-                    key={field.id}
-                    index={index}
-                    control={form.control}
-                    previewPlaylist={findPreviewPlaylist(index)}
-                  />
-                ))}
-              </TabsList>
-              {2 <= fields.length && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setReorderOpen(true)}
-                >
-                  <ArrowUpDown className="mr-1 h-3 w-3" />
-                  {t('reorderPlaylists')}
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={hasSeparatePresentation}
-                title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
-                onClick={() => {
-                  append({ ...DEFAULT_PLAYLIST });
-                  setActiveTab(`tab-${fields.length}`);
-                }}
-              >
-                <Plus className="mr-1 h-3 w-3" />
-                {t('add')}
-              </Button>
-            </div>
-
-            {fields.map((field, index) => (
-              <TabsContent key={field.id} value={`tab-${index}`}>
-                <PlaylistTabContent
-                  index={index}
-                  previewPlaylist={findPreviewPlaylist(index)}
-                  ungroupedEpisodes={previewMutation.data?.ungrouped ?? []}
-                  excludedEpisodes={previewMutation.data?.excluded ?? []}
-                  globalDebug={previewMutation.data?.debug}
-                  playlistCount={fields.length}
-                  onRemove={() => {
-                    remove(index);
-                    const lastIndex = fields.length - 2;
-                    if (0 <= lastIndex) {
-                      setActiveTab(`tab-${Math.min(index, lastIndex)}`);
-                    }
-                  }}
-                />
-              </TabsContent>
-            ))}
-          </Tabs>
-
-          {fields.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-12">
-              {t('noPlaylists')}
-            </p>
-          )}
+          <PlaylistSection />
         </FormProvider>
       )}
 
@@ -630,22 +518,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         filePath={conflictPath}
         onReload={handleReload}
         onKeepChanges={handleKeepChanges}
-      />
-
-      <PlaylistReorderDialog
-        open={reorderOpen}
-        onOpenChange={setReorderOpen}
-        items={fields.map((field, index) => ({
-          id: field.id,
-          displayName: form.getValues(`playlists.${index}.displayName`) || t('playlistFallbackName', { number: index + 1 }),
-        }))}
-        onConfirm={(reordered) => {
-          const currentPlaylists = form.getValues('playlists');
-          const idToIndex = new Map(fields.map((f, i) => [f.id, i]));
-          const newPlaylists = reordered.map((item) => currentPlaylists[idToIndex.get(item.id)!]);
-          form.setValue('playlists', newPlaylists, { shouldDirty: true });
-          setActiveTab('tab-0');
-        }}
       />
     </div>
   );
@@ -722,19 +594,163 @@ function EditorHeader({
 interface PlaylistTabTriggerProps {
   index: number;
   control: Control<PatternConfig>;
-  previewPlaylist: PreviewPlaylist | null;
+}
+
+// -- Playlist section (owns useFieldArray — isolated so nested field changes
+//    don't re-render EditorLayout) --
+
+function PlaylistSection() {
+  const { t } = useTranslation('editor');
+  const form = useFormContext<PatternConfig>();
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'playlists',
+  });
+  const [activeTab, setActiveTab] = useState('tab-0');
+  const [reorderOpen, setReorderOpen] = useState(false);
+
+  const [hasSeparatePresentation, setHasSeparatePresentation] = useState(() =>
+    form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false,
+  );
+  useEffect(() => {
+    const subscription = form.watch((_values, { name }) => {
+      if (!name || name.includes('presentation') || name === 'playlists') {
+        const has = form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false;
+        setHasSeparatePresentation(has);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  return (
+    <>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="mt-6"
+      >
+        <div className="flex items-center gap-2">
+          <TabsList>
+            {fields.map((field, index) => (
+              <PlaylistTabTrigger
+                key={field.id}
+                index={index}
+                control={form.control}
+              />
+            ))}
+          </TabsList>
+          {2 <= fields.length && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setReorderOpen(true)}
+            >
+              <ArrowUpDown className="mr-1 h-3 w-3" />
+              {t('reorderPlaylists')}
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={hasSeparatePresentation}
+            title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
+            onClick={() => {
+              append({ ...DEFAULT_PLAYLIST });
+              setActiveTab(`tab-${fields.length}`);
+            }}
+          >
+            <Plus className="mr-1 h-3 w-3" />
+            {t('add')}
+          </Button>
+        </div>
+
+        {fields.map((field, index) => (
+          <TabsContent key={field.id} value={`tab-${index}`}>
+            <PlaylistTabContent
+              index={index}
+              playlistCount={fields.length}
+              onRemove={() => {
+                remove(index);
+                const lastIndex = fields.length - 2;
+                if (0 <= lastIndex) {
+                  setActiveTab(`tab-${Math.min(index, lastIndex)}`);
+                }
+              }}
+            />
+          </TabsContent>
+        ))}
+      </Tabs>
+
+      {fields.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center py-12">
+          {t('noPlaylists')}
+        </p>
+      )}
+
+      <PlaylistReorderDialog
+        open={reorderOpen}
+        onOpenChange={setReorderOpen}
+        items={fields.map((field, index) => ({
+          id: field.id,
+          displayName: form.getValues(`playlists.${index}.displayName`) || t('playlistFallbackName', { number: index + 1 }),
+        }))}
+        onConfirm={(reordered) => {
+          const currentPlaylists = form.getValues('playlists');
+          const idToIndex = new Map(fields.map((f, i) => [f.id, i]));
+          const newPlaylists = reordered.map((item) => currentPlaylists[idToIndex.get(item.id)!]);
+          form.setValue('playlists', newPlaylists, { shouldDirty: true });
+          setActiveTab('tab-0');
+        }}
+      />
+    </>
+  );
+}
+
+// Isolated components that read preview state from Zustand store.
+// Only these re-render when preview data changes, not EditorLayout.
+
+function PreviewDebugPanel() {
+  const debug = useEditorStore((s) => s.previewData?.debug);
+  return (
+    <div className={debug ? undefined : 'invisible'}>
+      {debug && <DebugInfoPanel debug={debug} />}
+    </div>
+  );
+}
+
+function PreviewButton({ onClick }: { onClick: () => void }) {
+  const isPending = useEditorStore((s) => s.previewPending);
+  const { t } = useTranslation('editor');
+  return (
+    <Button onClick={onClick} disabled={isPending}>
+      {isPending ? (
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      ) : (
+        <Play className="mr-2 h-4 w-4" />
+      )}
+      {t('runPreview')}
+    </Button>
+  );
 }
 
 function PlaylistTabTrigger({
   index,
   control,
-  previewPlaylist,
 }: PlaylistTabTriggerProps) {
   const { t } = useTranslation('editor');
   const displayName = useWatch({
     control,
     name: `playlists.${index}.displayName`,
   });
+  const playlistId = useWatch({
+    control,
+    name: `playlists.${index}.id`,
+  });
+  const previewPlaylist = useEditorStore((s) =>
+    s.previewData?.playlists.find((p) => p.id === playlistId) ?? null,
+  );
   const name = displayName || t('playlistFallbackName', { number: index + 1 });
 
   return (
