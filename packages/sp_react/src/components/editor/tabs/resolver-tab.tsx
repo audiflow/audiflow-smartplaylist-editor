@@ -3,13 +3,6 @@ import { useTranslation } from 'react-i18next';
 import type { PatternConfig, Presentation, ResolverType } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
@@ -41,29 +34,42 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
       <SectionNote i18nKey="sectionNote.resolver" />
 
       <div className="space-y-4">
-        <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-resolverType`} hint="resolverType">
+        <div className="space-y-2">
+          <HintLabel hint="resolverType">
             {t('resolverType')}
           </HintLabel>
-          <Select
-            value={resolverType ?? ''}
-            onValueChange={(val) => setValue(`${prefix}.resolverType`, val as ResolverType, { shouldDirty: true })}
-          >
-            <SelectTrigger id={`playlist-${index}-resolverType`}>
-              <SelectValue placeholder={t('selectResolver')} />
-            </SelectTrigger>
-            <SelectContent className="min-w-[280px]">
-              {RESOLVER_TYPES.map((type) => (
-                <SelectItem
-                  key={type}
-                  value={type}
-                  description={t(`resolverDesc_${type}`)}
+          <div className="grid gap-2">
+            {RESOLVER_TYPES.map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setValue(`${prefix}.resolverType`, type as ResolverType, { shouldDirty: true })}
+                className={cn(
+                  'flex items-start gap-3 rounded-lg border p-3 text-left transition-colors',
+                  resolverType === type
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-muted-foreground/50',
+                )}
+              >
+                <div
+                  className={cn(
+                    'mt-0.5 h-4 w-4 shrink-0 rounded-full border-2',
+                    resolverType === type ? 'border-primary bg-primary' : 'border-muted-foreground/40',
+                  )}
                 >
-                  {t(`resolverLabel_${type}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  {resolverType === type && (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{t(`resolverLabel_${type}`)}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t(`resolverDesc_${type}`)}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">
