@@ -409,12 +409,29 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [configId, normalizedInitialConfig, t]);
 
   // Debounced auto-preview: re-run preview when form values change.
+  // Strip client-side-only fields (sort, display options) from the trigger key
+  // so changes to them don't cause a server roundtrip and UI flicker.
   const formValues = useWatch({ control: form.control });
-  const serializedValues = useMemo(
-    () => JSON.stringify(formValues),
-    [formValues],
-  );
-  const debouncedValues = useDebounce(serializedValues, 400);
+  const previewRelevantValues = useMemo(() => {
+    if (!formValues) return '';
+    const stripped = {
+      ...formValues,
+      playlists: formValues.playlists?.map((p) => {
+        const { episodeList, groupList, prependSeasonNumber, ...rest } = p ?? {};
+        // Keep episodeList but without sort/showYearHeaders (client-side only)
+        const { sort: _sort, showYearHeaders: _syh, ...episodeListRest } = episodeList ?? {};
+        // Keep groupList but without sort/yearBinding/showDateRange/userSortable (client-side only)
+        const { sort: _gsort, yearBinding: _yb, showDateRange: _sdr, userSortable: _us, ...groupListRest } = groupList ?? {};
+        return {
+          ...rest,
+          episodeList: episodeListRest,
+          groupList: groupListRest,
+        };
+      }),
+    };
+    return JSON.stringify(stripped);
+  }, [formValues]);
+  const debouncedValues = useDebounce(previewRelevantValues, 400);
 
   useEffect(() => {
     if (!feedUrl || isJsonMode) return;
@@ -487,10 +504,11 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         />
 
         <div className="flex items-center justify-between">
-          {previewMutation.data?.debug && (
-            <DebugInfoPanel debug={previewMutation.data.debug} />
-          )}
-          {!previewMutation.data?.debug && <div />}
+          <div className={previewMutation.data?.debug ? undefined : 'invisible'}>
+            {previewMutation.data?.debug && (
+              <DebugInfoPanel debug={previewMutation.data.debug} />
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => void handleSave()}

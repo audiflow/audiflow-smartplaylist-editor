@@ -64,6 +64,25 @@ export function PlaylistTabContent({
     [feedEpisodes, episodeFilters],
   );
 
+  // Retain previous preview data to avoid unmount/remount flicker during updates.
+  const lastPreviewRef = useRef<{
+    playlist: PreviewPlaylist;
+    ungrouped: PreviewEpisode[];
+    excluded: PreviewEpisode[];
+    debug: PreviewDebug | undefined;
+  } | null>(null);
+
+  if (previewPlaylist) {
+    lastPreviewRef.current = {
+      playlist: previewPlaylist,
+      ungrouped: ungroupedEpisodes,
+      excluded: excludedEpisodes,
+      debug: globalDebug,
+    };
+  }
+
+  const stablePreview = lastPreviewRef.current;
+
   // Default to 'filtered' then auto-switch to 'preview' once preview data arrives.
   const [activePreviewTab, setActivePreviewTab] = useState('filtered');
   const hasAutoSwitchedRef = useRef(false);
@@ -102,9 +121,10 @@ export function PlaylistTabContent({
     return map;
   }, [defaultSortField, defaultSortOrder, groupDefs]);
 
-  const claimedCount = previewPlaylist?.claimedByOthers?.length ?? 0;
-  const ungroupedCount = ungroupedEpisodes.length;
-  const excludedCount = excludedEpisodes.length;
+  const sp = stablePreview;
+  const stableClaimedCount = sp?.playlist.claimedByOthers?.length ?? 0;
+  const stableUngroupedCount = sp?.ungrouped.length ?? 0;
+  const stableExcludedCount = sp?.excluded.length ?? 0;
   const showClaimedTab = 2 <= playlistCount;
 
   return (
@@ -129,9 +149,9 @@ export function PlaylistTabContent({
               </TabsTrigger>
               <TabsTrigger value="preview">
                 {tp('tabPreview')}
-                {previewPlaylist && (
+                {sp && (
                   <Badge variant="secondary" className="ml-1.5">
-                    {previewPlaylist.episodeCount}
+                    {sp.playlist.episodeCount}
                   </Badge>
                 )}
               </TabsTrigger>
@@ -143,11 +163,11 @@ export function PlaylistTabContent({
               />
             </TabsContent>
             <TabsContent value="preview">
-              {previewPlaylist ? (
+              {sp ? (
                 <>
-                  {globalDebug && (
+                  {sp.debug && (
                     <div className="border rounded-md px-3 py-1.5 mb-3">
-                      <DebugInfoStats debug={globalDebug} />
+                      <DebugInfoStats debug={sp.debug} />
                     </div>
                   )}
                   <Tabs defaultValue="groups">
@@ -155,22 +175,22 @@ export function PlaylistTabContent({
                       <TabsTrigger value="groups">
                         {tp('tabGroups')}
                         <Badge variant="secondary" className="ml-1.5">
-                          {previewPlaylist.episodeCount}
+                          {sp.playlist.episodeCount}
                         </Badge>
                       </TabsTrigger>
                       <TabsTrigger value="ungrouped">
                         {tp('tabUngrouped')}
-                        {0 < ungroupedCount && (
+                        {0 < stableUngroupedCount && (
                           <Badge variant="secondary" className="ml-1.5">
-                            {ungroupedCount}
+                            {stableUngroupedCount}
                           </Badge>
                         )}
                       </TabsTrigger>
                       <TabsTrigger value="excluded">
                         {tp('tabExcluded')}
-                        {0 < excludedCount && (
+                        {0 < stableExcludedCount && (
                           <Badge variant="secondary" className="ml-1.5">
-                            {excludedCount}
+                            {stableExcludedCount}
                           </Badge>
                         )}
                       </TabsTrigger>
@@ -180,20 +200,20 @@ export function PlaylistTabContent({
                       {showClaimedTab && (
                         <TabsTrigger value="claimed">
                           {tp('tabClaimed')}
-                          {0 < claimedCount && (
+                          {0 < stableClaimedCount && (
                             <Badge variant="secondary" className="ml-1.5">
-                              {claimedCount}
+                              {stableClaimedCount}
                             </Badge>
                           )}
                         </TabsTrigger>
                       )}
                     </TabsList>
                     <TabsContent value="groups">
-                      <PlaylistTree playlists={[previewPlaylist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
+                      <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
                     </TabsContent>
                     <TabsContent value="ungrouped">
-                      {0 < ungroupedCount ? (
-                        <UngroupedEpisodesPanel episodes={ungroupedEpisodes} />
+                      {0 < stableUngroupedCount ? (
+                        <UngroupedEpisodesPanel episodes={sp.ungrouped} />
                       ) : (
                         <p className="text-sm text-muted-foreground py-4 text-center">
                           {tp('emptyUngrouped')}
@@ -201,8 +221,8 @@ export function PlaylistTabContent({
                       )}
                     </TabsContent>
                     <TabsContent value="excluded">
-                      {0 < excludedCount ? (
-                        <UngroupedEpisodesPanel episodes={excludedEpisodes} />
+                      {0 < stableExcludedCount ? (
+                        <UngroupedEpisodesPanel episodes={sp.excluded} />
                       ) : (
                         <p className="text-sm text-muted-foreground py-4 text-center">
                           {tp('emptyExcluded')}
@@ -210,13 +230,13 @@ export function PlaylistTabContent({
                       )}
                     </TabsContent>
                     <TabsContent value="extraction">
-                      <ExtractionPreview playlist={previewPlaylist} />
+                      <ExtractionPreview playlist={sp.playlist} />
                     </TabsContent>
                     {showClaimedTab && (
                       <TabsContent value="claimed">
-                        {0 < claimedCount ? (
+                        {0 < stableClaimedCount ? (
                           <ClaimedEpisodesSection
-                            episodes={previewPlaylist.claimedByOthers ?? []}
+                            episodes={sp.playlist.claimedByOthers ?? []}
                           />
                         ) : (
                           <p className="text-sm text-muted-foreground py-4 text-center">
