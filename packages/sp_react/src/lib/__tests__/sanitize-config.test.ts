@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeConfig, stripConditionalFields } from '../sanitize-config';
-import type { PatternConfig } from '@/schemas/config-schema';
+import { sanitizeConfig, stripConditionalFields } from '../sanitize-config.ts';
+import type { PatternConfig } from '@/schemas/config-schema.ts';
 
 describe('sanitizeConfig', () => {
   it('removes keys with empty string values', () => {
