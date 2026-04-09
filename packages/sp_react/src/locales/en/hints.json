@@ -15,6 +15,7 @@
   "presentation": "Choose how groups appear in the app. 'Collect into one playlist' shows all groups inside a single entry. 'Make each group its own playlist' creates a separate entry for each group.",
   "episodeFilters": "Rules applied before organizing episodes. Within each rule, all fields must match (AND). Across rules: include matches if ANY rule matches (OR); exclude rejects if ANY rule matches (OR).",
   "filterTitle": "A case-insensitive text pattern matched against episode titles. Use regular expression syntax for advanced matching.",
+  "filterDescription": "A case-insensitive text pattern matched against episode descriptions. Use regular expression syntax for advanced matching.",
   "showYearHeaders": "When enabled, episode lists show year separators, helping users navigate long lists.",
   "showDateRange": "When enabled, each group card shows the date range of its episodes (earliest to latest).",
   "userSortable": "When enabled, users can flip between ascending and descending order in the app.",
