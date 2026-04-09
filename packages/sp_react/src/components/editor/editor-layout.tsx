@@ -660,7 +660,7 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
             disabled={hasSeparatePresentation}
             title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
             onClick={() => {
-              append({ ...DEFAULT_PLAYLIST });
+              append({ ...DEFAULT_PLAYLIST, priority: fields.length });
               setActiveTab(`tab-${fields.length}`);
             }}
           >
