@@ -14,11 +14,9 @@ import { useFeed } from '@/api/queries.ts';
 import { filterEpisodes } from '@/lib/episode-filter.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
-import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
 import { UngroupedEpisodesPanel } from '@/components/preview/ungrouped-episodes-panel.tsx';
 import { FilteredEpisodesPanel } from '@/components/preview/filtered-episodes-panel.tsx';
 import { PlaylistTree } from '@/components/preview/playlist-tree.tsx';
-import { ExtractionPreview } from '@/components/preview/extraction-preview.tsx';
 import {
   Tabs,
   TabsList,
@@ -115,10 +113,8 @@ export function PlaylistTabContent({
   }, [defaultSortField, defaultSortOrder, groupDefs]);
 
   const sp = stablePreview;
-  const stableClaimedCount = sp?.playlist.claimedByOthers?.length ?? 0;
   const stableUngroupedCount = sp?.ungrouped.length ?? 0;
   const stableExcludedCount = sp?.excluded.length ?? 0;
-  const showClaimedTab = 2 <= playlistCount;
 
   return (
     <div className="pt-2">
@@ -179,19 +175,6 @@ export function PlaylistTabContent({
                           </Badge>
                         )}
                       </TabsTrigger>
-                      <TabsTrigger value="extraction">
-                        {tp('tabExtraction')}
-                      </TabsTrigger>
-                      {showClaimedTab && (
-                        <TabsTrigger value="claimed">
-                          {tp('tabClaimed')}
-                          {0 < stableClaimedCount && (
-                            <Badge variant="secondary" className="ml-1.5">
-                              {stableClaimedCount}
-                            </Badge>
-                          )}
-                        </TabsTrigger>
-                      )}
                     </TabsList>
                     <TabsContent value="groups">
                       <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
@@ -214,22 +197,6 @@ export function PlaylistTabContent({
                         </p>
                       )}
                     </TabsContent>
-                    <TabsContent value="extraction">
-                      <ExtractionPreview playlist={sp.playlist} />
-                    </TabsContent>
-                    {showClaimedTab && (
-                      <TabsContent value="claimed">
-                        {0 < stableClaimedCount ? (
-                          <ClaimedEpisodesSection
-                            episodes={sp.playlist.claimedByOthers ?? []}
-                          />
-                        ) : (
-                          <p className="text-sm text-muted-foreground py-4 text-center">
-                            {tp('emptyClaimed')}
-                          </p>
-                        )}
-                      </TabsContent>
-                    )}
                   </Tabs>
                 </>
               ) : (
