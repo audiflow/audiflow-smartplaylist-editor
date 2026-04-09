@@ -17,6 +17,7 @@ import { Trash2 } from 'lucide-react';
 
 interface PlaylistFormProps {
   index: number;
+  playlistCount: number;
   onRemove: () => void;
 }
 
@@ -29,7 +30,7 @@ function ErrorDot({ visible }: { visible: boolean }) {
   );
 }
 
-export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
+export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormProps) {
   const { t } = useTranslation('editor');
   const { formState } = useFormContext<PatternConfig>();
 
@@ -88,7 +89,7 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
           <EpisodeListTab index={index} />
         </TabsContent>
         <TabsContent value="resolver">
-          <ResolverTab index={index} />
+          <ResolverTab index={index} playlistCount={playlistCount} />
         </TabsContent>
         <TabsContent value="groups">
           <GroupsTab index={index} />

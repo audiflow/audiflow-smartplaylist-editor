@@ -118,6 +118,11 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const isNewConfig = configId === null;
   const effectiveId = isNewConfig ? formId : configId;
 
+  // Disable "Add Playlist" when any playlist uses "separate" presentation,
+  // because separate creates multiple top-level playlists in the mobile app.
+  const formPlaylists = useWatch({ control: form.control, name: 'playlists' });
+  const hasSeparatePresentation = formPlaylists?.some((p) => p?.presentation === 'separate') ?? false;
+
   // Auto-populate feed URL input from feedUrls when the input is empty.
   // In form mode, watch the form field; in JSON mode, parse from jsonText.
   const formFeedUrls = useWatch({ control: form.control, name: 'feedUrls' });
@@ -555,6 +560,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
                 type="button"
                 variant="outline"
                 size="sm"
+                disabled={hasSeparatePresentation}
+                title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
                 onClick={() => {
                   append({ ...DEFAULT_PLAYLIST });
                   setActiveTab(`tab-${fields.length}`);

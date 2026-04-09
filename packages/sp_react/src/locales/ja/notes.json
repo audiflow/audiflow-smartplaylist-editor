@@ -7,7 +7,7 @@
   "sectionNote.displaySettings": "アプリ内でのエピソードリストやグループの表示オプションです。グループごとにオーバーライドできます。",
   "interactionNote.episodeFilters.requireExclude": "RequireとExcludeの両方が設定されている場合、まずRequireに一致するエピソードが選択され、その中からExcludeに一致するものが除外されます。Requireが未設定の場合、全エピソードが対象となりExcludeのみが適用されます。",
   "interactionNote.episodeList.titleExtractorChain": "タイトル抽出器は各ステップを順番に試行します。あるステップの正規表現がマッチしない場合、次のステップにフォールバックします。すべて失敗した場合、フォールバック値が使用されます。",
-  "interactionNote.resolver.resolverStructure": "「セパレート」表示では、リゾルバーの各グループが独立したプレイリストになります。「コンバインド」表示では、すべてのグループが1つの親プレイリストの中にまとめられます。",
+  "interactionNote.resolver.resolverStructure": "統合: すべてのグループがアプリ内の1つのプレイリストエントリにまとめられます。個別: 各グループが独立したプレイリストエントリになりますが、複数の定義がそれぞれエントリを作成すると一覧が煩雑になるため、プレイリスト定義は1つのみに制限されます。",
   "interactionNote.resolver.titleExtractor": "タイトル抽出器はエピソードタイトルからグループの表示名を生成します。seasonNumber、year、titleDiscoveryリゾルバーでは、正規表現で抽出した値がデフォルトのグループ名を置き換えます。titleClassifierリゾルバーでは使用されません（静的なグループ表示名を使用します）。",
   "interactionNote.resolver.numberingExtractor": "ナンバリング抽出器はシーズンナンバーリゾルバーがタイトルからシーズン番号とエピソード番号を抽出するために使用します。ポッドキャストのタイトル形式に合わせて正規表現パターンとキャプチャグループを設定してください。",
   "interactionNote.groups.overrides": "グループレベルのオーバーライドは、エピソードリストタブと表示設定タブで設定したデフォルトより優先されます。オーバーライドを未設定にするとデフォルト値が継承されます。",
