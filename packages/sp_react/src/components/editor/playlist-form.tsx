@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
@@ -30,9 +30,12 @@ function ErrorDot({ visible }: { visible: boolean }) {
   );
 }
 
+const RESOLVERS_WITH_GROUPS = new Set(['seasonNumber', 'titleClassifier']);
+
 export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormProps) {
   const { t } = useTranslation('editor');
-  const { formState } = useFormContext<PatternConfig>();
+  const { formState, control } = useFormContext<PatternConfig>();
+  const resolverType = useWatch({ control, name: `playlists.${index}.resolverType` as const });
 
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
@@ -69,10 +72,12 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
             {t('tab.resolver')}
             <ErrorDot visible={hasResolverError} />
           </TabsTrigger>
-          <TabsTrigger value="groups">
-            {t('tab.groups')}
-            <ErrorDot visible={hasGroupsError} />
-          </TabsTrigger>
+          {RESOLVERS_WITH_GROUPS.has(resolverType ?? '') && (
+            <TabsTrigger value="groups">
+              {t('tab.groups')}
+              <ErrorDot visible={hasGroupsError} />
+            </TabsTrigger>
+          )}
           <TabsTrigger value="display">
             {t('tab.displaySettings')}
             <ErrorDot visible={hasDisplayError} />
@@ -91,9 +96,11 @@ export function PlaylistForm({ index, playlistCount, onRemove }: PlaylistFormPro
         <TabsContent value="resolver">
           <ResolverTab index={index} playlistCount={playlistCount} />
         </TabsContent>
-        <TabsContent value="groups">
-          <GroupsTab index={index} />
-        </TabsContent>
+        {RESOLVERS_WITH_GROUPS.has(resolverType ?? '') && (
+          <TabsContent value="groups">
+            <GroupsTab index={index} />
+          </TabsContent>
+        )}
         <TabsContent value="display">
           <DisplaySettingsTab index={index} />
         </TabsContent>
