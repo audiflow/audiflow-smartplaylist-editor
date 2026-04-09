@@ -40,7 +40,7 @@ This document covers:
   5. sp_react conformance tests
 - Consumer repos (audiflow, data repos) must update their vendored copies after schema changes
 - Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`
-- Shared `$defs` in playlist-definition schema: `GroupDef`, `SortSpec`, `SortRule`, `SortCondition`, `TitleExtractor`, `EpisodeExtractor`
+- Shared `$defs` in playlist-definition schema: `GroupDef`, `SortSpec`, `SortRule`, `SortCondition`, `TitleExtractor`, `NumberingExtractor`
 
 ## Consumer adoption process
 

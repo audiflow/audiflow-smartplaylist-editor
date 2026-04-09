@@ -37,13 +37,13 @@
 - [ ] **Step 1: Copy all three schema files from the data repo**
 
 ```bash
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist.feat-v4/schema/playlist-definition.schema.json \
+cp $DATA_REPO/schema/playlist-definition.schema.json \
    crates/sp_core/assets/playlist-definition.schema.json
 
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist.feat-v4/schema/pattern-index.schema.json \
+cp $DATA_REPO/schema/pattern-index.schema.json \
    crates/sp_core/assets/pattern-index.schema.json
 
-cp /Users/tohru/Documents/src/ghq/github.com/audiflow/audiflow-smartplaylist.feat-v4/schema/pattern-meta.schema.json \
+cp $DATA_REPO/schema/pattern-meta.schema.json \
    crates/sp_core/assets/pattern-meta.schema.json
 ```
 

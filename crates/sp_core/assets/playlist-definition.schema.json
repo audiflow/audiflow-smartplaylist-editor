@@ -18,7 +18,7 @@
     },
     "displayName": {
       "type": "string",
-      "description": "Human-readable playlist name shown in the app UI. For rss, year, and titleAppearanceOrder resolvers, this may be overridden per-group at runtime by titleExtractor output. For the category resolver, group-level display names come from static GroupDef entries."
+      "description": "Human-readable playlist name shown in the app UI. For seasonNumber, year, and titleDiscovery resolvers, this may be overridden per-group at runtime by titleExtractor output. For the titleClassifier resolver, group-level display names come from static GroupDef entries."
     },
     "resolverType": {
       "description": "Determines the algorithm used to group episodes into playlists. Each resolver interprets the episode data differently and supports different configuration fields.",
@@ -95,11 +95,11 @@
     },
     "nullSeasonGroupKey": {
       "type": "integer",
-      "description": "Group key assigned to episodes that have a null or zero seasonNumber in RSS metadata. Used only by the rss resolver. When set, episodes without a valid season number are placed into a group with this key (e.g., 0 for a 'Specials' group). When omitted, such episodes are left ungrouped and may fall through to a fallback definition."
+      "description": "Group key assigned to episodes that have a null or zero seasonNumber in RSS metadata. Used only by the seasonNumber resolver. When set, episodes without a valid season number are placed into a group with this key (e.g., 0 for a 'Specials' group). When omitted, such episodes are left ungrouped and may fall through to a fallback definition."
     },
     "titleExtractor": {
       "$ref": "#/$defs/TitleExtractor",
-      "description": "Configuration for extracting display names for resolver results (playlist titles in 'split' mode, group card titles in 'grouped' mode). Used by rss, year, and titleAppearanceOrder resolvers. Not used by the category resolver, which uses static display names from GroupDef entries. The extractor runs against a representative episode from each group (typically the first episode)."
+      "description": "Configuration for extracting display names for resolver results (playlist titles in 'split' mode, group card titles in 'grouped' mode). Used by seasonNumber, year, and titleDiscovery resolvers. Not used by the titleClassifier resolver, which uses static display names from GroupDef entries. The extractor runs against a representative episode from each group (typically the first episode)."
     },
     "prependSeasonNumber": {
       "type": "boolean",
@@ -161,7 +161,7 @@
     },
     "groups": {
       "type": "array",
-      "description": "Static group definitions, primarily used by the category resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleAppearanceOrder resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and numberingExtractor defaults.",
+      "description": "Static group definitions, primarily used by the titleClassifier resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleDiscovery resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and numberingExtractor defaults.",
       "items": {
         "$ref": "#/$defs/GroupDef"
       }
@@ -253,7 +253,7 @@
         },
         "displayName": {
           "type": "string",
-          "description": "Human-readable group name shown on the group card in the UI. For the category resolver this is always used as-is (not overridden by titleExtractor)."
+          "description": "Human-readable group name shown on the group card in the UI. For the titleClassifier resolver this is always used as-is (not overridden by titleExtractor)."
         },
         "pattern": {
           "type": "string",

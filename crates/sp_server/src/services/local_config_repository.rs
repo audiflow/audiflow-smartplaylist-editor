@@ -311,7 +311,7 @@ mod tests {
             "id": "playlist-1",
             "displayName": "Playlist One",
             "resolverType": "seasonNumber",
-            "playlistStructure": "groups"
+            "playlistStructure": "grouped"
         });
         std::fs::write(
             pattern_dir.join("playlists").join("playlist-1.json"),
@@ -379,7 +379,7 @@ mod tests {
             "id": "playlist-2",
             "displayName": "Playlist Two",
             "resolverType": "titleClassifier",
-            "playlistStructure": "groups"
+            "playlistStructure": "grouped"
         });
 
         repo.save_playlist("test-pattern", "playlist-2", &new_playlist)
@@ -402,7 +402,7 @@ mod tests {
         let tmp = setup_test_dir();
         let repo = LocalConfigRepository::new(tmp.path());
 
-        let playlist = json!({"id": "fmt-test", "displayName": "Fmt", "resolverType": "seasonNumber", "playlistStructure": "groups"});
+        let playlist = json!({"id": "fmt-test", "displayName": "Fmt", "resolverType": "seasonNumber", "playlistStructure": "grouped"});
         repo.save_playlist("test-pattern", "fmt-test", &playlist)
             .unwrap();
 

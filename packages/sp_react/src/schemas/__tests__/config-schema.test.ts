@@ -5,6 +5,7 @@ import {
   groupDefSchema,
   titleExtractorSchema,
   numberingExtractorSchema,
+  resolverTypeSchema,
   sortRuleSchema,
   episodeSortRuleSchema,
   episodeFiltersSchema,
@@ -353,5 +354,76 @@ describe('numberingExtractorSchema', () => {
     expect(result.fallbackSeasonNumber).toBe(0);
     expect(result.fallbackEpisodePattern).toBe('\\[bangai-hen#(\\d+)\\]');
     expect(result.fallbackToRss).toBe(true);
+  });
+});
+
+describe('resolverTypeSchema (legacy v3 migration)', () => {
+  it('normalizes legacy "rss" to "seasonNumber"', () => {
+    expect(resolverTypeSchema.parse('rss')).toBe('seasonNumber');
+  });
+
+  it('normalizes legacy "category" to "titleClassifier"', () => {
+    expect(resolverTypeSchema.parse('category')).toBe('titleClassifier');
+  });
+
+  it('normalizes legacy "titleAppearanceOrder" to "titleDiscovery"', () => {
+    expect(resolverTypeSchema.parse('titleAppearanceOrder')).toBe('titleDiscovery');
+  });
+
+  it('passes through v4 values unchanged', () => {
+    expect(resolverTypeSchema.parse('seasonNumber')).toBe('seasonNumber');
+    expect(resolverTypeSchema.parse('titleClassifier')).toBe('titleClassifier');
+    expect(resolverTypeSchema.parse('titleDiscovery')).toBe('titleDiscovery');
+    expect(resolverTypeSchema.parse('year')).toBe('year');
+  });
+});
+
+describe('migrateExtractorKey (episodeExtractor -> numberingExtractor)', () => {
+  it('migrates episodeExtractor at playlist level', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      playlistStructure: 'split',
+      episodeExtractor: {
+        source: 'title',
+        pattern: '\\[(\\d+)-(\\d+)\\]',
+      },
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.numberingExtractor).toBeDefined();
+    expect(result.numberingExtractor?.source).toBe('title');
+    expect((result as Record<string, unknown>)['episodeExtractor']).toBeUndefined();
+  });
+
+  it('migrates episodeExtractor at group level', () => {
+    const input = {
+      id: 'g1',
+      displayName: 'Group 1',
+      episodeExtractor: {
+        source: 'title',
+        pattern: 'E(\\d+)',
+        episodeGroup: 1,
+      },
+    };
+    const result = groupDefSchema.parse(input);
+    expect(result.numberingExtractor).toBeDefined();
+    expect(result.numberingExtractor?.source).toBe('title');
+    expect((result as Record<string, unknown>)['episodeExtractor']).toBeUndefined();
+  });
+
+  it('preserves existing numberingExtractor (no double-migration)', () => {
+    const input = {
+      id: 'test',
+      displayName: 'Test',
+      resolverType: 'seasonNumber',
+      playlistStructure: 'split',
+      numberingExtractor: {
+        source: 'title',
+        pattern: 'S(\\d+)E(\\d+)',
+      },
+    };
+    const result = playlistDefinitionSchema.parse(input);
+    expect(result.numberingExtractor?.pattern).toBe('S(\\d+)E(\\d+)');
   });
 });

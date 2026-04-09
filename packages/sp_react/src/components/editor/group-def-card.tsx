@@ -53,16 +53,16 @@ export function GroupDefCard({
   const yearBinding = watch(`${prefix}.display.yearBinding`);
   const episodeSort = watch(`${prefix}.episodeList.sort` as any);
   const titleExtractor = watch(`${prefix}.episodeList.titleExtractor` as any);
-  const episodeExtractor = watch(`${prefix}.numberingExtractor` as any);
+  const numberingExtractor = watch(`${prefix}.numberingExtractor` as any);
 
   const expandedOverrides = useMemo(() => {
     const items: string[] = [];
     if (yearBinding != null) items.push('yearBinding');
     if (episodeSort != null) items.push('episodeSort');
     if (titleExtractor != null) items.push('titleExtractor');
-    if (episodeExtractor != null) items.push('numberingExtractor');
+    if (numberingExtractor != null) items.push('numberingExtractor');
     return items;
-  }, [yearBinding, episodeSort, titleExtractor, episodeExtractor]);
+  }, [yearBinding, episodeSort, titleExtractor, numberingExtractor]);
 
   return (
     <Card className="py-4">

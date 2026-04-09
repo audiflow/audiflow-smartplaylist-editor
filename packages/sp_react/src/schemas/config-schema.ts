@@ -31,7 +31,7 @@ export const resolverTypeValues = ['seasonNumber', 'year', 'titleDiscovery', 'ti
 
 export const resolverTypeSchema = z.preprocess(
   (val) => {
-    if (typeof val === 'string' && val in legacyResolverTypeMap) {
+    if (typeof val === 'string' && Object.hasOwn(legacyResolverTypeMap, val)) {
       return legacyResolverTypeMap[val];
     }
     return val;

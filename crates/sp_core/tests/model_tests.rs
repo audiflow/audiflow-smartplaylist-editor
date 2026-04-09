@@ -534,6 +534,44 @@ mod filter_semantics {
     }
 }
 
+// --- Legacy v3 `episodeExtractor` alias backward compatibility ---
+
+#[test]
+fn playlist_definition_deserializes_legacy_episode_extractor_alias() {
+    let json_val = json!({
+        "id": "legacy",
+        "displayName": "Legacy Playlist",
+        "resolverType": "seasonNumber",
+        "playlistStructure": "split",
+        "episodeExtractor": {
+            "source": "title",
+            "pattern": "\\[(\\d+)-(\\d+)\\]"
+        }
+    });
+
+    let def: PlaylistDefinition = serde_json::from_value(json_val).unwrap();
+    assert!(def.numbering_extractor.is_some(), "episodeExtractor alias should deserialize into numbering_extractor");
+    assert_eq!(def.numbering_extractor.as_ref().unwrap().source, "title");
+}
+
+#[test]
+fn group_def_deserializes_legacy_episode_extractor_alias() {
+    let json_val = json!({
+        "id": "g1",
+        "displayName": "Group One",
+        "episodeExtractor": {
+            "source": "title",
+            "pattern": "E(\\d+)",
+            "episodeGroup": 1
+        }
+    });
+
+    let group: GroupDef = serde_json::from_value(json_val).unwrap();
+    assert!(group.numbering_extractor.is_some(), "episodeExtractor alias should deserialize into numbering_extractor");
+    assert_eq!(group.numbering_extractor.as_ref().unwrap().source, "title");
+    assert_eq!(group.numbering_extractor.as_ref().unwrap().episode_group, 1);
+}
+
 // --- PatternConfig::matches_podcast() ---
 
 #[test]
