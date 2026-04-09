@@ -155,6 +155,15 @@ The filtered episodes tab shows the result of applying the current require/exclu
 filters against the loaded feed. This gives immediate feedback on whether filters
 are working as intended. Updates with the same debounce as the main preview.
 
+### Default tab behavior
+
+- **New playlist:** Filtered Episodes tab is shown initially.
+- **Auto-switch to Preview:** For a new config, once a valid resolver configuration
+  becomes available, the preview panel automatically switches to the Preview tab.
+  This happens only once — subsequent edits to the resolver do not trigger another
+  auto-switch.
+- **Existing playlist:** Preserve last-used tab (or Filtered Episodes as default).
+
 ## Form State
 
 React Hook Form state persists across tab switches naturally (components are not
