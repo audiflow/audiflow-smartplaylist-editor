@@ -80,11 +80,19 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const [jsonText, setJsonText] = useState('');
   const [activeTab, setActiveTab] = useState('tab-0');
 
+  // Normalize legacy v3 field names (e.g. episodeExtractor, rss resolver type)
+  // through the Zod schema before seeding the form.
+  const normalizedInitialConfig = useMemo(() => {
+    if (!initialConfig) return undefined;
+    const parsed = patternConfigSchema.safeParse(initialConfig);
+    return parsed.success ? parsed.data : initialConfig;
+  }, [initialConfig]);
+
   const form = useForm<PatternConfig>({
     // Cast needed: zodResolver infers the Zod input type (with optional defaults),
     // but the form operates on the output type where defaults are applied.
     resolver: zodResolver(patternConfigSchema) as Resolver<PatternConfig>,
-    defaultValues: initialConfig ?? DEFAULT_CONFIG,
+    defaultValues: normalizedInitialConfig ?? DEFAULT_CONFIG,
   });
 
   const { fields, append, remove } = useFieldArray({
@@ -127,7 +135,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [formFeedUrls, jsonText, isJsonMode, feedUrl, setFeedUrl]);
 
   // Track the config snapshot that was last loaded/saved for conflict detection
-  const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(initialConfig);
+  const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(normalizedInitialConfig);
 
   // Watch the assembled config query for external changes
   const assembledConfigQuery = useAssembledConfig(configId);
@@ -140,10 +148,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Detect external changes while user has unsaved edits (conflict detection)
+  // Detect external changes while user has unsaved edits (conflict detection).
+  // Normalize the server payload through Zod so v3 legacy naming differences
+  // don't trigger false conflict warnings.
   useEffect(() => {
     if (!assembledConfigQuery.data || !isDirty || isSaving) return;
-    if (JSON.stringify(assembledConfigQuery.data) !== JSON.stringify(lastLoadedConfig)) {
+    const parsed = patternConfigSchema.safeParse(assembledConfigQuery.data);
+    const normalizedServer = parsed.success ? parsed.data : assembledConfigQuery.data;
+    if (JSON.stringify(normalizedServer) !== JSON.stringify(lastLoadedConfig)) {
       setConflict(`patterns/${configId}`);
     }
   }, [assembledConfigQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -167,7 +179,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         setDirty(!!values.id);
         return;
       }
-      if (!initialConfig || normalizedLastLoaded === undefined) {
+      if (!normalizedInitialConfig || normalizedLastLoaded === undefined) {
         setDirty(true);
         return;
       }
@@ -180,7 +192,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       setDirty(current !== normalizedLastLoaded);
     });
     return () => subscription.unsubscribe();
-  }, [form, normalizedLastLoaded, setDirty, initialConfig, isNewConfig]);
+  }, [form, normalizedLastLoaded, setDirty, normalizedInitialConfig, isNewConfig]);
 
   const handleModeToggle = useCallback(() => {
     if (!isJsonMode) {
@@ -362,12 +374,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // fire's mutation becomes orphaned; the second fire attaches properly.
   const hasAutoPreviewedRef = useRef(false);
   useEffect(() => {
-    if (hasAutoPreviewedRef.current || !configId || !initialConfig) return;
-    const url = initialConfig.feedUrls?.[0];
+    if (hasAutoPreviewedRef.current || !configId || !normalizedInitialConfig) return;
+    const url = normalizedInitialConfig.feedUrls?.[0];
     if (!url) return;
     hasAutoPreviewedRef.current = true;
     previewMutationRef.current.mutate(
-      { config: sanitizeConfig(initialConfig), feedUrl: url },
+      { config: sanitizeConfig(normalizedInitialConfig), feedUrl: url },
       {
         onError: (error) => {
           toast.error(t('toastPreviewError', {
@@ -380,26 +392,33 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     return () => {
       hasAutoPreviewedRef.current = false;
     };
-  }, [configId, initialConfig, t]);
+  }, [configId, normalizedInitialConfig, t]);
+
+  // Normalize server payload through Zod for consistent v3-to-v4 migration.
+  const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
+    const parsed = patternConfigSchema.safeParse(raw);
+    return parsed.success ? parsed.data : raw;
+  }, []);
 
   // Conflict resolution: reload from disk
   const handleReload = useCallback(() => {
     if (assembledConfigQuery.data) {
-      form.reset(assembledConfigQuery.data);
-      setLastLoadedConfig(assembledConfigQuery.data);
+      const normalized = normalizeServerConfig(assembledConfigQuery.data);
+      form.reset(normalized);
+      setLastLoadedConfig(normalized);
       setDirty(false);
     }
     clearConflict();
-  }, [assembledConfigQuery.data, form, setDirty, clearConflict]);
+  }, [assembledConfigQuery.data, form, setDirty, clearConflict, normalizeServerConfig]);
 
   // Conflict resolution: keep current changes
   const handleKeepChanges = useCallback(() => {
     clearConflict();
     // Update lastLoadedConfig so we don't re-trigger conflict
     if (assembledConfigQuery.data) {
-      setLastLoadedConfig(assembledConfigQuery.data);
+      setLastLoadedConfig(normalizeServerConfig(assembledConfigQuery.data));
     }
-  }, [assembledConfigQuery.data, clearConflict]);
+  }, [assembledConfigQuery.data, clearConflict, normalizeServerConfig]);
 
   return (
     <div className="container mx-auto max-w-7xl p-6">

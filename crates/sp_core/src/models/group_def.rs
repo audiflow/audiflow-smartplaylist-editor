@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::episode_extractor::EpisodeExtractor;
+use super::numbering_extractor::NumberingExtractor;
 use super::sort::EpisodeSortRule;
 use super::title_extractor::TitleExtractor;
 
@@ -20,8 +20,9 @@ pub struct GroupDef {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub episode_list: Option<GroupDefEpisodeList>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub episode_extractor: Option<EpisodeExtractor>,
+    /// Accepts legacy `episodeExtractor` key for v3 backward compatibility.
+    #[serde(skip_serializing_if = "Option::is_none", alias = "episodeExtractor")]
+    pub numbering_extractor: Option<NumberingExtractor>,
 }
 
 /// Per-group display overrides for the group card.

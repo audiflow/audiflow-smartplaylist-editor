@@ -20,12 +20,24 @@ export const playlistStructureSchema = z.enum(['split', 'grouped']);
 
 export const yearBindingSchema = z.enum(['none', 'pinToYear', 'splitByYear']);
 
-export const resolverTypeSchema = z.enum([
-  'rss',
-  'category',
-  'year',
-  'titleAppearanceOrder',
-]);
+// Legacy v3 resolver type strings mapped to v4 equivalents.
+const legacyResolverTypeMap: Record<string, string> = {
+  rss: 'seasonNumber',
+  category: 'titleClassifier',
+  titleAppearanceOrder: 'titleDiscovery',
+};
+
+export const resolverTypeValues = ['seasonNumber', 'year', 'titleDiscovery', 'titleClassifier'] as const;
+
+export const resolverTypeSchema = z.preprocess(
+  (val) => {
+    if (typeof val === 'string' && Object.hasOwn(legacyResolverTypeMap, val)) {
+      return legacyResolverTypeMap[val];
+    }
+    return val;
+  },
+  z.enum(resolverTypeValues),
+);
 
 // -- Sort types --
 
@@ -90,7 +102,7 @@ export const titleExtractorSchema: z.ZodType<TitleExtractorInput> = z.lazy(
     }),
 );
 
-export const episodeExtractorSchema = z.object({
+export const numberingExtractorSchema = z.object({
   source: z.string(),
   pattern: z.string(),
   seasonGroup: z.number().nullish(),
@@ -101,48 +113,65 @@ export const episodeExtractorSchema = z.object({
   fallbackToRss: z.boolean().nullish().transform((v) => v ?? false),
 });
 
+// Migrate legacy v3 `episodeExtractor` key to v4 `numberingExtractor`.
+function migrateExtractorKey(val: unknown): unknown {
+  if (val == null || typeof val !== 'object' || Array.isArray(val)) return val;
+  const obj = val as Record<string, unknown>;
+  if ('episodeExtractor' in obj && !('numberingExtractor' in obj)) {
+    const { episodeExtractor, ...rest } = obj;
+    return { ...rest, numberingExtractor: episodeExtractor };
+  }
+  return val;
+}
+
 // -- Group definition --
 
-export const groupDefSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  pattern: z.string().optional(),
-  display: z
-    .object({
-      showDateRange: z.boolean().optional(),
-      yearBinding: yearBindingSchema.optional(),
-    })
-    .optional(),
-  episodeList: z
-    .object({
-      showYearHeaders: z.boolean().optional(),
-      sort: episodeSortRuleSchema.optional(),
-      titleExtractor: titleExtractorSchema.optional(),
-    })
-    .optional(),
-  episodeExtractor: episodeExtractorSchema.optional(),
-});
+export const groupDefSchema = z.preprocess(
+  migrateExtractorKey,
+  z.object({
+    id: z.string(),
+    displayName: z.string(),
+    pattern: z.string().optional(),
+    display: z
+      .object({
+        showDateRange: z.boolean().optional(),
+        yearBinding: yearBindingSchema.optional(),
+      })
+      .optional(),
+    episodeList: z
+      .object({
+        showYearHeaders: z.boolean().optional(),
+        sort: episodeSortRuleSchema.optional(),
+        titleExtractor: titleExtractorSchema.optional(),
+      })
+      .optional(),
+    numberingExtractor: numberingExtractorSchema.optional(),
+  }),
+);
 
 // -- Playlist definition --
 
-export const playlistDefinitionSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  resolverType: resolverTypeSchema,
-  playlistStructure: playlistStructureSchema,
-  priority: z
-    .number()
-    .nullish()
-    .transform((v) => v ?? 0),
-  episodeFilters: episodeFiltersSchema.nullish(),
-  prependSeasonNumber: z.boolean().default(false),
-  nullSeasonGroupKey: z.number().nullish(),
-  groups: z.array(groupDefSchema).nullish(),
-  groupList: groupListSettingsSchema.nullish(),
-  episodeList: episodeListSettingsSchema.nullish(),
-  titleExtractor: titleExtractorSchema.nullish(),
-  episodeExtractor: episodeExtractorSchema.nullish(),
-});
+export const playlistDefinitionSchema = z.preprocess(
+  migrateExtractorKey,
+  z.object({
+    id: z.string(),
+    displayName: z.string(),
+    resolverType: resolverTypeSchema,
+    playlistStructure: playlistStructureSchema,
+    priority: z
+      .number()
+      .nullish()
+      .transform((v) => v ?? 0),
+    episodeFilters: episodeFiltersSchema.nullish(),
+    prependSeasonNumber: z.boolean().default(false),
+    nullSeasonGroupKey: z.number().nullish(),
+    groups: z.array(groupDefSchema).nullish(),
+    groupList: groupListSettingsSchema.nullish(),
+    episodeList: episodeListSettingsSchema.nullish(),
+    titleExtractor: titleExtractorSchema.nullish(),
+    numberingExtractor: numberingExtractorSchema.nullish(),
+  }),
+);
 
 // -- Pattern config --
 
@@ -171,6 +200,6 @@ export type GroupListSettings = z.infer<typeof groupListSettingsSchema>;
 export type EpisodeListSettings = z.infer<typeof episodeListSettingsSchema>;
 export type GroupDef = z.infer<typeof groupDefSchema>;
 export type TitleExtractor = z.infer<typeof titleExtractorSchema>;
-export type EpisodeExtractor = z.infer<typeof episodeExtractorSchema>;
+export type NumberingExtractor = z.infer<typeof numberingExtractorSchema>;
 export type PlaylistDefinition = z.infer<typeof playlistDefinitionSchema>;
 export type PatternConfig = z.infer<typeof patternConfigSchema>;

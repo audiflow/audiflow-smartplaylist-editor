@@ -25,10 +25,10 @@ const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
 const SORT_ORDERS = ['ascending', 'descending'] as const;
 
 const RESOLVER_TYPES = [
-  'rss',
-  'category',
+  'seasonNumber',
   'year',
-  'titleAppearanceOrder',
+  'titleDiscovery',
+  'titleClassifier',
 ] as const;
 
 const PLAYLIST_STRUCTURES = ['split', 'grouped'] as const;
@@ -313,7 +313,7 @@ function StructureSettings({
           </Select>
         </div>
 
-        {resolverType === 'rss' && (
+        {resolverType === 'seasonNumber' && (
           <div className="space-y-1.5">
             <HintLabel
               htmlFor={`playlist-${index}-nullSeasonGroupKey`}

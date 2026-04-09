@@ -696,7 +696,7 @@ impl ResolverService {
         definition: &PlaylistDefinition,
         episodes: &[&dyn EpisodeData],
     ) -> Option<Vec<SimpleEpisodeData>> {
-        let extractor = definition.episode_extractor.as_ref()?;
+        let extractor = definition.numbering_extractor.as_ref()?;
 
         let compiled = extractor.compile();
         Some(
@@ -727,9 +727,16 @@ impl ResolverService {
     }
 
     fn find_resolver_by_type(&self, resolver_type: &str) -> Option<&dyn Resolver> {
+        // Normalize legacy v3 resolver type strings to v4 equivalents.
+        let normalized = match resolver_type {
+            "rss" => "seasonNumber",
+            "category" => "titleClassifier",
+            "titleAppearanceOrder" => "titleDiscovery",
+            other => other,
+        };
         self.resolvers
             .iter()
-            .find(|r| r.resolver_type() == resolver_type)
+            .find(|r| r.resolver_type() == normalized)
             .map(|r| r.as_ref())
     }
 

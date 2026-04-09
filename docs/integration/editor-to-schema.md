@@ -39,8 +39,8 @@ This document covers:
   4. sp_react Zod schema (`packages/sp_react/src/schemas/config-schema.ts`)
   5. sp_react conformance tests
 - Consumer repos (audiflow, data repos) must update their vendored copies after schema changes
-- Valid resolver types: `rss`, `category`, `year`, `titleAppearanceOrder`
-- Shared `$defs` in playlist-definition schema: `GroupDef`, `SortSpec`, `SortRule`, `SortCondition`, `TitleExtractor`, `EpisodeExtractor`
+- Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`
+- Shared `$defs` in playlist-definition schema: `GroupDef`, `SortSpec`, `SortRule`, `SortCondition`, `TitleExtractor`, `NumberingExtractor`
 
 ## Consumer adoption process
 

@@ -95,7 +95,7 @@
             />
         </svg>
     <a href="#if_resolverType" onclick="anchorLink('if_resolverType')">resolverType</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="const-value" id="if_resolverType_const">Specific value: <code>"category"</code></span>
+<span class="const-value" id="if_resolverType_const">Specific value: <code>"titleClassifier"</code></span>
         
 
         
@@ -195,7 +195,7 @@
             />
         </svg>
     <a href="#displayName" onclick="anchorLink('displayName')">displayName</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Human-readable playlist name shown in the app UI. For rss, year, and titleAppearanceOrder resolvers, this may be overridden per-group at runtime by titleExtractor output. For the category resolver, group-level display names come from static GroupDef entries.</p>
+<span class="description"><p>Human-readable playlist name shown in the app UI. For seasonNumber, year, and titleDiscovery resolvers, this may be overridden per-group at runtime by titleExtractor output. For the titleClassifier resolver, group-level display names come from static GroupDef entries.</p>
 </span>
         
 
@@ -279,8 +279,8 @@
             />
         </svg>
     <a href="#resolverType_oneOf_i0" onclick="anchorLink('resolverType_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Groups episodes by their iTunes season number from RSS feed metadata (itunes:season tag). Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts that properly tag seasons in their RSS feed. Supports: nullSeasonGroupKey, titleExtractor, episodeExtractor.</p>
-</span><span class="const-value" id="resolverType_oneOf_i0_const">Specific value: <code>"rss"</code></span>
+<span class="description"><p>Groups episodes by season number, using numberingExtractor when configured and falling back to RSS feed metadata (itunes:season tag) when needed. Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts that expose season numbering either in titles or RSS metadata. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor.</p>
+</span><span class="const-value" id="resolverType_oneOf_i0_const">Specific value: <code>"seasonNumber"</code></span>
         
 
         
@@ -314,7 +314,7 @@
         </svg>
     <a href="#resolverType_oneOf_i1" onclick="anchorLink('resolverType_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
 <span class="description"><p>Groups episodes by matching their titles against regex patterns defined in the groups array. Groups are evaluated in order; the first matching pattern claims each episode. A group without a pattern acts as a catch-all for unmatched episodes. Best for podcasts with naming conventions like '[Series A] Episode 1' or 'Arc 1: Title'. Requires: groups. Does not use titleExtractor (group display names come from GroupDef.displayName).</p>
-</span><span class="const-value" id="resolverType_oneOf_i1_const">Specific value: <code>"category"</code></span>
+</span><span class="const-value" id="resolverType_oneOf_i1_const">Specific value: <code>"titleClassifier"</code></span>
         
 
         
@@ -347,7 +347,7 @@
             />
         </svg>
     <a href="#resolverType_oneOf_i2" onclick="anchorLink('resolverType_oneOf_i2')">item 2</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Groups episodes by their publication year (publishedAt field). Each distinct year becomes a separate group, sorted by year descending by default (newest first). Best for long-running podcasts where yearly grouping provides natural navigation. Supports: titleExtractor, episodeExtractor.</p>
+<span class="description"><p>Groups episodes by their publication year (publishedAt field). Each distinct year becomes a separate group, sorted by year descending by default (newest first). Best for long-running podcasts where yearly grouping provides natural navigation. Supports: titleExtractor, numberingExtractor.</p>
 </span><span class="const-value" id="resolverType_oneOf_i2_const">Specific value: <code>"year"</code></span>
         
 
@@ -382,7 +382,7 @@
         </svg>
     <a href="#resolverType_oneOf_i3" onclick="anchorLink('resolverType_oneOf_i3')">item 3</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
 <span class="description"><p>Groups episodes by a recurring pattern extracted from their titles, ordered by when each unique pattern first appears in the feed (sorted by publication date). Uses titleExtractor or the first group's pattern to extract group names. Best for podcasts with titled story arcs or recurring series. Supports: titleExtractor (primary), groups[0].pattern (fallback for extraction).</p>
-</span><span class="const-value" id="resolverType_oneOf_i3_const">Specific value: <code>"titleAppearanceOrder"</code></span>
+</span><span class="const-value" id="resolverType_oneOf_i3_const">Specific value: <code>"titleDiscovery"</code></span>
         
 
         
@@ -496,7 +496,7 @@
             />
         </svg>
     <a href="#playlistStructure_oneOf_i0" onclick="anchorLink('playlistStructure_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Each resolver result (season, year, category match) becomes a separate top-level smart playlist. One definition produces many playlists, each containing episodes that share the same grouping key. Tapping a playlist shows its episodes directly. Best when each group (e.g., a season or year) should stand alone as an independent playlist.</p>
+<span class="description"><p>Each resolver result (season, year, titleClassifier match) becomes a separate top-level smart playlist. One definition produces many playlists, each containing episodes that share the same grouping key. Tapping a playlist shows its episodes directly. Best when each group (e.g., a season or year) should stand alone as an independent playlist.</p>
 </span><span class="const-value" id="playlistStructure_oneOf_i0_const">Specific value: <code>"split"</code></span>
         
 
@@ -865,7 +865,7 @@
             />
         </svg>
     <a href="#nullSeasonGroupKey" onclick="anchorLink('nullSeasonGroupKey')">nullSeasonGroupKey</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
-<span class="description"><p>Group key assigned to episodes that have a null or zero seasonNumber in RSS metadata. Used only by the rss resolver. When set, episodes without a valid season number are placed into a group with this key (e.g., 0 for a 'Specials' group). When omitted, such episodes are left ungrouped and may fall through to a fallback definition.</p>
+<span class="description"><p>Group key assigned to episodes that have a null or zero seasonNumber in RSS metadata. Used only by the seasonNumber resolver. When set, episodes without a valid season number are placed into a group with this key (e.g., 0 for a 'Specials' group). When omitted, such episodes are left ungrouped and may fall through to a fallback definition.</p>
 </span>
         
 
@@ -899,7 +899,7 @@
             />
         </svg>
     <a href="#titleExtractor" onclick="anchorLink('titleExtractor')">titleExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Configuration for extracting display names for resolver results (playlist titles in 'split' mode, group card titles in 'grouped' mode). Used by rss, year, and titleAppearanceOrder resolvers. Not used by the category resolver, which uses static display names from GroupDef entries. The extractor runs against a representative episode from each group (typically the first episode).</p>
+<span class="description"><p>Configuration for extracting display names for resolver results (playlist titles in 'split' mode, group card titles in 'grouped' mode). Used by seasonNumber, year, and titleDiscovery resolvers. Not used by the titleClassifier resolver, which uses static display names from GroupDef entries. The extractor runs against a representative episode from each group (typically the first episode).</p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -938,7 +938,7 @@
             />
         </svg>
     <a href="#titleExtractor_source" onclick="anchorLink('titleExtractor_source')">source</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
-<span class="description"><p>Episode field to read the raw value from. 'title': the episode title string. 'description': the episode description/summary string. 'seasonNumber': the episode's season number as a string (from RSS itunes:season or episodeExtractor). 'episodeNumber': the episode number as a string (from RSS itunes:episode or episodeExtractor). For 'seasonNumber' and 'episodeNumber', the numeric value is converted to a string before pattern matching.</p>
+<span class="description"><p>Episode field to read the raw value from. 'title': the episode title string. 'description': the episode description/summary string. 'seasonNumber': the episode's season number as a string (from RSS itunes:season or numberingExtractor). 'episodeNumber': the episode number as a string (from RSS itunes:episode or numberingExtractor). For 'seasonNumber' and 'episodeNumber', the numeric value is converted to a string before pattern matching.</p>
 </span><div class="enum-value" id="titleExtractor_source_enum">
             <h4>Must be one of:</h4>
             <ul class="list-group"><li class="list-group-item enum-item">"title"</li><li class="list-group-item enum-item">"description"</li><li class="list-group-item enum-item">"seasonNumber"</li><li class="list-group-item enum-item">"episodeNumber"</li></ul>
@@ -1620,7 +1620,7 @@
             />
         </svg>
     <a href="#groupList_sort_field_oneOf_i0" onclick="anchorLink('groupList_sort_field_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Sort by the group's numeric sort key. For rss resolver, this is the season number. For year resolver, the publication year. For titleAppearanceOrder, the first-appearance index. For category, the group's position in the groups array.</p>
+<span class="description"><p>Sort by the group's numeric sort key. For seasonNumber resolver, this is the season number. For year resolver, the publication year. For titleDiscovery, the first-appearance index. For titleClassifier, the group's position in the groups array.</p>
 </span><span class="const-value" id="groupList_sort_field_oneOf_i0_const">Specific value: <code>"playlistNumber"</code></span>
         
 
@@ -2049,7 +2049,7 @@
             />
         </svg>
     <a href="#episodeList_sort_field_oneOf_i1" onclick="anchorLink('episodeList_sort_field_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Sort by episode number (from RSS metadata or episodeExtractor).</p>
+<span class="description"><p>Sort by episode number (from RSS metadata or numberingExtractor).</p>
 </span><span class="const-value" id="episodeList_sort_field_oneOf_i1_const">Specific value: <code>"episodeNumber"</code></span>
         
 
@@ -2201,18 +2201,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor">
+<div class="accordion" id="accordionnumberingExtractor">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor">
+        <div class="card-header" id="headingnumberingExtractor">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor"
-                        aria-expanded="" aria-controls="episodeExtractor" onclick="setAnchor('#episodeExtractor')"><span class="property-name">episodeExtractor</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor"
+                        aria-expanded="" aria-controls="numberingExtractor" onclick="setAnchor('#numberingExtractor')"><span class="property-name">numberingExtractor</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor"
-             data-parent="#accordionepisodeExtractor">
+        <div id="numberingExtractor"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor"
+             data-parent="#accordionnumberingExtractor">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2222,8 +2222,8 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Default configuration for extracting season and episode numbers from episode title or description text. Overrides RSS metadata (itunes:season, itunes:episode) with values parsed from the episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be overridden per-group via GroupDef.episodeExtractor.</p>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Default configuration for extracting season and episode numbers from episode title or description text. Overrides RSS metadata (itunes:season, itunes:episode) with values parsed from the episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be overridden per-group via GroupDef.numberingExtractor.</p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -2233,18 +2233,18 @@
         
 
         
-<div class="accordion" id="accordionepisodeExtractor_source">
+<div class="accordion" id="accordionnumberingExtractor_source">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_source">
+        <div class="card-header" id="headingnumberingExtractor_source">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_source"
-                        aria-expanded="" aria-controls="episodeExtractor_source" onclick="setAnchor('#episodeExtractor_source')"><span class="property-name">source</span> <span class="badge badge-warning required-property">Required</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_source"
+                        aria-expanded="" aria-controls="numberingExtractor_source" onclick="setAnchor('#numberingExtractor_source')"><span class="property-name">source</span> <span class="badge badge-warning required-property">Required</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_source"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_source"
-             data-parent="#accordionepisodeExtractor_source">
+        <div id="numberingExtractor_source"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_source"
+             data-parent="#accordionnumberingExtractor_source">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2254,16 +2254,16 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_source" onclick="anchorLink('episodeExtractor_source')">source</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+    <a href="#numberingExtractor_source" onclick="anchorLink('numberingExtractor_source')">source</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
 <span class="description"><p>Episode field to extract numbers from. 'title': the episode title (most common). 'description': the episode description/summary.</p>
-</span><div class="enum-value" id="episodeExtractor_source_enum">
+</span><div class="enum-value" id="numberingExtractor_source_enum">
             <h4>Must be one of:</h4>
             <ul class="list-group"><li class="list-group-item enum-item">"title"</li><li class="list-group-item enum-item">"description"</li></ul>
             </div>
@@ -2277,18 +2277,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor_pattern">
+<div class="accordion" id="accordionnumberingExtractor_pattern">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_pattern">
+        <div class="card-header" id="headingnumberingExtractor_pattern">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_pattern"
-                        aria-expanded="" aria-controls="episodeExtractor_pattern" onclick="setAnchor('#episodeExtractor_pattern')"><span class="property-name">pattern</span> <span class="badge badge-warning required-property">Required</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_pattern"
+                        aria-expanded="" aria-controls="numberingExtractor_pattern" onclick="setAnchor('#numberingExtractor_pattern')"><span class="property-name">pattern</span> <span class="badge badge-warning required-property">Required</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_pattern"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_pattern"
-             data-parent="#accordionepisodeExtractor_pattern">
+        <div id="numberingExtractor_pattern"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_pattern"
+             data-parent="#accordionnumberingExtractor_pattern">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2298,14 +2298,14 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_pattern" onclick="anchorLink('episodeExtractor_pattern')">pattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#numberingExtractor_pattern" onclick="anchorLink('numberingExtractor_pattern')">pattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Primary regex pattern with capture groups for season and episode numbers. Must contain at least one capture group for the episode number (episodeGroup). Should contain a capture group for season (seasonGroup) unless seasonGroup is null. Example: '[(\d+)-(\d+)]' captures season from group 1 and episode from group 2.</p>
 </span>
         
@@ -2318,18 +2318,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor_seasonGroup">
+<div class="accordion" id="accordionnumberingExtractor_seasonGroup">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_seasonGroup">
+        <div class="card-header" id="headingnumberingExtractor_seasonGroup">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_seasonGroup"
-                        aria-expanded="" aria-controls="episodeExtractor_seasonGroup" onclick="setAnchor('#episodeExtractor_seasonGroup')"><span class="property-name">seasonGroup</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_seasonGroup"
+                        aria-expanded="" aria-controls="numberingExtractor_seasonGroup" onclick="setAnchor('#numberingExtractor_seasonGroup')"><span class="property-name">seasonGroup</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_seasonGroup"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_seasonGroup"
-             data-parent="#accordionepisodeExtractor_seasonGroup">
+        <div id="numberingExtractor_seasonGroup"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_seasonGroup"
+             data-parent="#accordionnumberingExtractor_seasonGroup">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2339,14 +2339,14 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_seasonGroup" onclick="anchorLink('episodeExtractor_seasonGroup')">seasonGroup</a></div><span class="badge badge-dark value-type">Type: integer or null</span> <span class="badge badge-success default-value">Default: 1</span><br/>
+    <a href="#numberingExtractor_seasonGroup" onclick="anchorLink('numberingExtractor_seasonGroup')">seasonGroup</a></div><span class="badge badge-dark value-type">Type: integer or null</span> <span class="badge badge-success default-value">Default: 1</span><br/>
 <span class="description"><p>Capture group index for the season number in the primary pattern. Default is 1. Set to null to skip season extraction entirely (episode-only mode), useful when only episode renumbering is needed without changing season grouping.</p>
 </span>
         
@@ -2359,18 +2359,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor_episodeGroup">
+<div class="accordion" id="accordionnumberingExtractor_episodeGroup">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_episodeGroup">
+        <div class="card-header" id="headingnumberingExtractor_episodeGroup">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_episodeGroup"
-                        aria-expanded="" aria-controls="episodeExtractor_episodeGroup" onclick="setAnchor('#episodeExtractor_episodeGroup')"><span class="property-name">episodeGroup</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_episodeGroup"
+                        aria-expanded="" aria-controls="numberingExtractor_episodeGroup" onclick="setAnchor('#numberingExtractor_episodeGroup')"><span class="property-name">episodeGroup</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_episodeGroup"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_episodeGroup"
-             data-parent="#accordionepisodeExtractor_episodeGroup">
+        <div id="numberingExtractor_episodeGroup"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_episodeGroup"
+             data-parent="#accordionnumberingExtractor_episodeGroup">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2380,38 +2380,38 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_episodeGroup" onclick="anchorLink('episodeExtractor_episodeGroup')">episodeGroup</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 2</span><br/>
+    <a href="#numberingExtractor_episodeGroup" onclick="anchorLink('numberingExtractor_episodeGroup')">episodeGroup</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 2</span><br/>
 <span class="description"><p>Capture group index for the episode number in the primary pattern. Default is 2. The extracted value is parsed as an integer and used for episode ordering within groups.</p>
 </span>
         
 
         
-        <p><span class="badge badge-light restriction numeric-restriction" id="episodeExtractor_episodeGroup_number">Value must be greater or equal to <code>1</code></span></p>
+        <p><span class="badge badge-light restriction numeric-restriction" id="numberingExtractor_episodeGroup_number">Value must be greater or equal to <code>1</code></span></p>
 
         
             </div>
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor_fallbackSeasonNumber">
+<div class="accordion" id="accordionnumberingExtractor_fallbackSeasonNumber">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_fallbackSeasonNumber">
+        <div class="card-header" id="headingnumberingExtractor_fallbackSeasonNumber">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackSeasonNumber"
-                        aria-expanded="" aria-controls="episodeExtractor_fallbackSeasonNumber" onclick="setAnchor('#episodeExtractor_fallbackSeasonNumber')"><span class="property-name">fallbackSeasonNumber</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_fallbackSeasonNumber"
+                        aria-expanded="" aria-controls="numberingExtractor_fallbackSeasonNumber" onclick="setAnchor('#numberingExtractor_fallbackSeasonNumber')"><span class="property-name">fallbackSeasonNumber</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_fallbackSeasonNumber"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackSeasonNumber"
-             data-parent="#accordionepisodeExtractor_fallbackSeasonNumber">
+        <div id="numberingExtractor_fallbackSeasonNumber"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_fallbackSeasonNumber"
+             data-parent="#accordionnumberingExtractor_fallbackSeasonNumber">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2421,14 +2421,14 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_fallbackSeasonNumber" onclick="anchorLink('episodeExtractor_fallbackSeasonNumber')">fallbackSeasonNumber</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+    <a href="#numberingExtractor_fallbackSeasonNumber" onclick="anchorLink('numberingExtractor_fallbackSeasonNumber')">fallbackSeasonNumber</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
 <span class="description"><p>Fixed season number assigned when the primary pattern fails but fallbackEpisodePattern matches. Typically 0 for special/bonus episodes that don't belong to a regular season. Only used in conjunction with fallbackEpisodePattern.</p>
 </span>
         
@@ -2441,18 +2441,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor_fallbackEpisodePattern">
+<div class="accordion" id="accordionnumberingExtractor_fallbackEpisodePattern">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_fallbackEpisodePattern">
+        <div class="card-header" id="headingnumberingExtractor_fallbackEpisodePattern">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackEpisodePattern"
-                        aria-expanded="" aria-controls="episodeExtractor_fallbackEpisodePattern" onclick="setAnchor('#episodeExtractor_fallbackEpisodePattern')"><span class="property-name">fallbackEpisodePattern</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_fallbackEpisodePattern"
+                        aria-expanded="" aria-controls="numberingExtractor_fallbackEpisodePattern" onclick="setAnchor('#numberingExtractor_fallbackEpisodePattern')"><span class="property-name">fallbackEpisodePattern</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_fallbackEpisodePattern"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackEpisodePattern"
-             data-parent="#accordionepisodeExtractor_fallbackEpisodePattern">
+        <div id="numberingExtractor_fallbackEpisodePattern"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_fallbackEpisodePattern"
+             data-parent="#accordionnumberingExtractor_fallbackEpisodePattern">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2462,14 +2462,14 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_fallbackEpisodePattern" onclick="anchorLink('episodeExtractor_fallbackEpisodePattern')">fallbackEpisodePattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+    <a href="#numberingExtractor_fallbackEpisodePattern" onclick="anchorLink('numberingExtractor_fallbackEpisodePattern')">fallbackEpisodePattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Secondary regex pattern tried when the primary pattern does not match. Designed for special episodes with a different title format (e.g., bonus episodes, extras). The episode number is extracted from the capture group specified by fallbackEpisodeCaptureGroup, and the season is set to fallbackSeasonNumber.</p>
 </span>
         
@@ -2482,18 +2482,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor_fallbackEpisodeCaptureGroup">
+<div class="accordion" id="accordionnumberingExtractor_fallbackEpisodeCaptureGroup">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_fallbackEpisodeCaptureGroup">
+        <div class="card-header" id="headingnumberingExtractor_fallbackEpisodeCaptureGroup">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackEpisodeCaptureGroup"
-                        aria-expanded="" aria-controls="episodeExtractor_fallbackEpisodeCaptureGroup" onclick="setAnchor('#episodeExtractor_fallbackEpisodeCaptureGroup')"><span class="property-name">fallbackEpisodeCaptureGroup</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_fallbackEpisodeCaptureGroup"
+                        aria-expanded="" aria-controls="numberingExtractor_fallbackEpisodeCaptureGroup" onclick="setAnchor('#numberingExtractor_fallbackEpisodeCaptureGroup')"><span class="property-name">fallbackEpisodeCaptureGroup</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_fallbackEpisodeCaptureGroup"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackEpisodeCaptureGroup"
-             data-parent="#accordionepisodeExtractor_fallbackEpisodeCaptureGroup">
+        <div id="numberingExtractor_fallbackEpisodeCaptureGroup"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_fallbackEpisodeCaptureGroup"
+             data-parent="#accordionnumberingExtractor_fallbackEpisodeCaptureGroup">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2503,38 +2503,38 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_fallbackEpisodeCaptureGroup" onclick="anchorLink('episodeExtractor_fallbackEpisodeCaptureGroup')">fallbackEpisodeCaptureGroup</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 1</span><br/>
+    <a href="#numberingExtractor_fallbackEpisodeCaptureGroup" onclick="anchorLink('numberingExtractor_fallbackEpisodeCaptureGroup')">fallbackEpisodeCaptureGroup</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 1</span><br/>
 <span class="description"><p>Capture group index for the episode number in fallbackEpisodePattern. Default is 1.</p>
 </span>
         
 
         
-        <p><span class="badge badge-light restriction numeric-restriction" id="episodeExtractor_fallbackEpisodeCaptureGroup_number">Value must be greater or equal to <code>1</code></span></p>
+        <p><span class="badge badge-light restriction numeric-restriction" id="numberingExtractor_fallbackEpisodeCaptureGroup_number">Value must be greater or equal to <code>1</code></span></p>
 
         
             </div>
         </div>
     </div>
 </div>
-<div class="accordion" id="accordionepisodeExtractor_fallbackToRss">
+<div class="accordion" id="accordionnumberingExtractor_fallbackToRss">
     <div class="card">
-        <div class="card-header" id="headingepisodeExtractor_fallbackToRss">
+        <div class="card-header" id="headingnumberingExtractor_fallbackToRss">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor_fallbackToRss"
-                        aria-expanded="" aria-controls="episodeExtractor_fallbackToRss" onclick="setAnchor('#episodeExtractor_fallbackToRss')"><span class="property-name">fallbackToRss</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#numberingExtractor_fallbackToRss"
+                        aria-expanded="" aria-controls="numberingExtractor_fallbackToRss" onclick="setAnchor('#numberingExtractor_fallbackToRss')"><span class="property-name">fallbackToRss</span></button>
             </h2>
         </div>
 
-        <div id="episodeExtractor_fallbackToRss"
-             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor_fallbackToRss"
-             data-parent="#accordionepisodeExtractor_fallbackToRss">
+        <div id="numberingExtractor_fallbackToRss"
+             class="collapse property-definition-div" aria-labelledby="headingnumberingExtractor_fallbackToRss"
+             data-parent="#accordionnumberingExtractor_fallbackToRss">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -2544,14 +2544,14 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a>
+    <a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')">numberingExtractor</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#episodeExtractor_fallbackToRss" onclick="anchorLink('episodeExtractor_fallbackToRss')">fallbackToRss</a></div><span class="badge badge-dark value-type">Type: boolean</span> <span class="badge badge-success default-value">Default: false</span><br/>
+    <a href="#numberingExtractor_fallbackToRss" onclick="anchorLink('numberingExtractor_fallbackToRss')">fallbackToRss</a></div><span class="badge badge-dark value-type">Type: boolean</span> <span class="badge badge-success default-value">Default: false</span><br/>
 <span class="description"><p>When true, fall back to the episode's RSS episodeNumber (itunes:episode) if neither the primary pattern nor the fallback pattern matched. This is the last resort in the three-tier extraction strategy. Season number is not set in this case (only episode number is used).</p>
 </span>
         
@@ -2590,7 +2590,7 @@
             />
         </svg>
     <a href="#groups" onclick="anchorLink('groups')">groups</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
-<span class="description"><p>Static group definitions, primarily used by the category resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleAppearanceOrder resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and episodeExtractor defaults.</p>
+<span class="description"><p>Static group definitions, primarily used by the titleClassifier resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleDiscovery resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and numberingExtractor defaults.</p>
 </span>
         
 
@@ -2617,7 +2617,7 @@
             />
         </svg>
     <a href="#groups_items" onclick="anchorLink('groups_items')">GroupDef</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Static group definition. Groups with a pattern match episodes by title regex; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in definition order (first-match-wins). At most one catch-all group should exist and should be placed last. Groups can override definition-level defaults for display, episodeList, and episodeExtractor.</p>
+<span class="description"><p>Static group definition. Groups with a pattern match episodes by title regex; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in definition order (first-match-wins). At most one catch-all group should exist and should be placed last. Groups can override definition-level defaults for display, episodeList, and numberingExtractor.</p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -2711,7 +2711,7 @@
             />
         </svg>
     <a href="#groups_items_displayName" onclick="anchorLink('groups_items_displayName')">displayName</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Human-readable group name shown on the group card in the UI. For the category resolver this is always used as-is (not overridden by titleExtractor).</p>
+<span class="description"><p>Human-readable group name shown on the group card in the UI. For the titleClassifier resolver this is always used as-is (not overridden by titleExtractor).</p>
 </span>
         
 
@@ -3124,18 +3124,18 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordiongroups_items_episodeExtractor">
+<div class="accordion" id="accordiongroups_items_numberingExtractor">
     <div class="card">
-        <div class="card-header" id="headinggroups_items_episodeExtractor">
+        <div class="card-header" id="headinggroups_items_numberingExtractor">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_episodeExtractor"
-                        aria-expanded="" aria-controls="groups_items_episodeExtractor" onclick="setAnchor('#groups_items_episodeExtractor')"><span class="property-name">episodeExtractor</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_numberingExtractor"
+                        aria-expanded="" aria-controls="groups_items_numberingExtractor" onclick="setAnchor('#groups_items_numberingExtractor')"><span class="property-name">numberingExtractor</span></button>
             </h2>
         </div>
 
-        <div id="groups_items_episodeExtractor"
-             class="collapse property-definition-div" aria-labelledby="headinggroups_items_episodeExtractor"
-             data-parent="#accordiongroups_items_episodeExtractor">
+        <div id="groups_items_numberingExtractor"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_numberingExtractor"
+             data-parent="#accordiongroups_items_numberingExtractor">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -3159,9 +3159,9 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#groups_items_episodeExtractor" onclick="anchorLink('groups_items_episodeExtractor')">episodeExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Per-group override for episode number extraction. When omitted, inherits the definition-level episodeExtractor.</p>
-</span><a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')" class="ref-link">Same definition as episodeExtractor</a>
+    <a href="#groups_items_numberingExtractor" onclick="anchorLink('groups_items_numberingExtractor')">numberingExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Per-group override for episode number extraction. When omitted, inherits the definition-level numberingExtractor.</p>
+</span><a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')" class="ref-link">Same definition as numberingExtractor</a>
             </div>
         </div>
     </div>

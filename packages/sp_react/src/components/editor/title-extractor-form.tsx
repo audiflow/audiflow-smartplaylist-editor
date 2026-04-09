@@ -123,7 +123,7 @@ export function TitleExtractorForm({
     [steps, fieldPath, setValue],
   );
 
-  if (showCategoryNote && resolverType === 'category') {
+  if (showCategoryNote && resolverType === 'titleClassifier') {
     return (
       <div className="space-y-2">
         <h4 className="text-sm font-medium">{t('titleExtractor')}</h4>

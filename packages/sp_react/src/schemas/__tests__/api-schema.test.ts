@@ -166,7 +166,7 @@ describe('previewPlaylistSchema', () => {
       id: 'seasons',
       displayName: 'Seasons',
       sortKey: 1,
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       episodeCount: 100,
       groups: [
         {
@@ -214,7 +214,7 @@ describe('previewResultSchema', () => {
         },
       ],
       ungrouped: [{ id: 99, title: 'Unmatched' }],
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       debug: {
         totalEpisodes: 11,
         groupedEpisodes: 10,
@@ -223,7 +223,7 @@ describe('previewResultSchema', () => {
     });
     expect(result.playlists).toHaveLength(1);
     expect(result.ungrouped).toHaveLength(1);
-    expect(result.resolverType).toBe('rss');
+    expect(result.resolverType).toBe('seasonNumber');
   });
 });
 

@@ -12,7 +12,7 @@ fn valid_playlist_definition_passes() {
     let def = json!({
         "id": "main",
         "displayName": "Main",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "grouped"
     });
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);
@@ -105,7 +105,7 @@ fn playlist_definition_with_additional_properties_fails() {
     let def = json!({
         "id": "main",
         "displayName": "Main",
-        "resolverType": "rss",
+        "resolverType": "seasonNumber",
         "playlistStructure": "grouped",
         "unknownField": true
     });

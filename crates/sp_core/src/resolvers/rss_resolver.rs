@@ -11,7 +11,7 @@ pub struct RssResolver;
 
 impl Resolver for RssResolver {
     fn resolver_type(&self) -> &str {
-        "rss"
+        "seasonNumber"
     }
 
     fn default_sort(&self) -> SortRule {

@@ -420,7 +420,7 @@ mod tests {
         // Playlist
         std::fs::write(
             patterns.join("show_a/playlists/main.json"),
-            r#"{"resolverType": "category"}"#,
+            r#"{"resolverType": "titleClassifier"}"#,
         )
         .unwrap();
 
@@ -439,7 +439,7 @@ mod tests {
         // Make a change
         std::fs::write(
             patterns.join("show_a/playlists/main.json"),
-            r#"{"resolverType": "rss"}"#,
+            r#"{"resolverType": "seasonNumber"}"#,
         )
         .unwrap();
         Command::new("git")
@@ -511,7 +511,7 @@ mod tests {
 
         std::fs::write(
             patterns.join("show_a/playlists/main.json"),
-            r#"{"resolverType": "category"}"#,
+            r#"{"resolverType": "titleClassifier"}"#,
         )
         .unwrap();
 
@@ -529,7 +529,7 @@ mod tests {
         // Make a change
         std::fs::write(
             patterns.join("show_a/playlists/main.json"),
-            r#"{"resolverType": "rss"}"#,
+            r#"{"resolverType": "seasonNumber"}"#,
         )
         .unwrap();
         Command::new("git")

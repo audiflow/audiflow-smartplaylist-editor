@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
-import { EpisodeExtractorForm } from '@/components/editor/episode-extractor-form.tsx';
+import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
@@ -53,16 +53,16 @@ export function GroupDefCard({
   const yearBinding = watch(`${prefix}.display.yearBinding`);
   const episodeSort = watch(`${prefix}.episodeList.sort` as any);
   const titleExtractor = watch(`${prefix}.episodeList.titleExtractor` as any);
-  const episodeExtractor = watch(`${prefix}.episodeExtractor` as any);
+  const numberingExtractor = watch(`${prefix}.numberingExtractor` as any);
 
   const expandedOverrides = useMemo(() => {
     const items: string[] = [];
     if (yearBinding != null) items.push('yearBinding');
     if (episodeSort != null) items.push('episodeSort');
     if (titleExtractor != null) items.push('titleExtractor');
-    if (episodeExtractor != null) items.push('episodeExtractor');
+    if (numberingExtractor != null) items.push('numberingExtractor');
     return items;
-  }, [yearBinding, episodeSort, titleExtractor, episodeExtractor]);
+  }, [yearBinding, episodeSort, titleExtractor, numberingExtractor]);
 
   return (
     <Card className="py-4">
@@ -228,14 +228,14 @@ export function GroupDefCard({
             </AccordionContent>
           </AccordionItem>
 
-          {/* Episode Extractor Override */}
-          <AccordionItem value="episodeExtractor">
+          {/* Numbering Extractor Override */}
+          <AccordionItem value="numberingExtractor">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
-              {t('groupEpisodeExtractor')} <HintIcon hint="groupEpisodeExtractor" />
+              {t('groupNumberingExtractor')} <HintIcon hint="groupNumberingExtractor" />
             </AccordionTrigger>
             <AccordionContent>
-              <EpisodeExtractorForm
-                fieldPath={`${prefix}.episodeExtractor`}
+              <NumberingExtractorForm
+                fieldPath={`${prefix}.numberingExtractor`}
                 idPrefix={`group-ep-ext-${playlistIndex}-${groupIndex}`}
               />
             </AccordionContent>

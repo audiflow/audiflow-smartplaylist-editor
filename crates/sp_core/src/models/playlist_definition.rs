@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::episode_extractor::EpisodeExtractor;
+use super::numbering_extractor::NumberingExtractor;
 use super::group_def::GroupDef;
 use super::is_zero;
 use super::sort::{EpisodeSortRule, SortRule};
@@ -44,10 +44,11 @@ pub struct PlaylistDefinition {
     pub episode_list: Option<EpisodeListSettings>,
 
     /// Configuration for extracting season and episode numbers.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub episode_extractor: Option<EpisodeExtractor>,
+    /// Accepts legacy `episodeExtractor` key for v3 backward compatibility.
+    #[serde(skip_serializing_if = "Option::is_none", alias = "episodeExtractor")]
+    pub numbering_extractor: Option<NumberingExtractor>,
 
-    /// Static group definitions for category-based grouping.
+    /// Static group definitions for titleClassifier-based grouping.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub groups: Option<Vec<GroupDef>>,
 }

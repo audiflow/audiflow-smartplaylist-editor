@@ -71,11 +71,11 @@ Core types use Rust structs with `serde::Serialize`/`Deserialize`. Custom serial
 | `PatternConfig` | Per-podcast config: id, podcast_guid, feed_urls, year_grouped_episodes, playlists |
 | `PatternMeta` / `PatternSummary` / `RootMeta` | Split config metadata hierarchy |
 | `EpisodeFilters` / `EpisodeFilterEntry` | Require/exclude regex filters on title/description |
-| `GroupDef` | Static group definition with id, display_name, pattern, display, episode_list, episode_extractor |
+| `GroupDef` | Static group definition with id, display_name, pattern, display, episode_list, numbering_extractor |
 | `GroupListSettings` | year_binding, user_sortable, show_date_range, sort rule |
 | `EpisodeListSettings` | show_year_headers, sort rule, title_extractor |
 | `TitleExtractor` | Regex-based display name extraction with source, pattern, group, template, fallback chain |
-| `EpisodeExtractor` | Season/episode number extraction with primary/fallback patterns and RSS fallback |
+| `NumberingExtractor` | Season/episode number extraction with primary/fallback patterns and RSS fallback |
 | `SortRule` / `SortField` / `SortOrder` | Group-level sorting (PlaylistNumber, NewestEpisodeDate, Alphabetical) |
 | `EpisodeSortRule` / `EpisodeSortField` | Episode-level sorting (PublishedAt, EpisodeNumber, Title) |
 | `PlaylistPreviewResult` | Preview output: definition_id, playlist, claimed_by_others map |
@@ -95,10 +95,10 @@ trait Resolver {
 
 | Resolver | Strategy |
 |----------|----------|
-| `RssResolver` | Groups by `seasonNumber` RSS field |
-| `CategoryResolver` | Groups by regex patterns against group definitions |
+| `RssResolver` | Groups by `seasonNumber` field (resolver type: `seasonNumber`) |
+| `CategoryResolver` | Groups by regex patterns against group definitions (resolver type: `titleClassifier`) |
 | `YearResolver` | Groups by publication year |
-| `TitleAppearanceResolver` | Groups by title pattern, ordered by first appearance |
+| `TitleAppearanceResolver` | Groups by title pattern, ordered by first appearance (resolver type: `titleDiscovery`) |
 
 `ResolverService` orchestrates the chain:
 

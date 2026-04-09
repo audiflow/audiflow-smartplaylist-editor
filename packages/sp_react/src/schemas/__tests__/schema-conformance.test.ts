@@ -6,7 +6,7 @@ import {
   playlistDefinitionSchema,
   playlistStructureSchema,
   yearBindingSchema,
-  resolverTypeSchema,
+  resolverTypeValues,
   sortFieldSchema,
   sortOrderSchema,
   episodeSortFieldSchema,
@@ -42,9 +42,12 @@ function createValidator() {
 }
 
 describe('Zod enums match vendored playlist-definition schema', () => {
-  it('resolverTypes match schema', () => {
+  it('resolverTypes match schema (v4 values present, legacy aliases allowed)', () => {
     const schemaValues = extractEnum(topProps.resolverType);
-    expect(resolverTypeSchema.options).toEqual(schemaValues);
+    // Schema includes both v4 and deprecated v3 aliases; Zod only declares v4 values.
+    const legacyAliases = ['rss', 'category', 'titleAppearanceOrder'];
+    const v4Only = schemaValues.filter((v: string) => !legacyAliases.includes(v));
+    expect([...resolverTypeValues]).toEqual(v4Only);
   });
 
   it('playlistStructure values match schema', () => {
@@ -94,7 +97,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
     const parsed = playlistDefinitionSchema.parse({
       id: 'main',
       displayName: 'Main Episodes',
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       playlistStructure: 'grouped',
     });
     const valid = validate(parsed);
@@ -106,7 +109,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
     const parsed = playlistDefinitionSchema.parse({
       id: 'seasons',
       displayName: 'Seasons',
-      resolverType: 'rss',
+      resolverType: 'seasonNumber',
       playlistStructure: 'grouped',
       priority: 100,
       prependSeasonNumber: true,
@@ -135,7 +138,7 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
         group: 1,
         template: 'Season {value}',
       },
-      episodeExtractor: {
+      numberingExtractor: {
         source: 'title',
         pattern: '\\[(\\d+)-(\\d+)\\]',
         seasonGroup: 1,
