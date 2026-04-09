@@ -105,11 +105,11 @@ describe('PlaylistForm', () => {
       expect(screen.getByText(/resolver type/i)).toBeInTheDocument();
     });
 
-    it('renders presentation select', async () => {
+    it('renders presentation radio cards', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
       await switchToTab(user, /resolver/i);
-      expect(screen.getByText(/presentation/i)).toBeInTheDocument();
+      expect(screen.getByText(/how groups appear/i)).toBeInTheDocument();
     });
 
     it('shows nullSeasonGroupKey when resolverType is seasonNumber', async () => {
