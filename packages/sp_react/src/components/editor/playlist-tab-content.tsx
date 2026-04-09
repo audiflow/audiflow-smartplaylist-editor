@@ -79,9 +79,12 @@ export function PlaylistTabContent({
 
   // Fall back to 'filtered' when the active tab requires preview data that
   // is no longer available (e.g. after a preview error or config change).
+  // Also reset the auto-switch guard so that when preview data returns,
+  // the effect above can auto-switch back to 'groups'.
   useEffect(() => {
     if (activePreviewTab !== 'filtered' && !previewPlaylist) {
       setActivePreviewTab('filtered');
+      hasAutoSwitchedRef.current = false;
     }
   }, [activePreviewTab, previewPlaylist]);
   const groupYearBindingOverrides = useMemo(() => {

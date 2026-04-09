@@ -383,7 +383,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     if (!url) return;
     hasAutoPreviewedRef.current = true;
     // Record the initial serialization so the debounced effect skips its first tick
-    lastPreviewedValuesRef.current = JSON.stringify(normalizedInitialConfig);
+    lastPreviewedValuesRef.current = `${url}\0${JSON.stringify(normalizedInitialConfig)}`;
     previewMutationRef.current.mutate(
       { config: sanitizeConfig(normalizedInitialConfig), feedUrl: url },
       {
@@ -413,9 +413,10 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     // For existing configs, wait until initial auto-preview has run.
     // For new configs (no configId), allow debounced preview immediately.
     if (configId !== null && !hasAutoPreviewedRef.current) return;
-    // Skip if form values haven't changed since the last preview
-    if (debouncedValues === lastPreviewedValuesRef.current) return;
-    lastPreviewedValuesRef.current = debouncedValues;
+    // Skip if neither form values nor feed URL changed since the last preview
+    const deduplicationKey = `${feedUrl}\0${debouncedValues}`;
+    if (deduplicationKey === lastPreviewedValuesRef.current) return;
+    lastPreviewedValuesRef.current = deduplicationKey;
     const config = form.getValues();
     previewMutationRef.current.mutate(
       { config: sanitizeConfig(config), feedUrl },
