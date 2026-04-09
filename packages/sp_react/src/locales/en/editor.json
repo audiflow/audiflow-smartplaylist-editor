@@ -35,6 +35,7 @@
   "filters": "Filters",
   "showDateRange": "Show Date Range",
   "advancedNote": "Advanced fields (groups, extractors, sort) can be edited in JSON mode.",
+  "dangerZone": "Danger Zone",
   "removePlaylist": "Remove Playlist",
   "feedUrl": "Feed URL",
   "selectFeedUrl": "Select feed URL",

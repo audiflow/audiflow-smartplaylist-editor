@@ -35,6 +35,7 @@
   "filters": "フィルター",
   "showDateRange": "日付範囲を表示",
   "advancedNote": "高度な設定（グループ、抽出器、ソート）は JSON モードで編集できます。",
+  "dangerZone": "危険な操作",
   "removePlaylist": "プレイリストを削除",
   "feedUrl": "フィード URL",
   "selectFeedUrl": "フィード URL を選択",

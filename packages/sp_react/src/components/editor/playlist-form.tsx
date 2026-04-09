@@ -6,6 +6,7 @@ import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Button } from '@/components/ui/button.tsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs.tsx';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion.tsx';
 import { BasicSettingsTab } from '@/components/editor/tabs/basic-settings-tab.tsx';
 import { EpisodeFilterTab } from '@/components/editor/tabs/episode-filter-tab.tsx';
 import { EpisodeListTab } from '@/components/editor/tabs/episode-list-tab.tsx';
@@ -97,12 +98,21 @@ export function PlaylistForm({ index, onRemove }: PlaylistFormProps) {
         </TabsContent>
       </Tabs>
 
-      <div className="flex justify-end">
-        <Button variant="destructive" size="sm" type="button" onClick={onRemove}>
-          <Trash2 className="mr-2 h-4 w-4" />
-          {t('removePlaylist')}
-        </Button>
-      </div>
+      <Accordion type="single" collapsible>
+        <AccordionItem value="danger-zone" className="border-destructive/30">
+          <AccordionTrigger className="text-sm text-destructive hover:text-destructive">
+            {t('dangerZone')}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="flex justify-end pt-2">
+              <Button variant="destructive" size="sm" type="button" onClick={onRemove}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('removePlaylist')}
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }

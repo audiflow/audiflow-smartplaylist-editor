@@ -173,10 +173,11 @@ describe('PlaylistForm', () => {
   });
 
   describe('RemoveButton', () => {
-    it('calls onRemove when clicked', async () => {
+    it('calls onRemove when danger zone is opened and button clicked', async () => {
       const user = userEvent.setup();
       const { onRemove } = renderPlaylistForm();
 
+      await user.click(screen.getByText(/danger zone/i));
       await user.click(screen.getByText(/remove playlist/i));
 
       expect(onRemove).toHaveBeenCalledOnce();
