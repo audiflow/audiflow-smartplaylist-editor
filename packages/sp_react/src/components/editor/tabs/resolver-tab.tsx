@@ -44,7 +44,7 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
             value={resolverType ?? ''}
             onValueChange={(val) => setValue(`${prefix}.resolverType`, val as ResolverType, { shouldDirty: true })}
           >
-            <SelectTrigger id={`playlist-${index}-resolverType`}>
+            <SelectTrigger id={`playlist-${index}-resolverType`} className="w-full">
               <SelectValue placeholder={t('selectResolver')} />
             </SelectTrigger>
             <SelectContent className="min-w-[280px]">
