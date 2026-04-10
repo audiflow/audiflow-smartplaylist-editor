@@ -36,4 +36,14 @@ describe('FilteredEpisodesPanel', () => {
     );
     expect(screen.getByText('emptyFiltered')).toBeInTheDocument();
   });
+
+  it('shows no-feed message when totalCount is 0', () => {
+    render(
+      <FilteredEpisodesPanel
+        episodes={[]}
+        totalCount={0}
+      />,
+    );
+    expect(screen.getByText('noFeedLoaded')).toBeInTheDocument();
+  });
 });

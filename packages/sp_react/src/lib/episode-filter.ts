@@ -1,14 +1,5 @@
 import type { FeedEpisode } from '@/schemas/api-schema.ts';
-
-interface FilterEntry {
-  title?: string;
-  description?: string;
-}
-
-interface EpisodeFilters {
-  require?: FilterEntry[];
-  exclude?: FilterEntry[];
-}
+import type { EpisodeFilterEntry, EpisodeFilters } from '@/schemas/config-schema.ts';
 
 function isNonEmpty(value: string | undefined): value is string {
   return value !== undefined && value !== '';
@@ -31,7 +22,7 @@ interface CompiledEntry {
   description: RegExp | null;
 }
 
-function compileEntry(entry: FilterEntry): CompiledEntry {
+function compileEntry(entry: EpisodeFilterEntry): CompiledEntry {
   return {
     title: isNonEmpty(entry.title) ? tryCompileRegex(entry.title) : null,
     description: isNonEmpty(entry.description) ? tryCompileRegex(entry.description) : null,

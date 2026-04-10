@@ -33,6 +33,7 @@
   "yearUnknown": "Unknown Year",
   "tabPreview": "Preview",
   "tabFiltered": "Filtered Episodes",
+  "noFeedLoaded": "Enter a feed URL to see filtered episodes.",
   "emptyFiltered": "No episodes match the current filters.",
   "filteredCount": "{{filtered}} of {{total}} episodes passed filters"
 }

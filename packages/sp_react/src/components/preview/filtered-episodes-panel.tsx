@@ -12,6 +12,14 @@ export function FilteredEpisodesPanel({
 }: FilteredEpisodesPanelProps) {
   const { t } = useTranslation('preview');
 
+  if (totalCount === 0) {
+    return (
+      <p className="text-sm text-muted-foreground py-4 text-center">
+        {t('noFeedLoaded')}
+      </p>
+    );
+  }
+
   if (episodes.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">
@@ -34,7 +42,7 @@ export function FilteredEpisodesPanel({
             <span className="text-foreground">{ep.title}</span>
             {ep.publishedAt && (
               <span className="text-muted-foreground ml-2 text-xs">
-                {ep.publishedAt}
+                {new Date(ep.publishedAt).toLocaleDateString()}
               </span>
             )}
           </li>
