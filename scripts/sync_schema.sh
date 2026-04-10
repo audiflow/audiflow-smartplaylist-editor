@@ -39,7 +39,7 @@ if [ 0 -lt "$missing_count" ]; then
   exit 1
 fi
 
-# All files validated; copy atomically
+# All files validated; now copy each file into the destination
 for f in $SCHEMA_FILES; do
   cp "$SCHEMA_SRC/$f" "$SCHEMA_DST/$f"
   echo "  $f"
