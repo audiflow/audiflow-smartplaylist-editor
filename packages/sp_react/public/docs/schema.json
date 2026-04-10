@@ -25,7 +25,7 @@
       "oneOf": [
         {
           "const": "seasonNumber",
-      "description": "Groups episodes by their season number from feed data or titles. Season numbers come from the numbering rule (parsing titles/descriptions) if configured, falling back to RSS metadata (itunes:season). Each distinct season becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey or left ungrouped. Best for podcasts that tag seasons or use consistent title patterns like 'S01E01'. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor."
+      "description": "Groups episodes by their season number from feed data or titles. Season numbers come from the numbering rule (parsing titles/descriptions) if configured, falling back to RSS metadata (itunes:season). Each distinct season becomes a separate group. Episodes without a season number are left ungrouped. Best for podcasts that tag seasons or use consistent title patterns like 'S01E01'. Supports: titleExtractor, numberingExtractor."
         },
         {
           "const": "year",
@@ -92,10 +92,6 @@
           }
         }
       }
-    },
-    "nullSeasonGroupKey": {
-      "type": "integer",
-      "description": "Episodes without a season number are placed into this group. Used only by the seasonNumber resolver. For example, set to 999 to collect special episodes in a 'Season 999' group. When omitted, such episodes are left ungrouped and may fall through to another definition."
     },
     "titleExtractor": {
       "$ref": "#/$defs/TitleExtractor",

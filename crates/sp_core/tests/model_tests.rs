@@ -15,7 +15,6 @@ fn playlist_definition_full_round_trip() {
             "require": [{"title": "^\\[\\d+"}],
             "exclude": [{"title": "^\\[bonus"}]
         },
-        "nullSeasonGroupKey": 0,
         "titleExtractor": {
             "source": "seasonNumber",
             "template": "Season {value}"
@@ -405,7 +404,6 @@ mod filter_semantics {
             presentation: "separate".to_string(),
             priority: 0,
             episode_filters: Some(EpisodeFilters { require, exclude }),
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,

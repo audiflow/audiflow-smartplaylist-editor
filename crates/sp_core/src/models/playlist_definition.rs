@@ -40,10 +40,6 @@ pub struct PlaylistDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub episode_filters: Option<EpisodeFilters>,
 
-    /// Group key to assign to episodes with null season number.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub null_season_group_key: Option<i32>,
-
     /// Configuration for extracting playlist/group display names.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title_extractor: Option<TitleExtractor>,
@@ -77,7 +73,7 @@ impl PlaylistDefinition {
     /// but ensures persisted/previewed data is clean.
     ///
     /// Conditional fields by resolver_type:
-    /// - `seasonNumber`:      numberingExtractor, titleExtractor, nullSeasonGroupKey
+    /// - `seasonNumber`:      numberingExtractor, titleExtractor
     /// - `titleDiscovery`:    titleExtractor, groups (groups[0].pattern used as fallback)
     /// - `titleClassifier`:   groups
     /// - `year`:              titleExtractor
@@ -85,10 +81,9 @@ impl PlaylistDefinition {
     pub fn strip_conditional_fields(&mut self) {
         let rt = self.resolver_type.as_str();
 
-        // numberingExtractor + nullSeasonGroupKey: only seasonNumber
+        // numberingExtractor: only seasonNumber
         if rt != "seasonNumber" {
             self.numbering_extractor = None;
-            self.null_season_group_key = None;
         }
 
         // titleExtractor (top-level only): seasonNumber, titleDiscovery, or year
@@ -189,7 +184,6 @@ mod tests {
             "displayName": "Test",
             "resolverType": resolver_type,
             "presentation": "combined",
-            "nullSeasonGroupKey": 0,
             "numberingExtractor": {
                 "source": "title",
                 "pattern": "(\\d+)",
@@ -219,7 +213,6 @@ mod tests {
         def.strip_conditional_fields();
 
         assert!(def.numbering_extractor.is_some());
-        assert!(def.null_season_group_key.is_some());
         assert!(def.title_extractor.is_some());
         assert!(def.groups.is_none());
     }
@@ -230,7 +223,6 @@ mod tests {
         def.strip_conditional_fields();
 
         assert!(def.numbering_extractor.is_none());
-        assert!(def.null_season_group_key.is_none());
         assert!(def.title_extractor.is_some());
         assert!(def.groups.is_some());
     }
@@ -241,7 +233,6 @@ mod tests {
         def.strip_conditional_fields();
 
         assert!(def.numbering_extractor.is_none());
-        assert!(def.null_season_group_key.is_none());
         assert!(def.title_extractor.is_none());
         assert!(def.groups.is_some());
         // episodeList.titleExtractor is NOT stripped (independent of resolver)
@@ -254,7 +245,6 @@ mod tests {
         def.strip_conditional_fields();
 
         assert!(def.numbering_extractor.is_none());
-        assert!(def.null_season_group_key.is_none());
         assert!(def.title_extractor.is_some());
         assert!(def.groups.is_none());
     }

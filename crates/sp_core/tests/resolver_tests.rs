@@ -80,7 +80,6 @@ fn minimal_definition(resolver_type: &str) -> PlaylistDefinition {
         presentation: "separate".to_string(),
         priority: 0,
         episode_filters: None,
-        null_season_group_key: None,
         title_extractor: None,
         prepend_season_number: false,
         group_list: None,
@@ -156,30 +155,6 @@ fn rss_treats_null_season_as_ungrouped() {
     let grouping = result.unwrap();
     assert_eq!(grouping.playlists.len(), 1);
     assert_eq!(grouping.ungrouped_episode_ids, vec![2]);
-}
-
-#[test]
-fn rss_groups_null_zero_season_when_null_season_group_key_configured() {
-    let resolver = RssResolver;
-    let mut def = minimal_definition("seasonNumber");
-    def.null_season_group_key = Some(0);
-
-    let episodes = vec![
-        make_episode_with_season(1, "Ep1", Some(62), Some(1)),
-        make_episode_with_season(2, "Bangai1", None, Some(100)),
-        make_episode_with_season(3, "Bangai2", Some(0), Some(101)),
-    ];
-    let refs = as_refs(&episodes);
-    let result = resolver.resolve(&refs, Some(&def));
-
-    assert!(result.is_some());
-    let grouping = result.unwrap();
-    assert_eq!(grouping.playlists.len(), 2);
-    assert!(grouping.ungrouped_episode_ids.is_empty());
-
-    let p0 = grouping.playlists.iter().find(|p| p.id == "season_0").unwrap();
-    assert!(p0.episode_ids.contains(&2));
-    assert!(p0.episode_ids.contains(&3));
 }
 
 #[test]

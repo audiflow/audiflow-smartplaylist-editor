@@ -192,7 +192,6 @@ export const playlistDefinitionSchema = z.preprocess(
       .transform((v) => v ?? 0),
     episodeFilters: episodeFiltersSchema.nullish(),
     prependSeasonNumber: z.boolean().default(false),
-    nullSeasonGroupKey: z.number().nullish(),
     groups: z.array(groupDefSchema).nullish(),
     groupList: groupListSettingsSchema.nullish(),
     episodeList: episodeListSettingsSchema.nullish(),

@@ -117,7 +117,6 @@ describe('Zod-parsed output validates against playlist-definition schema', () =>
         require: [{ title: 'S\\d+' }],
         exclude: [{ title: 'Trailer' }],
       },
-      nullSeasonGroupKey: 0,
       groups: [
         { id: 'main', displayName: 'Main', pattern: '^Main\\b' },
         { id: 'other', displayName: 'Other' },

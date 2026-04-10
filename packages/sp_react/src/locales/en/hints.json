@@ -20,7 +20,6 @@
   "showDateRange": "When enabled, each group card shows the date range of its episodes (earliest to latest).",
   "userSortable": "When enabled, users can flip between ascending and descending order in the app.",
   "prependSeasonNumber": "When enabled, group titles are prefixed with the season number (e.g., S13 Regular Episodes). Groups with key 0 are excluded.",
-  "nullSeasonGroupKey": "Episodes without a season number are placed into this group. For example, set to 999 to collect special episodes in a 'Season 999' group.",
   "groupId": "A unique identifier for this group within the playlist.",
   "groupDisplayName": "The name shown to users for this group in the app.",
   "groupPattern": "A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Leave empty to create a catch-all for unmatched episodes.",

@@ -6,7 +6,7 @@ import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
  * get persisted on save, while the form state keeps them for undo.
  *
  * Conditional fields by resolverType:
- * - seasonNumber:      numberingExtractor, titleExtractor, nullSeasonGroupKey
+ * - seasonNumber:      numberingExtractor, titleExtractor
  * - titleDiscovery:    titleExtractor, groups (groups[0].pattern used as fallback)
  * - titleClassifier:   groups
  * - year:              titleExtractor
@@ -21,7 +21,6 @@ export function stripConditionalFields(config: PatternConfig): PatternConfig {
       // numberingExtractor: only seasonNumber
       if (rt !== 'seasonNumber') {
         delete stripped.numberingExtractor;
-        delete stripped.nullSeasonGroupKey;
       }
 
       // titleExtractor (top-level only): seasonNumber, titleDiscovery, or year

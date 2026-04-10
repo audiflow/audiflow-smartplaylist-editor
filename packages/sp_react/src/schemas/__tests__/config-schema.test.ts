@@ -42,7 +42,6 @@ describe('playlistDefinitionSchema', () => {
         require: [{ title: 'Episode' }],
         exclude: [{ title: 'Trailer' }],
       },
-      nullSeasonGroupKey: 0,
       groups: [
         { id: 'g1', displayName: 'Group 1', pattern: 'pattern1' },
       ],
@@ -78,7 +77,6 @@ describe('playlistDefinitionSchema', () => {
       require: [{ title: 'Episode' }],
       exclude: [{ title: 'Trailer' }],
     });
-    expect(result.nullSeasonGroupKey).toBe(0);
     expect(result.groups).toHaveLength(1);
     expect(result.groupList).toEqual({
       yearBinding: 'pinToYear',
