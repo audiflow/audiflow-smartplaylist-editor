@@ -553,7 +553,7 @@
             />
         </svg>
     <a href="#resolverType_oneOf_i0" onclick="anchorLink('resolverType_oneOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Groups episodes by their season number from feed data or titles. Season numbers come from the numbering rule (parsing titles/descriptions) if configured, falling back to RSS metadata (itunes:season). Each distinct season becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey or left ungrouped. Best for podcasts that tag seasons or use consistent title patterns like 'S01E01'. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor.</p>
+<span class="description"><p>Groups episodes by their season number from feed data or titles. Season numbers come from the numbering rule (parsing titles/descriptions) if configured, falling back to RSS metadata (itunes:season). Each distinct season becomes a separate group. Episodes without a season number are left ungrouped. Best for podcasts that tag seasons or use consistent title patterns like 'S01E01'. Supports: titleExtractor, numberingExtractor.</p>
 </span><span class="const-value" id="resolverType_oneOf_i0_const">Specific value: <code>"seasonNumber"</code></span>
         
 
@@ -1215,40 +1215,6 @@
         </div>
     </div>
 </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="accordion" id="accordionnullSeasonGroupKey">
-    <div class="card">
-        <div class="card-header" id="headingnullSeasonGroupKey">
-            <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#nullSeasonGroupKey"
-                        aria-expanded="" aria-controls="nullSeasonGroupKey" onclick="setAnchor('#nullSeasonGroupKey')"><span class="property-name">nullSeasonGroupKey</span></button>
-            </h2>
-        </div>
-
-        <div id="nullSeasonGroupKey"
-             class="collapse property-definition-div" aria-labelledby="headingnullSeasonGroupKey"
-             data-parent="#accordionnullSeasonGroupKey">
-            <div class="card-body pl-5">
-
-    <div class="breadcrumbs">root
-        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <path
-                fill-rule="evenodd"
-                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
-            />
-        </svg>
-    <a href="#nullSeasonGroupKey" onclick="anchorLink('nullSeasonGroupKey')">nullSeasonGroupKey</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
-<span class="description"><p>Episodes without a season number are placed into this group. Used only by the seasonNumber resolver. For example, set to 999 to collect special episodes in a 'Season 999' group. When omitted, such episodes are left ungrouped and may fall through to another definition.</p>
-</span>
-        
-
-        
-        
-
-        
             </div>
         </div>
     </div>
@@ -3620,6 +3586,6 @@
 </div>
 
     <footer>
-        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-10 at 15:12:16 +0900</p>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-10 at 22:51:48 +0900</p>
     </footer></body>
 </html>

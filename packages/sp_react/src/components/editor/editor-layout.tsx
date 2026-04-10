@@ -23,7 +23,7 @@ import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { ConflictDialog } from '@/components/editor/conflict-dialog.tsx';
 import { FeedUrlInput } from '@/components/editor/feed-url-input.tsx';
 import { PlaylistReorderDialog } from '@/components/editor/playlist-reorder-dialog.tsx';
-import { DebugInfoPanel } from '@/components/preview/debug-info-panel.tsx';
+import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Tabs,
@@ -477,9 +477,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           onModeToggle={handleModeToggle}
         />
 
-        <div className="flex items-center justify-between">
-          <PreviewDebugPanel />
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
             <Button
               onClick={() => void handleSave()}
               disabled={!isDirty || isSaving || !effectiveId}
@@ -493,7 +491,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
               {t('save', 'Save')}
             </Button>
             <PreviewButton onClick={handleRunPreview} />
-          </div>
         </div>
       </div>
 
@@ -642,41 +639,44 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
         onValueChange={setActiveTab}
         className="mt-6"
       >
-        <div className="flex items-center gap-2">
-          <TabsList>
-            {fields.map((field, index) => (
-              <PlaylistTabTrigger
-                key={field.id}
-                index={index}
-                control={form.control}
-              />
-            ))}
-          </TabsList>
-          {2 <= fields.length && (
+        <div className="grid gap-6 lg:grid-cols-2 items-center">
+          <div className="flex items-center gap-2">
+            <TabsList>
+              {fields.map((field, index) => (
+                <PlaylistTabTrigger
+                  key={field.id}
+                  index={index}
+                  control={form.control}
+                />
+              ))}
+            </TabsList>
+            {2 <= fields.length && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setReorderOpen(true)}
+              >
+                <ArrowUpDown className="mr-1 h-3 w-3" />
+                {t('reorderPlaylists')}
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setReorderOpen(true)}
+              disabled={hasSeparatePresentation}
+              title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
+              onClick={() => {
+                append({ ...DEFAULT_PLAYLIST, priority: fields.length });
+                setActiveTab(`tab-${fields.length}`);
+              }}
             >
-              <ArrowUpDown className="mr-1 h-3 w-3" />
-              {t('reorderPlaylists')}
+              <Plus className="mr-1 h-3 w-3" />
+              {t('add')}
             </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={hasSeparatePresentation}
-            title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
-            onClick={() => {
-              append({ ...DEFAULT_PLAYLIST, priority: fields.length });
-              setActiveTab(`tab-${fields.length}`);
-            }}
-          >
-            <Plus className="mr-1 h-3 w-3" />
-            {t('add')}
-          </Button>
+          </div>
+          <PreviewDebugStats />
         </div>
 
         {fields.map((field, index) => (
@@ -728,11 +728,12 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
 // Isolated components that read preview state from Zustand store.
 // Only these re-render when preview data changes, not EditorLayout.
 
-function PreviewDebugPanel() {
+function PreviewDebugStats() {
   const debug = useEditorStore((s) => s.previewData?.debug);
+  if (!debug) return null;
   return (
-    <div className={debug ? undefined : 'invisible'}>
-      {debug && <DebugInfoPanel debug={debug} />}
+    <div className="border rounded-md px-3 py-1 text-xs">
+      <DebugInfoStats debug={debug} />
     </div>
   );
 }

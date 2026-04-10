@@ -89,7 +89,6 @@
   "presentationDesc_separate": "Each group appears as a separate entry in the app's playlist list.",
   "presentationDesc_separate_disabled": "Only available when there is a single playlist definition.",
   "addDisabledSeparate": "Cannot add playlist definitions while \"Make each group its own playlist\" is selected",
-  "nullSeasonGroupKey": "Group key for episodes without a season",
   "addGroup": "Add Group",
   "removeGroup": "Remove",
   "groupId": "Group ID",

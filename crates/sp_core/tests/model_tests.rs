@@ -15,7 +15,6 @@ fn playlist_definition_full_round_trip() {
             "require": [{"title": "^\\[\\d+"}],
             "exclude": [{"title": "^\\[bonus"}]
         },
-        "nullSeasonGroupKey": 0,
         "titleExtractor": {
             "source": "seasonNumber",
             "template": "Season {value}"
@@ -405,7 +404,6 @@ mod filter_semantics {
             presentation: "separate".to_string(),
             priority: 0,
             episode_filters: Some(EpisodeFilters { require, exclude }),
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -426,10 +424,16 @@ mod filter_semantics {
             vec![Box::new(sp_core::resolvers::YearResolver)];
         let service = ResolverService::new(resolvers, vec![config]);
 
-        let ep_refs: Vec<&dyn EpisodeData> = episodes.iter().map(|e| e as &dyn EpisodeData).collect();
+        let ep_refs: Vec<&dyn EpisodeData> =
+            episodes.iter().map(|e| e as &dyn EpisodeData).collect();
         match service.resolve_smart_playlists(None, "https://example.com/feed", &ep_refs) {
             Some(grouping) => {
-                let mut ids: Vec<i64> = grouping.playlists.iter().flat_map(|p| &p.episode_ids).copied().collect();
+                let mut ids: Vec<i64> = grouping
+                    .playlists
+                    .iter()
+                    .flat_map(|p| &p.episode_ids)
+                    .copied()
+                    .collect();
                 ids.sort();
                 ids
             }
@@ -461,7 +465,10 @@ mod filter_semantics {
         let ids = filtered_ids(require, None, &episodes);
         assert!(ids.contains(&1), "alpha episode matches both entries");
         assert!(!ids.contains(&2), "beta episode only matches second entry");
-        assert!(!ids.contains(&3), "alpha standalone only matches first entry");
+        assert!(
+            !ids.contains(&3),
+            "alpha standalone only matches first entry"
+        );
     }
 
     #[test]
@@ -474,7 +481,10 @@ mod filter_semantics {
         }]);
 
         let ids = filtered_ids(require, None, &episodes);
-        assert!(ids.is_empty(), "episode matching no require entry should be excluded");
+        assert!(
+            ids.is_empty(),
+            "episode matching no require entry should be excluded"
+        );
     }
 
     #[test]
@@ -528,9 +538,18 @@ mod filter_semantics {
         }]);
 
         let ids = filtered_ids(require, exclude, &episodes);
-        assert!(ids.contains(&1), "special alpha episode passes all require and not excluded");
-        assert!(!ids.contains(&2), "special beta episode passes require but is excluded");
-        assert!(!ids.contains(&3), "gamma episode only matches second require entry");
+        assert!(
+            ids.contains(&1),
+            "special alpha episode passes all require and not excluded"
+        );
+        assert!(
+            !ids.contains(&2),
+            "special beta episode passes require but is excluded"
+        );
+        assert!(
+            !ids.contains(&3),
+            "gamma episode only matches second require entry"
+        );
     }
 }
 
@@ -550,7 +569,10 @@ fn playlist_definition_deserializes_legacy_episode_extractor_alias() {
     });
 
     let def: PlaylistDefinition = serde_json::from_value(json_val).unwrap();
-    assert!(def.numbering_extractor.is_some(), "episodeExtractor alias should deserialize into numbering_extractor");
+    assert!(
+        def.numbering_extractor.is_some(),
+        "episodeExtractor alias should deserialize into numbering_extractor"
+    );
     assert_eq!(def.numbering_extractor.as_ref().unwrap().source, "title");
 }
 
@@ -567,7 +589,10 @@ fn group_def_deserializes_legacy_episode_extractor_alias() {
     });
 
     let group: GroupDef = serde_json::from_value(json_val).unwrap();
-    assert!(group.numbering_extractor.is_some(), "episodeExtractor alias should deserialize into numbering_extractor");
+    assert!(
+        group.numbering_extractor.is_some(),
+        "episodeExtractor alias should deserialize into numbering_extractor"
+    );
     assert_eq!(group.numbering_extractor.as_ref().unwrap().source, "title");
     assert_eq!(group.numbering_extractor.as_ref().unwrap().episode_group, 1);
 }

@@ -9,7 +9,7 @@ use sp_core::models::{
 };
 use sp_core::resolvers::{RssResolver, YearResolver};
 use sp_core::services::{
-    sort_episode_ids_by_published_at, sort_groups, ConfigAssembler, ResolverService,
+    ConfigAssembler, ResolverService, sort_episode_ids_by_published_at, sort_groups,
 };
 
 // ---------------------------------------------------------------------------
@@ -302,7 +302,6 @@ fn make_definition(id: &str) -> PlaylistDefinition {
         presentation: "separate".to_string(),
         priority: 0,
         episode_filters: None,
-        null_season_group_key: None,
         title_extractor: None,
         prepend_season_number: false,
         group_list: None,
@@ -351,7 +350,10 @@ fn config_assembler_appends_unlisted_playlists() {
     assert_eq!(config.playlists[0].id, "a");
     // b and c appended (order of HashMap iteration is not guaranteed)
     assert_eq!(config.playlists.len(), 3);
-    let remaining_ids: Vec<&str> = config.playlists[1..].iter().map(|p| p.id.as_str()).collect();
+    let remaining_ids: Vec<&str> = config.playlists[1..]
+        .iter()
+        .map(|p| p.id.as_str())
+        .collect();
     assert!(remaining_ids.contains(&"b"));
     assert!(remaining_ids.contains(&"c"));
 }
@@ -362,10 +364,7 @@ fn config_assembler_appends_unlisted_playlists() {
 
 fn make_resolver_service(patterns: Vec<PatternConfig>) -> ResolverService {
     ResolverService::new(
-        vec![
-            Box::new(RssResolver),
-            Box::new(YearResolver),
-        ],
+        vec![Box::new(RssResolver), Box::new(YearResolver)],
         patterns,
     )
 }
@@ -407,8 +406,10 @@ fn resolver_returns_none_when_no_resolver_succeeds() {
             image_url: None,
         },
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service.resolve_smart_playlists(None, "https://example.com/feed", &refs);
     assert!(result.is_none());
@@ -431,8 +432,10 @@ fn resolver_uses_first_successful_resolver() {
         make_rss_episode(1, 1, "S1E1", 1, 1),
         make_rss_episode(2, 1, "S1E2", 2, 1),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service.resolve_smart_playlists(None, "https://example.com/feed", &refs);
     assert!(result.is_some());
@@ -445,11 +448,13 @@ fn resolver_falls_back_to_next_resolver() {
 
     // No season numbers, but has dates -> year resolver
     let eps = vec![
-        make_episode_with_title(1, "Ep 1", 1, 6),  // June
-        make_episode_with_title(2, "Ep 2", 1, 3),   // March 2024
+        make_episode_with_title(1, "Ep 1", 1, 6), // June
+        make_episode_with_title(2, "Ep 2", 1, 3), // March 2024
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service.resolve_smart_playlists(None, "https://example.com/feed", &refs);
     assert!(result.is_some());
@@ -470,7 +475,6 @@ fn resolver_matches_config_by_feed_url() {
             presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -484,8 +488,10 @@ fn resolver_matches_config_by_feed_url() {
         make_rss_episode(1, 1, "S1E1", 1, 1),
         make_rss_episode(2, 1, "S1E2", 1, 2),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service.resolve_smart_playlists(None, "https://example.com/feed.rss", &refs);
     assert!(result.is_some());
@@ -506,7 +512,6 @@ fn resolver_matches_config_by_guid() {
             presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -520,14 +525,13 @@ fn resolver_matches_config_by_guid() {
         make_rss_episode(1, 1, "S1E1", 1, 1),
         make_rss_episode(2, 1, "S1E2", 1, 2),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
-    let result = service.resolve_smart_playlists(
-        Some("test-guid"),
-        "https://other.com/feed",
-        &refs,
-    );
+    let result =
+        service.resolve_smart_playlists(Some("test-guid"), "https://other.com/feed", &refs);
     assert!(result.is_some());
     assert_eq!(result.unwrap().resolver_type, "seasonNumber");
 }
@@ -553,7 +557,6 @@ fn resolver_filters_by_require_regex() {
                     }]),
                     exclude: None,
                 }),
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -574,7 +577,6 @@ fn resolver_filters_by_require_regex() {
                         description: None,
                     }]),
                 }),
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -591,8 +593,10 @@ fn resolver_filters_by_require_regex() {
         make_episode_with_title(3, "Ep2 Main Story", 1, 3),
         make_episode_with_title(4, "Bonus: Outtakes", 1, 4),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_smart_playlists(None, "https://example.com/feed", &refs)
@@ -632,7 +636,6 @@ fn resolver_filter_regex_is_case_insensitive() {
                 }]),
                 exclude: None,
             }),
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -646,14 +649,21 @@ fn resolver_filter_regex_is_case_insensitive() {
         make_episode_with_title(1, "BONUS Episode", 1, 1),
         make_episode_with_title(2, "Regular Episode", 1, 2),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_smart_playlists(None, "https://example.com/feed", &refs)
         .unwrap();
 
-    let all_ids: Vec<i64> = result.playlists.iter().flat_map(|p| &p.episode_ids).copied().collect();
+    let all_ids: Vec<i64> = result
+        .playlists
+        .iter()
+        .flat_map(|p| &p.episode_ids)
+        .copied()
+        .collect();
     assert!(all_ids.contains(&1)); // BONUS matched by case-insensitive "bonus"
     assert!(!all_ids.contains(&2));
 }
@@ -674,7 +684,6 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 presentation: "separate".to_string(),
                 priority: 0,
                 episode_filters: None,
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -695,7 +704,6 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                     }]),
                     exclude: None,
                 }),
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -711,8 +719,10 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
         make_episode_with_title(2, "Bonus Ep", 1, 2),
         make_episode_with_title(3, "Another Regular", 1, 3),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_smart_playlists(None, "https://example.com/feed", &refs)
@@ -720,7 +730,12 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
 
     // Bonus (filtered) claims ep 2 before fallback processes
     // Fallback gets eps 1 and 3 (unclaimed)
-    let all_ids: Vec<i64> = result.playlists.iter().flat_map(|p| &p.episode_ids).copied().collect();
+    let all_ids: Vec<i64> = result
+        .playlists
+        .iter()
+        .flat_map(|p| &p.episode_ids)
+        .copied()
+        .collect();
     let mut all_sorted = all_ids.clone();
     all_sorted.sort();
     all_sorted.dedup();
@@ -741,7 +756,6 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
             presentation: "combined".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: Some(GroupListSettings {
@@ -761,8 +775,10 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
         make_rss_episode(2, 1, "S1E2", 1, 2),
         make_rss_episode(3, 2, "S2E1", 3, 1),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_smart_playlists(None, "https://example.com/feed", &refs)
@@ -803,7 +819,6 @@ fn resolver_split_structure_produces_multiple_playlists() {
             presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -817,8 +832,10 @@ fn resolver_split_structure_produces_multiple_playlists() {
         make_rss_episode(1, 1, "S1E1", 1, 1),
         make_rss_episode(2, 2, "S2E1", 3, 1),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_smart_playlists(None, "https://example.com/feed", &refs)
@@ -843,7 +860,6 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
             presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -859,8 +875,10 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
         make_rss_episode(2, 1, "S1E2", 1, 1), // January
         make_rss_episode(3, 1, "S1E3", 2, 1), // February
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_smart_playlists(None, "https://example.com/feed", &refs)
@@ -884,7 +902,6 @@ fn resolver_sorts_ungrouped_episode_ids() {
             presentation: "separate".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -925,8 +942,10 @@ fn resolver_sorts_ungrouped_episode_ids() {
             image_url: None,
         },
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_smart_playlists(None, "https://example.com/feed", &refs)
@@ -954,8 +973,10 @@ fn preview_returns_none_when_no_config_matches() {
     let service = make_resolver_service(vec![]);
 
     let eps = vec![make_rss_episode(1, 1, "S1E1", 1, 1)];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service.resolve_for_preview(None, "https://example.com/feed", &refs);
     assert!(result.is_none());
@@ -975,7 +996,6 @@ fn preview_returns_preview_grouping_with_single_playlist() {
             presentation: "combined".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -990,8 +1010,10 @@ fn preview_returns_preview_grouping_with_single_playlist() {
         make_rss_episode(2, 1, "S1E2", 2, 1),
         make_rss_episode(3, 2, "S2E1", 3, 1),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_for_preview(None, "https://example.com/feed", &refs)
@@ -1024,7 +1046,6 @@ fn preview_tracks_claimed_by_others() {
                     }]),
                     exclude: None,
                 }),
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -1045,7 +1066,6 @@ fn preview_tracks_claimed_by_others() {
                     }]),
                     exclude: None,
                 }),
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -1060,8 +1080,10 @@ fn preview_tracks_claimed_by_others() {
         make_episode_with_title(1, "Ep 1", 1, 1),
         make_episode_with_title(2, "Ep 2", 1, 2),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_for_preview(None, "https://example.com/feed", &refs)
@@ -1106,7 +1128,6 @@ fn preview_sorts_episode_ids_by_published_at() {
             presentation: "combined".to_string(),
             priority: 0,
             episode_filters: None,
-            null_season_group_key: None,
             title_extractor: None,
             prepend_season_number: false,
             group_list: None,
@@ -1122,15 +1143,20 @@ fn preview_sorts_episode_ids_by_published_at() {
         make_rss_episode(2, 1, "S1E2", 1, 1), // January
         make_rss_episode(3, 1, "S1E3", 2, 1), // February
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_for_preview(None, "https://example.com/feed", &refs)
         .unwrap();
 
     // Sorted ascending: Jan(2), Feb(3), Mar(1)
-    assert_eq!(result.playlist_results[0].playlist.episode_ids, vec![2, 3, 1]);
+    assert_eq!(
+        result.playlist_results[0].playlist.episode_ids,
+        vec![2, 3, 1]
+    );
 }
 
 #[test]
@@ -1154,7 +1180,6 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                     }]),
                     exclude: None,
                 }),
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -1169,7 +1194,6 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 presentation: "separate".to_string(),
                 priority: 0,
                 episode_filters: None, // fallback
-                null_season_group_key: None,
                 title_extractor: None,
                 prepend_season_number: false,
                 group_list: None,
@@ -1185,8 +1209,10 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
         make_episode_with_title(2, "Bonus: Extra", 1, 2),
         make_episode_with_title(3, "Main Ep 2", 1, 3),
     ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> =
-        eps.iter().map(|e| e as &dyn sp_core::models::EpisodeData).collect();
+    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
+        .iter()
+        .map(|e| e as &dyn sp_core::models::EpisodeData)
+        .collect();
 
     let result = service
         .resolve_for_preview(None, "https://example.com/feed", &refs)

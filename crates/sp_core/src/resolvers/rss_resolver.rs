@@ -26,7 +26,6 @@ impl Resolver for RssResolver {
         episodes: &[&dyn EpisodeData],
         definition: Option<&PlaylistDefinition>,
     ) -> Option<Grouping> {
-        let null_season_group_key = definition.and_then(|d| d.null_season_group_key);
         let title_extractor = definition.and_then(|d| d.title_extractor.as_ref());
 
         let mut grouped: BTreeMap<i32, Vec<&dyn EpisodeData>> = BTreeMap::new();
@@ -39,11 +38,7 @@ impl Resolver for RssResolver {
                     grouped.entry(n).or_default().push(episode);
                 }
                 _ => {
-                    if let Some(key) = null_season_group_key {
-                        grouped.entry(key).or_default().push(episode);
-                    } else {
-                        ungrouped.push(episode.id());
-                    }
+                    ungrouped.push(episode.id());
                 }
             }
         }
@@ -55,12 +50,11 @@ impl Resolver for RssResolver {
         let mut playlists: Vec<Playlist> = grouped
             .iter()
             .map(|(&season_number, eps)| {
-                let display_name =
-                    super::extract_display_name_with_fallback(
-                        format!("Season {}", season_number),
-                        eps,
-                        title_extractor,
-                    );
+                let display_name = super::extract_display_name_with_fallback(
+                    format!("Season {}", season_number),
+                    eps,
+                    title_extractor,
+                );
                 Playlist::new(
                     format!("season_{}", season_number),
                     display_name,
@@ -79,4 +73,3 @@ impl Resolver for RssResolver {
         })
     }
 }
-

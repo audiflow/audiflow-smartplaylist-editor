@@ -89,7 +89,6 @@
   "presentationDesc_separate": "各グループがアプリのプレイリスト一覧に個別のエントリとして並びます。",
   "presentationDesc_separate_disabled": "プレイリスト定義が1つの場合のみ選択できます。",
   "addDisabledSeparate": "「グループごとに独立したプレイリストにする」を選択中は、プレイリスト定義を追加できません",
-  "nullSeasonGroupKey": "シーズン番号がないエピソードの振り分け先",
   "addGroup": "グループを追加",
   "removeGroup": "削除",
   "groupId": "グループ ID",

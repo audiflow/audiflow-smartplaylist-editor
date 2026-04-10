@@ -80,7 +80,6 @@ fn minimal_definition(resolver_type: &str) -> PlaylistDefinition {
         presentation: "separate".to_string(),
         priority: 0,
         episode_filters: None,
-        null_season_group_key: None,
         title_extractor: None,
         prepend_season_number: false,
         group_list: None,
@@ -136,8 +135,16 @@ fn rss_groups_episodes_by_season_number() {
     let grouping = result.unwrap();
     assert_eq!(grouping.playlists.len(), 2);
 
-    let p1 = grouping.playlists.iter().find(|p| p.id == "season_1").unwrap();
-    let p2 = grouping.playlists.iter().find(|p| p.id == "season_2").unwrap();
+    let p1 = grouping
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_1")
+        .unwrap();
+    let p2 = grouping
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_2")
+        .unwrap();
     assert_eq!(p1.episode_ids, vec![1, 2]);
     assert_eq!(p2.episode_ids, vec![3]);
 }
@@ -159,30 +166,6 @@ fn rss_treats_null_season_as_ungrouped() {
 }
 
 #[test]
-fn rss_groups_null_zero_season_when_null_season_group_key_configured() {
-    let resolver = RssResolver;
-    let mut def = minimal_definition("seasonNumber");
-    def.null_season_group_key = Some(0);
-
-    let episodes = vec![
-        make_episode_with_season(1, "Ep1", Some(62), Some(1)),
-        make_episode_with_season(2, "Bangai1", None, Some(100)),
-        make_episode_with_season(3, "Bangai2", Some(0), Some(101)),
-    ];
-    let refs = as_refs(&episodes);
-    let result = resolver.resolve(&refs, Some(&def));
-
-    assert!(result.is_some());
-    let grouping = result.unwrap();
-    assert_eq!(grouping.playlists.len(), 2);
-    assert!(grouping.ungrouped_episode_ids.is_empty());
-
-    let p0 = grouping.playlists.iter().find(|p| p.id == "season_0").unwrap();
-    assert!(p0.episode_ids.contains(&2));
-    assert!(p0.episode_ids.contains(&3));
-}
-
-#[test]
 fn rss_uses_season_number_as_sort_key() {
     let resolver = RssResolver;
     let episodes = vec![
@@ -193,8 +176,16 @@ fn rss_uses_season_number_as_sort_key() {
     let refs = as_refs(&episodes);
     let result = resolver.resolve(&refs, None).unwrap();
 
-    let p1 = result.playlists.iter().find(|p| p.id == "season_1").unwrap();
-    let p2 = result.playlists.iter().find(|p| p.id == "season_2").unwrap();
+    let p1 = result
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_1")
+        .unwrap();
+    let p2 = result
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_2")
+        .unwrap();
     assert_eq!(p1.sort_key, 1);
     assert_eq!(p2.sort_key, 2);
 }
@@ -550,7 +541,10 @@ fn year_default_sort_is_playlist_number_descending() {
 #[test]
 fn year_returns_none_when_no_episodes_have_dates() {
     let resolver = YearResolver;
-    let episodes = vec![make_episode_no_date(1, "Ep1"), make_episode_no_date(2, "Ep2")];
+    let episodes = vec![
+        make_episode_no_date(1, "Ep1"),
+        make_episode_no_date(2, "Ep2"),
+    ];
     let refs = as_refs(&episodes);
     let result = resolver.resolve(&refs, None);
     assert!(result.is_none());

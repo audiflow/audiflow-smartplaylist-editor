@@ -13,7 +13,6 @@ import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { filterEpisodes } from '@/lib/episode-filter.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
-import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
 import { UngroupedEpisodesPanel } from '@/components/preview/ungrouped-episodes-panel.tsx';
 import { FilteredEpisodesPanel } from '@/components/preview/filtered-episodes-panel.tsx';
 import { PlaylistTree } from '@/components/preview/playlist-tree.tsx';
@@ -183,11 +182,6 @@ export function PlaylistTabContent({
             <TabsContent value="preview">
               {sp ? (
                 <>
-                  {sp.debug && (
-                    <div className="border rounded-md px-3 py-1.5 mb-3">
-                      <DebugInfoStats debug={sp.debug} />
-                    </div>
-                  )}
                   <Tabs defaultValue="groups">
                     <TabsList>
                       <TabsTrigger value="groups">
