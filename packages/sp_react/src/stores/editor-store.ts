@@ -40,7 +40,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   toggleJsonMode: () => set((state) => ({ isJsonMode: !state.isJsonMode })),
   setFeedUrl: (url) => set((state) => (state.feedUrl === url ? {} : { feedUrl: url })),
   setDirty: (dirty) => set((state) => (state.isDirty === dirty ? {} : { isDirty: dirty })),
-  setSaving: (saving) => set({ isSaving: saving }),
+  setSaving: (saving) => set((state) => (state.isSaving === saving ? {} : { isSaving: saving })),
   setLastSavedAt: (date) => set({ lastSavedAt: date, isDirty: false }),
   setConflict: (path) => set({ conflictDetected: true, conflictPath: path }),
   clearConflict: () => set({ conflictDetected: false, conflictPath: null }),

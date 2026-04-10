@@ -731,7 +731,7 @@ function PreviewButton({ onClick }: { onClick: () => void }) {
   const isPending = useEditorStore((s) => s.previewPending);
   const { t } = useTranslation('editor');
   return (
-    <Button onClick={onClick}>
+    <Button onClick={onClick} disabled={isPending} aria-busy={isPending}>
       {isPending ? (
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
       ) : (

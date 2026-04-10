@@ -90,15 +90,16 @@ function ToggleGroup({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-border">
+    <div className="inline-flex rounded-lg border border-border" role="radiogroup">
       {options.map((opt, i) => (
         <button
           key={opt.value}
           type="button"
-          aria-pressed={value === opt.value}
+          role="radio"
+          aria-checked={value === opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            'px-3 py-1.5 text-sm transition-colors',
+            'px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
             value === opt.value
               ? 'bg-primary text-primary-foreground'
               : 'hover:bg-muted',
