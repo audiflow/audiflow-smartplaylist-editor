@@ -188,7 +188,7 @@ describe('stripConditionalFields', () => {
     expect(pl.titleExtractor).toBeDefined();
   });
 
-  it('strips numberingExtractor and nullSeasonGroupKey for year resolver', () => {
+  it('strips numberingExtractor and nullSeasonGroupKey but keeps titleExtractor for year resolver', () => {
     const config = makeConfig({
       resolverType: 'year',
       numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
@@ -201,7 +201,7 @@ describe('stripConditionalFields', () => {
 
     expect(pl.numberingExtractor).toBeUndefined();
     expect(pl.nullSeasonGroupKey).toBeUndefined();
-    expect(pl.titleExtractor).toBeUndefined();
+    expect(pl.titleExtractor).toBeDefined();
   });
 
   it('keeps titleExtractor and groups but strips numberingExtractor for titleDiscovery', () => {

@@ -90,8 +90,8 @@ impl PlaylistDefinition {
             self.null_season_group_key = None;
         }
 
-        // titleExtractor (top-level): seasonNumber or titleDiscovery
-        if rt != "seasonNumber" && rt != "titleDiscovery" {
+        // titleExtractor (top-level): seasonNumber, titleDiscovery, or year
+        if rt != "seasonNumber" && rt != "titleDiscovery" && rt != "year" {
             self.title_extractor = None;
             // Also strip titleExtractor inside episodeList
             if let Some(ref mut el) = self.episode_list {
@@ -249,13 +249,13 @@ mod tests {
     }
 
     #[test]
-    fn year_strips_all_conditional_fields() {
+    fn year_keeps_title_extractor_strips_rest() {
         let mut def = make_definition("year");
         def.strip_conditional_fields();
 
         assert!(def.numbering_extractor.is_none());
         assert!(def.null_season_group_key.is_none());
-        assert!(def.title_extractor.is_none());
+        assert!(def.title_extractor.is_some());
         assert!(def.groups.is_none());
     }
 }

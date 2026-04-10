@@ -9,7 +9,7 @@ import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
  * - seasonNumber:      numberingExtractor, titleExtractor, nullSeasonGroupKey
  * - titleDiscovery:    titleExtractor, groups (groups[0].pattern used as fallback)
  * - titleClassifier:   groups
- * - year:              (none)
+ * - year:              titleExtractor
  */
 export function stripConditionalFields(config: PatternConfig): PatternConfig {
   return {
@@ -24,8 +24,8 @@ export function stripConditionalFields(config: PatternConfig): PatternConfig {
         delete stripped.nullSeasonGroupKey;
       }
 
-      // titleExtractor: seasonNumber or titleDiscovery
-      if (rt !== 'seasonNumber' && rt !== 'titleDiscovery') {
+      // titleExtractor: seasonNumber, titleDiscovery, or year
+      if (rt !== 'seasonNumber' && rt !== 'titleDiscovery' && rt !== 'year') {
         delete stripped.titleExtractor;
         // Also strip titleExtractor from episodeList if present
         if (stripped.episodeList?.titleExtractor) {
