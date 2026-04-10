@@ -257,7 +257,7 @@
         },
         "pattern": {
           "type": "string",
-          "description": "A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Leave empty to create a catch-all for unmatched episodes."
+          "description": "A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Omit this field to create a catch-all group for unmatched episodes."
         },
         "display": {
           "type": "object",

@@ -80,7 +80,8 @@ impl PlaylistDefinition {
     /// - `seasonNumber`:      numberingExtractor, titleExtractor, nullSeasonGroupKey
     /// - `titleDiscovery`:    titleExtractor, groups (groups[0].pattern used as fallback)
     /// - `titleClassifier`:   groups
-    /// - others (e.g. year):  none of the above
+    /// - `year`:              titleExtractor
+    /// - others:              none of the above
     pub fn strip_conditional_fields(&mut self) {
         let rt = self.resolver_type.as_str();
 
