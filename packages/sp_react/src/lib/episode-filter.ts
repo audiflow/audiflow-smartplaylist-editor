@@ -29,6 +29,17 @@ function compileEntry(entry: EpisodeFilterEntry): CompiledEntry {
   };
 }
 
+// Returns true when at least one field compiled to a valid regex.
+// Entries where all fields are null (empty source or invalid regex) would
+// match every episode via matchesCompiled, which is harmless for require
+// (AND semantics) but dangerous for exclude (OR semantics -- would exclude
+// all episodes). Filtering these out diverges from server behavior
+// intentionally: the editor processes in-progress typing, so safety
+// (not excluding everything by accident) trumps exact server parity.
+function hasCompiledField(entry: CompiledEntry): boolean {
+  return entry.title !== null || entry.description !== null;
+}
+
 // An entry matches when every compiled regex field matches.
 // Null fields are no-ops (always pass), matching the server's
 // CompiledFilterEntry::matches behavior.
@@ -48,11 +59,13 @@ export function filterEpisodes(
   const requireCompiled =
     filters.require
       ?.filter((e) => isNonEmpty(e.title) || isNonEmpty(e.description))
-      .map(compileEntry) ?? [];
+      .map(compileEntry)
+      .filter(hasCompiledField) ?? [];
   const excludeCompiled =
     filters.exclude
       ?.filter((e) => isNonEmpty(e.title) || isNonEmpty(e.description))
-      .map(compileEntry) ?? [];
+      .map(compileEntry)
+      .filter(hasCompiledField) ?? [];
 
   let result = [...episodes];
 

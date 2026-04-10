@@ -76,4 +76,31 @@ describe('filterEpisodes', () => {
     // Must match BOTH: "Season" AND "Episode 1"
     expect(result.map((e) => e.id)).toEqual([1, 4]);
   });
+
+  it('does not exclude all episodes when exclude entry has only invalid regex', () => {
+    const result = filterEpisodes(episodes, {
+      exclude: [{ title: '[invalid' }],
+    });
+    // Invalid regex compiles to null; all-null entry is dropped to prevent
+    // accidental "exclude-all" behavior during editing.
+    expect(result).toHaveLength(5);
+  });
+
+  it('applies exclude entry with mixed valid and invalid regex fields', () => {
+    const result = filterEpisodes(episodes, {
+      exclude: [{ title: '[invalid', description: 'Extra' }],
+    });
+    // title compiles to null (invalid), description compiles to /Extra/i.
+    // Entry has at least one valid field, so it is kept. Episode 3 ("Extra
+    // content") matches the description regex and gets excluded.
+    expect(result.map((e) => e.id)).toEqual([1, 2, 4, 5]);
+  });
+
+  it('does not exclude when all exclude entries have only invalid regexes', () => {
+    const result = filterEpisodes(episodes, {
+      exclude: [{ title: '[bad' }, { description: '(unclosed' }],
+    });
+    // Both entries compile to all-null and are dropped.
+    expect(result).toHaveLength(5);
+  });
 });
