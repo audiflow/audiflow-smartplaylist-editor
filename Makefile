@@ -82,7 +82,7 @@ validate: ## Validate configs in data directory against schema
 # -- Schema ------------------------------------------------------------------
 
 sync-schema: ## Copy schemas from data repo into editor (DATA_DIR as source)
-	bash scripts/sync_schema.sh
+	DATA_DIR=$(DATA_DIR) bash scripts/sync_schema.sh
 
 schema-doc: ## Regenerate schema HTML docs from local schema files
 	bash scripts/generate_schema_doc.sh
