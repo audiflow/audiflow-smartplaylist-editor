@@ -20,19 +20,51 @@
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
         </div>
 
-    <div class="breadcrumbs"></div> <h1>SmartPlaylist Definition</h1><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Defines how a playlist organizes, filters, sorts, and displays episodes for a podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same config share the podcast's episode pool; definitions with filters run first, then filter-less fallbacks claim remaining episodes.</p>
-</span> <span class="badge badge-info no-additional">No Additional Properties</span><h2 class="handle">
+    <div class="breadcrumbs"></div> <h1>SmartPlaylist Definition</h1><br/>
+<span class="description"><p>Defines how a playlist organizes, filters, sorts, and displays episodes for a podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same config share the podcast's episode pool and claim episodes based on priority.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span><div class="all-of-value" id="allOf"><h2 class="handle">
+  <label>All of</label>
+</h2><ul class="nav nav-tabs" id="tabsallOf_allOf" role="tablist"><li class="nav-item">
+            <a class="nav-link active allOf-option"
+               id="allOf_i0" data-toggle="tab" href="#tab-pane_allOf_i0" role="tab"
+               onclick="setAnchor('#allOf_i0')"
+            >Requirement 1</a>
+        </li><li class="nav-item">
+            <a class="nav-link allOf-option"
+               id="allOf_i1" data-toggle="tab" href="#tab-pane_allOf_i1" role="tab"
+               onclick="setAnchor('#allOf_i1')"
+            >Requirement 2</a>
+        </li></ul>
+<div class="tab-content card"><div class="tab-pane fade card-body active show"
+             id="tab-pane_allOf_i0" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i0" onclick="anchorLink('allOf_i0')">item 0</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<h2 class="handle">
     <label>Conditional Subschema</label>
 </h2>
 <p>If the conditions in the "If" tab are respected, then the conditions in the "Then" tab should be respected.
     Otherwise, the conditions in the "Else" tab should be respected.</p>
-<ul class="nav nav-tabs" id="root_condition_tabs" role="tablist">
+<ul class="nav nav-tabs" id="allOf_i0_condition_tabs" role="tablist">
     
     <li class="nav-item">
         <a class="nav-link active"
-           id="if" data-toggle="tab" href="#tab-pane_if" role="tab"
-           onclick="setAnchor('#if')"
+           id="allOf_i0_if" data-toggle="tab" href="#tab-pane_allOf_i0_if" role="tab"
+           onclick="setAnchor('#allOf_i0_if')"
         >If</a>
     </li>
 
@@ -40,15 +72,15 @@
         
         <li class="nav-item">
             <a class="nav-link"
-               id="then" data-toggle="tab" href="#tab-pane_then" role="tab"
-               onclick="setAnchor('#then')"
+               id="allOf_i0_then" data-toggle="tab" href="#tab-pane_allOf_i0_then" role="tab"
+               onclick="setAnchor('#allOf_i0_then')"
             >Then</a>
         </li></ul>
 
 <div class="tab-content card">
     
     <div class="tab-pane fade card-body active show"
-         id="tab-pane_if" role="tabpanel">
+         id="tab-pane_allOf_i0_if" role="tabpanel">
         
 
     <div class="breadcrumbs">root
@@ -58,7 +90,21 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#if" onclick="anchorLink('if')">if</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i0" onclick="anchorLink('allOf_i0')">item 0</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i0_if" onclick="anchorLink('allOf_i0_if')">if</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
         
 
@@ -66,18 +112,18 @@
         
 
         
-<div class="accordion" id="accordionif_resolverType">
+<div class="accordion" id="accordionallOf_i0_if_resolverType">
     <div class="card">
-        <div class="card-header" id="headingif_resolverType">
+        <div class="card-header" id="headingallOf_i0_if_resolverType">
             <h2 class="mb-0">
-                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#if_resolverType"
-                        aria-expanded="" aria-controls="if_resolverType" onclick="setAnchor('#if_resolverType')"><span class="property-name">resolverType</span> <span class="badge badge-warning required-property">Required</span></button>
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#allOf_i0_if_resolverType"
+                        aria-expanded="" aria-controls="allOf_i0_if_resolverType" onclick="setAnchor('#allOf_i0_if_resolverType')"><span class="property-name">resolverType</span> <span class="badge badge-warning required-property">Required</span></button>
             </h2>
         </div>
 
-        <div id="if_resolverType"
-             class="collapse property-definition-div" aria-labelledby="headingif_resolverType"
-             data-parent="#accordionif_resolverType">
+        <div id="allOf_i0_if_resolverType"
+             class="collapse property-definition-div" aria-labelledby="headingallOf_i0_if_resolverType"
+             data-parent="#accordionallOf_i0_if_resolverType">
             <div class="card-body pl-5">
 
     <div class="breadcrumbs">root
@@ -87,15 +133,29 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#if" onclick="anchorLink('if')">if</a>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
         <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#if_resolverType" onclick="anchorLink('if_resolverType')">resolverType</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="const-value" id="if_resolverType_const">Specific value: <code>"titleClassifier"</code></span>
+    <a href="#allOf_i0" onclick="anchorLink('allOf_i0')">item 0</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i0_if" onclick="anchorLink('allOf_i0_if')">if</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i0_if_resolverType" onclick="anchorLink('allOf_i0_if_resolverType')">resolverType</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="const-value" id="allOf_i0_if_resolverType_const">Specific value: <code>"titleClassifier"</code></span>
         
 
         
@@ -111,7 +171,7 @@
     
         
         <div class="tab-pane fade card-body"
-             id="tab-pane_then" role="tabpanel">
+             id="tab-pane_allOf_i0_then" role="tabpanel">
             
 
     <div class="breadcrumbs">root
@@ -121,7 +181,21 @@
                 d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
             />
         </svg>
-    <a href="#then" onclick="anchorLink('then')">then</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i0" onclick="anchorLink('allOf_i0')">item 0</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i0_then" onclick="anchorLink('allOf_i0_then')">then</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
 
         <div class="enum-value">
     <h4>The following properties are required:</h4>
@@ -133,6 +207,191 @@
 
         
         </div></div>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_allOf_i1" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1" onclick="anchorLink('allOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<h2 class="handle">
+    <label>Conditional Subschema</label>
+</h2>
+<p>If the conditions in the "If" tab are respected, then the conditions in the "Then" tab should be respected.
+    Otherwise, the conditions in the "Else" tab should be respected.</p>
+<ul class="nav nav-tabs" id="allOf_i1_condition_tabs" role="tablist">
+    
+    <li class="nav-item">
+        <a class="nav-link active"
+           id="allOf_i1_if" data-toggle="tab" href="#tab-pane_allOf_i1_if" role="tab"
+           onclick="setAnchor('#allOf_i1_if')"
+        >If</a>
+    </li>
+
+    
+        
+        <li class="nav-item">
+            <a class="nav-link"
+               id="allOf_i1_then" data-toggle="tab" href="#tab-pane_allOf_i1_then" role="tab"
+               onclick="setAnchor('#allOf_i1_then')"
+            >Then</a>
+        </li></ul>
+
+<div class="tab-content card">
+    
+    <div class="tab-pane fade card-body active show"
+         id="tab-pane_allOf_i1_if" role="tabpanel">
+        
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1" onclick="anchorLink('allOf_i1')">item 1</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1_if" onclick="anchorLink('allOf_i1_if')">if</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionallOf_i1_if_resolverType">
+    <div class="card">
+        <div class="card-header" id="headingallOf_i1_if_resolverType">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#allOf_i1_if_resolverType"
+                        aria-expanded="" aria-controls="allOf_i1_if_resolverType" onclick="setAnchor('#allOf_i1_if_resolverType')"><span class="property-name">resolverType</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="allOf_i1_if_resolverType"
+             class="collapse property-definition-div" aria-labelledby="headingallOf_i1_if_resolverType"
+             data-parent="#accordionallOf_i1_if_resolverType">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1" onclick="anchorLink('allOf_i1')">item 1</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1_if" onclick="anchorLink('allOf_i1_if')">if</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1_if_resolverType" onclick="anchorLink('allOf_i1_if_resolverType')">resolverType</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="const-value" id="allOf_i1_if_resolverType_const">Specific value: <code>"category"</code></span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+
+    
+        
+        <div class="tab-pane fade card-body"
+             id="tab-pane_allOf_i1_then" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf" onclick="anchorLink('allOf')">allOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1" onclick="anchorLink('allOf_i1')">item 1</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#allOf_i1_then" onclick="anchorLink('allOf_i1_then')">then</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+        <div class="enum-value">
+    <h4>The following properties are required:</h4>
+    <ul class="list-group"><li class="list-group-item required-property">groups</li></ul>
+    </div>
+
+        
+        
+
+        
+        </div></div>
+        
+
+        
+        
+
+        
+        </div></div></div>
         
 
         
@@ -252,6 +511,21 @@
                id="resolverType_oneOf_i3" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i3" role="tab"
                onclick="setAnchor('#resolverType_oneOf_i3')"
             >Option 4</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="resolverType_oneOf_i4" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i4" role="tab"
+               onclick="setAnchor('#resolverType_oneOf_i4')"
+            >Option 5</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="resolverType_oneOf_i5" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i5" role="tab"
+               onclick="setAnchor('#resolverType_oneOf_i5')"
+            >Option 6</a>
+        </li><li class="nav-item">
+            <a class="nav-link oneOf-option"
+               id="resolverType_oneOf_i6" data-toggle="tab" href="#tab-pane_resolverType_oneOf_i6" role="tab"
+               onclick="setAnchor('#resolverType_oneOf_i6')"
+            >Option 7</a>
         </li></ul>
 <div class="tab-content card"><div class="tab-pane fade card-body active show"
              id="tab-pane_resolverType_oneOf_i0" role="tabpanel">
@@ -389,11 +663,147 @@
         
 
         
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_resolverType_oneOf_i4" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf" onclick="anchorLink('resolverType_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf_i4" onclick="anchorLink('resolverType_oneOf_i4')">item 4</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Deprecated v3 alias for 'seasonNumber'. Use 'seasonNumber' for new configs.</p>
+</span><span class="const-value" id="resolverType_oneOf_i4_const">Specific value: <code>"rss"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_resolverType_oneOf_i5" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf" onclick="anchorLink('resolverType_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf_i5" onclick="anchorLink('resolverType_oneOf_i5')">item 5</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Deprecated v3 alias for 'titleClassifier'. Use 'titleClassifier' for new configs.</p>
+</span><span class="const-value" id="resolverType_oneOf_i5_const">Specific value: <code>"category"</code></span>
+        
+
+        
+        
+
+        
+        </div><div class="tab-pane fade card-body "
+             id="tab-pane_resolverType_oneOf_i6" role="tabpanel">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType" onclick="anchorLink('resolverType')">resolverType</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf" onclick="anchorLink('resolverType_oneOf')">oneOf</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#resolverType_oneOf_i6" onclick="anchorLink('resolverType_oneOf_i6')">item 6</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
+<span class="description"><p>Deprecated v3 alias for 'titleDiscovery'. Use 'titleDiscovery' for new configs.</p>
+</span><span class="const-value" id="resolverType_oneOf_i6_const">Specific value: <code>"titleAppearanceOrder"</code></span>
+        
+
+        
+        
+
+        
         </div></div></div>
         
 
         
         
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionpriority">
+    <div class="card">
+        <div class="card-header" id="headingpriority">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#priority"
+                        aria-expanded="" aria-controls="priority" onclick="setAnchor('#priority')"><span class="property-name">priority</span></button>
+            </h2>
+        </div>
+
+        <div id="priority"
+             class="collapse property-definition-div" aria-labelledby="headingpriority"
+             data-parent="#accordionpriority">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#priority" onclick="anchorLink('priority')">priority</a></div><span class="badge badge-dark value-type">Type: integer</span> <span class="badge badge-success default-value">Default: 0</span><br/>
+<span class="description"><p>Controls the order playlists claim episodes. Lower numbers go first. If two playlists could match the same episode, the one with lower priority claims it. Playlists with filters always run before filter-less ones. Within each tier, lower priority numbers are processed first.</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="priority_number">Value must be greater or equal to <code>0</code></span></p>
 
         
             </div>
@@ -2500,6 +2910,34 @@
         </div>
     </div>
 </div>
+<div class="accordion" id="accordionepisodeExtractor">
+    <div class="card">
+        <div class="card-header" id="headingepisodeExtractor">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#episodeExtractor"
+                        aria-expanded="" aria-controls="episodeExtractor" onclick="setAnchor('#episodeExtractor')"><span class="property-name">episodeExtractor</span></button>
+            </h2>
+        </div>
+
+        <div id="episodeExtractor"
+             class="collapse property-definition-div" aria-labelledby="headingepisodeExtractor"
+             data-parent="#accordionepisodeExtractor">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#episodeExtractor" onclick="anchorLink('episodeExtractor')">episodeExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Deprecated v3 alias for 'numberingExtractor'. Use 'numberingExtractor' for new configs.</p>
+</span><a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')" class="ref-link">Same definition as numberingExtractor</a>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="accordion" id="accordiongroups">
     <div class="card">
         <div class="card-header" id="headinggroups">
@@ -3098,6 +3536,48 @@
         </div>
     </div>
 </div>
+<div class="accordion" id="accordiongroups_items_episodeExtractor">
+    <div class="card">
+        <div class="card-header" id="headinggroups_items_episodeExtractor">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#groups_items_episodeExtractor"
+                        aria-expanded="" aria-controls="groups_items_episodeExtractor" onclick="setAnchor('#groups_items_episodeExtractor')"><span class="property-name">episodeExtractor</span></button>
+            </h2>
+        </div>
+
+        <div id="groups_items_episodeExtractor"
+             class="collapse property-definition-div" aria-labelledby="headinggroups_items_episodeExtractor"
+             data-parent="#accordiongroups_items_episodeExtractor">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups" onclick="anchorLink('groups')">groups</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items" onclick="anchorLink('groups_items')">groups items</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#groups_items_episodeExtractor" onclick="anchorLink('groups_items_episodeExtractor')">episodeExtractor</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Deprecated v3 alias for 'numberingExtractor'. Use 'numberingExtractor' for new configs.</p>
+</span><a href="#numberingExtractor" onclick="anchorLink('numberingExtractor')" class="ref-link">Same definition as numberingExtractor</a>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </div>
             </div>
@@ -3106,6 +3586,6 @@
 </div>
 
     <footer>
-        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-10 at 22:38:12 +0900</p>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-10 at 22:51:48 +0900</p>
     </footer></body>
 </html>
