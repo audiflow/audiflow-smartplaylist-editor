@@ -159,7 +159,11 @@ export function PlaylistTabContent({
               </TabsTrigger>
             </TabsList>
             <TabsContent value="filtered">
-              <LiveFilteredEpisodes index={index} feedEpisodes={feedQuery.data ?? []} feedLoaded={feedQuery.data != null} />
+              <LiveFilteredEpisodes
+                index={index}
+                feedEpisodes={feedQuery.data ?? []}
+                feedState={feedQuery.data != null ? 'success' : feedQuery.isLoading ? 'loading' : feedQuery.isError ? 'error' : 'idle'}
+              />
             </TabsContent>
             <TabsContent value="excluded">
               {sp ? (
@@ -229,14 +233,16 @@ export function PlaylistTabContent({
 }
 
 // Isolated component so useWatch on episodeFilters doesn't re-render the whole tree.
+type FeedState = 'idle' | 'loading' | 'error' | 'success';
+
 function LiveFilteredEpisodes({
   index,
   feedEpisodes,
-  feedLoaded,
+  feedState,
 }: {
   index: number;
   feedEpisodes: readonly FeedEpisode[];
-  feedLoaded: boolean;
+  feedState: FeedState;
 }) {
   const { control } = useFormContext<PatternConfig>();
   const episodeFilters = useWatch({ control, name: `playlists.${index}.episodeFilters` as const });
@@ -250,7 +256,7 @@ function LiveFilteredEpisodes({
     <FilteredEpisodesPanel
       episodes={filtered}
       totalCount={feedEpisodes.length}
-      feedLoaded={feedLoaded}
+      feedState={feedState}
     />
   );
 }

@@ -111,7 +111,7 @@ describe('PlaylistForm', () => {
       expect(screen.getByText(/how to organize/i)).toBeInTheDocument();
     });
 
-    it('renders presentation radio cards', async () => {
+    it('renders presentation select dropdown', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
       await switchToTab(user, /organize/i);

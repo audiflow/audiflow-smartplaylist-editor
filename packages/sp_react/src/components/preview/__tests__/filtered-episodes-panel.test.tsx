@@ -21,7 +21,7 @@ describe('FilteredEpisodesPanel', () => {
       <FilteredEpisodesPanel
         episodes={episodes}
         totalCount={5}
-        feedLoaded
+        feedState="success"
       />,
     );
     expect(screen.getByText('Episode 1')).toBeInTheDocument();
@@ -33,20 +33,42 @@ describe('FilteredEpisodesPanel', () => {
       <FilteredEpisodesPanel
         episodes={[]}
         totalCount={5}
-        feedLoaded
+        feedState="success"
       />,
     );
     expect(screen.getByText('emptyFiltered')).toBeInTheDocument();
   });
 
-  it('shows no-feed message when feed is not loaded', () => {
+  it('shows no-feed message when feed state is idle', () => {
     render(
       <FilteredEpisodesPanel
         episodes={[]}
         totalCount={0}
-        feedLoaded={false}
+        feedState="idle"
       />,
     );
     expect(screen.getByText('noFeedLoaded')).toBeInTheDocument();
+  });
+
+  it('shows loading message when feed is loading', () => {
+    render(
+      <FilteredEpisodesPanel
+        episodes={[]}
+        totalCount={0}
+        feedState="loading"
+      />,
+    );
+    expect(screen.getByText('feedLoading')).toBeInTheDocument();
+  });
+
+  it('shows error message when feed fails to load', () => {
+    render(
+      <FilteredEpisodesPanel
+        episodes={[]}
+        totalCount={0}
+        feedState="error"
+      />,
+    );
+    expect(screen.getByText('feedError')).toBeInTheDocument();
   });
 });

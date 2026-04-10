@@ -1,23 +1,41 @@
 import { useTranslation } from 'react-i18next';
 import type { FeedEpisode } from '@/schemas/api-schema.ts';
 
+type FeedState = 'idle' | 'loading' | 'error' | 'success';
+
 interface FilteredEpisodesPanelProps {
   episodes: readonly FeedEpisode[];
   totalCount: number;
-  feedLoaded: boolean;
+  feedState: FeedState;
 }
 
 export function FilteredEpisodesPanel({
   episodes,
   totalCount,
-  feedLoaded,
+  feedState,
 }: FilteredEpisodesPanelProps) {
   const { t } = useTranslation('preview');
 
-  if (!feedLoaded) {
+  if (feedState === 'idle') {
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">
         {t('noFeedLoaded')}
+      </p>
+    );
+  }
+
+  if (feedState === 'loading') {
+    return (
+      <p className="text-sm text-muted-foreground py-4 text-center">
+        {t('feedLoading')}
+      </p>
+    );
+  }
+
+  if (feedState === 'error') {
+    return (
+      <p className="text-sm text-muted-foreground py-4 text-center">
+        {t('feedError')}
       </p>
     );
   }

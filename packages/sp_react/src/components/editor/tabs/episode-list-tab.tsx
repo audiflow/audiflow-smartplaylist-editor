@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { cn } from '@/lib/utils.ts';
+import { useCallback, useRef, type KeyboardEvent } from 'react';
 
 const EPISODE_SORT_FIELDS = ['publishedAt', 'episodeNumber', 'title'] as const;
 const SORT_ORDERS = ['ascending', 'descending'] as const;
@@ -93,26 +94,56 @@ function ToggleGroup({
   onChange: (value: string) => void;
   'aria-label': string;
 }) {
+  const buttonsRef = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLButtonElement>) => {
+      const currentIndex = buttonsRef.current.findIndex((b) => b === e.currentTarget);
+      if (0 > currentIndex) return;
+
+      let nextIndex: number | null = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        nextIndex = (currentIndex + 1) % options.length;
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        nextIndex = (currentIndex - 1 + options.length) % options.length;
+      }
+
+      if (nextIndex !== null) {
+        e.preventDefault();
+        const nextButton = buttonsRef.current[nextIndex];
+        nextButton?.focus();
+        onChange(options[nextIndex].value);
+      }
+    },
+    [options, onChange],
+  );
+
   return (
     <div className="inline-flex rounded-lg border border-border" role="radiogroup" aria-label={ariaLabel}>
-      {options.map((opt, i) => (
-        <button
-          key={opt.value}
-          type="button"
-          role="radio"
-          aria-checked={value === opt.value}
-          onClick={() => onChange(opt.value)}
-          className={cn(
-            'px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
-            value === opt.value
-              ? 'bg-primary text-primary-foreground'
-              : 'hover:bg-muted',
-            0 < i && 'border-l border-border',
-          )}
-        >
-          {opt.label}
-        </button>
-      ))}
+      {options.map((opt, i) => {
+        const isSelected = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            ref={(el) => { buttonsRef.current[i] = el; }}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            tabIndex={isSelected ? 0 : -1}
+            onClick={() => onChange(opt.value)}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              'px-3 py-1.5 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
+              isSelected
+                ? 'bg-primary text-primary-foreground'
+                : 'hover:bg-muted',
+              0 < i && 'border-l border-border',
+            )}
+          >
+            {opt.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
