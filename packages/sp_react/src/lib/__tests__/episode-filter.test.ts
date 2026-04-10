@@ -3,7 +3,7 @@ import { filterEpisodes } from '../episode-filter.ts';
 import type { FeedEpisode } from '@/schemas/api-schema.ts';
 
 function episode(id: number, title: string, description?: string): FeedEpisode {
-  return { id, title, description: description ?? null };
+  return { id, title, description: description ?? null, guid: null, publishedAt: null, seasonNumber: null, episodeNumber: null, imageUrl: null };
 }
 
 describe('filterEpisodes', () => {

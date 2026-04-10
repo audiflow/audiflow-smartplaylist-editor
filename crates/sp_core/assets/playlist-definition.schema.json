@@ -29,7 +29,7 @@
         },
         {
           "const": "year",
-          "description": "Groups episodes by the year they were published. Each distinct year becomes a separate group. Best for long-running podcasts where yearly grouping is a natural fit. Supports: titleExtractor, numberingExtractor."
+          "description": "Groups episodes by the year they were published. Each distinct year becomes a separate group. Best for long-running podcasts where yearly grouping is a natural fit. Supports: titleExtractor."
         },
         {
           "const": "titleDiscovery",

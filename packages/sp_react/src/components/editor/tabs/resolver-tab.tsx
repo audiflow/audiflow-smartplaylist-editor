@@ -112,7 +112,7 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
         )}
       </div>
 
-      {(resolverType === 'seasonNumber' || resolverType === 'titleDiscovery') && (
+      {(resolverType === 'seasonNumber' || resolverType === 'titleDiscovery' || resolverType === 'year') && (
         <>
           <InteractionNote i18nKey="interactionNote.resolver.titleExtractor" />
           <TitleExtractorForm

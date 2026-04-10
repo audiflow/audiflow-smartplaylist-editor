@@ -11,8 +11,8 @@ vi.mock('react-i18next', () => ({
 }));
 
 const episodes: FeedEpisode[] = [
-  { id: 1, title: 'Episode 1' },
-  { id: 2, title: 'Episode 2' },
+  { id: 1, title: 'Episode 1', description: null, guid: null, publishedAt: null, seasonNumber: null, episodeNumber: null, imageUrl: null },
+  { id: 2, title: 'Episode 2', description: null, guid: null, publishedAt: null, seasonNumber: null, episodeNumber: null, imageUrl: null },
 ];
 
 describe('FilteredEpisodesPanel', () => {

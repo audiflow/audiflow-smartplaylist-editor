@@ -23,10 +23,10 @@ Groups are nested inside the Resolver tab since they only apply to the
 
 | Order | Tab Name | Fields | Accordions |
 |-------|----------|--------|------------|
-| 1 | 基本設定 | Playlist ID, Display Name, Priority | None |
+| 1 | 基本設定 | Playlist ID, Display Name | None |
 | 2 | エピソードフィルタ | Require Filters, Exclude Filters | None |
-| 3 | エピソードリスト | Episode Sort, Title Extractor | None |
-| 4 | リゾルバー | Resolver Type, Presentation, Numbering Extractor (conditional), Null Season Group Key (conditional), Groups (conditional, titleClassifier only) | Conditional sections use accordion |
+| 3 | エピソードリスト | Episode Sort | None |
+| 4 | リゾルバー | Resolver Type, Presentation, Numbering Extractor (conditional), Title Extractor (conditional), Null Season Group Key (conditional), Groups (conditional, titleClassifier only) | Conditional sections use accordion |
 | 5 | 表示設定 | Show Year Headers, Show Date Range, User Sortable, Prepend Season Number, Year Binding | None |
 
 ### Tab order rationale
@@ -137,7 +137,8 @@ non-active tabs.
 ### Auto-update with debounce
 
 The preview panel auto-updates as the user edits form fields, debounced to avoid
-excessive re-renders. No manual refresh button needed.
+excessive re-renders. Auto-preview is the primary mechanism, with a manual Run Preview
+button as a fallback for edge cases.
 
 - Watch form values via React Hook Form's `watch()` or `useWatch()`
 - Debounce interval: ~300-500ms after last keystroke

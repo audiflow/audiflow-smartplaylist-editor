@@ -393,7 +393,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // Uses a subscription + setTimeout instead of useWatch to avoid re-rendering
   // the entire editor on every keystroke.
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const subscription = form.watch(() => {
       clearTimeout(timer);
       timer = setTimeout(() => {
