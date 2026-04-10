@@ -38,13 +38,13 @@ const initialState = {
 export const useEditorStore = create<EditorState>((set) => ({
   ...initialState,
   toggleJsonMode: () => set((state) => ({ isJsonMode: !state.isJsonMode })),
-  setFeedUrl: (url) => set((state) => (state.feedUrl === url ? state : { feedUrl: url })),
-  setDirty: (dirty) => set((state) => (state.isDirty === dirty ? state : { isDirty: dirty })),
+  setFeedUrl: (url) => set((state) => (state.feedUrl === url ? {} : { feedUrl: url })),
+  setDirty: (dirty) => set((state) => (state.isDirty === dirty ? {} : { isDirty: dirty })),
   setSaving: (saving) => set({ isSaving: saving }),
   setLastSavedAt: (date) => set({ lastSavedAt: date, isDirty: false }),
   setConflict: (path) => set({ conflictDetected: true, conflictPath: path }),
   clearConflict: () => set({ conflictDetected: false, conflictPath: null }),
   setPreviewData: (data) => set({ previewData: data }),
-  setPreviewPending: (pending) => set((state) => (state.previewPending === pending ? state : { previewPending: pending })),
+  setPreviewPending: (pending) => set((state) => (state.previewPending === pending ? {} : { previewPending: pending })),
   reset: () => set(initialState),
 }));
