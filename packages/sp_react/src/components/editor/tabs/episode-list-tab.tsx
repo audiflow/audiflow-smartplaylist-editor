@@ -54,6 +54,7 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
             <div className="space-y-1.5">
               <HintLabel hint="episodeSortField">{t('episodeSortField')}</HintLabel>
               <ToggleGroup
+                aria-label={t('episodeSortField')}
                 options={EPISODE_SORT_FIELDS.map((f) => ({ value: f, label: t(`episodeSortField_${f}`) }))}
                 value={sort?.field ?? 'publishedAt'}
                 onChange={(val) => setValue(`${prefix}.episodeList.sort.field`, val as EpisodeSortField, { shouldDirty: true })}
@@ -62,6 +63,7 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
             <div className="space-y-1.5">
               <HintLabel hint="episodeSortOrder">{t('episodeSortOrder')}</HintLabel>
               <ToggleGroup
+                aria-label={t('episodeSortOrder')}
                 options={SORT_ORDERS.map((o) => ({ value: o, label: t(`sortOrder_${o}`) }))}
                 value={sort?.order ?? 'ascending'}
                 onChange={(val) => setValue(`${prefix}.episodeList.sort.order`, val as SortOrder, { shouldDirty: true })}
@@ -84,13 +86,15 @@ function ToggleGroup({
   options,
   value,
   onChange,
+  'aria-label': ariaLabel,
 }: {
   options: ReadonlyArray<{ value: string; label: string }>;
   value: string;
   onChange: (value: string) => void;
+  'aria-label': string;
 }) {
   return (
-    <div className="inline-flex rounded-lg border border-border" role="radiogroup">
+    <div className="inline-flex rounded-lg border border-border" role="radiogroup" aria-label={ariaLabel}>
       {options.map((opt, i) => (
         <button
           key={opt.value}
