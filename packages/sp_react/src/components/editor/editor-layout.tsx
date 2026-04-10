@@ -233,7 +233,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         return;
       }
     } else {
-      config = stripConditionalFields(form.getValues());
+      const parsed = patternConfigSchema.safeParse(form.getValues());
+      if (!parsed.success) {
+        toast.error(t('toastInvalidJsonPreview'));
+        return;
+      }
+      config = stripConditionalFields(parsed.data);
     }
     storePreviewRef.current.mutate(
       { config: sanitizeConfig(config), feedUrl },
@@ -399,10 +404,9 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       timer = setTimeout(() => {
         if (!feedUrl || isJsonMode) return;
         if (configId !== null && !hasAutoPreviewedRef.current) return;
-        const raw = form.getValues();
-        const parsed = patternConfigSchema.safeParse(raw);
+        const parsed = patternConfigSchema.safeParse(form.getValues());
         if (!parsed.success) return;
-        const config = stripConditionalFields(raw);
+        const config = stripConditionalFields(parsed.data);
         const key = `${feedUrl}\0${JSON.stringify(config)}`;
         if (key === lastPreviewedValuesRef.current) return;
         lastPreviewedValuesRef.current = key;
