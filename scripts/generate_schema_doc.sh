@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SCHEMA_SRC="$REPO_ROOT/crates/sp_core/assets/playlist-definition.schema.json"
+REPO_ROOT="$(unset CDPATH && cd "$(dirname "$0")/.." && pwd)"
 DOCS_DIR="$REPO_ROOT/packages/sp_react/public/docs"
 
 mkdir -p "$DOCS_DIR"
 
 # 1. Copy playlist-definition schema (the only one relevant to editor users)
 echo "Copying schema file..."
-cp "$SCHEMA_SRC" "$DOCS_DIR/schema.json"
+cp "$REPO_ROOT/crates/sp_core/assets/playlist-definition.schema.json" "$DOCS_DIR/schema.json"
 
 # 2. Generate human-readable HTML
 echo "Generating HTML documentation..."
