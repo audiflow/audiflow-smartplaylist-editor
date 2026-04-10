@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://audiflow.app/schema/v4/playlist-definition.json",
   "title": "SmartPlaylist Definition",
-  "description": "Defines how a smart playlist groups, filters, sorts, and displays episodes for a specific podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same pattern share the podcast's episode pool and claim episodes through a priority-based system.",
+  "description": "Defines how a playlist organizes, filters, sorts, and displays episodes for a podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same config share the podcast's episode pool and claim episodes based on priority.",
   "type": "object",
   "required": [
     "id",
@@ -14,30 +14,30 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Unique identifier within the parent pattern. Must match the filename (without .json extension) in the playlists/ directory. Referenced by the pattern meta's playlists array to control display order."
+      "description": "A unique identifier for this playlist within the config (e.g., 'season-1'). Must match the filename (without .json extension). Referenced by the pattern meta's playlists array to control display order."
     },
     "displayName": {
       "type": "string",
-      "description": "Human-readable playlist name shown in the app UI. For seasonNumber, year, and titleDiscovery resolvers, this may be overridden per-group at runtime by titleExtractor output. For the titleClassifier resolver, group-level display names come from static GroupDef entries."
+      "description": "The name shown to users in the app. For seasonNumber, year, and titleDiscovery resolvers, group names may be generated at runtime by the titleExtractor. For titleClassifier, group names come from the display names you define in groups."
     },
     "resolverType": {
-      "description": "Determines the algorithm used to group episodes into playlists. Each resolver interprets the episode data differently and supports different configuration fields.",
+      "description": "Determines how episodes are organized into groups. Each method interprets episode data differently and supports different configuration options.",
       "oneOf": [
         {
           "const": "seasonNumber",
-          "description": "Groups episodes by season number. The season number is determined by numberingExtractor (parsing from title or description) if configured, falling back to RSS metadata (itunes:season tag). Each distinct season number becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey (assigned to a fallback group) or left ungrouped. Best for podcasts with season-based structure, whether seasons are encoded in titles or tagged in RSS. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor."
+      "description": "Groups episodes by their season number from feed data or titles. Season numbers come from the numbering rule (parsing titles/descriptions) if configured, falling back to RSS metadata (itunes:season). Each distinct season becomes a separate group. Episodes without a season number are handled by nullSeasonGroupKey or left ungrouped. Best for podcasts that tag seasons or use consistent title patterns like 'S01E01'. Supports: nullSeasonGroupKey, titleExtractor, numberingExtractor."
         },
         {
           "const": "year",
-          "description": "Groups episodes by their publication year (publishedAt field). Each distinct year becomes a separate group, sorted by year descending by default (newest first). Best for long-running podcasts where yearly grouping provides natural navigation. Supports: titleExtractor, numberingExtractor."
+          "description": "Groups episodes by the year they were published. Each distinct year becomes a separate group. Best for long-running podcasts where yearly grouping is a natural fit. Supports: titleExtractor."
         },
         {
           "const": "titleDiscovery",
-          "description": "Groups episodes by a recurring pattern extracted from their titles, ordered by when each unique pattern first appears in the feed (sorted by publication date). Uses titleExtractor or the first group's pattern to extract group names. Best for podcasts with titled story arcs or recurring series. Supports: titleExtractor (primary), groups[0].pattern (fallback for extraction)."
+          "description": "Finds recurring patterns in episode titles and groups by them, in the order they first appear in the feed. Uses the titleExtractor or the first group's pattern to derive group names. Best for podcasts with titled story arcs or recurring series. Supports: titleExtractor (primary), groups[0].pattern (fallback)."
         },
         {
           "const": "titleClassifier",
-          "description": "Groups episodes by matching their titles against regex patterns defined in the groups array. Groups are evaluated in order; the first matching pattern claims each episode. A group without a pattern acts as a catch-all for unmatched episodes. Best for podcasts with naming conventions like '[Series A] Episode 1' or 'Arc 1: Title'. Requires: groups. Does not use titleExtractor (group display names come from GroupDef.displayName)."
+          "description": "Groups episodes by matching their titles against patterns you define in the groups section. Groups are evaluated in order; the first matching pattern claims each episode. A group without a pattern acts as a catch-all for unmatched episodes. Best for podcasts with naming conventions like 'Arc 1: ...' or 'Mystery Series: ...'. Requires: groups. Does not use titleExtractor (group names come from the display names you define directly)."
         },
         {
           "const": "rss",
@@ -57,7 +57,7 @@
       "type": "integer",
       "default": 0,
       "minimum": 0,
-      "description": "Controls episode claiming order among sibling definitions within the same pattern. Processing order: (1) definitions with at least one filter are processed first, sorted by priority ascending; (2) definitions without any filters (fallbacks) are processed second, also sorted by priority ascending. Within each group, lower priority numbers claim matching episodes first. Once a filtered definition claims episodes, those episodes are unavailable to subsequent definitions."
+      "description": "Controls the order playlists claim episodes. Lower numbers go first. If two playlists could match the same episode, the one with lower priority claims it. Playlists with filters always run before filter-less ones. Within each tier, lower priority numbers are processed first."
     },
     "presentation": {
       "description": "Determines how resolver results are presented to the user.",
@@ -74,19 +74,19 @@
     },
     "episodeFilters": {
       "type": "object",
-      "description": "Episode filters applied before resolver processing. Having any filter makes this a 'filtered' definition, which is processed before filter-less fallback definitions. Matched episodes are claimed and unavailable to later definitions. Within each entry, all specified fields must match (AND). Across entries: require includes episodes matching any entry (OR); exclude rejects episodes matching any entry (OR).",
+      "description": "Rules applied before organizing episodes. Having any filter makes this definition run before filter-less ones. Within each rule, all fields must match (AND). Across rules: require includes only when ALL rules match (AND); exclude rejects if ANY rule matches (OR).",
       "additionalProperties": false,
       "properties": {
         "require": {
           "type": "array",
-          "description": "Inclusion filters (OR). An episode is included if it matches ANY entry. Within each entry, all specified fields must match (AND).",
+          "description": "Include rules (AND). An episode is included only when it matches ALL rules. Within each rule, all fields must match (AND).",
           "items": {
             "$ref": "#/$defs/EpisodeFilterEntry"
           }
         },
         "exclude": {
           "type": "array",
-          "description": "Exclusion filters (OR). An episode is excluded if it matches ANY entry. Within each entry, all specified fields must match (AND).",
+          "description": "Exclude rules (OR). An episode is excluded if it matches ANY rule. Within each rule, all fields must match (AND).",
           "items": {
             "$ref": "#/$defs/EpisodeFilterEntry"
           }
@@ -95,65 +95,65 @@
     },
     "nullSeasonGroupKey": {
       "type": "integer",
-      "description": "Group key assigned to episodes that have a null or zero seasonNumber in RSS metadata. Used only by the seasonNumber resolver. When set, episodes without a valid season number are placed into a group with this key (e.g., 0 for a 'Specials' group). When omitted, such episodes are left ungrouped and may fall through to a fallback definition."
+      "description": "Episodes without a season number are placed into this group. Used only by the seasonNumber resolver. For example, set to 999 to collect special episodes in a 'Season 999' group. When omitted, such episodes are left ungrouped and may fall through to another definition."
     },
     "titleExtractor": {
       "$ref": "#/$defs/TitleExtractor",
-      "description": "Configuration for extracting display names for resolver results (playlist titles in 'separate' mode, group card titles in 'combined' mode). Used by seasonNumber, year, and titleDiscovery resolvers. Not used by the titleClassifier resolver, which uses static display names from GroupDef entries. The extractor runs against a representative episode from each group (typically the first episode)."
+      "description": "Generates display names from episode data for group titles. Used by seasonNumber, year, and titleDiscovery resolvers. Not used with titleClassifier, which uses the display names you define directly. Runs against a representative episode from each group (typically the first)."
     },
     "prependSeasonNumber": {
       "type": "boolean",
       "default": false,
-      "description": "Prepend a season number label to resolver result names. When true, results with a sortKey greater than 0 are displayed as 'S{sortKey} {displayName}' (e.g., 'S13 Lincoln Arc'). Results with sortKey 0 (typically special/ungrouped episodes) are displayed without the prefix. Applies in both 'separate' mode (playlist titles) and 'combined' mode (group card titles)."
+      "description": "When enabled, group titles are prefixed with the season number (e.g., 'S13 Lincoln Arc'). Groups with key 0 (typically specials) are excluded from prefixing. Applies in both 'separate' and 'combined' presentation modes."
     },
     "groupList": {
       "type": "object",
-      "description": "Settings for the group list view. Only meaningful when presentation is 'combined'. Controls how groups are displayed, sorted, and organized within the parent playlist.",
+      "description": "Settings for the group list view. Only applies when groups are collected into one playlist (presentation: 'combined'). Controls how groups are displayed, sorted, and organized.",
       "additionalProperties": false,
       "properties": {
         "yearBinding": {
           "$ref": "#/$defs/YearBinding",
-          "description": "Controls how groups relate to year headers in the group list view. Can be overridden per-group via GroupDef.display.yearBinding."
+          "description": "Controls how groups relate to year sections in the group list view. Can be customized per-group via GroupDef.display.yearBinding."
         },
         "userSortable": {
           "type": "boolean",
           "default": true,
-          "description": "Allow users to change the sort order at runtime. When true, users can flip between ascending and descending order."
+          "description": "When enabled, users can flip between ascending and descending order in the app."
         },
         "showDateRange": {
           "type": "boolean",
           "default": false,
-          "description": "Show date range and total duration metadata on group cards. When true, each group card displays the date span of its episodes and total playback duration. Can be overridden per-group via GroupDef.display.showDateRange."
+          "description": "When enabled, each group card shows the date range of its episodes (earliest to latest). Can be customized per-group via GroupDef.display.showDateRange."
         },
         "sort": {
           "$ref": "#/$defs/SortRule",
-          "description": "Sort rule for ordering groups within the parent playlist. When omitted, groups are ordered by their natural resolver order."
+          "description": "Sort rule for ordering groups. When not set, groups appear in their natural order."
         }
       }
     },
     "episodeList": {
       "type": "object",
-      "description": "Default display and ordering settings for episode lists within groups or playlists. Can be overridden per-group via GroupDef.episodeList.",
+      "description": "Default settings for how episodes appear within groups. Can be customized per-group via GroupDef.episodeList.",
       "additionalProperties": false,
       "properties": {
         "showYearHeaders": {
           "type": "boolean",
           "default": false,
-          "description": "Show year separator headers within episode lists. When true, episodes are visually separated by publication year with sticky headers. This controls year headers at the episode level (inside a group), as opposed to groupList.yearBinding which controls year structure at the group list level."
+          "description": "When enabled, episode lists show year dividers, helping users navigate long lists. This controls year sections inside a group, as opposed to groupList.yearBinding which controls year sections at the group list level."
         },
         "sort": {
           "$ref": "#/$defs/EpisodeSortRule",
-          "description": "Default sort rule for ordering episodes within a group or playlist. When omitted, episodes are ordered by publishedAt ascending. Can be overridden per-group via GroupDef.episodeList.sort. The mobile app may override this with user-specific sorting at runtime."
+          "description": "Default sort order for episodes within groups. When not set, episodes are ordered by published date (oldest first). Can be customized per-group via GroupDef.episodeList.sort."
         },
         "titleExtractor": {
           "$ref": "#/$defs/TitleExtractor",
-          "description": "Transform episode titles for display in the episode list. Strips redundant information (e.g., series name, group identifier) that is already conveyed by the group context. When omitted, episode titles are shown as-is. Can be overridden per-group via GroupDef.episodeList.titleExtractor."
+          "description": "Transform episode titles for display. Strips redundant information (e.g., series name) that is already conveyed by the group context. When omitted, titles are shown as-is. Can be customized per-group via GroupDef.episodeList.titleExtractor."
         }
       }
     },
     "numberingExtractor": {
       "$ref": "#/$defs/NumberingExtractor",
-      "description": "Default configuration for extracting season and episode numbers from episode title or description text. Overrides RSS metadata (itunes:season, itunes:episode) with values parsed from the episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be overridden per-group via GroupDef.numberingExtractor."
+      "description": "Finds season and episode numbers in episode titles or descriptions. Overrides feed data (itunes:season, itunes:episode) with values parsed from episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be customized per-group via GroupDef.numberingExtractor."
     },
     "episodeExtractor": {
       "$ref": "#/$defs/NumberingExtractor",
@@ -161,7 +161,7 @@
     },
     "groups": {
       "type": "array",
-      "description": "Static group definitions, primarily used by the titleClassifier resolver. Each group defines a regex pattern for matching episode titles. Groups are evaluated in order; the first matching pattern claims each episode (first-match-wins). A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For the titleDiscovery resolver, only groups[0].pattern is used as a fallback extraction pattern when titleExtractor is not provided. Groups can selectively override display, episodeList, and numberingExtractor defaults.",
+      "description": "Group definitions, primarily used by titleClassifier. Each group defines a text pattern for matching episode titles. Groups are evaluated in order; the first match claims each episode. A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For titleDiscovery, only groups[0].pattern is used as a fallback when titleExtractor is not provided. Groups can customize display, episodeList, and numberingExtractor settings.",
       "items": {
         "$ref": "#/$defs/GroupDef"
       }
@@ -206,41 +206,41 @@
   "$defs": {
     "EpisodeFilterEntry": {
       "type": "object",
-      "description": "A single filter condition matched against episode fields. When multiple fields are specified, all must match (AND logic within an entry). At least one field must be specified.",
+      "description": "A single filter rule matched against episode fields. When multiple fields are specified, all must match (AND). At least one field must be specified.",
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
         "title": {
           "type": "string",
-          "description": "Case-insensitive regex pattern matched against the episode title."
+          "description": "A case-insensitive text pattern matched against the episode title. Use regular expression syntax for advanced matching."
         },
         "description": {
           "type": "string",
-          "description": "Case-insensitive regex pattern matched against the episode description/summary."
+          "description": "A case-insensitive text pattern matched against the episode description. Use regular expression syntax for advanced matching."
         }
       }
     },
     "YearBinding": {
-      "description": "How groups relate to year headers. Controls whether groups are displayed in a flat list, pinned to a single year, or split across multiple years.",
+      "description": "Controls how groups relate to year sections. 'None' shows a flat list, 'pinToYear' places each group under its year, 'splitByYear' repeats a group for every year it spans.",
       "default": "none",
       "oneOf": [
         {
           "const": "none",
-          "description": "No year headers. Groups are displayed in a flat list without year structure."
+          "description": "No year sections. Groups are displayed in a flat list."
         },
         {
           "const": "pinToYear",
-          "description": "Year headers shown. Each group appears once, placed under the year of its earliest episode."
+          "description": "Show group under its year. Each group appears once, placed under the year of its earliest episode."
         },
         {
           "const": "splitByYear",
-          "description": "Year headers shown. A group appears multiple times, once for each year it contains episodes. Tapping a group-year entry shows only that year's episodes from the group."
+          "description": "Show group in each year it spans. A group appears multiple times, once for each year it has episodes in."
         }
       ]
     },
     "GroupDef": {
       "type": "object",
-      "description": "Static group definition. Groups with a pattern match episodes by title regex; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in definition order (first-match-wins). At most one catch-all group should exist and should be placed last. Groups can override definition-level defaults for display, episodeList, and numberingExtractor.",
+      "description": "A group definition. Groups with a pattern match episodes by title; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in order (first match wins). At most one catch-all should exist and should be placed last. Groups can customize display, episodeList, and numberingExtractor settings.",
       "required": [
         "id",
         "displayName"
@@ -249,53 +249,53 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier within the parent playlist definition. Used internally for mapping episodes to groups and for cache storage keys."
+          "description": "A unique identifier for this group within the playlist."
         },
         "displayName": {
           "type": "string",
-          "description": "Human-readable group name shown on the group card in the UI. For the titleClassifier resolver this is always used as-is (not overridden by titleExtractor)."
+          "description": "The name shown to users for this group in the app. For titleClassifier, this is always used as-is (not overridden by titleExtractor)."
         },
         "pattern": {
           "type": "string",
-          "description": "Case-insensitive regex pattern matched against episode titles. When present, episodes whose title matches are assigned to this group. When omitted, this group acts as a catch-all that collects all episodes not matched by any preceding group's pattern."
+          "description": "A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Omit this field to create a catch-all group for unmatched episodes."
         },
         "display": {
           "type": "object",
-          "description": "Per-group display overrides for the group card. Omitted fields inherit from the definition-level groupList defaults.",
+          "description": "Custom display settings for this group's card. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "showDateRange": {
               "type": "boolean",
-              "description": "Override whether date range and duration metadata are shown on this group's card. When omitted, inherits from groupList.showDateRange."
+              "description": "Show or hide date range on this group's card. When not set, uses the playlist default."
             },
             "yearBinding": {
               "$ref": "#/$defs/YearBinding",
-              "description": "Override the year binding mode for this group. When omitted, inherits from groupList.yearBinding."
+              "description": "Custom year-group relationship for this group. When not set, uses the playlist default."
             }
           }
         },
         "episodeList": {
           "type": "object",
-          "description": "Per-group override for episode list settings. Omitted fields inherit from the definition-level episodeList.",
+          "description": "Custom episode list settings for this group. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "showYearHeaders": {
               "type": "boolean",
-              "description": "Override whether year separator headers are shown within this group's episode list. When omitted, inherits from the definition-level episodeList.showYearHeaders."
+              "description": "Show or hide year dividers in this group's episode list. When not set, uses the playlist default."
             },
             "sort": {
               "$ref": "#/$defs/EpisodeSortRule",
-              "description": "Override sort rule for episodes in this group. When omitted, inherits from the definition-level episodeList.sort."
+              "description": "Custom episode sort for this group. When not set, uses the playlist default."
             },
             "titleExtractor": {
               "$ref": "#/$defs/TitleExtractor",
-              "description": "Override episode title transformation for this group. When omitted, inherits from the definition-level episodeList.titleExtractor."
+              "description": "Custom episode title transformation for this group. When not set, uses the playlist default."
             }
           }
         },
         "numberingExtractor": {
           "$ref": "#/$defs/NumberingExtractor",
-          "description": "Per-group override for episode number extraction. When omitted, inherits the definition-level numberingExtractor."
+          "description": "Custom number rule for this group. When not set, uses the playlist default."
         },
         "episodeExtractor": {
           "$ref": "#/$defs/NumberingExtractor",
@@ -305,7 +305,7 @@
     },
     "SortOrder": {
       "type": "string",
-      "description": "Sort direction. 'ascending': smallest/earliest/A-first values first. 'descending': largest/latest/Z-first values first.",
+      "description": "Ascending (A-Z, oldest first, lowest number first) or descending (Z-A, newest first, highest number first).",
       "enum": [
         "ascending",
         "descending"
@@ -313,7 +313,7 @@
     },
     "SortRule": {
       "type": "object",
-      "description": "A single sort rule defining which field to sort by and in which direction.",
+      "description": "What to sort groups by and in which direction.",
       "required": [
         "field",
         "order"
@@ -321,19 +321,19 @@
       "additionalProperties": false,
       "properties": {
         "field": {
-          "description": "The group attribute to compare when sorting.",
+          "description": "What to sort groups by.",
           "oneOf": [
             {
               "const": "playlistNumber",
-              "description": "Sort by the group's numeric sort key. For rss resolver, this is the season number. For year resolver, the publication year. For titleAppearanceOrder, the first-appearance index. For category, the group's position in the groups array."
+              "description": "Sort by the group's number. For seasonNumber this is the season, for year the publication year, for titleDiscovery the first-appearance index, for titleClassifier the group's position."
             },
             {
               "const": "newestEpisodeDate",
-              "description": "Sort by the publication date of the most recent episode in each group."
+              "description": "Sort by the newest episode date in each group."
             },
             {
               "const": "alphabetical",
-              "description": "Sort alphabetically by the group's display name using locale-aware string comparison."
+              "description": "Sort alphabetically by group name."
             }
           ]
         },
@@ -344,7 +344,7 @@
     },
     "EpisodeSortRule": {
       "type": "object",
-      "description": "Sort rule for ordering episodes within a group or playlist.",
+      "description": "What to sort episodes by and in which direction.",
       "required": [
         "field",
         "order"
@@ -352,19 +352,19 @@
       "additionalProperties": false,
       "properties": {
         "field": {
-          "description": "The episode attribute to sort by.",
+          "description": "What to sort episodes by.",
           "oneOf": [
             {
               "const": "publishedAt",
-              "description": "Sort by episode publication date."
+              "description": "Sort by the episode's published date."
             },
             {
               "const": "episodeNumber",
-              "description": "Sort by episode number (from RSS metadata or numberingExtractor)."
+              "description": "Sort by episode number (from feed data or numbering rule)."
             },
             {
               "const": "title",
-              "description": "Sort alphabetically by episode title using locale-aware string comparison."
+              "description": "Sort alphabetically by episode title."
             }
           ]
         },
@@ -375,7 +375,7 @@
     },
     "TitleExtractor": {
       "type": "object",
-      "description": "Extracts a display string from episode data using a regex-and-template pipeline. Used at the definition level to derive group/playlist display names from a representative episode, and at the episodeList level to transform individual episode titles. The pipeline runs in this order: (1) if fallbackValue is set and source is 'seasonNumber' or 'episodeNumber' with a null/zero value, return fallbackValue immediately; (2) read the source field from the episode; (3) if pattern is set, apply regex and extract the specified capture group; (4) if template is set, substitute the extracted value into the {value} placeholder; (5) if any step produces null, try the fallback extractor recursively. This enables chained extraction strategies for complex podcast formats.",
+      "description": "Generates a display name from episode data. Reads a value, optionally matches a pattern, and formats the result. Steps: (1) read the source field; (2) if pattern is set, find a match and extract the specified part; (3) if template is set, format with {value} placeholder; (4) if any step fails, try the fallback. Supports chaining multiple fallback steps for complex podcast formats.",
       "required": [
         "source"
       ],
@@ -389,35 +389,35 @@
             "seasonNumber",
             "episodeNumber"
           ],
-          "description": "Episode field to read the raw value from. 'title': the episode title string. 'description': the episode description/summary string. 'seasonNumber': the episode's season number as a string (from RSS itunes:season or numberingExtractor). 'episodeNumber': the episode number as a string (from RSS itunes:episode or numberingExtractor). For 'seasonNumber' and 'episodeNumber', the numeric value is converted to a string before pattern matching."
+          "description": "Which part of the episode to read: 'title' (episode title), 'description' (episode description), 'seasonNumber' (season number from feed or numbering rule), or 'episodeNumber' (episode number from feed or numbering rule)."
         },
         "pattern": {
           "type": "string",
-          "description": "Regex pattern applied to the source value. When provided, the first match is used and the capture group specified by 'group' is extracted. When omitted, the raw source value is used directly (useful for 'seasonNumber' source with a template like 'Season {value}')."
+          "description": "A text pattern to find in the source value. Use parentheses () to mark the part you want to extract. When omitted, the raw source value is used directly (useful with a template like 'Season {value}')."
         },
         "group": {
           "type": "integer",
           "default": 0,
           "minimum": 0,
-          "description": "Capture group index to extract from the regex match. 0 returns the full match. 1+ returns the specified capture group. Only meaningful when pattern is set."
+          "description": "Which matched part to use (0 = entire match, 1 = first part in parentheses, etc.). Only meaningful when pattern is set."
         },
         "template": {
           "type": "string",
-          "description": "Format template applied after extraction. The placeholder {value} is replaced with the extracted value. Example: 'Season {value}' with extracted value '3' produces 'Season 3'. Applied after pattern matching (or raw source value if no pattern)."
+          "description": "How to format the extracted text. Use {value} as a placeholder. For example, 'Season {value}' turns '3' into 'Season 3'."
         },
         "fallback": {
           "$ref": "#/$defs/TitleExtractor",
-          "description": "Fallback extractor tried when this extractor fails to produce a value (source value is null, or pattern doesn't match). Supports arbitrary nesting for multi-tier fallback chains. Not tried when fallbackValue already returned a result."
+          "description": "A fallback step tried when this one fails to find a match. Can be chained for multi-step fallbacks. Not tried when fallbackValue already returned a result."
         },
         "fallbackValue": {
           "type": "string",
-          "description": "Static string returned immediately when source is 'seasonNumber' or 'episodeNumber' and the numeric value is null or less than 1. Checked before any pattern matching. Has no effect when source is 'title' or 'description'. Useful for labeling special/ungrouped episodes (e.g., 'Extras' for season 0)."
+          "description": "A default name used when the source is 'seasonNumber' or 'episodeNumber' and the value is missing or zero. Checked before pattern matching. Has no effect for 'title' or 'description' sources. Useful for labeling specials (e.g., 'Extras' for season 0)."
         }
       }
     },
     "NumberingExtractor": {
       "type": "object",
-      "description": "Extracts season and episode numbers from episode text, overriding unreliable RSS metadata. Uses a three-tier fallback strategy: (1) primary pattern with separate capture groups for season and episode; (2) fallback pattern for special episodes with a fixed season number; (3) RSS episodeNumber as last resort. Essential for podcasts that encode numbering in titles like '[62-15] Title' rather than using standard RSS tags.",
+      "description": "Finds season and episode numbers in episode text, overriding feed data when needed. Uses a three-tier approach: (1) primary pattern with parts for season and episode; (2) fallback pattern for special episodes with a fixed season; (3) feed data as last resort. Essential for podcasts that encode numbering in titles like '[62-15] Title'.",
       "required": [
         "source",
         "pattern"
@@ -430,11 +430,11 @@
             "title",
             "description"
           ],
-          "description": "Episode field to extract numbers from. 'title': the episode title (most common). 'description': the episode description/summary."
+          "description": "Which part of the episode to read: 'title' (most common) or 'description'."
         },
         "pattern": {
           "type": "string",
-          "description": "Primary regex pattern with capture groups for season and episode numbers. Must contain at least one capture group for the episode number (episodeGroup). Should contain a capture group for season (seasonGroup) unless seasonGroup is null. Example: '[(\\d+)-(\\d+)]' captures season from group 1 and episode from group 2."
+          "description": "A text pattern with parentheses () marking where the season and episode numbers appear. Example: '[(\\d+)-(\\d+)]' finds season from part 1 and episode from part 2."
         },
         "seasonGroup": {
           "type": [
@@ -442,32 +442,32 @@
             "null"
           ],
           "default": 1,
-          "description": "Capture group index for the season number in the primary pattern. Default is 1. Set to null to skip season extraction entirely (episode-only mode), useful when only episode renumbering is needed without changing season grouping."
+          "description": "Which matched part contains the season number. Default is 1. Set to null to skip season detection (episode-only mode)."
         },
         "episodeGroup": {
           "type": "integer",
           "default": 2,
           "minimum": 1,
-          "description": "Capture group index for the episode number in the primary pattern. Default is 2. The extracted value is parsed as an integer and used for episode ordering within groups."
+          "description": "Which matched part contains the episode number (default: 2)."
         },
         "fallbackSeasonNumber": {
           "type": "integer",
-          "description": "Fixed season number assigned when the primary pattern fails but fallbackEpisodePattern matches. Typically 0 for special/bonus episodes that don't belong to a regular season. Only used in conjunction with fallbackEpisodePattern."
+          "description": "Season number to assign when only the fallback pattern matches (e.g., 0 for special episodes)."
         },
         "fallbackEpisodePattern": {
           "type": "string",
-          "description": "Secondary regex pattern tried when the primary pattern does not match. Designed for special episodes with a different title format (e.g., bonus episodes, extras). The episode number is extracted from the capture group specified by fallbackEpisodeCaptureGroup, and the season is set to fallbackSeasonNumber."
+          "description": "A backup pattern tried when the primary one doesn't match. Useful for catching special or bonus episodes with a different title format."
         },
         "fallbackEpisodeCaptureGroup": {
           "type": "integer",
           "default": 1,
           "minimum": 1,
-          "description": "Capture group index for the episode number in fallbackEpisodePattern. Default is 1."
+          "description": "Which matched part in the fallback pattern contains the episode number (default: 1)."
         },
         "fallbackToRss": {
           "type": "boolean",
           "default": false,
-          "description": "When true, fall back to the episode's RSS episodeNumber (itunes:episode) if neither the primary pattern nor the fallback pattern matched. This is the last resort in the three-tier extraction strategy. Season number is not set in this case (only episode number is used)."
+          "description": "When no pattern matches, use the episode number from the feed data instead. This is the last resort. Only the episode number is used; season number is not set."
         }
       }
     }

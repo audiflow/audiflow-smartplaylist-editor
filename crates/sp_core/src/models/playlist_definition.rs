@@ -71,6 +71,40 @@ pub struct PlaylistDefinition {
 }
 
 impl PlaylistDefinition {
+    /// Removes fields that are irrelevant to the current `resolver_type`.
+    ///
+    /// This keeps form-state values safe (the editor preserves them for undo),
+    /// but ensures persisted/previewed data is clean.
+    ///
+    /// Conditional fields by resolver_type:
+    /// - `seasonNumber`:      numberingExtractor, titleExtractor, nullSeasonGroupKey
+    /// - `titleDiscovery`:    titleExtractor, groups (groups[0].pattern used as fallback)
+    /// - `titleClassifier`:   groups
+    /// - `year`:              titleExtractor
+    /// - others:              none of the above
+    pub fn strip_conditional_fields(&mut self) {
+        let rt = self.resolver_type.as_str();
+
+        // numberingExtractor + nullSeasonGroupKey: only seasonNumber
+        if rt != "seasonNumber" {
+            self.numbering_extractor = None;
+            self.null_season_group_key = None;
+        }
+
+        // titleExtractor (top-level only): seasonNumber, titleDiscovery, or year
+        // Note: episodeList.titleExtractor is NOT stripped here -- it is an
+        // episode-list display setting independent of resolver type.
+        if rt != "seasonNumber" && rt != "titleDiscovery" && rt != "year" {
+            self.title_extractor = None;
+        }
+
+        // groups: titleClassifier uses full group definitions;
+        // titleDiscovery uses groups[0].pattern as a fallback extraction pattern
+        if rt != "titleClassifier" && rt != "titleDiscovery" {
+            self.groups = None;
+        }
+    }
+
     /// Whether this definition has any effective episode filters.
     pub fn has_filters(&self) -> bool {
         match &self.episode_filters {
@@ -143,4 +177,85 @@ pub struct EpisodeListSettings {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title_extractor: Option<TitleExtractor>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_definition(resolver_type: &str) -> PlaylistDefinition {
+        let json = serde_json::json!({
+            "id": "test",
+            "displayName": "Test",
+            "resolverType": resolver_type,
+            "presentation": "combined",
+            "nullSeasonGroupKey": 0,
+            "numberingExtractor": {
+                "source": "title",
+                "pattern": "(\\d+)",
+                "seasonGroup": 0,
+                "episodeGroup": 1
+            },
+            "titleExtractor": {
+                "source": "title",
+                "pattern": "(.+)",
+                "group": 1
+            },
+            "groups": [{ "id": "g1", "displayName": "G1", "pattern": ".*" }],
+            "episodeList": {
+                "titleExtractor": {
+                    "source": "title",
+                    "pattern": "(.+)",
+                    "group": 1
+                }
+            }
+        });
+        serde_json::from_value(json).unwrap()
+    }
+
+    #[test]
+    fn season_number_keeps_numbering_and_title_extractor() {
+        let mut def = make_definition("seasonNumber");
+        def.strip_conditional_fields();
+
+        assert!(def.numbering_extractor.is_some());
+        assert!(def.null_season_group_key.is_some());
+        assert!(def.title_extractor.is_some());
+        assert!(def.groups.is_none());
+    }
+
+    #[test]
+    fn title_discovery_keeps_title_extractor_and_groups() {
+        let mut def = make_definition("titleDiscovery");
+        def.strip_conditional_fields();
+
+        assert!(def.numbering_extractor.is_none());
+        assert!(def.null_season_group_key.is_none());
+        assert!(def.title_extractor.is_some());
+        assert!(def.groups.is_some());
+    }
+
+    #[test]
+    fn title_classifier_keeps_groups_only() {
+        let mut def = make_definition("titleClassifier");
+        def.strip_conditional_fields();
+
+        assert!(def.numbering_extractor.is_none());
+        assert!(def.null_season_group_key.is_none());
+        assert!(def.title_extractor.is_none());
+        assert!(def.groups.is_some());
+        // episodeList.titleExtractor is NOT stripped (independent of resolver)
+        assert!(def.episode_list.as_ref().unwrap().title_extractor.is_some());
+    }
+
+    #[test]
+    fn year_keeps_title_extractor_strips_rest() {
+        let mut def = make_definition("year");
+        def.strip_conditional_fields();
+
+        assert!(def.numbering_extractor.is_none());
+        assert!(def.null_season_group_key.is_none());
+        assert!(def.title_extractor.is_some());
+        assert!(def.groups.is_none());
+    }
 }

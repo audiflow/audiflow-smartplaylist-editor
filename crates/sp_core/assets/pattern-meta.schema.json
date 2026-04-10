@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://audiflow.app/schema/v4/pattern-meta.json",
   "title": "SmartPlaylist Pattern Meta",
-  "description": "Per-pattern metadata file at {patternId}/meta.json. Contains feed matching rules to identify which podcast this pattern applies to, and an ordered list of playlist definition IDs. The mobile app fetches this file after a feedUrlHint match in the root index, then performs exact matching using podcastGuid and feedUrls.",
+  "description": "Per-config metadata file at {patternId}/meta.json. Contains feed matching rules to identify the podcast, and an ordered list of playlist definitions. The app uses podcastGuid and feedUrls for matching.",
   "type": "object",
   "required": [
     "dataVersion",
@@ -20,15 +20,15 @@
     "id": {
       "type": "string",
       "minLength": 1,
-      "description": "Semi-deterministic pattern identifier derived at creation time and fixed forever. Computed as md5(podcastGuid)[0:12] if podcastGuid is available, otherwise md5(feedUrls[0])[0:12]. Must exactly match the parent directory name. Used as the cache storage key and for constructing file paths (e.g., {id}/playlists/{playlistId}.json)."
+      "description": "A unique identifier for this config, derived at creation time. Must match the parent directory name. Used for constructing file paths (e.g., {id}/playlists/{playlistId}.json)."
     },
     "podcastGuid": {
       "type": "string",
-      "description": "Podcast GUID for exact matching, checked before feedUrls. Typically the Apple Podcasts GUID or podcast:guid from the RSS feed. If set and matches the podcast's GUID, the pattern is considered a match and feedUrls are not checked. Omit when a reliable GUID is not available."
+      "description": "The podcast's unique ID from its RSS feed. When set, this takes priority over feed URL matching for more reliable identification. Omit when a reliable GUID is not available."
     },
     "feedUrls": {
       "type": "array",
-      "description": "List of exact feed URLs for podcast matching. Used as a fallback when podcastGuid is absent or doesn't match the podcast. A podcast matches if its feed URL equals any entry in this list (exact string comparison). Multiple URLs support podcasts that have migrated hosting providers or have alternate feed URLs.",
+      "description": "One or more RSS feed URLs that identify this podcast. The app matches incoming feeds against these URLs to find the right config. Multiple URLs support podcasts that have migrated hosts or have alternate feeds.",
       "items": {
         "type": "string"
       },
@@ -37,11 +37,11 @@
     "yearGroupedEpisodes": {
       "type": "boolean",
       "default": false,
-      "description": "When true, the podcast detail screen's all-episodes view groups episodes by publication year with sticky year headers. This is independent of smart playlist grouping and affects the default episode browsing experience (i.e., when the user views all episodes, not a specific playlist). Useful for long-running podcasts where chronological year navigation improves discoverability."
+      "description": "When enabled, the main episode list in the app groups episodes by their publication year with year headers. This is independent of playlist grouping and affects the default browsing experience. Useful for long-running podcasts."
     },
     "playlists": {
       "type": "array",
-      "description": "Ordered list of playlist definition IDs. Each ID maps to a file at playlists/{id}.json within this pattern directory. The array order determines the display order in the app's playlist tab. Must contain at least one entry.",
+      "description": "Ordered list of playlist definition IDs. Each maps to a file at playlists/{id}.json. The order here determines the display order in the app. Must contain at least one entry.",
       "items": {
         "type": "string"
       },

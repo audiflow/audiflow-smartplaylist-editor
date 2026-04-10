@@ -1,0 +1,15 @@
+{
+  "sectionNote.basicSettings": "The ID is used as the filename when saving and must be unique within this config.",
+  "sectionNote.episodeFilters": "Control which episodes from the feed are included in this playlist. Define text patterns to match against episode titles and descriptions.",
+  "sectionNote.episodeList": "Default settings for how episodes appear within each group. When using 'By title pattern matching', these can be customized per group.",
+  "sectionNote.resolver": "Choose how episodes are organized into groups. The organization method determines the grouping logic, and the presentation controls how groups appear in the app.",
+  "sectionNote.groups": "Define and arrange groups for this playlist. For 'By title pattern matching', groups are required regardless of the presentation setting. Each group can have its own episode list and display settings.",
+  "sectionNote.displaySettings": "Visual options that control how episode lists and groups appear in the app. When using 'By title pattern matching', these can be customized per group.",
+  "interactionNote.episodeFilters.requireExclude": "When both include and exclude rules are set, include rules run first to select matching episodes, then exclude rules remove any matches from that set. If no include rules are set, all episodes are candidates and only exclude rules apply.",
+  "interactionNote.episodeList.titleExtractorChain": "The group name rule tries each step in order. If a step's pattern doesn't match, it moves to the next step. If all steps fail, the default name is used.",
+  "interactionNote.resolver.resolverStructure": "· Collect into one playlist: all groups live inside one playlist entry in the app\n· Make each group its own playlist: each group becomes its own entry (only available with a single playlist definition)",
+  "interactionNote.resolver.titleExtractor": "The group name rule generates display names from episode data. For 'By season number', 'By publication year', and 'By recurring title pattern', it replaces the default group name with a value found in the episode. Not used with 'By title pattern matching' — those groups use the names you define directly.",
+  "interactionNote.resolver.numberingExtractor": "The season & episode number rule is used with 'By season number' to extract season and episode numbers from titles. Normally the RSS feed provides these directly, but some podcasts have missing or incorrect season/episode numbers — this rule lets you extract the correct numbers from the episode title instead.",
+  "interactionNote.groups.overrides": "Group-specific settings take precedence over the defaults set in the Episode List and Display tabs. Leave them unset to use the defaults.",
+  "interactionNote.displaySettings.yearBindingHeaders": "Year-group relationship controls how groups relate to year sections. Year dividers add separators within episode lists. These are independent — you can have year dividers without year-group linking, or vice versa."
+}

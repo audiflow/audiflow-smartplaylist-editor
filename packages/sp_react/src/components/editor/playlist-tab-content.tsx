@@ -1,19 +1,22 @@
-import { useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import type {
   PreviewPlaylist,
   PreviewEpisode,
   PreviewDebug,
+  FeedEpisode,
 } from '@/schemas/api-schema.ts';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import type { EpisodeSortRule } from '@/components/preview/episode-sort-utils.ts';
+import { useEditorStore } from '@/stores/editor-store.ts';
+import { useFeed } from '@/api/queries.ts';
+import { filterEpisodes } from '@/lib/episode-filter.ts';
 import { PlaylistForm } from '@/components/editor/playlist-form.tsx';
 import { DebugInfoStats } from '@/components/preview/debug-info-panel.tsx';
-import { ClaimedEpisodesSection } from '@/components/preview/claimed-episodes-section.tsx';
 import { UngroupedEpisodesPanel } from '@/components/preview/ungrouped-episodes-panel.tsx';
+import { FilteredEpisodesPanel } from '@/components/preview/filtered-episodes-panel.tsx';
 import { PlaylistTree } from '@/components/preview/playlist-tree.tsx';
-import { ExtractionPreview } from '@/components/preview/extraction-preview.tsx';
 import {
   Tabs,
   TabsList,
@@ -24,31 +27,74 @@ import { Badge } from '@/components/ui/badge.tsx';
 
 interface PlaylistTabContentProps {
   index: number;
-  previewPlaylist: PreviewPlaylist | null;
-  ungroupedEpisodes: PreviewEpisode[];
-  excludedEpisodes: PreviewEpisode[];
-  globalDebug: PreviewDebug | undefined;
   playlistCount: number;
   onRemove: () => void;
+  isNewConfig?: boolean;
 }
 
 export function PlaylistTabContent({
   index,
-  previewPlaylist,
-  ungroupedEpisodes,
-  excludedEpisodes,
-  globalDebug,
   playlistCount,
   onRemove,
+  isNewConfig,
 }: PlaylistTabContentProps) {
+  // Read preview data from Zustand store (isolated re-renders)
+  const previewData = useEditorStore((s) => s.previewData);
+  const playlistId = useWatch({ control: useFormContext<PatternConfig>().control, name: `playlists.${index}.id` as const });
+  const previewPlaylist = previewData?.playlists.find((p) => p.id === playlistId) ?? null;
+  const ungroupedEpisodes = previewData?.ungrouped ?? [];
+  const excludedEpisodes = previewData?.excluded ?? [];
+  const globalDebug = previewData?.debug;
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
-  const { watch } = useFormContext<PatternConfig>();
-  const prependSeasonNumber = watch(`playlists.${index}.prependSeasonNumber`) ?? false;
-  const yearBinding = (watch(`playlists.${index}.groupList.yearBinding`) ?? 'none') as YearBinding;
-  const groupDefs = watch(`playlists.${index}.groups`);
-  const defaultSortField = watch(`playlists.${index}.episodeList.sort.field`);
-  const defaultSortOrder = watch(`playlists.${index}.episodeList.sort.order`);
+  const { control } = useFormContext<PatternConfig>();
+  const feedUrl = useEditorStore((s) => s.feedUrl);
+  const feedQuery = useFeed(feedUrl || null);
+
+  const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.prependSeasonNumber` as const }) ?? false;
+  const yearBinding = (useWatch({ control, name: `playlists.${index}.groupList.yearBinding` as const }) ?? 'none') as YearBinding;
+  const groupDefs = useWatch({ control, name: `playlists.${index}.groups` as const });
+  const defaultSortField = useWatch({ control, name: `playlists.${index}.episodeList.sort.field` as const });
+  const defaultSortOrder = useWatch({ control, name: `playlists.${index}.episodeList.sort.order` as const });
+
+  // Retain previous preview data to avoid unmount/remount flicker during updates.
+  // Reset when playlistId changes so stale data from a different playlist is not shown.
+  const lastPreviewRef = useRef<{
+    playlistId: string;
+    playlist: PreviewPlaylist;
+    ungrouped: PreviewEpisode[];
+    excluded: PreviewEpisode[];
+    debug: PreviewDebug | undefined;
+  } | null>(null);
+
+  if (previewPlaylist) {
+    lastPreviewRef.current = {
+      playlistId,
+      playlist: previewPlaylist,
+      ungrouped: ungroupedEpisodes,
+      excluded: excludedEpisodes,
+      debug: globalDebug,
+    };
+  } else if (lastPreviewRef.current && lastPreviewRef.current.playlistId !== playlistId) {
+    lastPreviewRef.current = null;
+  }
+
+  const stablePreview = lastPreviewRef.current;
+
+  // New configs: start on 'filtered', auto-switch to 'preview' once data arrives.
+  // Existing configs: start directly on 'preview'.
+  const [activePreviewTab, setActivePreviewTab] = useState(
+    isNewConfig ? 'filtered' : 'preview',
+  );
+  const hasAutoSwitchedRef = useRef(!isNewConfig);
+
+  useEffect(() => {
+    if (hasAutoSwitchedRef.current) return;
+    if (previewPlaylist) {
+      hasAutoSwitchedRef.current = true;
+      setActivePreviewTab('preview');
+    }
+  }, [previewPlaylist]);
   const groupYearBindingOverrides = useMemo(() => {
     const map = new Map<string, YearBinding>();
     if (!groupDefs) return map;
@@ -76,115 +122,141 @@ export function PlaylistTabContent({
     return map;
   }, [defaultSortField, defaultSortOrder, groupDefs]);
 
-  const claimedCount = previewPlaylist?.claimedByOthers?.length ?? 0;
-  const ungroupedCount = ungroupedEpisodes.length;
-  const excludedCount = excludedEpisodes.length;
-  const showClaimedTab = 2 <= playlistCount;
+  const sp = stablePreview;
+  const stableUngroupedCount = sp?.ungrouped.length ?? 0;
+  const stableExcludedCount = sp?.excluded.length ?? 0;
 
   return (
     <div className="pt-2">
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Config side */}
         <div className="space-y-4 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
-          <PlaylistForm index={index} onRemove={onRemove} />
+          <PlaylistForm index={index} playlistCount={playlistCount} onRemove={onRemove} isNewConfig={isNewConfig} />
         </div>
 
         {/* Preview side */}
         <div className="rounded-lg border bg-muted/30 p-4 space-y-3 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
-          <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {t('previewSectionTitle')}
-          </h4>
-          {previewPlaylist ? (
-            <>
-              {globalDebug && (
-                <div className="border rounded-md px-3 py-1.5">
-                  <DebugInfoStats debug={globalDebug} />
-                </div>
-              )}
-              <Tabs defaultValue="groups">
-                <TabsList>
-                  <TabsTrigger value="groups">
-                    {tp('tabGroups')}
-                    <Badge variant="secondary" className="ml-1.5">
-                      {previewPlaylist.episodeCount}
-                    </Badge>
-                  </TabsTrigger>
-                  <TabsTrigger value="ungrouped">
-                    {tp('tabUngrouped')}
-                    {0 < ungroupedCount && (
-                      <Badge variant="secondary" className="ml-1.5">
-                        {ungroupedCount}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="excluded">
-                    {tp('tabExcluded')}
-                    {0 < excludedCount && (
-                      <Badge variant="secondary" className="ml-1.5">
-                        {excludedCount}
-                      </Badge>
-                    )}
-                  </TabsTrigger>
-                  <TabsTrigger value="extraction">
-                    {tp('tabExtraction')}
-                  </TabsTrigger>
-                  {showClaimedTab && (
-                    <TabsTrigger value="claimed">
-                      {tp('tabClaimed')}
-                      {0 < claimedCount && (
-                        <Badge variant="secondary" className="ml-1.5">
-                          {claimedCount}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  )}
-                </TabsList>
-                <TabsContent value="groups">
-                  <PlaylistTree playlists={[previewPlaylist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
-                </TabsContent>
-                <TabsContent value="ungrouped">
-                  {0 < ungroupedCount ? (
-                    <UngroupedEpisodesPanel episodes={ungroupedEpisodes} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-4 text-center">
-                      {tp('emptyUngrouped')}
-                    </p>
-                  )}
-                </TabsContent>
-                <TabsContent value="excluded">
-                  {0 < excludedCount ? (
-                    <UngroupedEpisodesPanel episodes={excludedEpisodes} />
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-4 text-center">
-                      {tp('emptyExcluded')}
-                    </p>
-                  )}
-                </TabsContent>
-                <TabsContent value="extraction">
-                  <ExtractionPreview playlist={previewPlaylist} />
-                </TabsContent>
-                {showClaimedTab && (
-                  <TabsContent value="claimed">
-                    {0 < claimedCount ? (
-                      <ClaimedEpisodesSection
-                        episodes={previewPlaylist.claimedByOthers ?? []}
-                      />
-                    ) : (
-                      <p className="text-sm text-muted-foreground py-4 text-center">
-                        {tp('emptyClaimed')}
-                      </p>
-                    )}
-                  </TabsContent>
+          <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
+            <TabsList>
+              <TabsTrigger value="filtered">
+                {tp('tabFiltered')}
+              </TabsTrigger>
+              <TabsTrigger value="excluded">
+                {tp('tabExcluded')}
+                {0 < stableExcludedCount && (
+                  <Badge variant="secondary" className="ml-1.5">
+                    {stableExcludedCount}
+                  </Badge>
                 )}
-              </Tabs>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              {t('tabPreviewEmpty')}
-            </p>
-          )}
+              </TabsTrigger>
+              <TabsTrigger value="preview">
+                {tp('tabPreview')}
+                {sp && (
+                  <Badge variant="secondary" className="ml-1.5">
+                    {sp.playlist.episodeCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="filtered">
+              <LiveFilteredEpisodes
+                index={index}
+                feedEpisodes={feedQuery.data ?? []}
+                feedState={feedQuery.data != null ? 'success' : feedQuery.isLoading ? 'loading' : feedQuery.isError ? 'error' : 'idle'}
+              />
+            </TabsContent>
+            <TabsContent value="excluded">
+              {sp ? (
+                0 < stableExcludedCount ? (
+                  <UngroupedEpisodesPanel episodes={sp.excluded} />
+                ) : (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    {tp('emptyExcluded')}
+                  </p>
+                )
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  {t('tabPreviewEmpty')}
+                </p>
+              )}
+            </TabsContent>
+            <TabsContent value="preview">
+              {sp ? (
+                <>
+                  {sp.debug && (
+                    <div className="border rounded-md px-3 py-1.5 mb-3">
+                      <DebugInfoStats debug={sp.debug} />
+                    </div>
+                  )}
+                  <Tabs defaultValue="groups">
+                    <TabsList>
+                      <TabsTrigger value="groups">
+                        {tp('tabGroups')}
+                        <Badge variant="secondary" className="ml-1.5">
+                          {sp.playlist.episodeCount}
+                        </Badge>
+                      </TabsTrigger>
+                      <TabsTrigger value="ungrouped">
+                        {tp('tabUngrouped')}
+                        {0 < stableUngroupedCount && (
+                          <Badge variant="secondary" className="ml-1.5">
+                            {stableUngroupedCount}
+                          </Badge>
+                        )}
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="groups">
+                      <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
+                    </TabsContent>
+                    <TabsContent value="ungrouped">
+                      {0 < stableUngroupedCount ? (
+                        <UngroupedEpisodesPanel episodes={sp.ungrouped} />
+                      ) : (
+                        <p className="text-sm text-muted-foreground py-4 text-center">
+                          {tp('emptyUngrouped')}
+                        </p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  {t('tabPreviewEmpty')}
+                </p>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
+  );
+}
+
+// Isolated component so useWatch on episodeFilters doesn't re-render the whole tree.
+type FeedState = 'idle' | 'loading' | 'error' | 'success';
+
+function LiveFilteredEpisodes({
+  index,
+  feedEpisodes,
+  feedState,
+}: {
+  index: number;
+  feedEpisodes: readonly FeedEpisode[];
+  feedState: FeedState;
+}) {
+  const { control } = useFormContext<PatternConfig>();
+  const episodeFilters = useWatch({ control, name: `playlists.${index}.episodeFilters` as const });
+
+  const filtered = useMemo(
+    () => filterEpisodes(feedEpisodes, episodeFilters ?? undefined),
+    [feedEpisodes, episodeFilters],
+  );
+
+  return (
+    <FilteredEpisodesPanel
+      episodes={filtered}
+      totalCount={feedEpisodes.length}
+      feedState={feedState}
+    />
   );
 }

@@ -128,7 +128,7 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
               </HintLabel>
               <Input
                 id={`${idPrefix}-seasonGroup`}
-                type="number"
+                type="number" className="w-24"
                 {...register(`${fieldPath}.seasonGroup` as any, {
                   setValueAs: (v) =>
                     v === '' || v === null || v === undefined
@@ -147,7 +147,7 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
               </HintLabel>
               <Input
                 id={`${idPrefix}-episodeGroup`}
-                type="number"
+                type="number" className="w-24"
                 {...register(`${fieldPath}.episodeGroup` as any, {
                   setValueAs: (v) =>
                     v === '' || v === null || v === undefined
@@ -189,7 +189,7 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
                 </HintLabel>
                 <Input
                   id={`${idPrefix}-fallbackSeasonNumber`}
-                  type="number"
+                  type="number" className="w-24"
                   {...register(`${fieldPath}.fallbackSeasonNumber` as any, {
                     setValueAs: (v) =>
                       v === '' || v === null || v === undefined
@@ -208,7 +208,7 @@ export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtract
                 </HintLabel>
                 <Input
                   id={`${idPrefix}-fallbackEpisodeCaptureGroup`}
-                  type="number"
+                  type="number" className="w-24"
                   {...register(`${fieldPath}.fallbackEpisodeCaptureGroup` as any, {
                     setValueAs: (v) =>
                       v === '' || v === null || v === undefined

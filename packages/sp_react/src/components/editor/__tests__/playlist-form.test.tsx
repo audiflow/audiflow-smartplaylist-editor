@@ -36,20 +36,26 @@ function FormWrapper({
 }
 
 function renderPlaylistForm(
-  overrides?: Partial<{ index: number; onRemove: () => void; config: PatternConfig }>,
+  overrides?: Partial<{ index: number; onRemove: () => void; config: PatternConfig; isNewConfig: boolean }>,
 ) {
   const index = overrides?.index ?? 0;
   const onRemove = overrides?.onRemove ?? vi.fn();
   const config = overrides?.config ?? DEFAULT_CONFIG;
+  const isNewConfig = overrides?.isNewConfig;
 
   return {
     onRemove,
     ...renderWithProviders(
       <FormWrapper defaultValues={config}>
-        <PlaylistForm index={index} onRemove={onRemove} />
+        <PlaylistForm index={index} playlistCount={config.playlists.length} onRemove={onRemove} isNewConfig={isNewConfig} />
       </FormWrapper>,
     ),
   };
+}
+
+async function switchToTab(user: ReturnType<typeof userEvent.setup>, tabName: RegExp) {
+  const tab = screen.getByRole('tab', { name: tabName });
+  await user.click(tab);
 }
 
 describe('PlaylistForm', () => {
@@ -57,91 +63,101 @@ describe('PlaylistForm', () => {
     useEditorStore.getState().reset();
   });
 
-  describe('BasicSettings', () => {
-    it('renders id input with current value', () => {
+  describe('Tabs', () => {
+    it('renders 5 tabs (no separate Groups tab)', () => {
       renderPlaylistForm();
+      const tabs = screen.getAllByRole('tab');
+      expect(tabs.length).toBe(5);
+    });
+
+    it('shows Organize tab as default for saved playlists', () => {
+      renderPlaylistForm();
+      const resolverTab = screen.getByRole('tab', { name: /organize/i });
+      expect(resolverTab).toHaveAttribute('data-state', 'active');
+    });
+
+    it('shows Basic tab as default for new configs', () => {
+      renderPlaylistForm({ isNewConfig: true });
+      const basicTab = screen.getByRole('tab', { name: /basic/i });
+      expect(basicTab).toHaveAttribute('data-state', 'active');
+    });
+  });
+
+  describe('BasicSettings', () => {
+    it('renders id input with current value', async () => {
+      const user = userEvent.setup();
+      renderPlaylistForm();
+      await switchToTab(user, /basic/i);
       const input = screen.getByLabelText(/^id$/i);
       expect(input).toBeInTheDocument();
       expect(input).toHaveValue('playlist-1');
     });
 
-    it('renders display name input with current value', () => {
+    it('renders display name input with current value', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /basic/i);
       const input = screen.getByLabelText(/display name/i);
       expect(input).toHaveValue('Test Playlist');
     });
 
-    it('renders priority input with current value', () => {
-      renderPlaylistForm();
-      const input = screen.getByLabelText(/priority/i);
-      expect(input).toHaveValue(0);
-    });
   });
 
   describe('StructureSettings', () => {
-    it('renders resolver type select', () => {
+    it('renders resolver type select', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
-      expect(screen.getByText(/resolver type/i)).toBeInTheDocument();
+      await switchToTab(user, /organize/i);
+      expect(screen.getByText(/how to organize/i)).toBeInTheDocument();
     });
 
-    it('renders presentation select', () => {
+    it('renders presentation select dropdown', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
-      expect(screen.getByText(/presentation/i)).toBeInTheDocument();
+      await switchToTab(user, /organize/i);
+      expect(screen.getByText(/how groups appear/i)).toBeInTheDocument();
     });
 
-    it('shows nullSeasonGroupKey when resolverType is seasonNumber', () => {
-      renderPlaylistForm();
-      expect(
-        screen.getByLabelText(/null season group key/i),
-      ).toBeInTheDocument();
-    });
-
-    it('hides nullSeasonGroupKey when resolverType is not seasonNumber', () => {
-      const config: PatternConfig = {
-        ...DEFAULT_CONFIG,
-        playlists: [
-          {
-            ...DEFAULT_CONFIG.playlists[0],
-            resolverType: 'titleClassifier',
-          },
-        ],
-      };
-      renderPlaylistForm({ config });
-      expect(
-        screen.queryByLabelText(/null season group key/i),
-      ).not.toBeInTheDocument();
-    });
-  });
+});
 
   describe('DisplayOptions', () => {
-    it('renders showYearHeaders checkbox', () => {
+    it('renders showYearHeaders checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
-      expect(screen.getByText(/show year headers/i)).toBeInTheDocument();
+      await switchToTab(user, /display/i);
+      expect(screen.getByText(/year dividers/i)).toBeInTheDocument();
     });
 
-    it('renders showDateRange checkbox', () => {
+    it('renders showDateRange checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
-      expect(screen.getByText(/show date range/i)).toBeInTheDocument();
+      await switchToTab(user, /display/i);
+      expect(screen.getByText(/date range/i)).toBeInTheDocument();
     });
 
-    it('renders userSortable checkbox', () => {
+    it('renders userSortable checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
-      expect(screen.getByText(/user sortable/i)).toBeInTheDocument();
+      await switchToTab(user, /display/i);
+      expect(screen.getByText(/change sort order/i)).toBeInTheDocument();
     });
 
-    it('renders prependSeasonNumber checkbox', () => {
+    it('renders prependSeasonNumber checkbox', async () => {
+      const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /display/i);
       expect(
-        screen.getByText(/prepend season number/i),
+        screen.getByText(/season number to group/i),
       ).toBeInTheDocument();
     });
   });
 
   describe('RemoveButton', () => {
-    it('calls onRemove when clicked', async () => {
+    it('calls onRemove when danger zone is opened and button clicked', async () => {
       const user = userEvent.setup();
       const { onRemove } = renderPlaylistForm();
 
+      await user.click(screen.getByText(/danger zone/i));
       await user.click(screen.getByText(/remove playlist/i));
 
       expect(onRemove).toHaveBeenCalledOnce();
@@ -149,25 +165,28 @@ describe('PlaylistForm', () => {
   });
 
   describe('FilterSettings', () => {
-    it('renders require and exclude filter sections', () => {
-      renderPlaylistForm();
-      expect(screen.getByText(/require filters/i)).toBeInTheDocument();
-      expect(screen.getByText(/exclude filters/i)).toBeInTheDocument();
-    });
-
-    it('adds a require filter entry when add button is clicked', async () => {
+    it('renders include and exclude filter sections', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /filters/i);
+      expect(screen.getByText(/include episodes/i)).toBeInTheDocument();
+      expect(screen.getByText(/exclude episodes/i)).toBeInTheDocument();
+    });
 
-      const requireSection = screen
-        .getByText(/require filters/i)
+    it('adds an include filter entry when add button is clicked', async () => {
+      const user = userEvent.setup();
+      renderPlaylistForm();
+      await switchToTab(user, /filters/i);
+
+      const includeSection = screen
+        .getByText(/include episodes/i)
         .closest('div.rounded-lg')!;
-      const addButton = within(requireSection).getByText(/add filter/i);
+      const addButton = within(includeSection).getByText(/add rule/i);
 
       await user.click(addButton);
 
-      const inputs = within(requireSection).getAllByPlaceholderText(
-        /regex pattern/i,
+      const inputs = within(includeSection).getAllByPlaceholderText(
+        /text pattern/i,
       );
       expect(1 <= inputs.length).toBe(true);
     });
@@ -175,16 +194,17 @@ describe('PlaylistForm', () => {
     it('adds an exclude filter entry when add button is clicked', async () => {
       const user = userEvent.setup();
       renderPlaylistForm();
+      await switchToTab(user, /filters/i);
 
       const excludeSection = screen
-        .getByText(/exclude filters/i)
+        .getByText(/exclude episodes/i)
         .closest('div.rounded-lg')!;
-      const addButton = within(excludeSection).getByText(/add filter/i);
+      const addButton = within(excludeSection).getByText(/add rule/i);
 
       await user.click(addButton);
 
       const inputs = within(excludeSection).getAllByPlaceholderText(
-        /regex pattern/i,
+        /text pattern/i,
       );
       expect(1 <= inputs.length).toBe(true);
     });

@@ -19,5 +19,7 @@
   "searchPodcastsHint": "ポッドキャスト名を入力して検索",
   "noSearchResults": "ポッドキャストが見つかりません",
   "searchError": "ポッドキャストの検索に失敗しました。もう一度お試しください。",
-  "episodeCount": "{{count}} エピソード"
+  "episodeCount": "{{count}} エピソード",
+  "noteLabel.section": "このセクションについて",
+  "noteLabel.interaction": "設定の組み合わせ"
 }

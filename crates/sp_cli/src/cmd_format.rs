@@ -132,7 +132,8 @@ fn format_file(path: &Path, schema_type: SchemaType, check: bool) -> anyhow::Res
 fn normalize_json(raw: &str, schema_type: SchemaType) -> Result<String, serde_json::Error> {
     match schema_type {
         SchemaType::PlaylistDefinition => {
-            let model: PlaylistDefinition = serde_json::from_str(raw)?;
+            let mut model: PlaylistDefinition = serde_json::from_str(raw)?;
+            model.strip_conditional_fields();
             serde_json::to_string_pretty(&model)
         }
         SchemaType::PatternMeta => {

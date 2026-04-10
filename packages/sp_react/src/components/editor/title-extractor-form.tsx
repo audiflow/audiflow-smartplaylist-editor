@@ -268,7 +268,7 @@ function TitleExtractorStep({
             </HintLabel>
             <Input
               id={`${idPrefix}-${stepIndex}-group`}
-              type="number"
+              type="number" className="w-24"
               value={step.group ?? 0}
               onChange={(e) =>
                 onUpdate({ group: parseInt(e.target.value, 10) || 0 })
