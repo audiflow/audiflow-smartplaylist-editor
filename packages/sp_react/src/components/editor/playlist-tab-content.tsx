@@ -159,7 +159,7 @@ export function PlaylistTabContent({
               </TabsTrigger>
             </TabsList>
             <TabsContent value="filtered">
-              <LiveFilteredEpisodes index={index} feedEpisodes={feedQuery.data ?? []} />
+              <LiveFilteredEpisodes index={index} feedEpisodes={feedQuery.data ?? []} feedLoaded={feedQuery.data != null} />
             </TabsContent>
             <TabsContent value="excluded">
               {sp ? (
@@ -232,9 +232,11 @@ export function PlaylistTabContent({
 function LiveFilteredEpisodes({
   index,
   feedEpisodes,
+  feedLoaded,
 }: {
   index: number;
   feedEpisodes: readonly FeedEpisode[];
+  feedLoaded: boolean;
 }) {
   const { control } = useFormContext<PatternConfig>();
   const episodeFilters = useWatch({ control, name: `playlists.${index}.episodeFilters` as const });
@@ -248,6 +250,7 @@ function LiveFilteredEpisodes({
     <FilteredEpisodesPanel
       episodes={filtered}
       totalCount={feedEpisodes.length}
+      feedLoaded={feedLoaded}
     />
   );
 }

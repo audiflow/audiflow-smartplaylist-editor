@@ -268,12 +268,18 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const handleSave = useCallback(async () => {
     if (!effectiveId || isSaving) return;
 
-    // Snapshot immediately: form.getValues() returns mutable references to RHF
-    // internal state, so clone before any awaits to avoid mid-save mutations.
+    // Normalize through Zod so legacy-key migrations and default transforms are
+    // applied before saving, keeping save behavior consistent with preview.
     // stripConditionalFields removes fields hidden by the current resolverType
     // so they don't get persisted (form state retains them for undo).
     const raw = isJsonMode && parsedJsonConfig ? parsedJsonConfig : form.getValues();
-    const snapshot = structuredClone(isJsonMode ? raw : stripConditionalFields(raw));
+    const parsed = patternConfigSchema.safeParse(raw);
+    if (!parsed.success) {
+      // Trigger form validation so field errors surface in the UI
+      void form.trigger();
+      return;
+    }
+    const snapshot = structuredClone(isJsonMode ? parsed.data : stripConditionalFields(parsed.data));
 
     setSaving(true);
     try {

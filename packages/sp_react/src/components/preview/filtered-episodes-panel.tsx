@@ -4,15 +4,17 @@ import type { FeedEpisode } from '@/schemas/api-schema.ts';
 interface FilteredEpisodesPanelProps {
   episodes: readonly FeedEpisode[];
   totalCount: number;
+  feedLoaded: boolean;
 }
 
 export function FilteredEpisodesPanel({
   episodes,
   totalCount,
+  feedLoaded,
 }: FilteredEpisodesPanelProps) {
   const { t } = useTranslation('preview');
 
-  if (totalCount === 0) {
+  if (!feedLoaded) {
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">
         {t('noFeedLoaded')}

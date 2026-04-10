@@ -21,6 +21,7 @@ describe('FilteredEpisodesPanel', () => {
       <FilteredEpisodesPanel
         episodes={episodes}
         totalCount={5}
+        feedLoaded
       />,
     );
     expect(screen.getByText('Episode 1')).toBeInTheDocument();
@@ -32,16 +33,18 @@ describe('FilteredEpisodesPanel', () => {
       <FilteredEpisodesPanel
         episodes={[]}
         totalCount={5}
+        feedLoaded
       />,
     );
     expect(screen.getByText('emptyFiltered')).toBeInTheDocument();
   });
 
-  it('shows no-feed message when totalCount is 0', () => {
+  it('shows no-feed message when feed is not loaded', () => {
     render(
       <FilteredEpisodesPanel
         episodes={[]}
         totalCount={0}
+        feedLoaded={false}
       />,
     );
     expect(screen.getByText('noFeedLoaded')).toBeInTheDocument();
