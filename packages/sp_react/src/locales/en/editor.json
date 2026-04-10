@@ -171,5 +171,6 @@
   "tab.episodeList": "Episode List",
   "tab.resolver": "Organize",
   "tab.groups": "Groups",
-  "tab.displaySettings": "Display"
+  "tab.displaySettings": "Display",
+  "tab.hasErrors": "has errors"
 }

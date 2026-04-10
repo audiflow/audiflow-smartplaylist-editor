@@ -23,10 +23,13 @@ interface PlaylistFormProps {
 
 const EMPTY_TITLES: readonly string[] = [];
 
-function ErrorDot({ visible }: { visible: boolean }) {
+function ErrorDot({ visible, label }: { visible: boolean; label: string }) {
   if (!visible) return null;
   return (
-    <span className="ml-1 inline-block h-2 w-2 rounded-full bg-destructive" aria-hidden="true" />
+    <>
+      <span className="ml-1 inline-block h-2 w-2 rounded-full bg-destructive" aria-hidden="true" />
+      <span className="sr-only">{label}</span>
+    </>
   );
 }
 
@@ -54,23 +57,23 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
         <TabsList className="w-full">
           <TabsTrigger value="basic">
             {t('tab.basicSettings')}
-            <ErrorDot visible={hasBasicError} />
+            <ErrorDot visible={hasBasicError} label={t('tab.hasErrors')} />
           </TabsTrigger>
           <TabsTrigger value="filters">
             {t('tab.episodeFilters')}
-            <ErrorDot visible={hasFilterError} />
+            <ErrorDot visible={hasFilterError} label={t('tab.hasErrors')} />
           </TabsTrigger>
           <TabsTrigger value="episode-list">
             {t('tab.episodeList')}
-            <ErrorDot visible={hasEpisodeListError} />
+            <ErrorDot visible={hasEpisodeListError} label={t('tab.hasErrors')} />
           </TabsTrigger>
           <TabsTrigger value="resolver">
             {t('tab.resolver')}
-            <ErrorDot visible={hasResolverError} />
+            <ErrorDot visible={hasResolverError} label={t('tab.hasErrors')} />
           </TabsTrigger>
           <TabsTrigger value="display">
             {t('tab.displaySettings')}
-            <ErrorDot visible={hasDisplayError} />
+            <ErrorDot visible={hasDisplayError} label={t('tab.hasErrors')} />
           </TabsTrigger>
         </TabsList>
 
