@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Copies schema files from the data repo (source of truth) into the editor repo.
-# Requires DATA_DIR to point at a cloned audiflow-smartplaylist repo.
+# Uses DATA_DIR if set; otherwise defaults to a sibling audiflow-smartplaylist checkout.
 
 REPO_ROOT="$(unset CDPATH && cd "$(dirname "$0")/.." && pwd)"
 DATA_DIR="${DATA_DIR:-$REPO_ROOT/../audiflow-smartplaylist}"
@@ -23,20 +23,26 @@ fi
 
 echo "Syncing schemas from $SCHEMA_SRC -> $SCHEMA_DST"
 
+SCHEMA_FILES="pattern-index.schema.json pattern-meta.schema.json playlist-definition.schema.json"
+
+# Validate all files exist before copying any (prevent partial updates)
 missing_count=0
-for f in pattern-index.schema.json pattern-meta.schema.json playlist-definition.schema.json; do
+for f in $SCHEMA_FILES; do
   if [ ! -f "$SCHEMA_SRC/$f" ]; then
     echo "  Error: $f not found in source" >&2
     missing_count=$((missing_count + 1))
-    continue
   fi
-  cp "$SCHEMA_SRC/$f" "$SCHEMA_DST/$f"
-  echo "  $f"
 done
 
 if [ 0 -lt "$missing_count" ]; then
-  echo "Error: $missing_count schema file(s) missing from source. Sync incomplete." >&2
+  echo "Error: $missing_count schema file(s) missing from source. Aborting sync." >&2
   exit 1
 fi
+
+# All files validated; copy atomically
+for f in $SCHEMA_FILES; do
+  cp "$SCHEMA_SRC/$f" "$SCHEMA_DST/$f"
+  echo "  $f"
+done
 
 echo "Done. Run 'make schema-doc' to regenerate HTML docs."
