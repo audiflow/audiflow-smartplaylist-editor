@@ -135,8 +135,16 @@ fn rss_groups_episodes_by_season_number() {
     let grouping = result.unwrap();
     assert_eq!(grouping.playlists.len(), 2);
 
-    let p1 = grouping.playlists.iter().find(|p| p.id == "season_1").unwrap();
-    let p2 = grouping.playlists.iter().find(|p| p.id == "season_2").unwrap();
+    let p1 = grouping
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_1")
+        .unwrap();
+    let p2 = grouping
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_2")
+        .unwrap();
     assert_eq!(p1.episode_ids, vec![1, 2]);
     assert_eq!(p2.episode_ids, vec![3]);
 }
@@ -168,8 +176,16 @@ fn rss_uses_season_number_as_sort_key() {
     let refs = as_refs(&episodes);
     let result = resolver.resolve(&refs, None).unwrap();
 
-    let p1 = result.playlists.iter().find(|p| p.id == "season_1").unwrap();
-    let p2 = result.playlists.iter().find(|p| p.id == "season_2").unwrap();
+    let p1 = result
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_1")
+        .unwrap();
+    let p2 = result
+        .playlists
+        .iter()
+        .find(|p| p.id == "season_2")
+        .unwrap();
     assert_eq!(p1.sort_key, 1);
     assert_eq!(p2.sort_key, 2);
 }
@@ -525,7 +541,10 @@ fn year_default_sort_is_playlist_number_descending() {
 #[test]
 fn year_returns_none_when_no_episodes_have_dates() {
     let resolver = YearResolver;
-    let episodes = vec![make_episode_no_date(1, "Ep1"), make_episode_no_date(2, "Ep2")];
+    let episodes = vec![
+        make_episode_no_date(1, "Ep1"),
+        make_episode_no_date(2, "Ep2"),
+    ];
     let refs = as_refs(&episodes);
     let result = resolver.resolve(&refs, None);
     assert!(result.is_none());

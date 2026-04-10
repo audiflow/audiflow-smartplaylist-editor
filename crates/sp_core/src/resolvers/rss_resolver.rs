@@ -50,12 +50,11 @@ impl Resolver for RssResolver {
         let mut playlists: Vec<Playlist> = grouped
             .iter()
             .map(|(&season_number, eps)| {
-                let display_name =
-                    super::extract_display_name_with_fallback(
-                        format!("Season {}", season_number),
-                        eps,
-                        title_extractor,
-                    );
+                let display_name = super::extract_display_name_with_fallback(
+                    format!("Season {}", season_number),
+                    eps,
+                    title_extractor,
+                );
                 Playlist::new(
                     format!("season_{}", season_number),
                     display_name,
@@ -74,4 +73,3 @@ impl Resolver for RssResolver {
         })
     }
 }
-

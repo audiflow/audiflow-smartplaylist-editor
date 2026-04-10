@@ -1,8 +1,8 @@
 use serde::{Deserialize, Deserializer, Serialize};
 
-use super::numbering_extractor::NumberingExtractor;
 use super::group_def::GroupDef;
 use super::is_zero;
+use super::numbering_extractor::NumberingExtractor;
 use super::sort::{EpisodeSortRule, SortRule};
 use super::title_extractor::TitleExtractor;
 
@@ -29,7 +29,10 @@ pub struct PlaylistDefinition {
     pub resolver_type: String,
     /// Accepts legacy `playlistStructure` key and normalizes legacy values
     /// (`grouped` -> `combined`, `split` -> `separate`).
-    #[serde(alias = "playlistStructure", deserialize_with = "deserialize_presentation")]
+    #[serde(
+        alias = "playlistStructure",
+        deserialize_with = "deserialize_presentation"
+    )]
     pub presentation: String,
 
     /// Episode claiming order among siblings (lower = first, default: 0).
@@ -105,14 +108,8 @@ impl PlaylistDefinition {
         match &self.episode_filters {
             None => false,
             Some(f) => {
-                let has_require = f
-                    .require
-                    .as_ref()
-                    .is_some_and(|r| !r.is_empty());
-                let has_exclude = f
-                    .exclude
-                    .as_ref()
-                    .is_some_and(|e| !e.is_empty());
+                let has_require = f.require.as_ref().is_some_and(|r| !r.is_empty());
+                let has_exclude = f.exclude.as_ref().is_some_and(|e| !e.is_empty());
                 has_require || has_exclude
             }
         }
