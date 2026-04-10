@@ -120,12 +120,6 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
             idPrefix={`title-ext-${index}`}
             resolverType={resolverType}
           />
-
-          <InteractionNote i18nKey="interactionNote.episodeList.titleExtractorChain" />
-          <TitleExtractorForm
-            fieldPath={`playlists.${index}.episodeList.titleExtractor`}
-            idPrefix={`ep-list-title-ext-${index}`}
-          />
         </>
       )}
 

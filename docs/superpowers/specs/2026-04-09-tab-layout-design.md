@@ -25,8 +25,8 @@ Groups are nested inside the Resolver tab since they only apply to the
 |-------|----------|--------|------------|
 | 1 | 基本設定 | Playlist ID, Display Name | None |
 | 2 | エピソードフィルタ | Require Filters, Exclude Filters | None |
-| 3 | エピソードリスト | Episode Sort | None |
-| 4 | リゾルバー | Resolver Type, Presentation, Numbering Extractor (conditional), Title Extractor (conditional), Null Season Group Key (conditional), Groups (conditional, titleClassifier only) | Conditional sections use accordion |
+| 3 | エピソードリスト | Episode Sort, Episode List Title Extractor | None |
+| 4 | リゾルバー | Resolver Type, Presentation, Numbering Extractor (conditional), Title Extractor (conditional, resolver-level), Null Season Group Key (conditional), Groups (conditional, titleClassifier only) | Conditional sections use accordion |
 | 5 | 表示設定 | Show Year Headers, Show Date Range, User Sortable, Prepend Season Number, Year Binding | None |
 
 ### Tab order rationale

@@ -24,14 +24,11 @@ export function stripConditionalFields(config: PatternConfig): PatternConfig {
         delete stripped.nullSeasonGroupKey;
       }
 
-      // titleExtractor: seasonNumber, titleDiscovery, or year
+      // titleExtractor (top-level only): seasonNumber, titleDiscovery, or year
+      // Note: episodeList.titleExtractor is NOT stripped -- it is an
+      // episode-list display setting independent of resolver type.
       if (rt !== 'seasonNumber' && rt !== 'titleDiscovery' && rt !== 'year') {
         delete stripped.titleExtractor;
-        // Also strip titleExtractor from episodeList if present
-        if (stripped.episodeList?.titleExtractor) {
-          stripped.episodeList = { ...stripped.episodeList };
-          delete stripped.episodeList.titleExtractor;
-        }
       }
 
       // groups: titleClassifier uses full group definitions;

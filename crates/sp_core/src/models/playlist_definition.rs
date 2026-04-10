@@ -91,13 +91,11 @@ impl PlaylistDefinition {
             self.null_season_group_key = None;
         }
 
-        // titleExtractor (top-level): seasonNumber, titleDiscovery, or year
+        // titleExtractor (top-level only): seasonNumber, titleDiscovery, or year
+        // Note: episodeList.titleExtractor is NOT stripped here -- it is an
+        // episode-list display setting independent of resolver type.
         if rt != "seasonNumber" && rt != "titleDiscovery" && rt != "year" {
             self.title_extractor = None;
-            // Also strip titleExtractor inside episodeList
-            if let Some(ref mut el) = self.episode_list {
-                el.title_extractor = None;
-            }
         }
 
         // groups: titleClassifier uses full group definitions;
@@ -246,7 +244,8 @@ mod tests {
         assert!(def.null_season_group_key.is_none());
         assert!(def.title_extractor.is_none());
         assert!(def.groups.is_some());
-        assert!(def.episode_list.as_ref().unwrap().title_extractor.is_none());
+        // episodeList.titleExtractor is NOT stripped (independent of resolver)
+        assert!(def.episode_list.as_ref().unwrap().title_extractor.is_some());
     }
 
     #[test]

@@ -44,8 +44,8 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
   const errors = formState.errors.playlists?.[index];
   const hasBasicError = !!(errors?.id || errors?.displayName);
   const hasFilterError = !!errors?.episodeFilters;
-  const hasEpisodeListError = !!errors?.episodeList?.sort;
-  const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.numberingExtractor || errors?.titleExtractor || errors?.episodeList?.titleExtractor || errors?.nullSeasonGroupKey || errors?.groups);
+  const hasEpisodeListError = !!(errors?.episodeList?.sort || errors?.episodeList?.titleExtractor);
+  const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.numberingExtractor || errors?.titleExtractor || errors?.nullSeasonGroupKey || errors?.groups);
   const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders || errors?.groupList?.yearBinding || errors?.groupList?.showDateRange || errors?.groupList?.userSortable);
 
   return (
