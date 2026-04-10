@@ -587,7 +587,7 @@
             />
         </svg>
     <a href="#resolverType_oneOf_i1" onclick="anchorLink('resolverType_oneOf_i1')">item 1</a></div><span class="badge badge-dark value-type">Type: const</span><br/>
-<span class="description"><p>Groups episodes by the year they were published. Each distinct year becomes a separate group. Best for long-running podcasts where yearly grouping is a natural fit. Supports: titleExtractor, numberingExtractor.</p>
+<span class="description"><p>Groups episodes by the year they were published. Each distinct year becomes a separate group. Best for long-running podcasts where yearly grouping is a natural fit. Supports: titleExtractor.</p>
 </span><span class="const-value" id="resolverType_oneOf_i1_const">Specific value: <code>"year"</code></span>
         
 
@@ -947,7 +947,7 @@
             />
         </svg>
     <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Rules applied before organizing episodes. Having any filter makes this definition run before filter-less ones. Within each rule, all fields must match (AND). Across rules: require includes if ANY rule matches (OR); exclude rejects if ANY rule matches (OR).</p>
+<span class="description"><p>Rules applied before organizing episodes. Having any filter makes this definition run before filter-less ones. Within each rule, all fields must match (AND). Across rules: require includes only when ALL rules match (AND); exclude rejects if ANY rule matches (OR).</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
         
 
@@ -984,7 +984,7 @@
             />
         </svg>
     <a href="#episodeFilters_require" onclick="anchorLink('episodeFilters_require')">require</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
-<span class="description"><p>Include rules (OR). An episode is included if it matches ANY rule. Within each rule, all fields must match (AND).</p>
+<span class="description"><p>Include rules (AND). An episode is included only when it matches ALL rules. Within each rule, all fields must match (AND).</p>
 </span>
         
 
@@ -3163,7 +3163,7 @@
             />
         </svg>
     <a href="#groups_items_pattern" onclick="anchorLink('groups_items_pattern')">pattern</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Leave empty to create a catch-all for unmatched episodes.</p>
+<span class="description"><p>A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Omit this field to create a catch-all group for unmatched episodes.</p>
 </span>
         
 
@@ -3620,6 +3620,6 @@
 </div>
 
     <footer>
-        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-10 at 08:02:43 +0900</p>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-10 at 15:12:16 +0900</p>
     </footer></body>
 </html>
