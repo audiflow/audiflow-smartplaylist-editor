@@ -141,11 +141,18 @@ function YearGroupEntryList({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <SortedEpisodeList
-              groupId={entry.group.id}
-              episodes={entry.filteredEpisodes ?? entry.group.episodes}
-              episodeSortRules={episodeSortRules}
-            />
+            {entry.group.subGroups && 0 < entry.group.subGroups.length ? (
+              <SubGroupList
+                subGroups={entry.group.subGroups}
+                episodeSortRules={episodeSortRules}
+              />
+            ) : (
+              <SortedEpisodeList
+                groupId={entry.group.id}
+                episodes={entry.filteredEpisodes ?? entry.group.episodes}
+                episodeSortRules={episodeSortRules}
+              />
+            )}
           </AccordionContent>
         </AccordionItem>
       ))}
@@ -184,9 +191,50 @@ function GroupList({
             </div>
           </AccordionTrigger>
           <AccordionContent>
+            {group.subGroups && 0 < group.subGroups.length ? (
+              <SubGroupList
+                subGroups={group.subGroups}
+                episodeSortRules={episodeSortRules}
+              />
+            ) : (
+              <SortedEpisodeList
+                groupId={group.id}
+                episodes={group.episodes}
+                episodeSortRules={episodeSortRules}
+              />
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+}
+
+function SubGroupList({
+  subGroups,
+  episodeSortRules,
+}: {
+  subGroups: PreviewGroup[];
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
+}) {
+  const { t } = useTranslation('preview');
+
+  return (
+    <Accordion type="multiple" className="ml-4">
+      {subGroups.map((sub) => (
+        <AccordionItem key={sub.id} value={sub.id}>
+          <AccordionTrigger>
+            <div className="flex items-center gap-2">
+              <span>{sub.displayName}</span>
+              <Badge variant="outline">
+                {t('episodes', { count: sub.episodeCount })}
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
             <SortedEpisodeList
-              groupId={group.id}
-              episodes={group.episodes}
+              groupId={sub.id}
+              episodes={sub.episodes}
               episodeSortRules={episodeSortRules}
             />
           </AccordionContent>

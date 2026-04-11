@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
   presentationSchema,
+  partitionByValues,
   yearBindingSchema,
   resolverTypeValues,
   sortFieldSchema,
@@ -50,9 +51,18 @@ describe('Zod enums match vendored playlist-definition schema', () => {
     expect([...resolverTypeValues]).toEqual(v4Only);
   });
 
-  it('presentation values match schema', () => {
+  it('presentation values match schema (deprecated, includes legacy aliases)', () => {
     const schemaValues = extractEnum(topProps.presentation);
-    expect(presentationSchema.options).toEqual(schemaValues);
+    const legacyAliases = ['grouped', 'split'];
+    const v4Only = schemaValues.filter((v: string) => !legacyAliases.includes(v));
+    expect(presentationSchema.options).toEqual(v4Only);
+  });
+
+  it('partitionBy values match schema', () => {
+    const selectorDef = defs.SelectorConfig as Record<string, unknown>;
+    const selectorProps = selectorDef.properties as Record<string, Record<string, unknown>>;
+    const schemaValues = extractEnum(selectorProps.partitionBy);
+    expect([...partitionByValues]).toEqual(schemaValues);
   });
 
   it('yearBinding values match schema', () => {
