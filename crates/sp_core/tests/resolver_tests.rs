@@ -76,7 +76,7 @@ fn minimal_definition(resolver_type: &str) -> PlaylistDefinition {
     PlaylistDefinition {
         id: "test".to_string(),
         display_name: "Test".to_string(),
-        resolver_type: resolver_type.to_string(),
+        resolver_type: Some(resolver_type.to_string()),
         presentation: Some("separate".to_string()),
         selector: None,
         priority: 0,
@@ -87,6 +87,11 @@ fn minimal_definition(resolver_type: &str) -> PlaylistDefinition {
         episode_list: None,
         numbering_extractor: None,
         groups: None,
+        grouping: None,
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
     }
 }
 

@@ -352,7 +352,7 @@ mod tests {
         let playlist = repo.get_playlist("test-pattern", "playlist-1").unwrap();
         assert_eq!(playlist.id, "playlist-1");
         assert_eq!(playlist.display_name, "Playlist One");
-        assert_eq!(playlist.resolver_type, "seasonNumber");
+        assert_eq!(playlist.effective_resolver_type(), "seasonNumber");
     }
 
     #[test]

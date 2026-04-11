@@ -191,13 +191,13 @@ fn compute_enriched_episodes(
         let mut map = HashMap::new();
 
         // Definition-level extractor: applies to all episodes (skip already-enriched)
-        if let Some(ext) = &definition.numbering_extractor {
+        if let Some(ext) = definition.effective_numbering_extractor() {
             enrich_with_extractor(ext, episodes, &mut map, false);
         }
 
         // Group-level extractors: scoped to that group's resolved episodes,
         // overwriting any definition-level entry
-        if let Some(groups) = &definition.groups
+        if let Some(groups) = definition.effective_static_classifiers()
             && let Some(def_groups) = group_episode_ids.get(definition.id.as_str())
         {
             for group in groups {
@@ -285,7 +285,7 @@ fn compute_extracted_display_names(
 ) -> HashMap<String, HashMap<i64, String>> {
     let mut result = HashMap::new();
     for definition in &config.playlists {
-        let title_ext = match &definition.title_extractor {
+        let title_ext = match definition.effective_title_extractor() {
             Some(e) => e,
             None => continue,
         };
@@ -295,7 +295,7 @@ fn compute_extracted_display_names(
         // (mirrors what the resolver does) so title extraction sees
         // the same season/episode numbers the resolver used.
         let enriched: Option<Vec<SimpleEpisodeData>> =
-            definition.numbering_extractor.as_ref().map(|ext| {
+            definition.effective_numbering_extractor().map(|ext| {
                 let compiled_ep = ext.compile();
                 episodes
                     .iter()

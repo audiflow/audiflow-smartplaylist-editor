@@ -39,7 +39,7 @@ impl Resolver for CategoryResolver {
         definition: Option<&PlaylistDefinition>,
     ) -> Option<Grouping> {
         let definition = definition?;
-        let group_defs = definition.groups.as_ref()?;
+        let group_defs = definition.effective_static_classifiers()?;
         if group_defs.is_empty() {
             return None;
         }

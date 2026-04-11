@@ -177,7 +177,7 @@ impl ResolverService {
                 continue;
             }
 
-            let resolver = match self.find_resolver_by_type(&definition.resolver_type) {
+            let resolver = match self.find_resolver_by_type(definition.effective_resolver_type()) {
                 Some(r) => r,
                 None => continue,
             };
@@ -267,7 +267,7 @@ impl ResolverService {
                 continue;
             }
 
-            let resolver = match self.find_resolver_by_type(&definition.resolver_type) {
+            let resolver = match self.find_resolver_by_type(definition.effective_resolver_type()) {
                 Some(r) => r,
                 None => continue,
             };
@@ -380,10 +380,7 @@ impl ResolverService {
             Presentation::Combined
         };
         let year_binding = parse_year_binding(
-            definition
-                .group_list
-                .as_ref()
-                .and_then(|gl| gl.year_binding.as_deref()),
+            definition.effective_year_binding(),
         );
 
         let unsorted_groups: Vec<PlaylistGroup> = result
@@ -405,10 +402,7 @@ impl ResolverService {
             })
             .collect();
 
-        let sort_rule = definition
-            .group_list
-            .as_ref()
-            .and_then(|gl| gl.sort.as_ref());
+        let sort_rule = definition.effective_group_sort();
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
 
         // Apply partitioning if configured
@@ -440,16 +434,8 @@ impl ResolverService {
             thumbnail_url: None,
             presentation,
             year_binding,
-            show_year_headers: definition
-                .episode_list
-                .as_ref()
-                .and_then(|el| el.show_year_headers)
-                .unwrap_or(false),
-            show_date_range: definition
-                .group_list
-                .as_ref()
-                .and_then(|gl| gl.show_date_range)
-                .unwrap_or(false),
+            show_year_headers: definition.effective_show_year_headers(),
+            show_date_range: definition.effective_show_date_range(),
             groups: Some(groups),
         }
     }
@@ -482,14 +468,10 @@ impl ResolverService {
             Presentation::Combined
         };
         let year_binding = parse_year_binding(
-            definition
-                .group_list
-                .as_ref()
-                .and_then(|gl| gl.year_binding.as_deref()),
+            definition.effective_year_binding(),
         );
         let group_def_map: HashMap<&str, &crate::models::GroupDef> = definition
-            .groups
-            .as_ref()
+            .effective_static_classifiers()
             .map(|gs| gs.iter().map(|g| (g.id.as_str(), g)).collect())
             .unwrap_or_default();
 
@@ -510,13 +492,7 @@ impl ResolverService {
                     }),
                     show_date_range: g_def
                         .and_then(|d| d.display.as_ref().and_then(|disp| disp.show_date_range))
-                        .unwrap_or_else(|| {
-                            definition
-                                .group_list
-                                .as_ref()
-                                .and_then(|gl| gl.show_date_range)
-                                .unwrap_or(false)
-                        }),
+                        .unwrap_or_else(|| definition.effective_show_date_range()),
                     earliest_date: None,
                     latest_date: None,
                     total_duration_ms: None,
@@ -525,10 +501,7 @@ impl ResolverService {
             })
             .collect();
 
-        let sort_rule = definition
-            .group_list
-            .as_ref()
-            .and_then(|gl| gl.sort.as_ref());
+        let sort_rule = definition.effective_group_sort();
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
 
         // Apply partitioning if configured
@@ -560,16 +533,8 @@ impl ResolverService {
             thumbnail_url: None,
             presentation: presentation.clone(),
             year_binding: year_binding.clone(),
-            show_year_headers: definition
-                .episode_list
-                .as_ref()
-                .and_then(|el| el.show_year_headers)
-                .unwrap_or(false),
-            show_date_range: definition
-                .group_list
-                .as_ref()
-                .and_then(|gl| gl.show_date_range)
-                .unwrap_or(false),
+            show_year_headers: definition.effective_show_year_headers(),
+            show_date_range: definition.effective_show_date_range(),
             groups: Some(groups),
         });
     }
@@ -585,10 +550,7 @@ impl ResolverService {
             Presentation::Combined
         };
         let year_binding = parse_year_binding(
-            definition
-                .group_list
-                .as_ref()
-                .and_then(|gl| gl.year_binding.as_deref()),
+            definition.effective_year_binding(),
         );
 
         let decorated: Vec<Playlist> = result
@@ -751,7 +713,7 @@ impl ResolverService {
         definition: &PlaylistDefinition,
         episodes: &[&dyn EpisodeData],
     ) -> Option<Vec<SimpleEpisodeData>> {
-        let extractor = definition.numbering_extractor.as_ref()?;
+        let extractor = definition.effective_numbering_extractor()?;
 
         let compiled = extractor.compile();
         Some(

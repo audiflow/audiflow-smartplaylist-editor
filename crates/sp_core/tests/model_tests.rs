@@ -400,7 +400,7 @@ mod filter_semantics {
         let definition = PlaylistDefinition {
             id: "test".to_string(),
             display_name: "Test".to_string(),
-            resolver_type: "year".to_string(),
+            resolver_type: Some("year".to_string()),
             presentation: Some("separate".to_string()),
             selector: None,
             priority: 0,
@@ -411,6 +411,11 @@ mod filter_semantics {
             episode_list: None,
             numbering_extractor: None,
             groups: None,
+            grouping: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         };
 
         let config = PatternConfig {
