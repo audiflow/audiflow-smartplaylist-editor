@@ -1,14 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://audiflow.app/schema/v4/playlist-definition.json",
+  "$id": "https://audiflow.app/schema/v5/playlist-definition.json",
   "title": "SmartPlaylist Definition",
   "description": "Defines how a playlist organizes, filters, sorts, and displays episodes for a podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same config share the podcast's episode pool and claim episodes based on priority.",
   "type": "object",
   "required": [
     "id",
     "displayName",
-    "resolverType",
-    "presentation"
+    "resolverType"
   ],
   "additionalProperties": false,
   "properties": {
@@ -59,18 +58,14 @@
       "minimum": 0,
       "description": "Controls the order playlists claim episodes. Lower numbers go first. If two playlists could match the same episode, the one with lower priority claims it. Playlists with filters always run before filter-less ones. Within each tier, lower priority numbers are processed first."
     },
+    "selector": {
+      "$ref": "#/$defs/SelectorConfig",
+      "description": "Controls how resolver groups map to selector dropdown entries. When absent, all groups appear as cards inside a single entry. When partitionBy is 'group', each group becomes its own entry. When partitionBy is 'seasonNumber' or 'year', groups are organized under partition entries."
+    },
     "presentation": {
-      "description": "Determines how resolver results are presented to the user.",
-      "oneOf": [
-        {
-          "const": "separate",
-          "description": "Each resolver result becomes its own playlist, selectable from a dropdown. One definition produces many playlists, each containing episodes that share the same grouping key. Tapping a playlist shows its episodes directly. Best when each group (e.g., a season or year) should stand alone as an independent playlist."
-        },
-        {
-          "const": "combined",
-          "description": "All resolver results are collected as group cards inside a single playlist. One definition produces one playlist with sub-groups. Tapping the playlist shows group cards, and tapping a group card navigates to its episodes. Enables groupList settings (yearBinding, userSortable, showDateRange, sort). Best when groups should be browsed together under a unified playlist."
-        }
-      ]
+      "description": "Deprecated v4 field. Use 'selector' instead. Maps 'combined' to no partition, 'separate' to partitionBy 'group'.",
+      "type": "string",
+      "enum": ["separate", "combined", "grouped", "split"]
     },
     "episodeFilters": {
       "type": "object",
@@ -464,6 +459,22 @@
           "type": "boolean",
           "default": false,
           "description": "When no pattern matches, use the episode number from the feed data instead. This is the last resort. Only the episode number is used; season number is not set."
+        }
+      }
+    },
+    "SelectorConfig": {
+      "type": "object",
+      "description": "Controls how resolver groups map to selector dropdown entries in the app UI.",
+      "additionalProperties": false,
+      "properties": {
+        "partitionBy": {
+          "description": "How to partition groups into selector entries.",
+          "type": "string",
+          "enum": ["group", "seasonNumber", "year"]
+        },
+        "titleExtractor": {
+          "$ref": "#/$defs/TitleExtractor",
+          "description": "Generates display names for partitioned selector entries. Used when partitionBy is 'seasonNumber' or 'year'. Not needed for 'group' (group names are used directly)."
         }
       }
     }
