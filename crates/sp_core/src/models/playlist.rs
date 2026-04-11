@@ -62,6 +62,12 @@ pub struct PlaylistGroup {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub total_duration_ms: Option<i64>,
+
+    /// Nested sub-groups produced by partitionBy (seasonNumber/year).
+    /// When present, the group acts as a partition container and
+    /// sub_groups hold the actual content groups.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sub_groups: Option<Vec<PlaylistGroup>>,
 }
 
 impl PlaylistGroup {

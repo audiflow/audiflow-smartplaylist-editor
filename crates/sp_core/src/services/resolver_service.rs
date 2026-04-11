@@ -398,6 +398,7 @@ impl ResolverService {
                 earliest_date: None,
                 latest_date: None,
                 total_duration_ms: None,
+                sub_groups: None,
             })
             .collect();
 
@@ -496,6 +497,7 @@ impl ResolverService {
                     earliest_date: None,
                     latest_date: None,
                     total_duration_ms: None,
+                    sub_groups: None,
                 }
             })
             .collect();

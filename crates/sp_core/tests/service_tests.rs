@@ -158,6 +158,7 @@ fn make_group(id: &str, name: &str, sort_key: i32, episode_ids: Vec<i64>) -> Pla
         earliest_date: None,
         latest_date: None,
         total_duration_ms: None,
+        sub_groups: None,
     }
 }
 
