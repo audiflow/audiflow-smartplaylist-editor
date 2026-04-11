@@ -26,9 +26,9 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
           <div className="flex items-center gap-2">
             <Checkbox
               id={`playlist-${index}-showYearHeaders`}
-              checked={watch(`${prefix}.episodeList.showYearHeaders`) ?? false}
+              checked={watch(`${prefix}.episodeListing.showYearHeaders`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.episodeList.showYearHeaders`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.episodeListing.showYearHeaders`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel htmlFor={`playlist-${index}-showYearHeaders`} hint="showYearHeaders">
@@ -38,9 +38,9 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
           <div className="flex items-center gap-2">
             <Checkbox
               id={`playlist-${index}-showDateRange`}
-              checked={watch(`${prefix}.groupList.showDateRange`) ?? false}
+              checked={watch(`${prefix}.groupItem.showDateRange`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.groupList.showDateRange`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.groupItem.showDateRange`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel htmlFor={`playlist-${index}-showDateRange`} hint="showDateRange">{t('showDateRange')}</HintLabel>
@@ -48,9 +48,9 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
           <div className="flex items-center gap-2">
             <Checkbox
               id={`playlist-${index}-userSortable`}
-              checked={watch(`${prefix}.groupList.userSortable`) ?? true}
+              checked={watch(`${prefix}.groupListing.userSortable`) ?? true}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.groupList.userSortable`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.groupListing.userSortable`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel htmlFor={`playlist-${index}-userSortable`} hint="userSortable">{t('userSortable')}</HintLabel>
@@ -58,9 +58,9 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
           <div className="flex items-center gap-2">
             <Checkbox
               id={`playlist-${index}-prependSeasonNumber`}
-              checked={watch(`${prefix}.prependSeasonNumber`) ?? false}
+              checked={watch(`${prefix}.groupItem.prependSeasonNumber`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.prependSeasonNumber`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.groupItem.prependSeasonNumber`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel htmlFor={`playlist-${index}-prependSeasonNumber`} hint="prependSeasonNumber">{t('prependSeasonNumber')}</HintLabel>
@@ -74,8 +74,8 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
             {t('yearBinding')}
           </HintLabel>
           <Select
-            value={watch(`${prefix}.groupList.yearBinding`) ?? 'none'}
-            onValueChange={(v) => setValue(`${prefix}.groupList.yearBinding`, v === 'none' ? undefined : v as YearBinding, { shouldDirty: true })}
+            value={watch(`${prefix}.groupListing.yearBinding`) ?? 'none'}
+            onValueChange={(v) => setValue(`${prefix}.groupListing.yearBinding`, v === 'none' ? undefined : v as YearBinding, { shouldDirty: true })}
           >
             <SelectTrigger id={`playlist-${index}-yearBinding`} className="w-full">
               <SelectValue />

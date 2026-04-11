@@ -12,8 +12,7 @@ fn valid_playlist_definition_passes() {
     let def = json!({
         "id": "main",
         "displayName": "Main",
-        "resolverType": "seasonNumber",
-        "presentation": "combined"
+        "grouping": { "by": "seasonNumber" }
     });
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);
     assert!(errors.is_empty(), "Expected no errors but got: {errors:?}");
@@ -22,8 +21,20 @@ fn valid_playlist_definition_passes() {
 #[test]
 fn missing_required_field_fails() {
     let v = test_validator();
-    // missing id (required in v5)
+    // missing id (required)
     let def = json!({
+        "displayName": "Main",
+        "grouping": { "by": "seasonNumber" }
+    });
+    let errors = v.validate(SchemaType::PlaylistDefinition, &def);
+    assert!(!errors.is_empty());
+}
+
+#[test]
+fn missing_grouping_fails() {
+    let v = test_validator();
+    let def = json!({
+        "id": "main",
         "displayName": "Main"
     });
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);
@@ -31,13 +42,12 @@ fn missing_required_field_fails() {
 }
 
 #[test]
-fn invalid_enum_value_fails() {
+fn invalid_grouping_by_value_fails() {
     let v = test_validator();
     let def = json!({
         "id": "main",
         "displayName": "Main",
-        "resolverType": "invalidType",
-        "presentation": "combined"
+        "grouping": { "by": "invalidType" }
     });
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);
     assert!(!errors.is_empty());
@@ -104,8 +114,7 @@ fn playlist_definition_with_additional_properties_fails() {
     let def = json!({
         "id": "main",
         "displayName": "Main",
-        "resolverType": "seasonNumber",
-        "presentation": "combined",
+        "grouping": { "by": "seasonNumber" },
         "unknownField": true
     });
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);

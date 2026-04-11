@@ -1,6 +1,6 @@
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, Presentation, ResolverType } from '@/schemas/config-schema.ts';
+import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
@@ -22,14 +22,12 @@ interface ResolverTabProps {
   playlistCount: number;
 }
 
-export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
+export function ResolverTab({ index }: ResolverTabProps) {
   const prefix = `playlists.${index}` as const;
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const resolverType = watch(`${prefix}.resolverType`);
-  const presentation = watch(`${prefix}.presentation`) ?? 'combined';
-  const isSeparateDisabled = 1 < playlistCount;
+  const resolverType = watch(`${prefix}.grouping.by`);
 
   return (
     <div className="space-y-4">
@@ -42,7 +40,7 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
           </HintLabel>
           <Select
             value={resolverType ?? ''}
-            onValueChange={(val) => setValue(`${prefix}.resolverType`, val as ResolverType, { shouldDirty: true })}
+            onValueChange={(val) => setValue(`${prefix}.grouping.by`, val as ResolverType, { shouldDirty: true })}
           >
             <SelectTrigger id={`playlist-${index}-resolverType`} className="w-full">
               <SelectValue placeholder={t('selectResolver')} />
@@ -63,33 +61,11 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
 
         <InteractionNote i18nKey="interactionNote.resolver.resolverStructure" />
 
-        <div className="space-y-1.5">
-          <HintLabel htmlFor={`playlist-${index}-presentation`} hint="presentation">
-            {t('presentation')}
-          </HintLabel>
-          <Select
-            value={presentation}
-            onValueChange={(val) => setValue(`${prefix}.presentation`, val as Presentation, { shouldDirty: true })}
-          >
-            <SelectTrigger id={`playlist-${index}-presentation`} className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="combined">
-                {t('presentationLabel_combined')}
-              </SelectItem>
-              <SelectItem value="separate" disabled={isSeparateDisabled}>
-                {t('presentationLabel_separate')}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {resolverType === 'seasonNumber' && (
           <>
             <InteractionNote i18nKey="interactionNote.resolver.numberingExtractor" />
             <NumberingExtractorForm
-              fieldPath={`playlists.${index}.numberingExtractor`}
+              fieldPath={`playlists.${index}.grouping.numberingExtractor`}
               idPrefix={`ep-ext-${index}`}
             />
           </>
@@ -100,7 +76,7 @@ export function ResolverTab({ index, playlistCount }: ResolverTabProps) {
         <>
           <InteractionNote i18nKey="interactionNote.resolver.titleExtractor" />
           <TitleExtractorForm
-            fieldPath={`playlists.${index}.titleExtractor`}
+            fieldPath={`playlists.${index}.groupItem.titleExtractor`}
             idPrefix={`title-ext-${index}`}
             resolverType={resolverType}
           />

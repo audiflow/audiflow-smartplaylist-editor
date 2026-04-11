@@ -619,19 +619,6 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
   const [activeTab, setActiveTab] = useState('tab-0');
   const [reorderOpen, setReorderOpen] = useState(false);
 
-  const [hasSeparatePresentation, setHasSeparatePresentation] = useState(() =>
-    form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false,
-  );
-  useEffect(() => {
-    const subscription = form.watch((_values, { name }) => {
-      if (!name || name.includes('presentation') || name === 'playlists') {
-        const has = form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false;
-        setHasSeparatePresentation(has);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
-
   return (
     <>
       <Tabs
@@ -665,8 +652,6 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
               type="button"
               variant="outline"
               size="sm"
-              disabled={hasSeparatePresentation}
-              title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
               onClick={() => {
                 append({ ...DEFAULT_PLAYLIST, priority: fields.length });
                 setActiveTab(`tab-${fields.length}`);

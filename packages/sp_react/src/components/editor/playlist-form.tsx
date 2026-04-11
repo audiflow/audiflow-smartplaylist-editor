@@ -47,9 +47,9 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
   const errors = formState.errors.playlists?.[index];
   const hasBasicError = !!(errors?.id || errors?.displayName);
   const hasFilterError = !!errors?.episodeFilters;
-  const hasEpisodeListError = !!(errors?.episodeList?.sort || errors?.episodeList?.titleExtractor);
-  const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.numberingExtractor || errors?.titleExtractor || errors?.groups);
-  const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders || errors?.groupList?.yearBinding || errors?.groupList?.showDateRange || errors?.groupList?.userSortable);
+  const hasEpisodeListError = !!(errors?.episodeListing?.sort || errors?.episodeItem?.titleExtractor);
+  const hasResolverError = !!(errors?.grouping);
+  const hasDisplayError = !!(errors?.groupItem?.prependSeasonNumber || errors?.episodeListing?.showYearHeaders || errors?.groupListing?.yearBinding || errors?.groupListing?.userSortable || errors?.groupItem?.showDateRange);
 
   return (
     <div className="space-y-4">

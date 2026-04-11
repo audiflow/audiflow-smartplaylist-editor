@@ -15,11 +15,8 @@ const DEFAULT_CONFIG: PatternConfig = {
     {
       id: 'playlist-1',
       displayName: 'Test Playlist',
-      resolverType: 'seasonNumber',
-      presentation: 'combined',
+      grouping: { by: 'seasonNumber' },
       priority: 0,
-      prependSeasonNumber: false,
-      groups: [],
     },
   ],
 };
@@ -111,14 +108,7 @@ describe('PlaylistForm', () => {
       expect(screen.getByText(/how to organize/i)).toBeInTheDocument();
     });
 
-    it('renders presentation select dropdown', async () => {
-      const user = userEvent.setup();
-      renderPlaylistForm();
-      await switchToTab(user, /organize/i);
-      expect(screen.getByText(/how groups appear/i)).toBeInTheDocument();
-    });
-
-});
+  });
 
   describe('DisplayOptions', () => {
     it('renders showYearHeaders checkbox', async () => {

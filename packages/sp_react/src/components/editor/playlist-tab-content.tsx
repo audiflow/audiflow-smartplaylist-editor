@@ -50,11 +50,11 @@ export function PlaylistTabContent({
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
 
-  const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.prependSeasonNumber` as const }) ?? false;
-  const yearBinding = (useWatch({ control, name: `playlists.${index}.groupList.yearBinding` as const }) ?? 'none') as YearBinding;
-  const groupDefs = useWatch({ control, name: `playlists.${index}.groups` as const });
-  const defaultSortField = useWatch({ control, name: `playlists.${index}.episodeList.sort.field` as const });
-  const defaultSortOrder = useWatch({ control, name: `playlists.${index}.episodeList.sort.order` as const });
+  const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.groupItem.prependSeasonNumber` as const }) ?? false;
+  const yearBinding = (useWatch({ control, name: `playlists.${index}.groupListing.yearBinding` as const }) ?? 'none') as YearBinding;
+  const groupDefs = useWatch({ control, name: `playlists.${index}.grouping.staticClassifiers` as const });
+  const defaultSortField = useWatch({ control, name: `playlists.${index}.episodeListing.sort.field` as const });
+  const defaultSortOrder = useWatch({ control, name: `playlists.${index}.episodeListing.sort.order` as const });
 
   // Retain previous preview data to avoid unmount/remount flicker during updates.
   // Reset when playlistId changes so stale data from a different playlist is not shown.

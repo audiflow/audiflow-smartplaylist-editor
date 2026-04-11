@@ -48,7 +48,7 @@ export function GroupDefCard({
 }: GroupDefCardProps) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
-  const prefix = `playlists.${playlistIndex}.groups.${groupIndex}` as const;
+  const prefix = `playlists.${playlistIndex}.grouping.staticClassifiers.${groupIndex}` as const;
 
   const yearBinding = watch(`${prefix}.display.yearBinding`);
   const episodeSort = watch(`${prefix}.episodeList.sort` as any);

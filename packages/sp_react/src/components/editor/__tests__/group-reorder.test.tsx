@@ -23,8 +23,10 @@ function FormWrapper({
         {
           id: 'playlist-1',
           displayName: 'Test Playlist',
-          resolverType: 'category',
-          groups,
+          grouping: {
+            by: 'titleClassifier',
+            staticClassifiers: groups,
+          },
         },
       ],
     },

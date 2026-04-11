@@ -7,8 +7,7 @@ describe('sanitizeConfig', () => {
     const config = {
       id: 'test',
       displayName: 'Test',
-      resolverType: 'year',
-      presentation: 'combined',
+      grouping: { by: 'year' },
       episodeFilters: {
         require: [{ title: '' }],
       },
@@ -18,8 +17,6 @@ describe('sanitizeConfig', () => {
 
     expect(result.id).toBe('test');
     expect(result.displayName).toBe('Test');
-    expect(result.resolverType).toBe('year');
-    expect(result.presentation).toBe('combined');
     expect(result).not.toHaveProperty('episodeFilters');
   });
 
@@ -30,7 +27,7 @@ describe('sanitizeConfig', () => {
         require: [],
         exclude: [],
       },
-      episodeList: {
+      episodeListing: {
         sort: null,
       },
     };
@@ -39,27 +36,27 @@ describe('sanitizeConfig', () => {
 
     expect(result.id).toBe('test');
     expect(result).not.toHaveProperty('episodeFilters');
-    expect(result).not.toHaveProperty('episodeList');
+    expect(result).not.toHaveProperty('episodeListing');
   });
 
   it('removes keys with null values', () => {
     const config = {
       id: 'test',
-      groupList: null,
-      episodeList: null,
+      groupListing: null,
+      episodeListing: null,
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
     expect(result.id).toBe('test');
-    expect(result).not.toHaveProperty('groupList');
-    expect(result).not.toHaveProperty('episodeList');
+    expect(result).not.toHaveProperty('groupListing');
+    expect(result).not.toHaveProperty('episodeListing');
   });
 
   it('preserves non-empty strings', () => {
     const config = {
       id: 'test',
-      presentation: 'combined',
+      grouping: { by: 'year' },
       episodeFilters: {
         require: [{ title: '^\\d+' }],
         exclude: [{ title: 'bonus' }],
@@ -68,7 +65,6 @@ describe('sanitizeConfig', () => {
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    expect(result.presentation).toBe('combined');
     expect(result.episodeFilters).toBeDefined();
   });
 
@@ -79,14 +75,12 @@ describe('sanitizeConfig', () => {
         {
           id: 'pl-1',
           displayName: 'Main',
-          resolverType: 'year',
-          presentation: 'combined',
+          grouping: { by: 'year' },
         },
         {
           id: 'pl-2',
           displayName: 'Bonus',
-          resolverType: 'year',
-          presentation: 'separate',
+          grouping: { by: 'titleClassifier' },
         },
       ],
     };
@@ -96,14 +90,12 @@ describe('sanitizeConfig', () => {
     };
 
     expect(result.playlists).toHaveLength(2);
-    expect(result.playlists[0].presentation).toBe('combined');
-    expect(result.playlists[1].presentation).toBe('separate');
   });
 
   it('strips nested objects with only empty values', () => {
     const config = {
       id: 'pl-1',
-      groupList: {
+      groupListing: {
         sort: null,
         yearBinding: '',
       },
@@ -111,22 +103,21 @@ describe('sanitizeConfig', () => {
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    // groupList becomes empty after stripping all values, so the key is removed entirely
-    expect(result.groupList).toBeUndefined();
-    expect('groupList' in result).toBe(false);
+    expect(result.groupListing).toBeUndefined();
+    expect('groupListing' in result).toBe(false);
   });
 
-  it('preserves groupList with non-empty sort', () => {
+  it('preserves groupListing with non-empty sort', () => {
     const config = {
       id: 'pl-1',
-      groupList: {
+      groupListing: {
         sort: { field: 'playlistNumber', order: 'ascending' },
       },
     };
 
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
-    expect(result.groupList).toEqual({
+    expect(result.groupListing).toEqual({
       sort: { field: 'playlistNumber', order: 'ascending' },
     });
   });
@@ -134,9 +125,11 @@ describe('sanitizeConfig', () => {
   it('passes through non-string primitives unchanged', () => {
     const config = {
       priority: 0,
-      prependSeasonNumber: false,
-      groupList: {
+      groupItem: {
         showDateRange: true,
+        prependSeasonNumber: false,
+      },
+      groupListing: {
         userSortable: false,
       },
     };
@@ -144,10 +137,11 @@ describe('sanitizeConfig', () => {
     const result = sanitizeConfig(config) as Record<string, unknown>;
 
     expect(result.priority).toBe(0);
-    expect(result.prependSeasonNumber).toBe(false);
-    const groupList = result.groupList as Record<string, unknown>;
-    expect(groupList.showDateRange).toBe(true);
-    expect(groupList.userSortable).toBe(false);
+    const groupItem = result.groupItem as Record<string, unknown>;
+    expect(groupItem.showDateRange).toBe(true);
+    expect(groupItem.prependSeasonNumber).toBe(false);
+    const groupListing = result.groupListing as Record<string, unknown>;
+    expect(groupListing.userSortable).toBe(false);
   });
 });
 
@@ -162,11 +156,8 @@ function makeConfig(
       {
         id: 'pl-1',
         displayName: 'Main',
-        resolverType: 'seasonNumber',
-        presentation: 'combined',
+        grouping: { by: 'seasonNumber' },
         priority: 0,
-        prependSeasonNumber: false,
-        groups: [],
         ...overrides,
       },
     ],
@@ -174,82 +165,100 @@ function makeConfig(
 }
 
 describe('stripConditionalFields', () => {
-  it('keeps numberingExtractor and titleExtractor for seasonNumber', () => {
+  it('keeps numberingExtractor and groupItem.titleExtractor for seasonNumber', () => {
     const config = makeConfig({
-      resolverType: 'seasonNumber',
-      numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
-      titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      grouping: {
+        by: 'seasonNumber',
+        numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
+      },
+      groupItem: {
+        titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      },
     });
 
     const result = stripConditionalFields(config);
     const pl = result.playlists[0];
 
-    expect(pl.numberingExtractor).toBeDefined();
-    expect(pl.titleExtractor).toBeDefined();
+    expect(pl.grouping.numberingExtractor).toBeDefined();
+    expect(pl.groupItem?.titleExtractor).toBeDefined();
   });
 
-  it('strips numberingExtractor but keeps titleExtractor for year resolver', () => {
+  it('strips numberingExtractor but keeps groupItem.titleExtractor for year resolver', () => {
     const config = makeConfig({
-      resolverType: 'year',
-      numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
-      titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      grouping: {
+        by: 'year',
+        numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
+      },
+      groupItem: {
+        titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      },
     });
 
     const result = stripConditionalFields(config);
     const pl = result.playlists[0];
 
-    expect(pl.numberingExtractor).toBeUndefined();
-    expect(pl.titleExtractor).toBeDefined();
+    expect(pl.grouping.numberingExtractor).toBeUndefined();
+    expect(pl.groupItem?.titleExtractor).toBeDefined();
   });
 
-  it('keeps titleExtractor and groups but strips numberingExtractor for titleDiscovery', () => {
+  it('keeps titleExtractor and staticClassifiers but strips numberingExtractor for titleDiscovery', () => {
     const config = makeConfig({
-      resolverType: 'titleDiscovery',
-      numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
-      titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
-      groups: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      grouping: {
+        by: 'titleDiscovery',
+        numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      },
+      groupItem: {
+        titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      },
     });
 
     const result = stripConditionalFields(config);
     const pl = result.playlists[0];
 
-    expect(pl.numberingExtractor).toBeUndefined();
-    expect(pl.titleExtractor).toBeDefined();
-    expect(pl.groups).toHaveLength(1);
+    expect(pl.grouping.numberingExtractor).toBeUndefined();
+    expect(pl.groupItem?.titleExtractor).toBeDefined();
+    expect(pl.grouping.staticClassifiers).toHaveLength(1);
   });
 
-  it('keeps groups only for titleClassifier', () => {
+  it('keeps staticClassifiers only for titleClassifier', () => {
     const config = makeConfig({
-      resolverType: 'titleClassifier',
-      groups: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      grouping: {
+        by: 'titleClassifier',
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      },
     });
 
     const result = stripConditionalFields(config);
 
-    expect(result.playlists[0].groups).toHaveLength(1);
+    expect(result.playlists[0].grouping.staticClassifiers).toHaveLength(1);
   });
 
-  it('strips groups for non-titleClassifier resolvers', () => {
+  it('strips staticClassifiers for non-titleClassifier resolvers', () => {
     const config = makeConfig({
-      resolverType: 'seasonNumber',
-      groups: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      grouping: {
+        by: 'seasonNumber',
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      },
     });
 
     const result = stripConditionalFields(config);
 
-    expect(result.playlists[0].groups).toBeUndefined();
+    expect(result.playlists[0].grouping.staticClassifiers).toBeUndefined();
   });
 
   it('does not mutate the original config', () => {
     const config = makeConfig({
-      resolverType: 'year',
-      numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
-      groups: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      grouping: {
+        by: 'year',
+        numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+      },
     });
 
     stripConditionalFields(config);
 
-    expect(config.playlists[0].numberingExtractor).toBeDefined();
-    expect(config.playlists[0].groups).toHaveLength(1);
+    expect(config.playlists[0].grouping.numberingExtractor).toBeDefined();
+    expect(config.playlists[0].grouping.staticClassifiers).toHaveLength(1);
   });
 });

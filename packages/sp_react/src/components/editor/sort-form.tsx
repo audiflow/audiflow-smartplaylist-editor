@@ -29,17 +29,15 @@ export function SortForm({ index }: SortFormProps) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const presentation = watch(`playlists.${index}.presentation`);
-  const isCombinedMode = presentation === 'combined';
-  const sort = watch(`playlists.${index}.groupList.sort`);
+  const sort = watch(`playlists.${index}.groupListing.sort`);
 
   const isEnabled = sort != null;
 
   function handleToggle() {
     if (isEnabled) {
-      setValue(`playlists.${index}.groupList.sort`, undefined, { shouldDirty: true });
+      setValue(`playlists.${index}.groupListing.sort`, undefined, { shouldDirty: true });
     } else {
-      setValue(`playlists.${index}.groupList.sort`, { ...DEFAULT_SORT_RULE }, { shouldDirty: true });
+      setValue(`playlists.${index}.groupListing.sort`, { ...DEFAULT_SORT_RULE }, { shouldDirty: true });
     }
   }
 
@@ -47,21 +45,17 @@ export function SortForm({ index }: SortFormProps) {
     <div className="rounded-lg border border-border p-4 space-y-3">
       <div className="flex items-center justify-between">
         <HintLabel hint="groupListSort">{t('sortToggle')}</HintLabel>
-        {isCombinedMode && (
-          <Button
-            type="button"
-            variant={isEnabled ? 'default' : 'outline'}
-            size="sm"
-            onClick={handleToggle}
-          >
-            {isEnabled ? t('sortEnabled') : t('sortDisabled')}
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant={isEnabled ? 'default' : 'outline'}
+          size="sm"
+          onClick={handleToggle}
+        >
+          {isEnabled ? t('sortEnabled') : t('sortDisabled')}
+        </Button>
       </div>
 
-      {!isCombinedMode ? (
-        <p className="text-muted-foreground text-sm">{t('sortDisabledNote')}</p>
-      ) : isEnabled ? (
+      {isEnabled && (
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <HintLabel
@@ -73,7 +67,7 @@ export function SortForm({ index }: SortFormProps) {
             <Select
               value={sort?.field ?? 'playlistNumber'}
               onValueChange={(val) =>
-                setValue(`playlists.${index}.groupList.sort.field`, val as SortField, { shouldDirty: true })
+                setValue(`playlists.${index}.groupListing.sort.field`, val as SortField, { shouldDirty: true })
               }
             >
               <SelectTrigger id={`sort-${index}-field`} className="w-full">
@@ -99,7 +93,7 @@ export function SortForm({ index }: SortFormProps) {
             <Select
               value={sort?.order ?? 'ascending'}
               onValueChange={(val) =>
-                setValue(`playlists.${index}.groupList.sort.order`, val as SortOrder, { shouldDirty: true })
+                setValue(`playlists.${index}.groupListing.sort.order`, val as SortOrder, { shouldDirty: true })
               }
             >
               <SelectTrigger id={`sort-${index}-order`} className="w-full">
@@ -115,7 +109,7 @@ export function SortForm({ index }: SortFormProps) {
             </Select>
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -20,7 +20,7 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const sort = watch(`${prefix}.episodeList.sort`);
+  const sort = watch(`${prefix}.episodeListing.sort`);
   const isSortEnabled = sort != null;
 
   return (
@@ -36,10 +36,10 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
             size="sm"
             onClick={() => {
               if (isSortEnabled) {
-                setValue(`${prefix}.episodeList.sort`, undefined, { shouldDirty: true });
+                setValue(`${prefix}.episodeListing.sort`, undefined, { shouldDirty: true });
               } else {
                 setValue(
-                  `${prefix}.episodeList.sort`,
+                  `${prefix}.episodeListing.sort`,
                   { field: 'publishedAt', order: 'ascending' },
                   { shouldDirty: true },
                 );
@@ -58,7 +58,7 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
                 aria-label={t('episodeSortField')}
                 options={EPISODE_SORT_FIELDS.map((f) => ({ value: f, label: t(`episodeSortField_${f}`) }))}
                 value={sort?.field ?? 'publishedAt'}
-                onChange={(val) => setValue(`${prefix}.episodeList.sort.field`, val as EpisodeSortField, { shouldDirty: true })}
+                onChange={(val) => setValue(`${prefix}.episodeListing.sort.field`, val as EpisodeSortField, { shouldDirty: true })}
               />
             </div>
             <div className="space-y-1.5">
@@ -67,7 +67,7 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
                 aria-label={t('episodeSortOrder')}
                 options={SORT_ORDERS.map((o) => ({ value: o, label: t(`sortOrder_${o}`) }))}
                 value={sort?.order ?? 'ascending'}
-                onChange={(val) => setValue(`${prefix}.episodeList.sort.order`, val as SortOrder, { shouldDirty: true })}
+                onChange={(val) => setValue(`${prefix}.episodeListing.sort.order`, val as SortOrder, { shouldDirty: true })}
               />
             </div>
           </div>
@@ -76,7 +76,7 @@ export function EpisodeListTab({ index }: EpisodeListTabProps) {
 
       <InteractionNote i18nKey="interactionNote.episodeList.titleExtractorChain" />
       <TitleExtractorForm
-        fieldPath={`playlists.${index}.episodeList.titleExtractor`}
+        fieldPath={`playlists.${index}.episodeItem.titleExtractor`}
         idPrefix={`ep-list-title-ext-${index}`}
       />
     </div>

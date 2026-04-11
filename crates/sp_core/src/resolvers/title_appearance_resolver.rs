@@ -36,9 +36,12 @@ impl Resolver for TitleAppearanceResolver {
     ) -> Option<Grouping> {
         let definition = definition?;
 
-        let title_extractor = definition.effective_title_extractor();
+        let title_extractor = definition
+            .group_item
+            .as_ref()
+            .and_then(|gi| gi.title_extractor.as_ref());
         let pattern_str = definition
-            .effective_static_classifiers()
+            .grouping.static_classifiers.as_ref()
             .and_then(|g| g.first())
             .and_then(|g| g.pattern.as_deref());
 

@@ -8,59 +8,61 @@ fn playlist_definition_full_round_trip() {
     let json_val = json!({
         "id": "main",
         "displayName": "Main Episodes",
-        "resolverType": "seasonNumber",
-        "presentation": "combined",
+        "grouping": {
+            "by": "seasonNumber",
+            "numberingExtractor": {
+                "source": "title",
+                "pattern": "\\[(\\d+)-(\\d+)\\]"
+            },
+            "staticClassifiers": [
+                {
+                    "id": "main",
+                    "displayName": "Main",
+                    "pattern": "^\\[\\d+-\\d+\\]"
+                }
+            ]
+        },
         "priority": 1,
         "episodeFilters": {
             "require": [{"title": "^\\[\\d+"}],
             "exclude": [{"title": "^\\[bonus"}]
         },
-        "titleExtractor": {
-            "source": "seasonNumber",
-            "template": "Season {value}"
+        "groupItem": {
+            "titleExtractor": {
+                "source": "seasonNumber",
+                "template": "Season {value}"
+            },
+            "prependSeasonNumber": true,
+            "showDateRange": true
         },
-        "prependSeasonNumber": true,
-        "groupList": {
+        "groupListing": {
             "yearBinding": "pinToYear",
             "userSortable": true,
-            "showDateRange": true,
             "sort": {
                 "field": "newestEpisodeDate",
                 "order": "descending"
             }
         },
-        "episodeList": {
+        "episodeListing": {
             "showYearHeaders": true,
             "sort": {
                 "field": "episodeNumber",
                 "order": "ascending"
             }
-        },
-        "numberingExtractor": {
-            "source": "title",
-            "pattern": "\\[(\\d+)-(\\d+)\\]"
-        },
-        "groups": [
-            {
-                "id": "main",
-                "displayName": "Main",
-                "pattern": "^\\[\\d+-\\d+\\]"
-            }
-        ]
+        }
     });
 
     let def: PlaylistDefinition = serde_json::from_value(json_val.clone()).unwrap();
     assert_eq!(def.id, "main");
     assert_eq!(def.priority, 1);
-    assert!(def.prepend_season_number);
-    assert!(def.groups.is_some());
-    assert_eq!(def.groups.as_ref().unwrap().len(), 1);
+    assert!(def.group_item.as_ref().unwrap().prepend_season_number.unwrap());
+    assert!(def.grouping.static_classifiers.is_some());
+    assert_eq!(def.grouping.static_classifiers.as_ref().unwrap().len(), 1);
 
     let serialized = serde_json::to_value(&def).unwrap();
     assert_eq!(serialized["id"], "main");
     assert_eq!(serialized["priority"], 1);
-    assert_eq!(serialized["prependSeasonNumber"], true);
-    assert_eq!(serialized["groupList"]["yearBinding"], "pinToYear");
+    assert_eq!(serialized["groupListing"]["yearBinding"], "pinToYear");
 }
 
 #[test]
@@ -68,23 +70,19 @@ fn playlist_definition_minimal_round_trip() {
     let json_val = json!({
         "id": "simple",
         "displayName": "Simple Playlist",
-        "resolverType": "seasonNumber",
-        "presentation": "separate"
+        "grouping": { "by": "seasonNumber" }
     });
 
     let def: PlaylistDefinition = serde_json::from_value(json_val).unwrap();
     assert_eq!(def.id, "simple");
     assert_eq!(def.priority, 0);
-    assert!(!def.prepend_season_number);
     assert!(def.episode_filters.is_none());
-    assert!(def.groups.is_none());
+    assert!(def.grouping.static_classifiers.is_none());
 
     let serialized = serde_json::to_value(&def).unwrap();
     // Default values should be omitted
     assert!(serialized.get("priority").is_none());
-    assert!(serialized.get("prependSeasonNumber").is_none());
     assert!(serialized.get("episodeFilters").is_none());
-    assert!(serialized.get("groups").is_none());
 }
 
 // --- JSON round-trip for sort types ---
@@ -319,8 +317,7 @@ fn has_filters_with_require() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "seasonNumber",
-        "presentation": "separate",
+        "grouping": { "by": "seasonNumber" },
         "episodeFilters": {
             "require": [{"title": "pattern"}]
         }
@@ -334,8 +331,7 @@ fn has_filters_with_exclude() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "seasonNumber",
-        "presentation": "separate",
+        "grouping": { "by": "seasonNumber" },
         "episodeFilters": {
             "exclude": [{"title": "bonus"}]
         }
@@ -349,8 +345,7 @@ fn has_filters_empty() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "seasonNumber",
-        "presentation": "separate",
+        "grouping": { "by": "seasonNumber" },
         "episodeFilters": {}
     }))
     .unwrap();
@@ -362,8 +357,7 @@ fn has_filters_none() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
-        "resolverType": "seasonNumber",
-        "presentation": "separate"
+        "grouping": { "by": "seasonNumber" }
     }))
     .unwrap();
     assert!(!def.has_filters());
@@ -400,18 +394,15 @@ mod filter_semantics {
         let definition = PlaylistDefinition {
             id: "test".to_string(),
             display_name: "Test".to_string(),
-            resolver_type: Some("year".to_string()),
-            presentation: Some("separate".to_string()),
+            grouping: GroupingConfig {
+                by: "year".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
             selector: None,
             priority: 0,
             episode_filters: Some(EpisodeFilters { require, exclude }),
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
-            grouping: None,
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -449,8 +440,6 @@ mod filter_semantics {
 
     #[test]
     fn require_and_semantics_all_entries_must_match() {
-        // Two require entries: title matches "alpha" AND title matches "episode"
-        // Only episodes matching ALL entries pass.
         let episodes = vec![
             ep(1, "alpha episode"),
             ep(2, "beta episode"),
@@ -520,8 +509,6 @@ mod filter_semantics {
 
     #[test]
     fn require_and_exclude_combined() {
-        // require: title contains "special" AND "episode"; exclude: "beta"
-        // Only episodes matching all require entries and no exclude entries pass.
         let episodes = vec![
             ep(1, "special alpha episode"),
             ep(2, "special beta episode"),
@@ -560,26 +547,29 @@ mod filter_semantics {
 }
 
 // --- Legacy v3 `episodeExtractor` alias backward compatibility ---
+// The alias is preserved in GroupingConfig for old JSON that uses
+// grouping.episodeExtractor instead of grouping.numberingExtractor.
 
 #[test]
-fn playlist_definition_deserializes_legacy_episode_extractor_alias() {
+fn grouping_config_deserializes_legacy_episode_extractor_alias() {
     let json_val = json!({
         "id": "legacy",
         "displayName": "Legacy Playlist",
-        "resolverType": "seasonNumber",
-        "presentation": "separate",
-        "episodeExtractor": {
-            "source": "title",
-            "pattern": "\\[(\\d+)-(\\d+)\\]"
+        "grouping": {
+            "by": "seasonNumber",
+            "episodeExtractor": {
+                "source": "title",
+                "pattern": "\\[(\\d+)-(\\d+)\\]"
+            }
         }
     });
 
     let def: PlaylistDefinition = serde_json::from_value(json_val).unwrap();
     assert!(
-        def.numbering_extractor.is_some(),
+        def.grouping.numbering_extractor.is_some(),
         "episodeExtractor alias should deserialize into numbering_extractor"
     );
-    assert_eq!(def.numbering_extractor.as_ref().unwrap().source, "title");
+    assert_eq!(def.grouping.numbering_extractor.as_ref().unwrap().source, "title");
 }
 
 #[test]
@@ -762,7 +752,6 @@ fn episode_extractor_serialization_omits_defaults() {
     assert!(!extractor.fallback_to_rss);
 
     let serialized = serde_json::to_value(&extractor).unwrap();
-    // seasonGroup=1 serialized (Dart includes non-null), episodeGroup=2 always serialized
     assert_eq!(serialized["seasonGroup"], 1);
     assert_eq!(serialized["episodeGroup"], 2);
     assert!(serialized.get("fallbackEpisodeCaptureGroup").is_none());
@@ -782,7 +771,6 @@ fn episode_extractor_serialization_includes_non_defaults() {
     .unwrap();
 
     let serialized = serde_json::to_value(&extractor).unwrap();
-    // null seasonGroup should be omitted (matches Dart: if seasonGroup != null)
     assert!(serialized.get("seasonGroup").is_none());
     assert_eq!(serialized["episodeGroup"], 1);
     assert_eq!(serialized["fallbackToRss"], true);
@@ -874,8 +862,7 @@ fn pattern_config_round_trip() {
             {
                 "id": "main",
                 "displayName": "Main",
-                "resolverType": "seasonNumber",
-                "presentation": "separate"
+                "grouping": { "by": "seasonNumber" }
             }
         ]
     });

@@ -14,15 +14,15 @@ const CONFIG_WITH_GROUPS: PatternConfig = {
     {
       id: 'playlist-1',
       displayName: 'Test Playlist',
-      resolverType: 'category',
-      presentation: 'combined',
+      grouping: {
+        by: 'titleClassifier',
+        staticClassifiers: [
+          { id: 'group-a', displayName: 'Group A', pattern: 'pattern-a' },
+          { id: 'group-b', displayName: 'Group B', pattern: 'pattern-b' },
+          { id: 'group-c', displayName: 'Group C', pattern: 'pattern-c' },
+        ],
+      },
       priority: 0,
-      prependSeasonNumber: false,
-      groups: [
-        { id: 'group-a', displayName: 'Group A', pattern: 'pattern-a' },
-        { id: 'group-b', displayName: 'Group B', pattern: 'pattern-b' },
-        { id: 'group-c', displayName: 'Group C', pattern: 'pattern-c' },
-      ],
     },
   ],
 };
@@ -33,9 +33,12 @@ function buildSingleGroupConfig(): PatternConfig {
     playlists: [
       {
         ...CONFIG_WITH_GROUPS.playlists[0],
-        groups: [
-          { id: 'only', displayName: 'Only Group', pattern: 'p' },
-        ],
+        grouping: {
+          ...CONFIG_WITH_GROUPS.playlists[0].grouping,
+          staticClassifiers: [
+            { id: 'only', displayName: 'Only Group', pattern: 'p' },
+          ],
+        },
       },
     ],
   };

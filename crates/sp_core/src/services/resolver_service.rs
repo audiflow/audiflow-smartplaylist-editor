@@ -5,9 +5,9 @@ use regex::{Regex, RegexBuilder};
 use std::collections::BTreeMap;
 
 use crate::models::{
-    EpisodeData, EpisodeFilterEntry, Grouping, PatternConfig, Playlist, PlaylistDefinition,
-    PlaylistGroup, PlaylistPreviewResult, Presentation, PreviewGrouping, SimpleEpisodeData,
-    TitleExtractor,
+    EpisodeData, EpisodeFilterEntry, GroupDef, Grouping, PatternConfig, Playlist,
+    PlaylistDefinition, PlaylistGroup, PlaylistPreviewResult, Presentation, PreviewGrouping,
+    SimpleEpisodeData, TitleExtractor,
 };
 
 /// Precompiled filter entry for efficient per-episode matching.
@@ -177,7 +177,7 @@ impl ResolverService {
                 continue;
             }
 
-            let resolver = match self.find_resolver_by_type(definition.effective_resolver_type()) {
+            let resolver = match self.find_resolver_by_type(definition.grouping.by.as_str()) {
                 Some(r) => r,
                 None => continue,
             };
@@ -191,7 +191,7 @@ impl ResolverService {
                 resolver_type = Some(result.resolver_type.clone());
             }
 
-            if definition.effective_partition_by() == Some("group") {
+            if definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) == Some("group") {
                 Self::add_split_playlists(
                     &mut all_playlists,
                     definition,
@@ -267,7 +267,7 @@ impl ResolverService {
                 continue;
             }
 
-            let resolver = match self.find_resolver_by_type(definition.effective_resolver_type()) {
+            let resolver = match self.find_resolver_by_type(definition.grouping.by.as_str()) {
                 Some(r) => r,
                 None => continue,
             };
@@ -374,13 +374,13 @@ impl ResolverService {
         sort_key: i32,
         episode_by_id: &HashMap<i64, &dyn EpisodeData>,
     ) -> Playlist {
-        let presentation = if definition.effective_partition_by() == Some("group") {
+        let presentation = if definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) == Some("group") {
             Presentation::Separate
         } else {
             Presentation::Combined
         };
         let year_binding = parse_year_binding(
-            definition.effective_year_binding(),
+            definition.group_listing.as_ref().and_then(|gl| gl.year_binding.as_deref()),
         );
 
         let unsorted_groups: Vec<PlaylistGroup> = result
@@ -402,11 +402,11 @@ impl ResolverService {
             })
             .collect();
 
-        let sort_rule = definition.effective_group_sort();
+        let sort_rule = definition.group_listing.as_ref().and_then(|gl| gl.sort.as_ref());
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
 
         // Apply partitioning if configured
-        let groups = match definition.effective_partition_by() {
+        let groups = match definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) {
             Some("seasonNumber") => {
                 let title_ext = definition
                     .selector
@@ -434,8 +434,8 @@ impl ResolverService {
             thumbnail_url: None,
             presentation,
             year_binding,
-            show_year_headers: definition.effective_show_year_headers(),
-            show_date_range: definition.effective_show_date_range(),
+            show_year_headers: definition.episode_listing.as_ref().and_then(|el| el.show_year_headers).unwrap_or(false),
+            show_date_range: definition.group_item.as_ref().and_then(|gi| gi.show_date_range).unwrap_or(false),
             groups: Some(groups),
         }
     }
@@ -462,16 +462,16 @@ impl ResolverService {
         result: &Grouping,
         episode_by_id: &HashMap<i64, &dyn EpisodeData>,
     ) {
-        let presentation = if definition.effective_partition_by() == Some("group") {
+        let presentation = if definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) == Some("group") {
             Presentation::Separate
         } else {
             Presentation::Combined
         };
         let year_binding = parse_year_binding(
-            definition.effective_year_binding(),
+            definition.group_listing.as_ref().and_then(|gl| gl.year_binding.as_deref()),
         );
-        let group_def_map: HashMap<&str, &crate::models::GroupDef> = definition
-            .effective_static_classifiers()
+        let group_def_map: HashMap<&str, &GroupDef> = definition
+            .grouping.static_classifiers.as_ref()
             .map(|gs| gs.iter().map(|g| (g.id.as_str(), g)).collect())
             .unwrap_or_default();
 
@@ -492,7 +492,7 @@ impl ResolverService {
                     }),
                     show_date_range: g_def
                         .and_then(|d| d.display.as_ref().and_then(|disp| disp.show_date_range))
-                        .unwrap_or_else(|| definition.effective_show_date_range()),
+                        .unwrap_or_else(|| definition.group_item.as_ref().and_then(|gi| gi.show_date_range).unwrap_or(false)),
                     earliest_date: None,
                     latest_date: None,
                     total_duration_ms: None,
@@ -501,11 +501,11 @@ impl ResolverService {
             })
             .collect();
 
-        let sort_rule = definition.effective_group_sort();
+        let sort_rule = definition.group_listing.as_ref().and_then(|gl| gl.sort.as_ref());
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
 
         // Apply partitioning if configured
-        let groups = match definition.effective_partition_by() {
+        let groups = match definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) {
             Some("seasonNumber") => {
                 let title_ext = definition
                     .selector
@@ -533,8 +533,8 @@ impl ResolverService {
             thumbnail_url: None,
             presentation: presentation.clone(),
             year_binding: year_binding.clone(),
-            show_year_headers: definition.effective_show_year_headers(),
-            show_date_range: definition.effective_show_date_range(),
+            show_year_headers: definition.episode_listing.as_ref().and_then(|el| el.show_year_headers).unwrap_or(false),
+            show_date_range: definition.group_item.as_ref().and_then(|gi| gi.show_date_range).unwrap_or(false),
             groups: Some(groups),
         });
     }
@@ -544,13 +544,13 @@ impl ResolverService {
         definition: &PlaylistDefinition,
         result: &Grouping,
     ) {
-        let presentation = if definition.effective_partition_by() == Some("group") {
+        let presentation = if definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) == Some("group") {
             Presentation::Separate
         } else {
             Presentation::Combined
         };
         let year_binding = parse_year_binding(
-            definition.effective_year_binding(),
+            definition.group_listing.as_ref().and_then(|gl| gl.year_binding.as_deref()),
         );
 
         let decorated: Vec<Playlist> = result
@@ -565,14 +565,14 @@ impl ResolverService {
                 presentation: presentation.clone(),
                 year_binding: year_binding.clone(),
                 show_year_headers: definition
-                    .episode_list
+                    .episode_listing
                     .as_ref()
                     .and_then(|el| el.show_year_headers)
                     .unwrap_or(false),
                 show_date_range: definition
-                    .group_list
+                    .group_item
                     .as_ref()
-                    .and_then(|gl| gl.show_date_range)
+                    .and_then(|gi| gi.show_date_range)
                     .unwrap_or(false),
                 groups: None,
             })
@@ -713,7 +713,7 @@ impl ResolverService {
         definition: &PlaylistDefinition,
         episodes: &[&dyn EpisodeData],
     ) -> Option<Vec<SimpleEpisodeData>> {
-        let extractor = definition.effective_numbering_extractor()?;
+        let extractor = definition.grouping.numbering_extractor.as_ref()?;
 
         let compiled = extractor.compile();
         Some(
