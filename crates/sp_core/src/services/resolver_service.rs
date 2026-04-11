@@ -80,7 +80,7 @@ impl CompiledFilters {
 use crate::resolvers::Resolver;
 use crate::services::episode_sorter::sort_episode_ids_by_published_at;
 use crate::services::group_sorter::sort_groups;
-use crate::services::helpers::{parse_presentation, parse_year_binding};
+use crate::services::helpers::parse_year_binding;
 
 /// Service that orchestrates the smart playlist resolver chain.
 ///
@@ -188,20 +188,18 @@ impl ResolverService {
                 resolver_type = Some(result.resolver_type.clone());
             }
 
-            let presentation = parse_presentation(&definition.presentation);
-
-            if presentation == Presentation::Combined {
+            if definition.effective_partition_by() == Some("group") {
+                Self::add_split_playlists(
+                    &mut all_playlists,
+                    definition,
+                    &result,
+                );
+            } else {
                 self.add_grouped_playlist(
                     &mut all_playlists,
                     definition,
                     &result,
                     episode_by_id,
-                );
-            } else {
-                Self::add_split_playlists(
-                    &mut all_playlists,
-                    definition,
-                    &result,
                 );
             }
 
@@ -373,7 +371,11 @@ impl ResolverService {
         sort_key: i32,
         episode_by_id: &HashMap<i64, &dyn EpisodeData>,
     ) -> Playlist {
-        let presentation = parse_presentation(&definition.presentation);
+        let presentation = if definition.effective_partition_by() == Some("group") {
+            Presentation::Separate
+        } else {
+            Presentation::Combined
+        };
         let year_binding = parse_year_binding(
             definition
                 .group_list
@@ -450,7 +452,11 @@ impl ResolverService {
         result: &Grouping,
         episode_by_id: &HashMap<i64, &dyn EpisodeData>,
     ) {
-        let presentation = parse_presentation(&definition.presentation);
+        let presentation = if definition.effective_partition_by() == Some("group") {
+            Presentation::Separate
+        } else {
+            Presentation::Combined
+        };
         let year_binding = parse_year_binding(
             definition
                 .group_list
@@ -528,7 +534,11 @@ impl ResolverService {
         definition: &PlaylistDefinition,
         result: &Grouping,
     ) {
-        let presentation = parse_presentation(&definition.presentation);
+        let presentation = if definition.effective_partition_by() == Some("group") {
+            Presentation::Separate
+        } else {
+            Presentation::Combined
+        };
         let year_binding = parse_year_binding(
             definition
                 .group_list

@@ -28,7 +28,7 @@ pub use pattern_summary::PatternSummary;
 pub use playlist::{Grouping, Playlist, PlaylistGroup, Presentation, YearBinding};
 pub use playlist_definition::{
     EpisodeFilterEntry, EpisodeFilters, EpisodeListSettings, GroupListSettings,
-    PlaylistDefinition,
+    PlaylistDefinition, SelectorConfig,
 };
 pub use preview_grouping::{PlaylistPreviewResult, PreviewGrouping};
 pub use root_meta::RootMeta;

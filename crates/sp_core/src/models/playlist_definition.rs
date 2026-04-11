@@ -6,18 +6,38 @@ use super::numbering_extractor::NumberingExtractor;
 use super::sort::{EpisodeSortRule, SortRule};
 use super::title_extractor::TitleExtractor;
 
+/// Configuration for the selector dropdown in the app UI.
+///
+/// Controls how resolver groups map to selector entries:
+/// - No `partitionBy` → single entry (was `presentation: "combined"`)
+/// - `partitionBy: "group"` → one entry per group (was `presentation: "separate"`)
+/// - `partitionBy: "seasonNumber"` → one entry per season, groups as cards within
+/// - `partitionBy: "year"` → one entry per year, groups as cards within
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectorConfig {
+    /// How to partition groups into selector entries.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub partition_by: Option<String>,
+
+    /// Generates display names for partitioned selector entries.
+    /// Used when partitionBy is "seasonNumber" or "year".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title_extractor: Option<TitleExtractor>,
+}
+
 /// Deserializes the presentation field, normalizing legacy values.
 /// Maps "grouped" -> "combined" and "split" -> "separate".
-fn deserialize_presentation<'de, D>(deserializer: D) -> Result<String, D::Error>
+fn deserialize_presentation_optional<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    let raw = String::deserialize(deserializer)?;
-    Ok(match raw.as_str() {
+    let raw: Option<String> = Option::deserialize(deserializer)?;
+    Ok(raw.map(|s| match s.as_str() {
         "grouped" => "combined".to_owned(),
         "split" => "separate".to_owned(),
-        _ => raw,
-    })
+        _ => s,
+    }))
 }
 
 /// Unified per-playlist definition with all fields strongly typed.
@@ -29,11 +49,19 @@ pub struct PlaylistDefinition {
     pub resolver_type: String,
     /// Accepts legacy `playlistStructure` key and normalizes legacy values
     /// (`grouped` -> `combined`, `split` -> `separate`).
+    /// Deprecated in v5: use `selector` instead.
     #[serde(
+        default,
         alias = "playlistStructure",
-        deserialize_with = "deserialize_presentation"
+        deserialize_with = "deserialize_presentation_optional",
+        skip_serializing_if = "Option::is_none"
     )]
-    pub presentation: String,
+    pub presentation: Option<String>,
+
+    /// Selector configuration controlling how groups map to dropdown entries.
+    /// Replaces `presentation` in v5.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selector: Option<SelectorConfig>,
 
     /// Episode claiming order among siblings (lower = first, default: 0).
     #[serde(default, skip_serializing_if = "is_zero")]
@@ -70,6 +98,24 @@ pub struct PlaylistDefinition {
 }
 
 impl PlaylistDefinition {
+    /// Returns the effective partition mode derived from `selector` or
+    /// legacy `presentation`.
+    ///
+    /// - `selector.partitionBy: "group"` or `presentation: "separate"` → `"group"`
+    /// - `selector.partitionBy: "seasonNumber"` → `"seasonNumber"`
+    /// - `selector.partitionBy: "year"` → `"year"`
+    /// - otherwise → `None` (single entry, was `"combined"`)
+    pub fn effective_partition_by(&self) -> Option<&str> {
+        if let Some(sel) = &self.selector {
+            return sel.partition_by.as_deref();
+        }
+        // Legacy: presentation: "separate" maps to partitionBy: "group"
+        match self.presentation.as_deref() {
+            Some("separate") => Some("group"),
+            _ => None,
+        }
+    }
+
     /// Removes fields that are irrelevant to the current `resolver_type`.
     ///
     /// This keeps form-state values safe (the editor preserves them for undo),
