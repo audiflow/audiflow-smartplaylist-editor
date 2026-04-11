@@ -177,6 +177,17 @@ export const groupDefSchema = z.preprocess(
   }),
 );
 
+// -- Selector config --
+
+export const partitionByValues = ['group', 'seasonNumber', 'year'] as const;
+
+export const partitionBySchema = z.enum(partitionByValues);
+
+export const selectorConfigSchema = z.object({
+  partitionBy: partitionBySchema.optional(),
+  titleExtractor: titleExtractorSchema.nullish(),
+});
+
 // -- Playlist definition --
 
 export const playlistDefinitionSchema = z.preprocess(
@@ -185,7 +196,8 @@ export const playlistDefinitionSchema = z.preprocess(
     id: z.string(),
     displayName: z.string(),
     resolverType: resolverTypeSchema,
-    presentation: presentationSchema,
+    presentation: presentationSchema.nullish(),
+    selector: selectorConfigSchema.nullish(),
     priority: z
       .number()
       .nullish()
@@ -228,5 +240,7 @@ export type EpisodeListSettings = z.infer<typeof episodeListSettingsSchema>;
 export type GroupDef = z.infer<typeof groupDefSchema>;
 export type TitleExtractor = z.infer<typeof titleExtractorSchema>;
 export type NumberingExtractor = z.infer<typeof numberingExtractorSchema>;
+export type PartitionBy = z.infer<typeof partitionBySchema>;
+export type SelectorConfig = z.infer<typeof selectorConfigSchema>;
 export type PlaylistDefinition = z.infer<typeof playlistDefinitionSchema>;
 export type PatternConfig = z.infer<typeof patternConfigSchema>;
