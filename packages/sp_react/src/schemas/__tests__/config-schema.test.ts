@@ -120,9 +120,13 @@ describe('playlistDefinitionSchema', () => {
     expect(() =>
       playlistDefinitionSchema.parse({ id: 'x' }),
     ).toThrow();
-    expect(() =>
-      playlistDefinitionSchema.parse({ id: 'x', displayName: 'Y' }),
-    ).toThrow();
+  });
+
+  it('accepts minimal v5 definition without resolverType', () => {
+    // In v5, resolverType is optional (grouping.by is the canonical field)
+    const parsed = playlistDefinitionSchema.parse({ id: 'x', displayName: 'Y' });
+    expect(parsed.id).toBe('x');
+    expect(parsed.resolverType).toBeUndefined();
   });
 });
 

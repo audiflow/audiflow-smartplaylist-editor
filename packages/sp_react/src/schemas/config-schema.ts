@@ -119,9 +119,10 @@ const legacyPresentationMap: Record<string, string> = {
   split: 'separate',
 };
 
-// Migrate legacy v3 keys and values to v4 equivalents.
+// Migrate legacy v3/v4 keys and values to v5 equivalents.
 // - `episodeExtractor` -> `numberingExtractor`
 // - `playlistStructure` -> `presentation` (with value mapping)
+// - `resolverType` -> `grouping.by` (v4 -> v5)
 function migrateLegacyKeys(val: unknown): unknown {
   if (val == null || typeof val !== 'object' || Array.isArray(val)) return val;
   const obj = val as Record<string, unknown>;
@@ -147,6 +148,12 @@ function migrateLegacyKeys(val: unknown): unknown {
   // (e.g., backend may return `presentation: "grouped"` after alias deserialization)
   if ('presentation' in result && typeof result.presentation === 'string' && Object.hasOwn(legacyPresentationMap, result.presentation)) {
     result = { ...result, presentation: legacyPresentationMap[result.presentation] };
+  }
+
+  // Migrate v4 resolverType -> v5 grouping.by
+  if ('resolverType' in result && !('grouping' in result)) {
+    const grouping: Record<string, unknown> = { by: result.resolverType };
+    result = { ...result, grouping };
   }
 
   return result;
@@ -188,6 +195,30 @@ export const selectorConfigSchema = z.object({
   titleExtractor: titleExtractorSchema.nullish(),
 });
 
+// -- v5 grouping config --
+
+export const groupingConfigSchema = z.object({
+  by: resolverTypeSchema,
+  discoveryHint: z.string().nullish(),
+  numberingExtractor: numberingExtractorSchema.nullish(),
+  staticClassifiers: z.array(groupDefSchema).nullish(),
+});
+
+// -- v5 groupItem config --
+
+export const groupItemConfigSchema = z.object({
+  showDateRange: z.boolean().optional(),
+  pinToYear: z.boolean().optional(),
+  prependSeasonNumber: z.boolean().optional(),
+  titleExtractor: titleExtractorSchema.nullish(),
+});
+
+// -- v5 episodeItem config --
+
+export const episodeItemConfigSchema = z.object({
+  titleExtractor: titleExtractorSchema.nullish(),
+});
+
 // -- Playlist definition --
 
 export const playlistDefinitionSchema = z.preprocess(
@@ -195,7 +226,8 @@ export const playlistDefinitionSchema = z.preprocess(
   z.object({
     id: z.string(),
     displayName: z.string(),
-    resolverType: resolverTypeSchema,
+    // v4 fields (kept for backward compat)
+    resolverType: resolverTypeSchema.nullish(),
     presentation: presentationSchema.nullish(),
     selector: selectorConfigSchema.nullish(),
     priority: z
@@ -209,6 +241,12 @@ export const playlistDefinitionSchema = z.preprocess(
     episodeList: episodeListSettingsSchema.nullish(),
     titleExtractor: titleExtractorSchema.nullish(),
     numberingExtractor: numberingExtractorSchema.nullish(),
+    // v5 fields
+    grouping: groupingConfigSchema.nullish(),
+    groupListing: groupListSettingsSchema.nullish(),
+    groupItem: groupItemConfigSchema.nullish(),
+    episodeListing: episodeListSettingsSchema.nullish(),
+    episodeItem: episodeItemConfigSchema.nullish(),
   }),
 );
 
@@ -242,5 +280,8 @@ export type TitleExtractor = z.infer<typeof titleExtractorSchema>;
 export type NumberingExtractor = z.infer<typeof numberingExtractorSchema>;
 export type PartitionBy = z.infer<typeof partitionBySchema>;
 export type SelectorConfig = z.infer<typeof selectorConfigSchema>;
+export type GroupingConfig = z.infer<typeof groupingConfigSchema>;
+export type GroupItemConfig = z.infer<typeof groupItemConfigSchema>;
+export type EpisodeItemConfig = z.infer<typeof episodeItemConfigSchema>;
 export type PlaylistDefinition = z.infer<typeof playlistDefinitionSchema>;
 export type PatternConfig = z.infer<typeof patternConfigSchema>;

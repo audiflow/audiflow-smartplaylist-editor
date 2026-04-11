@@ -6,8 +6,7 @@
   "type": "object",
   "required": [
     "id",
-    "displayName",
-    "resolverType"
+    "displayName"
   ],
   "additionalProperties": false,
   "properties": {
@@ -20,7 +19,7 @@
       "description": "The name shown to users in the app. For seasonNumber, year, and titleDiscovery resolvers, group names may be generated at runtime by the titleExtractor. For titleClassifier, group names come from the display names you define in groups."
     },
     "resolverType": {
-      "description": "Determines how episodes are organized into groups. Each method interprets episode data differently and supports different configuration options.",
+      "description": "Deprecated v4 field. Use 'grouping.by' instead. Determines how episodes are organized into groups.",
       "oneOf": [
         {
           "const": "seasonNumber",
@@ -62,6 +61,26 @@
       "$ref": "#/$defs/SelectorConfig",
       "description": "Controls how resolver groups map to selector dropdown entries. When absent, all groups appear as cards inside a single entry. When partitionBy is 'group', each group becomes its own entry. When partitionBy is 'seasonNumber' or 'year', groups are organized under partition entries."
     },
+    "grouping": {
+      "$ref": "#/$defs/GroupingConfig",
+      "description": "Defines how episodes are organized into groups. Contains the grouping method, discovery hints, numbering extraction, and static classifiers."
+    },
+    "groupListing": {
+      "$ref": "#/$defs/GroupListingConfig",
+      "description": "How the group list is arranged. Controls sorting, user sort toggling, and section headers."
+    },
+    "groupItem": {
+      "$ref": "#/$defs/GroupItemConfig",
+      "description": "Defaults for individual group card display. Overridable per-classifier in grouping.staticClassifiers[].groupItem."
+    },
+    "episodeListing": {
+      "$ref": "#/$defs/EpisodeListingConfig",
+      "description": "How episodes are arranged within groups. Controls sorting and year headers. Overridable per-classifier."
+    },
+    "episodeItem": {
+      "$ref": "#/$defs/EpisodeItemConfig",
+      "description": "Defaults for individual episode row display. Overridable per-classifier."
+    },
     "presentation": {
       "description": "Deprecated v4 field. Use 'selector' instead. Maps 'combined' to no partition, 'separate' to partitionBy 'group'.",
       "type": "string",
@@ -90,16 +109,16 @@
     },
     "titleExtractor": {
       "$ref": "#/$defs/TitleExtractor",
-      "description": "Generates display names from episode data for group titles. Used by seasonNumber, year, and titleDiscovery resolvers. Not used with titleClassifier, which uses the display names you define directly. Runs against a representative episode from each group (typically the first)."
+      "description": "Deprecated v4 field. Use 'groupItem.titleExtractor' instead. Generates display names from episode data for group titles."
     },
     "prependSeasonNumber": {
       "type": "boolean",
       "default": false,
-      "description": "When enabled, group titles are prefixed with the season number (e.g., 'S13 Lincoln Arc'). Groups with key 0 (typically specials) are excluded from prefixing. Applies in both 'separate' and 'combined' presentation modes."
+      "description": "Deprecated v4 field. Use 'groupItem.prependSeasonNumber' instead. When enabled, group titles are prefixed with the season number."
     },
     "groupList": {
       "type": "object",
-      "description": "Settings for the group list view. Only applies when groups are collected into one playlist (presentation: 'combined'). Controls how groups are displayed, sorted, and organized.",
+      "description": "Deprecated v4 field. Use 'groupListing' and 'groupItem' instead. Settings for the group list view.",
       "additionalProperties": false,
       "properties": {
         "yearBinding": {
@@ -124,7 +143,7 @@
     },
     "episodeList": {
       "type": "object",
-      "description": "Default settings for how episodes appear within groups. Can be customized per-group via GroupDef.episodeList.",
+      "description": "Deprecated v4 field. Use 'episodeListing' and 'episodeItem' instead. Default settings for how episodes appear within groups.",
       "additionalProperties": false,
       "properties": {
         "showYearHeaders": {
@@ -144,7 +163,7 @@
     },
     "numberingExtractor": {
       "$ref": "#/$defs/NumberingExtractor",
-      "description": "Finds season and episode numbers in episode titles or descriptions. Overrides feed data (itunes:season, itunes:episode) with values parsed from episode content. Essential for podcasts that encode numbering in titles (e.g., '[62-15] Title') rather than using standard RSS tags. Can be customized per-group via GroupDef.numberingExtractor."
+      "description": "Deprecated v4 field. Use 'grouping.numberingExtractor' instead. Finds season and episode numbers in episode titles or descriptions."
     },
     "episodeExtractor": {
       "$ref": "#/$defs/NumberingExtractor",
@@ -152,13 +171,35 @@
     },
     "groups": {
       "type": "array",
-      "description": "Group definitions, primarily used by titleClassifier. Each group defines a text pattern for matching episode titles. Groups are evaluated in order; the first match claims each episode. A group without a pattern acts as a catch-all for unmatched episodes and should be placed last. For titleDiscovery, only groups[0].pattern is used as a fallback when titleExtractor is not provided. Groups can customize display, episodeList, and numberingExtractor settings.",
+      "description": "Deprecated v4 field. Use 'grouping.staticClassifiers' instead. Group definitions for titleClassifier.",
       "items": {
         "$ref": "#/$defs/GroupDef"
       }
     }
   },
   "allOf": [
+    {
+      "if": {
+        "properties": {
+          "grouping": {
+            "properties": {
+              "by": {
+                "const": "titleClassifier"
+              }
+            },
+            "required": ["by"]
+          }
+        },
+        "required": ["grouping"]
+      },
+      "then": {
+        "properties": {
+          "grouping": {
+            "required": ["staticClassifiers"]
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": {
@@ -475,6 +516,153 @@
         "titleExtractor": {
           "$ref": "#/$defs/TitleExtractor",
           "description": "Generates display names for partitioned selector entries. Used when partitionBy is 'seasonNumber' or 'year'. Not needed for 'group' (group names are used directly)."
+        }
+      }
+    },
+    "GroupingConfig": {
+      "type": "object",
+      "description": "Defines how episodes are organized into groups. The 'by' field selects the grouping strategy.",
+      "required": ["by"],
+      "additionalProperties": false,
+      "properties": {
+        "by": {
+          "description": "Determines how episodes are organized into groups.",
+          "oneOf": [
+            {
+              "const": "seasonNumber",
+              "description": "Groups episodes by their season number from feed data or titles."
+            },
+            {
+              "const": "year",
+              "description": "Groups episodes by the year they were published."
+            },
+            {
+              "const": "titleDiscovery",
+              "description": "Finds recurring patterns in episode titles and groups by them."
+            },
+            {
+              "const": "titleClassifier",
+              "description": "Groups episodes by matching titles against patterns defined in staticClassifiers."
+            },
+            {
+              "const": "rss",
+              "description": "Deprecated v3 alias for 'seasonNumber'."
+            },
+            {
+              "const": "category",
+              "description": "Deprecated v3 alias for 'titleClassifier'."
+            },
+            {
+              "const": "titleAppearanceOrder",
+              "description": "Deprecated v3 alias for 'titleDiscovery'."
+            }
+          ]
+        },
+        "discoveryHint": {
+          "type": "string",
+          "description": "Regex pattern for titleDiscovery fallback. Replaces the v4 groups[0].pattern overload."
+        },
+        "numberingExtractor": {
+          "$ref": "#/$defs/NumberingExtractor",
+          "description": "Finds season and episode numbers in episode text, overriding feed data when needed."
+        },
+        "staticClassifiers": {
+          "type": "array",
+          "description": "Group definitions for titleClassifier. Each entry defines a pattern for matching episode titles. Required when 'by' is 'titleClassifier'.",
+          "items": {
+            "$ref": "#/$defs/GroupDef"
+          }
+        }
+      }
+    },
+    "GroupListingConfig": {
+      "type": "object",
+      "description": "Controls how the group list is arranged, sorted, and sectioned.",
+      "additionalProperties": false,
+      "properties": {
+        "sort": {
+          "$ref": "#/$defs/SortRule",
+          "description": "Sort rule for ordering groups. When not set, groups appear in their natural order."
+        },
+        "userSortable": {
+          "type": "boolean",
+          "default": true,
+          "description": "When enabled, users can flip between ascending and descending order in the app."
+        },
+        "sectionBy": {
+          "type": "object",
+          "description": "Controls how groups are sectioned in the list view.",
+          "additionalProperties": false,
+          "properties": {
+            "year": {
+              "type": "object",
+              "description": "Year-based sectioning options.",
+              "additionalProperties": false,
+              "properties": {
+                "pin": {
+                  "type": "boolean",
+                  "description": "When true, each group is pinned to the year of its earliest episode."
+                }
+              }
+            },
+            "seasonNumber": {
+              "type": "boolean",
+              "description": "When true, groups are sectioned by season number."
+            }
+          }
+        }
+      }
+    },
+    "GroupItemConfig": {
+      "type": "object",
+      "description": "Default display settings for individual group cards. Overridable per-classifier in grouping.staticClassifiers[].groupItem.",
+      "additionalProperties": false,
+      "properties": {
+        "showDateRange": {
+          "type": "boolean",
+          "default": false,
+          "description": "When enabled, each group card shows the date range of its episodes."
+        },
+        "pinToYear": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, pin group to its earliest year's section."
+        },
+        "prependSeasonNumber": {
+          "type": "boolean",
+          "default": false,
+          "description": "When enabled, group titles are prefixed with the season number (e.g., 'S13 Lincoln Arc')."
+        },
+        "titleExtractor": {
+          "$ref": "#/$defs/TitleExtractor",
+          "description": "Generates display names for group titles from episode data."
+        }
+      }
+    },
+    "EpisodeListingConfig": {
+      "type": "object",
+      "description": "Controls how episodes are arranged within groups. Overridable per-classifier.",
+      "additionalProperties": false,
+      "properties": {
+        "sort": {
+          "$ref": "#/$defs/EpisodeSortRule",
+          "description": "Sort order for episodes within groups. When not set, episodes are ordered by published date (oldest first)."
+        },
+        "showYearHeaders": {
+          "type": "boolean",
+          "default": false,
+          "description": "When enabled, episode lists show year dividers."
+        }
+      }
+    },
+    "EpisodeItemConfig": {
+      "type": "object",
+      "description": "Default display settings for individual episode rows. Overridable per-classifier.",
+      "additionalProperties": false,
+      "properties": {
+        "titleExtractor": {
+          "$ref": "#/$defs/TitleExtractor",
+          "description": "Transforms episode display names. Strips redundant information conveyed by the group context."
         }
       }
     }

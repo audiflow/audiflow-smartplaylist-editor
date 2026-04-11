@@ -15,7 +15,7 @@ export function stripConditionalFields(config: PatternConfig): PatternConfig {
   return {
     ...config,
     playlists: config.playlists.map((playlist) => {
-      const rt: ResolverType | undefined = playlist.resolverType;
+      const rt: ResolverType | undefined = playlist.resolverType ?? undefined;
       const stripped = { ...playlist };
 
       // numberingExtractor: only seasonNumber

@@ -18,7 +18,7 @@ export function ExtractorsForm({ index }: ExtractorsFormProps) {
       <TitleExtractorForm
         fieldPath={`playlists.${index}.titleExtractor`}
         idPrefix={`title-ext-${index}`}
-        resolverType={watch(`playlists.${index}.resolverType`)}
+        resolverType={watch(`playlists.${index}.resolverType`) ?? undefined}
         showCategoryNote
       />
       <NumberingExtractorForm

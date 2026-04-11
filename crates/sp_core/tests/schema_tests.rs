@@ -22,9 +22,8 @@ fn valid_playlist_definition_passes() {
 #[test]
 fn missing_required_field_fails() {
     let v = test_validator();
-    // missing resolverType and presentation
+    // missing id (required in v5)
     let def = json!({
-        "id": "main",
         "displayName": "Main"
     });
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);
