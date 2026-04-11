@@ -1255,3 +1255,121 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
     // Fallback (no filters) always has empty claimed_by_others
     assert!(all_result.claimed_by_others.is_empty());
 }
+
+// =========================================================================
+// Partition by seasonNumber tests
+// =========================================================================
+
+#[test]
+fn partition_by_season_creates_sub_groups() {
+    use sp_core::models::{EpisodeData, SelectorConfig, TitleExtractor};
+    use sp_core::resolvers::TitleAppearanceResolver;
+
+    // Primary resolver: titleDiscovery (groups by professor name)
+    // Selector: partitionBy seasonNumber (organize groups under seasons)
+    let def = PlaylistDefinition {
+        id: "by_prof".to_string(),
+        display_name: "By Professor".to_string(),
+        resolver_type: "titleDiscovery".to_string(),
+        presentation: None,
+        selector: Some(SelectorConfig {
+            partition_by: Some("seasonNumber".to_string()),
+            title_extractor: Some(TitleExtractor {
+                source: "seasonNumber".to_string(),
+                pattern: None,
+                group: 0,
+                template: Some("Season {value}".to_string()),
+                fallback: None,
+                fallback_value: None,
+            }),
+        }),
+        priority: 0,
+        episode_filters: None,
+        title_extractor: Some(TitleExtractor {
+            source: "title".to_string(),
+            pattern: Some(r"\[(\w+)".to_string()),
+            group: 1,
+            template: None,
+            fallback: None,
+            fallback_value: None,
+        }),
+        prepend_season_number: false,
+        group_list: None,
+        episode_list: None,
+        numbering_extractor: None,
+        groups: None,
+    };
+
+    let episodes = vec![
+        SimpleEpisodeData {
+            id: 1, title: "[ProfA 1] Topic".to_string(), description: None,
+            season_number: Some(1), episode_number: Some(1),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 2, title: "[ProfA 2] Topic".to_string(), description: None,
+            season_number: Some(1), episode_number: Some(2),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 1, 8, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 3, title: "[ProfB 1] Topic".to_string(), description: None,
+            season_number: Some(1), episode_number: Some(3),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 1, 15, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 4, title: "[ProfC 1] Topic".to_string(), description: None,
+            season_number: Some(2), episode_number: Some(1),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 6, 1, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 5, title: "[ProfC 2] Topic".to_string(), description: None,
+            season_number: Some(2), episode_number: Some(2),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 6, 8, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+    ];
+
+    let config = PatternConfig {
+        id: "test".to_string(),
+        podcast_guid: None,
+        feed_urls: Some(vec!["https://example.com/feed".to_string()]),
+        year_grouped_episodes: false,
+        playlists: vec![def],
+    };
+
+    let resolvers: Vec<Box<dyn sp_core::resolvers::Resolver>> = vec![
+        Box::new(RssResolver),
+        Box::new(TitleAppearanceResolver),
+        Box::new(YearResolver),
+    ];
+
+    let refs: Vec<&dyn EpisodeData> = episodes.iter().map(|e| e as &dyn EpisodeData).collect();
+    let service = ResolverService::new(resolvers, vec![config]);
+    let result = service
+        .resolve_smart_playlists(None, "https://example.com/feed", &refs)
+        .expect("should produce grouping");
+
+    // Should have 1 playlist (combined mode since partitionBy != "group")
+    assert_eq!(result.playlists.len(), 1);
+    let playlist = &result.playlists[0];
+
+    // Top-level groups should be seasons (partitions)
+    let groups = playlist.groups.as_ref().expect("should have groups");
+    assert_eq!(groups.len(), 2);
+
+    // Season 1 partition should have sub-groups: ProfA, ProfB
+    let s1 = &groups[0];
+    assert_eq!(s1.episode_ids.len(), 3);
+    let s1_subs = s1.sub_groups.as_ref().expect("season 1 should have sub_groups");
+    assert_eq!(s1_subs.len(), 2);
+
+    // Season 2 partition should have sub-group: ProfC
+    let s2 = &groups[1];
+    assert_eq!(s2.episode_ids.len(), 2);
+    let s2_subs = s2.sub_groups.as_ref().expect("season 2 should have sub_groups");
+    assert_eq!(s2_subs.len(), 1);
+}

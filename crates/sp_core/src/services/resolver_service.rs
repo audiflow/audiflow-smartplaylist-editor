@@ -2,9 +2,12 @@ use std::collections::{HashMap, HashSet};
 
 use regex::{Regex, RegexBuilder};
 
+use std::collections::BTreeMap;
+
 use crate::models::{
     EpisodeData, EpisodeFilterEntry, Grouping, PatternConfig, Playlist, PlaylistDefinition,
     PlaylistGroup, PlaylistPreviewResult, Presentation, PreviewGrouping, SimpleEpisodeData,
+    TitleExtractor,
 };
 
 /// Precompiled filter entry for efficient per-episode matching.
@@ -407,6 +410,26 @@ impl ResolverService {
             .as_ref()
             .and_then(|gl| gl.sort.as_ref());
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
+
+        // Apply partitioning if configured
+        let groups = match definition.effective_partition_by() {
+            Some("seasonNumber") => {
+                let title_ext = definition
+                    .selector
+                    .as_ref()
+                    .and_then(|s| s.title_extractor.as_ref());
+                Self::partition_groups_by_season(&groups, episode_by_id, title_ext)
+            }
+            Some("year") => {
+                let title_ext = definition
+                    .selector
+                    .as_ref()
+                    .and_then(|s| s.title_extractor.as_ref());
+                Self::partition_groups_by_year(&groups, episode_by_id, title_ext)
+            }
+            _ => groups,
+        };
+
         let all_episode_ids: Vec<i64> = groups.iter().flat_map(|g| g.episode_ids.iter()).copied().collect();
 
         Playlist {
@@ -507,6 +530,26 @@ impl ResolverService {
             .as_ref()
             .and_then(|gl| gl.sort.as_ref());
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
+
+        // Apply partitioning if configured
+        let groups = match definition.effective_partition_by() {
+            Some("seasonNumber") => {
+                let title_ext = definition
+                    .selector
+                    .as_ref()
+                    .and_then(|s| s.title_extractor.as_ref());
+                Self::partition_groups_by_season(&groups, episode_by_id, title_ext)
+            }
+            Some("year") => {
+                let title_ext = definition
+                    .selector
+                    .as_ref()
+                    .and_then(|s| s.title_extractor.as_ref());
+                Self::partition_groups_by_year(&groups, episode_by_id, title_ext)
+            }
+            _ => groups,
+        };
+
         let all_episode_ids: Vec<i64> = groups.iter().flat_map(|g| g.episode_ids.iter()).copied().collect();
 
         all_playlists.push(Playlist {
@@ -771,5 +814,125 @@ impl ResolverService {
 
         filtered.extend(fallbacks);
         filtered
+    }
+
+    /// Partitions groups by episode season number.
+    ///
+    /// Each resolver group is assigned to the season of its earliest
+    /// episode (pin behavior). The result is a list of partition groups
+    /// where each partition's `sub_groups` contains the original groups
+    /// that belong to that season.
+    fn partition_groups_by_season(
+        groups: &[PlaylistGroup],
+        episode_by_id: &HashMap<i64, &dyn EpisodeData>,
+        title_extractor: Option<&TitleExtractor>,
+    ) -> Vec<PlaylistGroup> {
+        // Assign each group to a season based on its first episode
+        let mut season_map: BTreeMap<i32, Vec<PlaylistGroup>> = BTreeMap::new();
+        for group in groups {
+            let season = group
+                .episode_ids
+                .iter()
+                .filter_map(|id| episode_by_id.get(id))
+                .filter_map(|ep| ep.season_number())
+                .next()
+                .unwrap_or(0);
+            season_map.entry(season).or_default().push(group.clone());
+        }
+
+        season_map
+            .iter()
+            .enumerate()
+            .map(|(i, (&season, sub_groups))| {
+                let display_name = title_extractor
+                    .and_then(|ext| {
+                        // Find a representative episode for title extraction
+                        let rep_ep = sub_groups
+                            .first()
+                            .and_then(|g| g.episode_ids.first())
+                            .and_then(|id| episode_by_id.get(id));
+                        rep_ep.and_then(|ep| ext.extract(*ep))
+                    })
+                    .unwrap_or_else(|| format!("Season {}", season));
+
+                let all_ids: Vec<i64> = sub_groups
+                    .iter()
+                    .flat_map(|g| g.episode_ids.iter())
+                    .copied()
+                    .collect();
+
+                PlaylistGroup {
+                    id: format!("season_{}", season),
+                    display_name,
+                    sort_key: (i as i32) + 1,
+                    episode_ids: all_ids,
+                    thumbnail_url: None,
+                    year_override: None,
+                    show_year_headers: None,
+                    show_date_range: false,
+                    earliest_date: None,
+                    latest_date: None,
+                    total_duration_ms: None,
+                    sub_groups: Some(sub_groups.clone()),
+                }
+            })
+            .collect()
+    }
+
+    /// Partitions groups by episode publication year.
+    fn partition_groups_by_year(
+        groups: &[PlaylistGroup],
+        episode_by_id: &HashMap<i64, &dyn EpisodeData>,
+        title_extractor: Option<&TitleExtractor>,
+    ) -> Vec<PlaylistGroup> {
+        let mut year_map: BTreeMap<i32, Vec<PlaylistGroup>> = BTreeMap::new();
+        for group in groups {
+            let year = group
+                .episode_ids
+                .iter()
+                .filter_map(|id| episode_by_id.get(id))
+                .filter_map(|ep| ep.published_at())
+                .map(|dt| dt.format("%Y").to_string().parse::<i32>().unwrap_or(0))
+                .next()
+                .unwrap_or(0);
+            year_map.entry(year).or_default().push(group.clone());
+        }
+
+        year_map
+            .iter()
+            .enumerate()
+            .map(|(i, (&year, sub_groups))| {
+                let display_name = title_extractor
+                    .and_then(|ext| {
+                        let rep_ep = sub_groups
+                            .first()
+                            .and_then(|g| g.episode_ids.first())
+                            .and_then(|id| episode_by_id.get(id));
+                        rep_ep.and_then(|ep| ext.extract(*ep))
+                    })
+                    .unwrap_or_else(|| format!("{}", year));
+
+                let all_ids: Vec<i64> = sub_groups
+                    .iter()
+                    .flat_map(|g| g.episode_ids.iter())
+                    .copied()
+                    .collect();
+
+                PlaylistGroup {
+                    id: format!("year_{}", year),
+                    display_name,
+                    sort_key: (i as i32) + 1,
+                    episode_ids: all_ids,
+                    thumbnail_url: None,
+                    year_override: None,
+                    show_year_headers: None,
+                    show_date_range: false,
+                    earliest_date: None,
+                    latest_date: None,
+                    total_duration_ms: None,
+                    sub_groups: Some(sub_groups.clone()),
+                }
+            })
+            .collect()
     }
 }
