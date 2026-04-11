@@ -442,13 +442,23 @@ fn serialize_group(
         })
         .collect();
 
-    serde_json::json!({
+    let mut obj = serde_json::json!({
         "id": group.id,
         "displayName": group.display_name,
         "sortKey": group.sort_key,
         "episodeCount": group.episode_count(),
         "episodes": episodes_json,
-    })
+    });
+
+    if let Some(sub_groups) = &group.sub_groups {
+        let sub_groups_json: Vec<Value> = sub_groups
+            .iter()
+            .map(|sg| serialize_group(sg, episode_by_id, enriched_by_id, extracted_names))
+            .collect();
+        obj["subGroups"] = Value::Array(sub_groups_json);
+    }
+
+    obj
 }
 
 fn serialize_episode(
