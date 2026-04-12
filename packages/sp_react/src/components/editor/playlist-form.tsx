@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
@@ -22,6 +22,13 @@ interface PlaylistFormProps {
 
 const EMPTY_TITLES: readonly string[] = [];
 
+const TAB_TO_REGION: Record<string, string | null> = {
+  basic: 'playlist-header',
+  filters: 'filters',
+  organize: 'group-list',
+  display: 'group-list',
+};
+
 function ErrorDot({ visible, label }: { visible: boolean; label: string }) {
   if (!visible) return null;
   return (
@@ -37,6 +44,14 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
   const { formState } = useFormContext<PatternConfig>();
 
   const feedUrl = useEditorStore((s) => s.feedUrl);
+  const setActivePreviewRegion = useEditorStore((s) => s.setActivePreviewRegion);
+  const defaultTab = isNewConfig ? 'basic' : 'organize';
+
+  useEffect(() => {
+    setActivePreviewRegion(TAB_TO_REGION[defaultTab] ?? null);
+    return () => setActivePreviewRegion(null);
+  }, [setActivePreviewRegion, defaultTab]);
+
   const feedQuery = useFeed(feedUrl || null);
   const episodeTitles = useMemo(
     () => feedQuery.data?.map((ep) => ep.title) ?? EMPTY_TITLES,
@@ -57,7 +72,7 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue={isNewConfig ? 'basic' : 'organize'}>
+      <Tabs defaultValue={defaultTab} onValueChange={(v) => setActivePreviewRegion(TAB_TO_REGION[v] ?? null)}>
         <TabsList className="w-full">
           <TabsTrigger value="basic">
             {t('tab.basicSettings')}
