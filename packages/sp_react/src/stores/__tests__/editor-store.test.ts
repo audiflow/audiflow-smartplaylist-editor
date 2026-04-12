@@ -86,3 +86,32 @@ describe('editorStore', () => {
     expect(state.conflictPath).toBeNull();
   });
 });
+
+describe('editor-store — activeGroupContext', () => {
+  beforeEach(() => {
+    useEditorStore.getState().reset();
+  });
+
+  it('defaults to "all" for any playlist id', () => {
+    expect(useEditorStore.getState().getActiveGroupContext('any-id')).toBe('all');
+  });
+
+  it('stores and retrieves context per playlist id', () => {
+    useEditorStore.getState().setActiveGroupContext('playlist-1', 'group-abc');
+    useEditorStore.getState().setActiveGroupContext('playlist-2', 'group-xyz');
+    expect(useEditorStore.getState().getActiveGroupContext('playlist-1')).toBe('group-abc');
+    expect(useEditorStore.getState().getActiveGroupContext('playlist-2')).toBe('group-xyz');
+  });
+
+  it('resets context for a specific playlist', () => {
+    useEditorStore.getState().setActiveGroupContext('playlist-1', 'group-abc');
+    useEditorStore.getState().resetActiveGroupContext('playlist-1');
+    expect(useEditorStore.getState().getActiveGroupContext('playlist-1')).toBe('all');
+  });
+
+  it('clears all contexts on reset()', () => {
+    useEditorStore.getState().setActiveGroupContext('playlist-1', 'group-abc');
+    useEditorStore.getState().reset();
+    expect(useEditorStore.getState().getActiveGroupContext('playlist-1')).toBe('all');
+  });
+});

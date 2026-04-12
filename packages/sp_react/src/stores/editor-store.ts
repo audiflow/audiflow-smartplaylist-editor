@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { PreviewResult } from '@/schemas/api-schema.ts';
 
+export type ActiveGroupContext = 'all' | string;
+
 interface EditorState {
   isJsonMode: boolean;
   feedUrl: string;
@@ -11,6 +13,7 @@ interface EditorState {
   conflictPath: string | null;
   previewData: PreviewResult | null;
   previewPending: boolean;
+  activeGroupContexts: Record<string, ActiveGroupContext>;
   toggleJsonMode: () => void;
   setFeedUrl: (url: string) => void;
   setDirty: (dirty: boolean) => void;
@@ -20,6 +23,9 @@ interface EditorState {
   clearConflict: () => void;
   setPreviewData: (data: PreviewResult | null) => void;
   setPreviewPending: (pending: boolean) => void;
+  getActiveGroupContext: (playlistId: string) => ActiveGroupContext;
+  setActiveGroupContext: (playlistId: string, context: ActiveGroupContext) => void;
+  resetActiveGroupContext: (playlistId: string) => void;
   reset: () => void;
 }
 
@@ -33,9 +39,10 @@ const initialState = {
   conflictPath: null as string | null,
   previewData: null as PreviewResult | null,
   previewPending: false,
+  activeGroupContexts: {} as Record<string, ActiveGroupContext>,
 };
 
-export const useEditorStore = create<EditorState>((set) => ({
+export const useEditorStore = create<EditorState>((set, get) => ({
   ...initialState,
   toggleJsonMode: () => set((state) => ({ isJsonMode: !state.isJsonMode })),
   setFeedUrl: (url) => set((state) => (state.feedUrl === url ? {} : { feedUrl: url })),
@@ -46,5 +53,16 @@ export const useEditorStore = create<EditorState>((set) => ({
   clearConflict: () => set({ conflictDetected: false, conflictPath: null }),
   setPreviewData: (data) => set({ previewData: data }),
   setPreviewPending: (pending) => set((state) => (state.previewPending === pending ? {} : { previewPending: pending })),
+  getActiveGroupContext: (playlistId) => get().activeGroupContexts[playlistId] ?? 'all',
+  setActiveGroupContext: (playlistId, context) =>
+    set((state) => ({
+      activeGroupContexts: { ...state.activeGroupContexts, [playlistId]: context },
+    })),
+  resetActiveGroupContext: (playlistId) =>
+    set((state) => {
+      if (!(playlistId in state.activeGroupContexts)) return {};
+      const { [playlistId]: _removed, ...rest } = state.activeGroupContexts;
+      return { activeGroupContexts: rest };
+    }),
   reset: () => set(initialState),
 }));
