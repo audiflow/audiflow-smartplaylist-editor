@@ -60,7 +60,7 @@ fn resolve_with_groups(
     let fallback_id = fallback.map(|g| g.id.as_str());
     let fallback_display_name = fallback.map(|g| g.display_name.as_str());
     let fallback_show_year_headers = fallback
-        .and_then(|g| g.episode_list.as_ref())
+        .and_then(|g| g.episode_listing.as_ref())
         .and_then(|el| el.show_year_headers);
 
     // Map from pattern group id -> list of episode ids
@@ -143,7 +143,7 @@ fn build_pattern_groups(group_defs: &[GroupDef]) -> Vec<PatternGroup> {
                 regex,
                 id: g.id.clone(),
                 display_name: g.display_name.clone(),
-                show_year_headers: g.episode_list.as_ref().and_then(|el| el.show_year_headers),
+                show_year_headers: g.episode_listing.as_ref().and_then(|el| el.show_year_headers),
             })
         })
         .collect()
