@@ -22,7 +22,7 @@ describe('HighlightLayer', () => {
     expect(target.classList.contains('preview-region-active')).toBe(false);
   });
 
-  it('adds the field-pulse class when activePreviewField matches', () => {
+  it('adds the field-pulse class when activePreviewFields contains the field', () => {
     const { container } = render(
       <HighlightLayer>
         <div data-preview-field="group-sort">sort</div>
@@ -32,5 +32,22 @@ describe('HighlightLayer', () => {
     expect(target.classList.contains('preview-field-pulse')).toBe(false);
     act(() => useEditorStore.getState().pulseActivePreviewField('group-sort', 10_000));
     expect(target.classList.contains('preview-field-pulse')).toBe(true);
+  });
+
+  it('pulses multiple fields simultaneously', () => {
+    const { container } = render(
+      <HighlightLayer>
+        <div data-preview-field="partition-entries">partitions</div>
+        <div data-preview-field="group-list-order">groups</div>
+      </HighlightLayer>,
+    );
+    const partitions = container.querySelector('[data-preview-field="partition-entries"]')!;
+    const groups = container.querySelector('[data-preview-field="group-list-order"]')!;
+    act(() => {
+      useEditorStore.getState().pulseActivePreviewField('partition-entries', 10_000);
+      useEditorStore.getState().pulseActivePreviewField('group-list-order', 10_000);
+    });
+    expect(partitions.classList.contains('preview-field-pulse')).toBe(true);
+    expect(groups.classList.contains('preview-field-pulse')).toBe(true);
   });
 });

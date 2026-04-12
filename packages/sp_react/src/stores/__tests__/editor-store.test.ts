@@ -119,9 +119,9 @@ describe('editor-store — activeGroupContext', () => {
 describe('editor-store — preview highlight', () => {
   beforeEach(() => useEditorStore.getState().reset());
 
-  it('defaults activePreviewRegion and activePreviewField to null', () => {
+  it('defaults activePreviewRegion to null and activePreviewFields to empty array', () => {
     expect(useEditorStore.getState().activePreviewRegion).toBeNull();
-    expect(useEditorStore.getState().activePreviewField).toBeNull();
+    expect(useEditorStore.getState().activePreviewFields).toEqual([]);
   });
 
   it('sets and clears activePreviewRegion', () => {
@@ -131,10 +131,25 @@ describe('editor-store — preview highlight', () => {
     expect(useEditorStore.getState().activePreviewRegion).toBeNull();
   });
 
-  it('sets activePreviewField and auto-clears after a delay', async () => {
+  it('adds field to activePreviewFields and auto-removes after delay', async () => {
     useEditorStore.getState().pulseActivePreviewField('group-sort', 50);
-    expect(useEditorStore.getState().activePreviewField).toBe('group-sort');
+    expect(useEditorStore.getState().activePreviewFields).toContain('group-sort');
     await new Promise((r) => setTimeout(r, 80));
-    expect(useEditorStore.getState().activePreviewField).toBeNull();
+    expect(useEditorStore.getState().activePreviewFields).not.toContain('group-sort');
+  });
+
+  it('supports dual-field pulse simultaneously', () => {
+    useEditorStore.getState().pulseActivePreviewField('partition-entries', 200);
+    useEditorStore.getState().pulseActivePreviewField('group-list-order', 200);
+    const { activePreviewFields } = useEditorStore.getState();
+    expect(activePreviewFields).toContain('partition-entries');
+    expect(activePreviewFields).toContain('group-list-order');
+  });
+
+  it('does not duplicate a field already pulsing', () => {
+    useEditorStore.getState().pulseActivePreviewField('group-sort', 200);
+    useEditorStore.getState().pulseActivePreviewField('group-sort', 200);
+    const { activePreviewFields } = useEditorStore.getState();
+    expect(activePreviewFields.filter((f) => f === 'group-sort')).toHaveLength(1);
   });
 });

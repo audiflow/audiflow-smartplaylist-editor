@@ -8,7 +8,7 @@ interface HighlightLayerProps {
 export function HighlightLayer({ children }: HighlightLayerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const activeRegion = useEditorStore((s) => s.activePreviewRegion);
-  const activeField = useEditorStore((s) => s.activePreviewField);
+  const activeFields = useEditorStore((s) => s.activePreviewFields);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -24,9 +24,12 @@ export function HighlightLayer({ children }: HighlightLayerProps) {
     if (!root) return;
     const all = root.querySelectorAll<HTMLElement>('[data-preview-field]');
     all.forEach((el) => {
-      el.classList.toggle('preview-field-pulse', el.dataset.previewField === activeField);
+      el.classList.toggle(
+        'preview-field-pulse',
+        activeFields.includes(el.dataset.previewField ?? ''),
+      );
     });
-  }, [activeField]);
+  }, [activeFields]);
 
   return <div ref={rootRef}>{children}</div>;
 }

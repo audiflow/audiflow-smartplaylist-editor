@@ -27,7 +27,7 @@ interface EditorState {
   setActiveGroupContext: (playlistId: string, context: ActiveGroupContext) => void;
   resetActiveGroupContext: (playlistId: string) => void;
   activePreviewRegion: string | null;
-  activePreviewField: string | null;
+  activePreviewFields: string[];
   setActivePreviewRegion: (region: string | null) => void;
   pulseActivePreviewField: (field: string, ttlMs?: number) => void;
   reset: () => void;
@@ -45,7 +45,7 @@ const initialState = {
   previewPending: false,
   activeGroupContexts: {} as Record<string, ActiveGroupContext>,
   activePreviewRegion: null as string | null,
-  activePreviewField: null as string | null,
+  activePreviewFields: [] as string[],
 };
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -73,9 +73,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setActivePreviewRegion: (region) =>
     set((state) => (state.activePreviewRegion === region ? {} : { activePreviewRegion: region })),
   pulseActivePreviewField: (field, ttlMs = 1000) => {
-    set({ activePreviewField: field });
+    set((state) =>
+      state.activePreviewFields.includes(field)
+        ? {}
+        : { activePreviewFields: [...state.activePreviewFields, field] },
+    );
     setTimeout(() => {
-      if (get().activePreviewField === field) set({ activePreviewField: null });
+      set((state) => ({
+        activePreviewFields: state.activePreviewFields.filter((f) => f !== field),
+      }));
     }, ttlMs);
   },
   reset: () => set(initialState),

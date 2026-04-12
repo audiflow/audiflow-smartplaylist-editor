@@ -9,7 +9,7 @@ describe('usePreviewHighlight', () => {
   it('returns props that call pulseActivePreviewField on focus', () => {
     const { result } = renderHook(() => usePreviewHighlight('group-sort'));
     act(() => result.current.onFocus());
-    expect(useEditorStore.getState().activePreviewField).toBe('group-sort');
+    expect(useEditorStore.getState().activePreviewFields).toContain('group-sort');
   });
 
   it('returns a data attribute for the field id', () => {
