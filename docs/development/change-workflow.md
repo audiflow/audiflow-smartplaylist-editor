@@ -26,14 +26,16 @@ When modifying JSON Schema or related models:
 3. Update sp_core tests (`crates/sp_core/tests/schema_tests.rs`, `model_tests.rs`)
 4. Update sp_react Zod schema (`packages/sp_react/src/schemas/config-schema.ts`)
 5. Update sp_react form components if field names or types changed
-6. Notify consumer repos to update their vendored schema copies
-7. Update docs/integration/editor-to-schema.md if schema structure changed
+6. Regenerate schema HTML docs (`make schema-doc`)
+7. Notify consumer repos to update their vendored schema copies
+8. Update docs/integration/editor-to-schema.md if schema structure changed
+9. Update docs/schema-reference.md if field semantics changed
 
 ## Required updates
 
 Update documentation when:
 - Architecture changes (new crates, changed boundaries) -> docs/architecture/*, `.claude/rules/project/architecture.md`
-- Schema or config format changes -> docs/integration/editor-to-schema.md, docs/integration/smartplaylist-contract.md
+- Schema or config format changes -> docs/integration/editor-to-schema.md, docs/integration/smartplaylist-contract.md, docs/schema-reference.md
 - New API endpoints -> `.claude/rules/project/architecture.md` (route table)
 - New concepts or entry points -> docs/overview.md
 - Process changes -> this document, docs/development/review-checklist.md
@@ -49,6 +51,17 @@ cd packages/sp_react && npx tsc -b --noEmit     # TypeScript compiles
 ```
 
 All checks must pass before submitting a PR. Use `make lint` and `make test` as shortcuts.
+
+## Useful Makefile targets
+
+```bash
+make test          # All tests (Rust + React)
+make lint          # All linters (clippy + oxlint + tsc)
+make sync-schema   # Copy schemas from data repo into editor
+make schema-doc    # Regenerate schema HTML docs
+make validate      # Validate configs in data directory
+make format        # Format JSON configs in data directory
+```
 
 ## When to update
 

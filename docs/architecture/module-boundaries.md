@@ -5,13 +5,14 @@
 ### Module: sp_core
 
 #### Responsibilities
-- Define all domain models (PatternConfig, PlaylistDefinition, Playlist, GroupDef, etc.)
+- Define all domain models (PatternConfig, PlaylistDefinition, SelectorConfig, GroupingConfig, GroupListingConfig, GroupItemConfig, EpisodeListingConfig, EpisodeItemConfig, Playlist, GroupDef, etc.)
 - Implement resolver trait and concrete resolvers (seasonNumber, titleClassifier, year, titleDiscovery)
 - Provide schema validation via embedded JSON Schema files
 - Implement services: ResolverService, ConfigAssembler, sorting utilities
 - Derive deterministic pattern IDs from podcast identity (`derive_pattern_id`, `is_deterministic_id`)
 - Provide EpisodeData trait abstraction for episode data
 - Cross-pattern uniqueness validation (`check_uniqueness` for podcastGuid and feedUrl conflicts)
+- Support nested sub-groups via partitionBy logic (seasonNumber, year)
 
 #### Non-responsibilities
 - HTTP handling, routing, or request/response types
@@ -40,6 +41,7 @@
 - AppError: structured JSON error responses
 - Cross-pattern uniqueness enforcement on pattern create/update
 - 404 JSON fallback for unmatched `/api/*` paths
+- Strip resolver-irrelevant fields from preview and save responses
 
 #### Non-responsibilities
 - Domain logic (resolvers, sorting, schema definitions) -- delegated to sp_core
@@ -78,14 +80,17 @@
 ### Module: sp_react
 
 #### Responsibilities
-- Web editor UI: pattern browsing, config editing forms, live preview
+- Web editor UI: pattern browsing, config editing forms (tabbed layout with 6 categories), live preview
+- Filtered episodes panel with debounced auto-preview
 - API client: HTTP wrapper for sp_server REST endpoints
 - Auto-derive read-only pattern ID for new configs via `useDerivedPatternId` hook (debounced, calls derive endpoint)
 - State management: Zustand for editor UI state, TanStack Query for server state
 - Form validation: React Hook Form + Zod 4 schemas mirroring JSON Schema
 - SSE hook (`useFileEvents`): invalidate TanStack Query cache on file changes
 - Inline duplicate detection for podcast identifiers (podcastGuid, feedUrls)
+- Client-side episode filtering utility
 - i18n: English and Japanese translations
+- Playlist reorder dialog for managing priority
 
 #### Non-responsibilities
 - Backend logic, file I/O, schema definitions
