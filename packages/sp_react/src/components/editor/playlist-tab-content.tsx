@@ -23,6 +23,7 @@ import {
   TabsContent,
 } from '@/components/ui/tabs.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
+import { HighlightLayer } from '@/components/editor/preview/highlight-layer.tsx';
 
 interface PlaylistTabContentProps {
   index: number;
@@ -143,93 +144,100 @@ export function PlaylistTabContent({
         </div>
 
         {/* Preview side */}
-        <div className="rounded-lg border bg-muted/30 p-4 space-y-3 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
-          <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
-            <TabsList>
-              <TabsTrigger value="filtered">
-                {tp('tabFiltered')}
-              </TabsTrigger>
-              <TabsTrigger value="excluded">
-                {tp('tabExcluded')}
-                {0 < stableExcludedCount && (
-                  <Badge variant="secondary" className="ml-1.5">
-                    {stableExcludedCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="preview">
-                {tp('tabPreview')}
-                {sp && (
-                  <Badge variant="secondary" className="ml-1.5">
-                    {sp.playlist.episodeCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="filtered">
-              <LiveFilteredEpisodes
-                index={index}
-                feedEpisodes={feedQuery.data ?? []}
-                feedState={feedQuery.data != null ? 'success' : feedQuery.isLoading ? 'loading' : feedQuery.isError ? 'error' : 'idle'}
-              />
-            </TabsContent>
-            <TabsContent value="excluded">
-              {sp ? (
-                0 < stableExcludedCount ? (
-                  <UngroupedEpisodesPanel episodes={sp.excluded} />
-                ) : (
-                  <p className="text-sm text-muted-foreground py-4 text-center">
-                    {tp('emptyExcluded')}
-                  </p>
-                )
-              ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  {t('tabPreviewEmpty')}
-                </p>
-              )}
-            </TabsContent>
-            <TabsContent value="preview">
-              {sp ? (
-                <>
-                  <Tabs defaultValue="groups">
-                    <TabsList>
-                      <TabsTrigger value="groups">
-                        {tp('tabGroups')}
-                        <Badge variant="secondary" className="ml-1.5">
-                          {sp.playlist.episodeCount}
-                        </Badge>
-                      </TabsTrigger>
-                      <TabsTrigger value="ungrouped">
-                        {tp('tabUngrouped')}
-                        {0 < stableUngroupedCount && (
-                          <Badge variant="secondary" className="ml-1.5">
-                            {stableUngroupedCount}
-                          </Badge>
-                        )}
-                      </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="groups">
-                      <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
-                    </TabsContent>
-                    <TabsContent value="ungrouped">
-                      {0 < stableUngroupedCount ? (
-                        <UngroupedEpisodesPanel episodes={sp.ungrouped} />
-                      ) : (
-                        <p className="text-sm text-muted-foreground py-4 text-center">
-                          {tp('emptyUngrouped')}
-                        </p>
-                      )}
-                    </TabsContent>
-                  </Tabs>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  {t('tabPreviewEmpty')}
-                </p>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+        <HighlightLayer>
+          <div
+            className="rounded-lg border bg-muted/30 p-4 space-y-3 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto"
+            data-preview-root
+          >
+            <div className="mx-auto w-full max-w-[420px]">
+              <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
+                <TabsList>
+                  <TabsTrigger value="filtered">
+                    {tp('tabFiltered')}
+                  </TabsTrigger>
+                  <TabsTrigger value="excluded">
+                    {tp('tabExcluded')}
+                    {0 < stableExcludedCount && (
+                      <Badge variant="secondary" className="ml-1.5">
+                        {stableExcludedCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="preview">
+                    {tp('tabPreview')}
+                    {sp && (
+                      <Badge variant="secondary" className="ml-1.5">
+                        {sp.playlist.episodeCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="filtered">
+                  <LiveFilteredEpisodes
+                    index={index}
+                    feedEpisodes={feedQuery.data ?? []}
+                    feedState={feedQuery.data != null ? 'success' : feedQuery.isLoading ? 'loading' : feedQuery.isError ? 'error' : 'idle'}
+                  />
+                </TabsContent>
+                <TabsContent value="excluded">
+                  {sp ? (
+                    0 < stableExcludedCount ? (
+                      <UngroupedEpisodesPanel episodes={sp.excluded} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground py-4 text-center">
+                        {tp('emptyExcluded')}
+                      </p>
+                    )
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      {t('tabPreviewEmpty')}
+                    </p>
+                  )}
+                </TabsContent>
+                <TabsContent value="preview">
+                  {sp ? (
+                    <>
+                      <Tabs defaultValue="groups">
+                        <TabsList>
+                          <TabsTrigger value="groups">
+                            {tp('tabGroups')}
+                            <Badge variant="secondary" className="ml-1.5">
+                              {sp.playlist.episodeCount}
+                            </Badge>
+                          </TabsTrigger>
+                          <TabsTrigger value="ungrouped">
+                            {tp('tabUngrouped')}
+                            {0 < stableUngroupedCount && (
+                              <Badge variant="secondary" className="ml-1.5">
+                                {stableUngroupedCount}
+                              </Badge>
+                            )}
+                          </TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="groups">
+                          <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
+                        </TabsContent>
+                        <TabsContent value="ungrouped">
+                          {0 < stableUngroupedCount ? (
+                            <UngroupedEpisodesPanel episodes={sp.ungrouped} />
+                          ) : (
+                            <p className="text-sm text-muted-foreground py-4 text-center">
+                              {tp('emptyUngrouped')}
+                            </p>
+                          )}
+                        </TabsContent>
+                      </Tabs>
+                    </>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      {t('tabPreviewEmpty')}
+                    </p>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </HighlightLayer>
       </div>
     </div>
   );
