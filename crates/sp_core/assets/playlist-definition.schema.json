@@ -153,7 +153,7 @@
         },
         "groupListing": {
           "type": "object",
-          "description": "Per-group overrides for groupListing settings. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for the group list (applied when this group appears in the list). Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "yearBinding": {
@@ -164,7 +164,7 @@
         },
         "groupItem": {
           "type": "object",
-          "description": "Per-group overrides for groupItem settings. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for this group's card. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "showDateRange": {
@@ -175,27 +175,27 @@
         },
         "episodeListing": {
           "type": "object",
-          "description": "Per-group overrides for episodeListing settings. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for the episode list inside this group. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "showYearHeaders": {
               "type": "boolean",
-              "description": "Show or hide year dividers in this group's episode list."
+              "description": "Show or hide year dividers in this group's episode list. When not set, uses the playlist default."
             },
             "sort": {
               "$ref": "#/$defs/EpisodeSortRule",
-              "description": "Custom episode sort for this group."
+              "description": "Custom episode sort for this group. When not set, uses the playlist default."
             }
           }
         },
         "episodeItem": {
           "type": "object",
-          "description": "Per-group overrides for episodeItem settings. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for individual episode rows inside this group. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "titleExtractor": {
               "$ref": "#/$defs/TitleExtractor",
-              "description": "Custom episode title transformation for this group."
+              "description": "Custom episode title transformation for this group. When not set, uses the playlist default."
             }
           }
         },
