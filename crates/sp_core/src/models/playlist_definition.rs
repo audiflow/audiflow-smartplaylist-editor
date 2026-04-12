@@ -113,19 +113,19 @@ pub struct PlaylistDefinition {
     pub id: String,
     pub display_name: String,
 
-    /// Grouping block: how episodes are organized into groups.
-    pub grouping: GroupingConfig,
-
-    /// Selector configuration controlling how groups map to dropdown entries.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub selector: Option<SelectorConfig>,
-
     /// Episode claiming order among siblings (lower = first).
     pub priority: i32,
 
     /// Episode filters applied before resolver processing.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub episode_filters: Option<EpisodeFilters>,
+
+    /// Grouping block: how episodes are organized into groups.
+    pub grouping: GroupingConfig,
+
+    /// Selector configuration controlling how groups map to dropdown entries.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selector: Option<SelectorConfig>,
 
     /// Group listing settings.
     #[serde(skip_serializing_if = "Option::is_none")]
