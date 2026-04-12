@@ -132,7 +132,7 @@
     },
     "GroupDef": {
       "type": "object",
-      "description": "A group definition. Groups with a pattern match episodes by title; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in order (first match wins). At most one catch-all should exist and should be placed last. Groups can customize display, episodeList, and numberingExtractor settings.",
+      "description": "A group definition. Groups with a pattern match episodes by title; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in order (first match wins). At most one catch-all should exist and should be placed last. Groups can override `groupListing`, `groupItem`, `episodeListing`, `episodeItem`, and `numberingExtractor` settings. Omitted fields use the playlist defaults.",
       "required": [
         "id",
         "displayName"
@@ -151,37 +151,51 @@
           "type": "string",
           "description": "A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Omit this field to create a catch-all group for unmatched episodes."
         },
-        "display": {
+        "groupListing": {
           "type": "object",
-          "description": "Custom display settings for this group's card. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for groupListing settings. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
-            "showDateRange": {
-              "type": "boolean",
-              "description": "Show or hide date range on this group's card. When not set, uses the playlist default."
-            },
             "yearBinding": {
               "$ref": "#/$defs/YearBinding",
               "description": "Custom year-group relationship for this group. When not set, uses the playlist default."
             }
           }
         },
-        "episodeList": {
+        "groupItem": {
           "type": "object",
-          "description": "Custom episode list settings for this group. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for groupItem settings. Omitted fields use the playlist defaults.",
+          "additionalProperties": false,
+          "properties": {
+            "showDateRange": {
+              "type": "boolean",
+              "description": "Show or hide date range on this group's card. When not set, uses the playlist default."
+            }
+          }
+        },
+        "episodeListing": {
+          "type": "object",
+          "description": "Per-group overrides for episodeListing settings. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "showYearHeaders": {
               "type": "boolean",
-              "description": "Show or hide year dividers in this group's episode list. When not set, uses the playlist default."
+              "description": "Show or hide year dividers in this group's episode list."
             },
             "sort": {
               "$ref": "#/$defs/EpisodeSortRule",
-              "description": "Custom episode sort for this group. When not set, uses the playlist default."
-            },
+              "description": "Custom episode sort for this group."
+            }
+          }
+        },
+        "episodeItem": {
+          "type": "object",
+          "description": "Per-group overrides for episodeItem settings. Omitted fields use the playlist defaults.",
+          "additionalProperties": false,
+          "properties": {
             "titleExtractor": {
               "$ref": "#/$defs/TitleExtractor",
-              "description": "Custom episode title transformation for this group. When not set, uses the playlist default."
+              "description": "Custom episode title transformation for this group."
             }
           }
         },
