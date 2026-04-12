@@ -13,6 +13,8 @@ import { SelectorBridge } from '@/components/editor/shared/selector-bridge.tsx';
 import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { SortForm } from '@/components/editor/sort-form.tsx';
 import { useEditorStore } from '@/stores/editor-store.ts';
+import { usePreviewHighlight } from '@/hooks/use-preview-highlight.ts';
+import { PREVIEW_FIELDS } from '@/components/editor/preview/preview-field-ids.ts';
 
 const YEAR_BINDING_OPTIONS = ['none', 'pinToYear', 'splitByYear'] as const;
 
@@ -37,26 +39,35 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
   const selectedIdx = staticClassifiers.findIndex((g) => g.id === activeContext);
   const isTitleClassifier = resolverType === 'titleClassifier';
 
+  const selectorTitleExtractorHl = usePreviewHighlight(PREVIEW_FIELDS.selectorTitleExtractor);
+  const groupListingSortHl = usePreviewHighlight(PREVIEW_FIELDS.groupListingSort);
+  const groupListingYearBindingHl = usePreviewHighlight(PREVIEW_FIELDS.groupListingYearBinding);
+  const groupItemPrependSeasonNumberHl = usePreviewHighlight(PREVIEW_FIELDS.groupItemPrependSeasonNumber);
+
   return (
     <div className="space-y-4">
       <SectionNote i18nKey="sectionNote.displaySettings" />
 
-      <SelectorBridge
-        partitionBy={partitionBy as 'group' | 'seasonNumber' | 'year' | undefined}
-        partitionByLabel={t(`partitionBy_${partitionBy ?? 'group'}`)}
-      >
-        <TitleExtractorForm
-          fieldPath={`${prefix}.selector.titleExtractor`}
-          idPrefix={`selector-title-${index}`}
-        />
-      </SelectorBridge>
+      <div {...selectorTitleExtractorHl}>
+        <SelectorBridge
+          partitionBy={partitionBy as 'group' | 'seasonNumber' | 'year' | undefined}
+          partitionByLabel={t(`partitionBy_${partitionBy ?? 'group'}`)}
+        >
+          <TitleExtractorForm
+            fieldPath={`${prefix}.selector.titleExtractor`}
+            idPrefix={`selector-title-${index}`}
+          />
+        </SelectorBridge>
+      </div>
 
       <ScopeZone tone="playlist" title={t('scope.playlist')} hint={t('scope.playlistHint')}>
         <div className="space-y-3">
-          <SortForm
-            fieldPath={`${prefix}.groupListing.sort`}
-            idPrefix={`group-sort-${index}`}
-          />
+          <div {...groupListingSortHl}>
+            <SortForm
+              fieldPath={`${prefix}.groupListing.sort`}
+              idPrefix={`group-sort-${index}`}
+            />
+          </div>
 
           <div className="flex items-center gap-2">
             <Checkbox
@@ -85,7 +96,7 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
                 )
               }
             >
-              <SelectTrigger id={`playlist-${index}-yearBinding`} className="w-full">
+              <SelectTrigger id={`playlist-${index}-yearBinding`} className="w-full" {...groupListingYearBindingHl}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -96,7 +107,7 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" {...groupItemPrependSeasonNumberHl}>
             <Checkbox
               id={`playlist-${index}-prependSeasonNumber`}
               checked={watch(`${prefix}.groupItem.prependSeasonNumber`) ?? false}
@@ -181,6 +192,8 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
   const prefix = `playlists.${index}` as const;
   const isSpecific = activeContext !== 'all';
 
+  const showDateRangeHl = usePreviewHighlight(PREVIEW_FIELDS.groupItemShowDateRange);
+
   // Per-group overrides write to the group's own block; defaults write to playlist root.
   const showDateRangeField = isSpecific
     ? `${prefix}.grouping.staticClassifiers.${selectedIdx}.groupItem.showDateRange`
@@ -190,7 +203,7 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
     <section className="space-y-3">
       <h5 className="text-sm font-semibold">{t('subsection.groups')}</h5>
       <InteractionNote i18nKey="interactionNote.displaySettings.yearBindingHeaders" />
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" {...showDateRangeHl}>
         <Checkbox
           id={`playlist-${index}-group-${activeContext}-showDateRange`}
           checked={watch(showDateRangeField as never) ?? false}
@@ -215,6 +228,9 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
   const prefix = `playlists.${index}` as const;
   const isSpecific = activeContext !== 'all';
 
+  const episodeListingSortHl = usePreviewHighlight(PREVIEW_FIELDS.episodeListingSort);
+  const episodeItemTitleHl = usePreviewHighlight(PREVIEW_FIELDS.episodeItemTitle);
+
   const groupPrefix = isSpecific
     ? `${prefix}.grouping.staticClassifiers.${selectedIdx}`
     : null;
@@ -234,7 +250,9 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
   return (
     <section className="space-y-3">
       <h5 className="text-sm font-semibold">{t('subsection.episodes')}</h5>
-      <SortForm fieldPath={sortPath} idPrefix={`ep-sort-${index}-${activeContext}`} />
+      <div {...episodeListingSortHl}>
+        <SortForm fieldPath={sortPath} idPrefix={`ep-sort-${index}-${activeContext}`} />
+      </div>
       <div className="flex items-center gap-2">
         <Checkbox
           id={`playlist-${index}-${activeContext}-showYearHeaders`}
@@ -250,10 +268,12 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
           {t('showYearHeaders')}
         </HintLabel>
       </div>
-      <TitleExtractorForm
-        fieldPath={titleExtractorPath}
-        idPrefix={`ep-title-${index}-${activeContext}`}
-      />
+      <div {...episodeItemTitleHl}>
+        <TitleExtractorForm
+          fieldPath={titleExtractorPath}
+          idPrefix={`ep-title-${index}-${activeContext}`}
+        />
+      </div>
     </section>
   );
 }

@@ -11,6 +11,8 @@ import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.ts
 import { ScopeZone } from '@/components/editor/shared/scope-zone.tsx';
 import { GroupContextBar } from '@/components/editor/shared/group-context-bar.tsx';
 import { useEditorStore } from '@/stores/editor-store.ts';
+import { usePreviewHighlight } from '@/hooks/use-preview-highlight.ts';
+import { PREVIEW_FIELDS } from '@/components/editor/preview/preview-field-ids.ts';
 
 const RESOLVER_TYPES = ['seasonNumber', 'year', 'titleDiscovery', 'titleClassifier'] as const;
 const PARTITION_OPTIONS = ['group', 'seasonNumber', 'year'] as const;
@@ -39,6 +41,8 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
   const activeContext = useEditorStore((s) => s.getActiveGroupContext(playlistId ?? ''));
   const setActiveContext = useEditorStore((s) => s.setActiveGroupContext);
   const resetActiveContext = useEditorStore((s) => s.resetActiveGroupContext);
+  const groupingByHl = usePreviewHighlight(PREVIEW_FIELDS.groupingBy);
+  const partitionByHl = usePreviewHighlight(PREVIEW_FIELDS.partitionBy);
 
   const selectedGroupIndex = staticClassifiers.findIndex((g) => g.id === activeContext);
   const isTitleClassifier = resolverType === 'titleClassifier';
@@ -69,7 +73,7 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
             {t('resolverType')}
           </HintLabel>
           <Select value={resolverType ?? ''} onValueChange={(v) => onGroupingByChange(v as ResolverType)}>
-            <SelectTrigger id={`playlist-${index}-resolverType`} className="w-full">
+            <SelectTrigger id={`playlist-${index}-resolverType`} className="w-full" {...groupingByHl}>
               <SelectValue placeholder={t('selectResolver')} />
             </SelectTrigger>
             <SelectContent className="min-w-[280px]">
@@ -96,7 +100,7 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
               )
             }
           >
-            <SelectTrigger id={`playlist-${index}-partitionBy`} className="w-full">
+            <SelectTrigger id={`playlist-${index}-partitionBy`} className="w-full" {...partitionByHl}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

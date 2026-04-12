@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button.tsx';
 import { RegexTester } from '@/components/editor/regex-tester.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
 import { Plus, Trash2 } from 'lucide-react';
+import { usePreviewHighlight } from '@/hooks/use-preview-highlight.ts';
+import { PREVIEW_FIELDS } from '@/components/editor/preview/preview-field-ids.ts';
 
 interface EpisodeFilterTabProps {
   index: number;
@@ -16,6 +18,8 @@ interface EpisodeFilterTabProps {
 export function EpisodeFilterTab({ index, episodeTitles }: EpisodeFilterTabProps) {
   const { register, watch, control } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
+  const requireHl = usePreviewHighlight(PREVIEW_FIELDS.filtersRequire);
+  const excludeHl = usePreviewHighlight(PREVIEW_FIELDS.filtersExclude);
 
   const { fields: requireFields, append: appendRequire, remove: removeRequire } = useFieldArray({
     control,
@@ -43,6 +47,7 @@ export function EpisodeFilterTab({ index, episodeTitles }: EpisodeFilterTabProps
                     <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
                     <Input
                       {...register(`playlists.${index}.episodeFilters.require.${filterIndex}.title`)}
+                      {...requireHl}
                       placeholder={t('placeholderRegex')}
                     />
                     {titleValue && <RegexTester pattern={titleValue} variant="include" titles={episodeTitles} />}
@@ -94,6 +99,7 @@ export function EpisodeFilterTab({ index, episodeTitles }: EpisodeFilterTabProps
                     <HintLabel hint="filterTitle">{t('filterTitle')}</HintLabel>
                     <Input
                       {...register(`playlists.${index}.episodeFilters.exclude.${filterIndex}.title`)}
+                      {...excludeHl}
                       placeholder={t('placeholderRegex')}
                     />
                     {titleValue && <RegexTester pattern={titleValue} variant="exclude" titles={episodeTitles} />}
