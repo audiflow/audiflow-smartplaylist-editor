@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-04-12-v5-editor-form-restructure-design.md`
 
+**Prereq:** `docs/superpowers/plans/2026-04-12-v5-groupdef-alignment.md` must land first. This plan assumes `GroupDef` overrides already use `groupListing` / `groupItem` / `episodeListing` / `episodeItem` (not the legacy `display` / `episodeList`).
+
 ---
 
 ## File Plan
@@ -1225,7 +1227,7 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: { index: number
   const groupPrefix = isSpecific ? `${prefix}.grouping.staticClassifiers.${selectedIdx}` : '';
 
   const showDateRangeField = isSpecific
-    ? `${groupPrefix}.display.showDateRange` as const
+    ? `${groupPrefix}.groupItem.showDateRange` as const
     : `${prefix}.groupItem.showDateRange` as const;
 
   return (
@@ -1251,13 +1253,14 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: { index: numb
   const { t } = useTranslation('editor');
   const prefix = `playlists.${index}` as const;
   const isSpecific = activeContext !== 'all';
-  const base = isSpecific
-    ? `${prefix}.grouping.staticClassifiers.${selectedIdx}.episodeList`
+  const groupPrefix = isSpecific
+    ? `${prefix}.grouping.staticClassifiers.${selectedIdx}`
     : null;
 
-  const sortPath = isSpecific ? `${base}.sort` : `${prefix}.episodeListing.sort`;
-  const yearHeadersPath = isSpecific ? `${base}.showYearHeaders` : `${prefix}.episodeListing.showYearHeaders`;
-  const titleExtractorPath = isSpecific ? `${base}.titleExtractor` : `${prefix}.episodeItem.titleExtractor`;
+  // v5 post-alignment: GroupDef overrides mirror playlist-level block names.
+  const sortPath = isSpecific ? `${groupPrefix}.episodeListing.sort` : `${prefix}.episodeListing.sort`;
+  const yearHeadersPath = isSpecific ? `${groupPrefix}.episodeListing.showYearHeaders` : `${prefix}.episodeListing.showYearHeaders`;
+  const titleExtractorPath = isSpecific ? `${groupPrefix}.episodeItem.titleExtractor` : `${prefix}.episodeItem.titleExtractor`;
 
   return (
     <section className="space-y-3">
