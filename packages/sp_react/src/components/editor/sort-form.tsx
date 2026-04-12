@@ -11,9 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select.tsx';
 
-interface SortFormProps {
-  index: number;
-}
+// Legacy props (index-based) are kept for backward compatibility.
+// New callers should prefer fieldPath + idPrefix.
+type SortFormProps =
+  | { index: number; fieldPath?: never; idPrefix?: never }
+  | { fieldPath: string; idPrefix: string; index?: never };
 
 const SORT_FIELDS = [
   'playlistNumber',
@@ -25,19 +27,27 @@ const SORT_ORDERS = ['ascending', 'descending'] as const;
 
 const DEFAULT_SORT_RULE = { field: 'playlistNumber', order: 'ascending' } as const;
 
-export function SortForm({ index }: SortFormProps) {
+export function SortForm(props: SortFormProps) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const sort = watch(`playlists.${index}.groupListing.sort`);
+  // Resolve the field paths: support legacy index-based and new fieldPath-based calling.
+  const resolvedFieldPath = 'fieldPath' in props && props.fieldPath != null
+    ? props.fieldPath
+    : `playlists.${props.index}.groupListing.sort`;
 
+  const resolvedIdPrefix = 'idPrefix' in props && props.idPrefix != null
+    ? props.idPrefix
+    : `sort-${'index' in props ? props.index : ''}`;
+
+  const sort = watch(resolvedFieldPath as never) as { field: SortField; order: SortOrder } | undefined;
   const isEnabled = sort != null;
 
   function handleToggle() {
     if (isEnabled) {
-      setValue(`playlists.${index}.groupListing.sort`, undefined, { shouldDirty: true });
+      setValue(resolvedFieldPath as never, undefined as never, { shouldDirty: true });
     } else {
-      setValue(`playlists.${index}.groupListing.sort`, { ...DEFAULT_SORT_RULE }, { shouldDirty: true });
+      setValue(resolvedFieldPath as never, { ...DEFAULT_SORT_RULE } as never, { shouldDirty: true });
     }
   }
 
@@ -59,7 +69,7 @@ export function SortForm({ index }: SortFormProps) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <HintLabel
-              htmlFor={`sort-${index}-field`}
+              htmlFor={`${resolvedIdPrefix}-field`}
               hint="sortField"
             >
               {t('sortField')}
@@ -67,10 +77,10 @@ export function SortForm({ index }: SortFormProps) {
             <Select
               value={sort?.field ?? 'playlistNumber'}
               onValueChange={(val) =>
-                setValue(`playlists.${index}.groupListing.sort.field`, val as SortField, { shouldDirty: true })
+                setValue(`${resolvedFieldPath}.field` as never, val as SortField, { shouldDirty: true })
               }
             >
-              <SelectTrigger id={`sort-${index}-field`} className="w-full">
+              <SelectTrigger id={`${resolvedIdPrefix}-field`} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -85,7 +95,7 @@ export function SortForm({ index }: SortFormProps) {
 
           <div className="space-y-1.5">
             <HintLabel
-              htmlFor={`sort-${index}-order`}
+              htmlFor={`${resolvedIdPrefix}-order`}
               hint="sortOrder"
             >
               {t('sortOrder')}
@@ -93,10 +103,10 @@ export function SortForm({ index }: SortFormProps) {
             <Select
               value={sort?.order ?? 'ascending'}
               onValueChange={(val) =>
-                setValue(`playlists.${index}.groupListing.sort.order`, val as SortOrder, { shouldDirty: true })
+                setValue(`${resolvedFieldPath}.order` as never, val as SortOrder, { shouldDirty: true })
               }
             >
-              <SelectTrigger id={`sort-${index}-order`} className="w-full">
+              <SelectTrigger id={`${resolvedIdPrefix}-order`} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
