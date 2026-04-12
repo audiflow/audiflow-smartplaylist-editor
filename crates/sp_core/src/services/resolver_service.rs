@@ -488,10 +488,10 @@ impl ResolverService {
                     thumbnail_url: p.thumbnail_url.clone(),
                     year_override: None,
                     show_year_headers: g_def.and_then(|d| {
-                        d.episode_list.as_ref().and_then(|el| el.show_year_headers)
+                        d.episode_listing.as_ref().and_then(|el| el.show_year_headers)
                     }),
                     show_date_range: g_def
-                        .and_then(|d| d.display.as_ref().and_then(|disp| disp.show_date_range))
+                        .and_then(|d| d.group_item.as_ref().and_then(|g| g.show_date_range))
                         .unwrap_or_else(|| definition.group_item.as_ref().and_then(|gi| gi.show_date_range).unwrap_or(false)),
                     earliest_date: None,
                     latest_date: None,
