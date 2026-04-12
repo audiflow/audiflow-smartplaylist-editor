@@ -39,6 +39,7 @@ export function PlaylistTabContent({
 }: PlaylistTabContentProps) {
   // Read preview data from Zustand store (isolated re-renders)
   const previewData = useEditorStore((s) => s.previewData);
+  const resetActiveGroupContext = useEditorStore((s) => s.resetActiveGroupContext);
   const playlistId = useWatch({ control: useFormContext<PatternConfig>().control, name: `playlists.${index}.id` as const });
   const previewPlaylist = previewData?.playlists.find((p) => p.id === playlistId) ?? null;
   const ungroupedEpisodes = previewData?.ungrouped ?? [];
@@ -94,6 +95,14 @@ export function PlaylistTabContent({
       setActivePreviewTab('preview');
     }
   }, [previewPlaylist]);
+
+  // Reset the active group context when leaving this playlist so returning
+  // always starts at "all groups" rather than a stale group id.
+  useEffect(() => {
+    return () => {
+      if (playlistId) resetActiveGroupContext(playlistId);
+    };
+  }, [playlistId, resetActiveGroupContext]);
   const groupYearBindingOverrides = useMemo(() => {
     const map = new Map<string, YearBinding>();
     if (!groupDefs) return map;
