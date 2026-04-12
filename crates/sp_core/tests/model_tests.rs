@@ -70,6 +70,7 @@ fn playlist_definition_minimal_round_trip() {
     let json_val = json!({
         "id": "simple",
         "displayName": "Simple Playlist",
+        "priority": 0,
         "grouping": { "by": "seasonNumber" }
     });
 
@@ -80,8 +81,8 @@ fn playlist_definition_minimal_round_trip() {
     assert!(def.grouping.static_classifiers.is_none());
 
     let serialized = serde_json::to_value(&def).unwrap();
-    // Default values should be omitted
-    assert!(serialized.get("priority").is_none());
+    // priority is always serialized now (auto-set from array order)
+    assert_eq!(serialized["priority"], 0);
     assert!(serialized.get("episodeFilters").is_none());
 }
 
@@ -317,6 +318,7 @@ fn has_filters_with_require() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
+        "priority": 0,
         "grouping": { "by": "seasonNumber" },
         "episodeFilters": {
             "require": [{"title": "pattern"}]
@@ -331,6 +333,7 @@ fn has_filters_with_exclude() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
+        "priority": 0,
         "grouping": { "by": "seasonNumber" },
         "episodeFilters": {
             "exclude": [{"title": "bonus"}]
@@ -345,6 +348,7 @@ fn has_filters_empty() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
+        "priority": 0,
         "grouping": { "by": "seasonNumber" },
         "episodeFilters": {}
     }))
@@ -357,6 +361,7 @@ fn has_filters_none() {
     let def: PlaylistDefinition = serde_json::from_value(json!({
         "id": "test",
         "displayName": "Test",
+        "priority": 0,
         "grouping": { "by": "seasonNumber" }
     }))
     .unwrap();
@@ -555,6 +560,7 @@ fn grouping_config_deserializes_legacy_episode_extractor_alias() {
     let json_val = json!({
         "id": "legacy",
         "displayName": "Legacy Playlist",
+        "priority": 0,
         "grouping": {
             "by": "seasonNumber",
             "episodeExtractor": {
@@ -862,6 +868,7 @@ fn pattern_config_round_trip() {
             {
                 "id": "main",
                 "displayName": "Main",
+                "priority": 0,
                 "grouping": { "by": "seasonNumber" }
             }
         ]

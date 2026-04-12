@@ -12,6 +12,7 @@ fn valid_playlist_definition_passes() {
     let def = json!({
         "id": "main",
         "displayName": "Main",
+        "priority": 0,
         "grouping": { "by": "seasonNumber" }
     });
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);
@@ -114,6 +115,7 @@ fn playlist_definition_with_additional_properties_fails() {
     let def = json!({
         "id": "main",
         "displayName": "Main",
+        "priority": 0,
         "grouping": { "by": "seasonNumber" },
         "unknownField": true
     });

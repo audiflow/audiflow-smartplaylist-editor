@@ -14,11 +14,12 @@ import {
 } from '../config-schema';
 
 describe('playlistDefinitionSchema', () => {
-  it('parses minimal valid v5 definition with defaults', () => {
+  it('parses minimal valid v5 definition with required priority', () => {
     const input = {
       id: 'main',
       displayName: 'Main Episodes',
       grouping: { by: 'seasonNumber' },
+      priority: 0,
     };
     const result = playlistDefinitionSchema.parse(input);
     expect(result.id).toBe('main');
@@ -91,15 +92,13 @@ describe('playlistDefinitionSchema', () => {
     expect(result.episodeItem?.titleExtractor?.pattern).toBe('#\\d+ (.+)');
   });
 
-  it('treats null priority as 0 (JSON round-trip from NaN)', () => {
+  it('rejects missing priority', () => {
     const input = {
       id: 'main',
       displayName: 'Main Episodes',
       grouping: { by: 'seasonNumber' },
-      priority: null,
     };
-    const result = playlistDefinitionSchema.parse(input);
-    expect(result.priority).toBe(0);
+    expect(() => playlistDefinitionSchema.parse(input)).toThrow();
   });
 
   it('rejects missing required fields', () => {
@@ -119,6 +118,7 @@ describe('playlistDefinitionSchema', () => {
     const input = {
       id: 'regular',
       displayName: 'Regular Series',
+      priority: 0,
       grouping: {
         by: 'seasonNumber',
         numberingExtractor: {
@@ -158,6 +158,7 @@ describe('patternConfigSchema', () => {
         {
           id: 'main',
           displayName: 'Main',
+          priority: 0,
           grouping: { by: 'seasonNumber' },
         },
       ],

@@ -160,7 +160,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [assembledConfigQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pre-compute normalized reference for dirty comparison.
-  // Zod parse applies all defaults (priority: 0, showYearHeaders: false, etc.)
+  // Zod parse applies all defaults (showYearHeaders: false, etc.)
   // so both sides have the same shape regardless of which tabs have been mounted.
   const normalizedLastLoaded = useMemo(() => {
     if (!lastLoadedConfig) return undefined;
@@ -279,7 +279,13 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       void form.trigger();
       return;
     }
-    const snapshot = structuredClone(isJsonMode ? parsed.data : stripConditionalFields(parsed.data));
+    const stripped = isJsonMode ? parsed.data : stripConditionalFields(parsed.data);
+    // Auto-assign priority from playlist array order so users never need to
+    // set it manually -- the order in the editor *is* the priority.
+    const snapshot = structuredClone({
+      ...stripped,
+      playlists: stripped.playlists.map((pl, index) => ({ ...pl, priority: index })),
+    });
 
     setSaving(true);
     try {

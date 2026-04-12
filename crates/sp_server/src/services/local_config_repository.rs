@@ -310,6 +310,7 @@ mod tests {
         let playlist = json!({
             "id": "playlist-1",
             "displayName": "Playlist One",
+            "priority": 0,
             "grouping": { "by": "seasonNumber" }
         });
         std::fs::write(
@@ -377,6 +378,7 @@ mod tests {
         let new_playlist = json!({
             "id": "playlist-2",
             "displayName": "Playlist Two",
+            "priority": 1,
             "grouping": { "by": "titleClassifier" }
         });
 

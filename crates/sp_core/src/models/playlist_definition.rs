@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use super::group_def::GroupDef;
-use super::is_zero;
 use super::numbering_extractor::NumberingExtractor;
 use super::sort::{EpisodeSortRule, SortRule};
 use super::title_extractor::TitleExtractor;
@@ -121,8 +120,7 @@ pub struct PlaylistDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selector: Option<SelectorConfig>,
 
-    /// Episode claiming order among siblings (lower = first, default: 0).
-    #[serde(default, skip_serializing_if = "is_zero")]
+    /// Episode claiming order among siblings (lower = first).
     pub priority: i32,
 
     /// Episode filters applied before resolver processing.
@@ -220,6 +218,7 @@ mod tests {
         let json = serde_json::json!({
             "id": "test",
             "displayName": "Test",
+            "priority": 0,
             "grouping": {
                 "by": by,
                 "numberingExtractor": {
@@ -293,6 +292,7 @@ mod tests {
         let json = serde_json::json!({
             "id": "test",
             "displayName": "Test",
+            "priority": 0,
             "grouping": {
                 "by": "seasonNumber",
                 "numberingExtractor": {

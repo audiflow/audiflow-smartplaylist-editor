@@ -102,6 +102,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
     const input = {
       id: 'professors',
       displayName: 'Seasons',
+      priority: 0,
       grouping: {
         by: 'titleDiscovery',
         discoveryHint: '【(?:出演：)?(.+?)(?:\\s*編.?)?】',
@@ -179,6 +180,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
     const input = {
       id: 'regular',
       displayName: 'Regular Series',
+      priority: 0,
       grouping: {
         by: 'seasonNumber',
         numberingExtractor: {

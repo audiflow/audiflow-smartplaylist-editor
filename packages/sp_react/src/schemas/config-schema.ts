@@ -159,10 +159,7 @@ export const playlistDefinitionSchema = z.object({
   id: z.string(),
   displayName: z.string(),
   selector: selectorConfigSchema.nullish(),
-  priority: z
-    .number()
-    .nullish()
-    .transform((v) => v ?? 0),
+  priority: z.number(),
   episodeFilters: episodeFiltersSchema.nullish(),
   // v5 fields
   grouping: groupingConfigSchema,
