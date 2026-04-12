@@ -15,37 +15,53 @@ pub struct GroupDef {
     pub pattern: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub display: Option<GroupDefDisplay>,
+    pub group_listing: Option<GroupDefGroupListing>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub episode_list: Option<GroupDefEpisodeList>,
+    pub group_item: Option<GroupDefGroupItem>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub episode_listing: Option<GroupDefEpisodeListing>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub episode_item: Option<GroupDefEpisodeItem>,
 
     /// Accepts legacy `episodeExtractor` key for v3 backward compatibility.
     #[serde(skip_serializing_if = "Option::is_none", alias = "episodeExtractor")]
     pub numbering_extractor: Option<NumberingExtractor>,
 }
 
-/// Per-group display overrides for the group card.
+/// Per-group overrides for the group list section.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GroupDefDisplay {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub show_date_range: Option<bool>,
-
+pub struct GroupDefGroupListing {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub year_binding: Option<String>,
 }
 
-/// Per-group episode list overrides.
+/// Per-group overrides for the group card.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GroupDefEpisodeList {
+pub struct GroupDefGroupItem {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_date_range: Option<bool>,
+}
+
+/// Per-group overrides for the episode list.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupDefEpisodeListing {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub show_year_headers: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sort: Option<EpisodeSortRule>,
+}
 
+/// Per-group overrides for individual episode rows.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupDefEpisodeItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title_extractor: Option<TitleExtractor>,
 }
