@@ -9,8 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs.t
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion.tsx';
 import { BasicSettingsTab } from '@/components/editor/tabs/basic-settings-tab.tsx';
 import { EpisodeFilterTab } from '@/components/editor/tabs/episode-filter-tab.tsx';
-import { EpisodeListTab } from '@/components/editor/tabs/episode-list-tab.tsx';
-import { ResolverTab } from '@/components/editor/tabs/resolver-tab.tsx';
+import { OrganizeTab } from '@/components/editor/tabs/organize-tab.tsx';
 import { DisplaySettingsTab } from '@/components/editor/tabs/display-settings-tab.tsx';
 import { Trash2 } from 'lucide-react';
 
@@ -47,13 +46,18 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
   const errors = formState.errors.playlists?.[index];
   const hasBasicError = !!(errors?.id || errors?.displayName);
   const hasFilterError = !!errors?.episodeFilters;
-  const hasEpisodeListError = !!(errors?.episodeListing?.sort || errors?.episodeItem?.titleExtractor);
-  const hasResolverError = !!(errors?.grouping);
-  const hasDisplayError = !!(errors?.groupItem?.prependSeasonNumber || errors?.episodeListing?.showYearHeaders || errors?.groupListing?.yearBinding || errors?.groupListing?.userSortable || errors?.groupItem?.showDateRange);
+  const hasOrganizeError = !!(errors?.grouping || errors?.selector?.partitionBy);
+  const hasDisplayError = !!(
+    errors?.selector?.titleExtractor
+    || errors?.groupListing
+    || errors?.groupItem
+    || errors?.episodeListing
+    || errors?.episodeItem
+  );
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue={isNewConfig ? 'basic' : 'resolver'}>
+      <Tabs defaultValue={isNewConfig ? 'basic' : 'organize'}>
         <TabsList className="w-full">
           <TabsTrigger value="basic">
             {t('tab.basicSettings')}
@@ -63,13 +67,9 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
             {t('tab.episodeFilters')}
             <ErrorDot visible={hasFilterError} label={t('tab.hasErrors')} />
           </TabsTrigger>
-          <TabsTrigger value="episode-list">
-            {t('tab.episodeList')}
-            <ErrorDot visible={hasEpisodeListError} label={t('tab.hasErrors')} />
-          </TabsTrigger>
-          <TabsTrigger value="resolver">
-            {t('tab.resolver')}
-            <ErrorDot visible={hasResolverError} label={t('tab.hasErrors')} />
+          <TabsTrigger value="organize">
+            {t('tab.organize')}
+            <ErrorDot visible={hasOrganizeError} label={t('tab.hasErrors')} />
           </TabsTrigger>
           <TabsTrigger value="display">
             {t('tab.displaySettings')}
@@ -83,11 +83,8 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
         <TabsContent value="filters">
           <EpisodeFilterTab index={index} episodeTitles={episodeTitles} />
         </TabsContent>
-        <TabsContent value="episode-list">
-          <EpisodeListTab index={index} />
-        </TabsContent>
-        <TabsContent value="resolver">
-          <ResolverTab index={index} playlistCount={playlistCount} />
+        <TabsContent value="organize">
+          <OrganizeTab index={index} playlistCount={playlistCount} />
         </TabsContent>
         <TabsContent value="display">
           <DisplaySettingsTab index={index} />

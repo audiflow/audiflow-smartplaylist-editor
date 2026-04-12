@@ -61,10 +61,17 @@ describe('PlaylistForm', () => {
   });
 
   describe('Tabs', () => {
-    it('renders 5 tabs (no separate Groups tab)', () => {
+    it('renders 4 tabs: Basic, Filters, Organize, Display', () => {
       renderPlaylistForm();
       const tabs = screen.getAllByRole('tab');
-      expect(tabs.length).toBe(5);
+      expect(tabs.length).toBe(4);
+      const names = tabs.map((t) => t.textContent?.trim());
+      expect(names).toEqual(['Basic', 'Filters', 'Organize', 'Display']);
+    });
+
+    it('does not render an Episode List tab', () => {
+      renderPlaylistForm();
+      expect(screen.queryByRole('tab', { name: /episode list/i })).toBeNull();
     });
 
     it('shows Organize tab as default for saved playlists', () => {
