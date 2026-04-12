@@ -6,48 +6,47 @@ import { useEditorStore } from '@/stores/editor-store.ts';
 describe('HighlightLayer', () => {
   beforeEach(() => useEditorStore.getState().reset());
 
-  it('adds the region-highlight class when activePreviewRegion matches', () => {
+  it('sets data-active-region when activePreviewRegion is set', () => {
     const { container } = render(
       <HighlightLayer>
-        <div>
-          <div data-preview-region="group-list">group list</div>
-        </div>
+        <div data-preview-region="group-list">group list</div>
       </HighlightLayer>,
     );
-    const target = container.querySelector('[data-preview-region="group-list"]')!;
-    expect(target.classList.contains('preview-region-active')).toBe(false);
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.dataset.activeRegion).toBeUndefined();
     act(() => useEditorStore.getState().setActivePreviewRegion('group-list'));
-    expect(target.classList.contains('preview-region-active')).toBe(true);
+    expect(wrapper.dataset.activeRegion).toBe('group-list');
     act(() => useEditorStore.getState().setActivePreviewRegion(null));
-    expect(target.classList.contains('preview-region-active')).toBe(false);
+    expect(wrapper.dataset.activeRegion).toBeUndefined();
   });
 
-  it('adds the field-pulse class when activePreviewFields contains the field', () => {
+  it('sets data-active-fields when pulseActivePreviewField is called', () => {
     const { container } = render(
       <HighlightLayer>
         <div data-preview-field="group-sort">sort</div>
       </HighlightLayer>,
     );
-    const target = container.querySelector('[data-preview-field="group-sort"]')!;
-    expect(target.classList.contains('preview-field-pulse')).toBe(false);
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.dataset.activeFields).toBeUndefined();
     act(() => useEditorStore.getState().pulseActivePreviewField('group-sort', 10_000));
-    expect(target.classList.contains('preview-field-pulse')).toBe(true);
+    expect(wrapper.dataset.activeFields).toBe('group-sort');
   });
 
-  it('pulses multiple fields simultaneously', () => {
+  it('lists multiple simultaneous active fields space-separated', () => {
     const { container } = render(
       <HighlightLayer>
         <div data-preview-field="partition-entries">partitions</div>
         <div data-preview-field="group-list-order">groups</div>
       </HighlightLayer>,
     );
-    const partitions = container.querySelector('[data-preview-field="partition-entries"]')!;
-    const groups = container.querySelector('[data-preview-field="group-list-order"]')!;
+    const wrapper = container.firstElementChild as HTMLElement;
     act(() => {
       useEditorStore.getState().pulseActivePreviewField('partition-entries', 10_000);
       useEditorStore.getState().pulseActivePreviewField('group-list-order', 10_000);
     });
-    expect(partitions.classList.contains('preview-field-pulse')).toBe(true);
-    expect(groups.classList.contains('preview-field-pulse')).toBe(true);
+    // Both fields must appear as space-separated tokens so CSS ~= matching works
+    const fields = wrapper.dataset.activeFields?.split(' ') ?? [];
+    expect(fields).toContain('partition-entries');
+    expect(fields).toContain('group-list-order');
   });
 });
