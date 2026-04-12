@@ -115,3 +115,26 @@ describe('editor-store — activeGroupContext', () => {
     expect(useEditorStore.getState().getActiveGroupContext('playlist-1')).toBe('all');
   });
 });
+
+describe('editor-store — preview highlight', () => {
+  beforeEach(() => useEditorStore.getState().reset());
+
+  it('defaults activePreviewRegion and activePreviewField to null', () => {
+    expect(useEditorStore.getState().activePreviewRegion).toBeNull();
+    expect(useEditorStore.getState().activePreviewField).toBeNull();
+  });
+
+  it('sets and clears activePreviewRegion', () => {
+    useEditorStore.getState().setActivePreviewRegion('group-list');
+    expect(useEditorStore.getState().activePreviewRegion).toBe('group-list');
+    useEditorStore.getState().setActivePreviewRegion(null);
+    expect(useEditorStore.getState().activePreviewRegion).toBeNull();
+  });
+
+  it('sets activePreviewField and auto-clears after a delay', async () => {
+    useEditorStore.getState().pulseActivePreviewField('group-sort', 50);
+    expect(useEditorStore.getState().activePreviewField).toBe('group-sort');
+    await new Promise((r) => setTimeout(r, 80));
+    expect(useEditorStore.getState().activePreviewField).toBeNull();
+  });
+});
