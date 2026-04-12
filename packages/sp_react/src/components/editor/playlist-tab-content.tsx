@@ -52,6 +52,7 @@ export function PlaylistTabContent({
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
 
+  const playlistDisplayName = useWatch({ control, name: `playlists.${index}.displayName` as const }) ?? '';
   const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.groupItem.prependSeasonNumber` as const }) ?? false;
   const yearBinding = (useWatch({ control, name: `playlists.${index}.groupListing.yearBinding` as const }) ?? 'none') as YearBinding;
   const groupDefs = useWatch({ control, name: `playlists.${index}.grouping.staticClassifiers` as const });
@@ -150,6 +151,11 @@ export function PlaylistTabContent({
             data-preview-root
           >
             <div className="mx-auto w-full max-w-[420px]">
+              {playlistDisplayName && (
+                <header data-preview-region="playlist-header" className="mb-3 px-1">
+                  <h2 className="text-sm font-semibold truncate">{playlistDisplayName}</h2>
+                </header>
+              )}
               <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
                 <TabsList>
                   <TabsTrigger value="filtered">
@@ -217,7 +223,7 @@ export function PlaylistTabContent({
                         <TabsContent value="groups">
                           <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
                         </TabsContent>
-                        <TabsContent value="ungrouped">
+                        <TabsContent value="ungrouped" data-preview-region="ungrouped">
                           {0 < stableUngroupedCount ? (
                             <UngroupedEpisodesPanel episodes={sp.ungrouped} />
                           ) : (

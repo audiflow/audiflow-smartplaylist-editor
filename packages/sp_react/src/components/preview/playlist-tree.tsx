@@ -38,7 +38,7 @@ export function PlaylistTree({
   const { t } = useTranslation('preview');
 
   return (
-    <div className="w-full space-y-4">
+    <div data-preview-region="group-list" className="w-full space-y-4">
       {playlists.map((playlist) => (
         <div key={playlist.id}>
           {playlist.groups && 0 < playlist.groups.length ? (
@@ -107,7 +107,7 @@ function YearSection({
 
   return (
     <div>
-      <div className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm px-2 py-1.5 -mx-2 border-b">
+      <div data-preview-field="group-year-sections" className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm px-2 py-1.5 -mx-2 border-b">
         <span className="text-sm font-semibold">
           {year === 0 ? t('yearUnknown') : t('yearHeader', { year })}
         </span>
@@ -131,10 +131,10 @@ function YearGroupEntryList({
   return (
     <Accordion type="multiple" className="ml-4">
       {entries.map((entry, idx) => (
-        <AccordionItem key={`${entry.group.id}-${idx}`} value={`${entry.group.id}-${idx}`}>
+        <AccordionItem data-preview-field="group-list-order" key={`${entry.group.id}-${idx}`} value={`${entry.group.id}-${idx}`}>
           <AccordionTrigger>
             <div className="flex items-center gap-2">
-              <span>{formatGroupName(entry.group, prependSeasonNumber)}</span>
+              <span data-preview-field="group-card-season-prefix">{formatGroupName(entry.group, prependSeasonNumber)}</span>
               <Badge variant="secondary">
                 {t('episodes', { count: entry.episodeCount })}
               </Badge>
@@ -181,10 +181,10 @@ function GroupList({
   return (
     <Accordion type="multiple" className="ml-4">
       {groups.map((group) => (
-        <AccordionItem key={group.id} value={group.id}>
+        <AccordionItem data-preview-field="group-list-order" key={group.id} value={group.id}>
           <AccordionTrigger>
             <div className="flex items-center gap-2">
-              <span>{formatGroupName(group, prependSeasonNumber)}</span>
+              <span data-preview-field="group-card-season-prefix">{formatGroupName(group, prependSeasonNumber)}</span>
               <Badge variant="secondary">
                 {t('episodes', { count: group.episodeCount })}
               </Badge>
@@ -264,10 +264,10 @@ function SortedEpisodeList({
 
 function EpisodeList({ episodes }: { episodes: PreviewEpisode[] }) {
   return (
-    <ul className="ml-4 space-y-0.5 text-sm text-muted-foreground">
+    <ul data-preview-field="episode-order" className="ml-4 space-y-0.5 text-sm text-muted-foreground">
       {episodes.map((ep) => (
         <li key={ep.id} className="flex items-center gap-2">
-          <span className="truncate" title={ep.title}>{ep.title}</span>
+          <span data-preview-field="episode-title" className="truncate" title={ep.title}>{ep.title}</span>
           {ep.publishedAt && (
             <span className="text-xs text-muted-foreground/60 shrink-0">
               {new Date(ep.publishedAt).toLocaleDateString()}
