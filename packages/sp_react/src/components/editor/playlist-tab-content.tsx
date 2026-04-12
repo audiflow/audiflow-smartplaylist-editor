@@ -98,7 +98,7 @@ export function PlaylistTabContent({
     const map = new Map<string, YearBinding>();
     if (!groupDefs) return map;
     for (const g of groupDefs) {
-      const override = g?.display?.yearBinding as YearBinding | undefined;
+      const override = g?.groupListing?.yearBinding as YearBinding | undefined;
       if (override !== undefined && g?.id) {
         map.set(g.id, override);
       }
@@ -112,7 +112,7 @@ export function PlaylistTabContent({
     }
     if (groupDefs) {
       for (const g of groupDefs) {
-        const sort = g?.episodeList?.sort;
+        const sort = g?.episodeListing?.sort;
         if (sort?.field && sort?.order && g?.id) {
           map.set(g.id, { field: sort.field, order: sort.order });
         }

@@ -87,16 +87,24 @@ export const groupDefSchema = z.object({
   id: z.string(),
   displayName: z.string(),
   pattern: z.string().optional(),
-  display: z
+  groupListing: z
     .object({
-      showDateRange: z.boolean().optional(),
       yearBinding: yearBindingSchema.optional(),
     })
     .optional(),
-  episodeList: z
+  groupItem: z
+    .object({
+      showDateRange: z.boolean().optional(),
+    })
+    .optional(),
+  episodeListing: z
     .object({
       showYearHeaders: z.boolean().optional(),
       sort: episodeSortRuleSchema.optional(),
+    })
+    .optional(),
+  episodeItem: z
+    .object({
       titleExtractor: titleExtractorSchema.optional(),
     })
     .optional(),

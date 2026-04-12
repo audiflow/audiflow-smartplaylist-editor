@@ -258,8 +258,10 @@ describe('groupDefSchema', () => {
     expect(result.id).toBe('main');
     expect(result.displayName).toBe('Main');
     expect(result.pattern).toBeUndefined();
-    expect(result.display).toBeUndefined();
-    expect(result.episodeList).toBeUndefined();
+    expect(result.groupListing).toBeUndefined();
+    expect(result.groupItem).toBeUndefined();
+    expect(result.episodeListing).toBeUndefined();
+    expect(result.episodeItem).toBeUndefined();
     expect(result.numberingExtractor).toBeUndefined();
   });
 
@@ -268,11 +270,13 @@ describe('groupDefSchema', () => {
       id: 'bonus',
       displayName: 'Bonus',
       pattern: 'Bonus.*',
-      display: {
-        showDateRange: true,
+      groupListing: {
         yearBinding: 'splitByYear',
       },
-      episodeList: {
+      groupItem: {
+        showDateRange: true,
+      },
+      episodeListing: {
         showYearHeaders: true,
         sort: { field: 'publishedAt', order: 'descending' },
       },
@@ -283,10 +287,10 @@ describe('groupDefSchema', () => {
       },
     });
     expect(result.pattern).toBe('Bonus.*');
-    expect(result.display?.showDateRange).toBe(true);
-    expect(result.display?.yearBinding).toBe('splitByYear');
-    expect(result.episodeList?.showYearHeaders).toBe(true);
-    expect(result.episodeList?.sort?.field).toBe('publishedAt');
+    expect(result.groupItem?.showDateRange).toBe(true);
+    expect(result.groupListing?.yearBinding).toBe('splitByYear');
+    expect(result.episodeListing?.showYearHeaders).toBe(true);
+    expect(result.episodeListing?.sort?.field).toBe('publishedAt');
     expect(result.numberingExtractor?.source).toBe('title');
   });
 });
