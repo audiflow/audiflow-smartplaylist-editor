@@ -7,7 +7,8 @@
   "required": [
     "id",
     "displayName",
-    "grouping"
+    "grouping",
+    "priority"
   ],
   "additionalProperties": false,
   "properties": {
@@ -21,9 +22,8 @@
     },
     "priority": {
       "type": "integer",
-      "default": 0,
       "minimum": 0,
-      "description": "Controls the order playlists claim episodes. Lower numbers go first. If two playlists could match the same episode, the one with lower priority claims it. Playlists with filters always run before filter-less ones. Within each tier, lower priority numbers are processed first."
+      "description": "Controls the order playlists claim episodes. Lower numbers go first. If two playlists could match the same episode, the one with lower priority claims it. Playlists with filters always run before filter-less ones. Within each tier, lower priority numbers are processed first. Auto-assigned from playlist array order by the editor."
     },
     "selector": {
       "$ref": "#/$defs/SelectorConfig",
