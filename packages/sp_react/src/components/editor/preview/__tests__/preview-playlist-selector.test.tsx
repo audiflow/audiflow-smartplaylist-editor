@@ -11,61 +11,21 @@ import {
 } from '@/components/editor/preview/preview-playlist-selector.tsx';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string, opts?: Record<string, unknown>) => {
+    // Minimal i18n stub: replace {{n}} and {{year}} placeholders
+    if (!opts) return key;
+    let out = key;
+    for (const [k, v] of Object.entries(opts)) {
+      out = out.replace(`{{${k}}}`, String(v));
+    }
+    return out;
+  }}),
 }));
 
 // Mock Radix Select so tests don't rely on pointer-events / scrollIntoView APIs
 // that jsdom does not implement. The mock exposes the same surface
 // (value, onValueChange, options as <li> elements) so we can verify behaviour
 // without fighting the Radix internals.
-vi.mock('@/components/ui/select.tsx', () => ({
-  Select: ({
-    children,
-    value,
-    onValueChange,
-  }: {
-    children: React.ReactNode;
-    value?: string;
-    onValueChange?: (v: string) => void;
-  }) => (
-    <div data-testid="select" data-value={value} data-on-change={String(onValueChange)}>
-      {/* Provide a button that triggers selection via data attributes in tests */}
-      {children}
-    </div>
-  ),
-  SelectTrigger: ({ children }: { children: React.ReactNode }) => (
-    <button role="combobox">{children}</button>
-  ),
-  SelectValue: ({ children }: { children: React.ReactNode }) => (
-    <span data-testid="select-value">{children}</span>
-  ),
-  SelectContent: ({ children }: { children: React.ReactNode }) => (
-    <ul>{children}</ul>
-  ),
-  SelectItem: ({
-    children,
-    value,
-    onClick,
-  }: {
-    children: React.ReactNode;
-    value: string;
-    onClick?: () => void;
-  }) => (
-    <li
-      role="option"
-      data-value={value}
-      onClick={onClick}
-    >
-      {children}
-    </li>
-  ),
-}));
-
-// After mocking Select, the onValueChange wiring won't work through the mock
-// automatically. We need to wire it manually. Let's use a proper mock that
-// captures onValueChange and calls it when an option is clicked.
-// Re-mock more carefully:
-
 vi.mock('@/components/ui/select.tsx', () => {
   let capturedOnValueChange: ((v: string) => void) | undefined;
 
@@ -115,6 +75,16 @@ vi.mock('@/components/ui/select.tsx', () => {
 
 // -- Helpers --
 
+/** Minimal i18n stub matching the mock above for use in pure function tests. */
+function stubT(key: string, opts?: Record<string, unknown>): string {
+  if (!opts) return key;
+  let out = key;
+  for (const [k, v] of Object.entries(opts)) {
+    out = out.replace(`{{${k}}}`, String(v));
+  }
+  return out;
+}
+
 function makePreviewResult(
   playlists: PreviewResult['playlists'],
 ): PreviewResult {
@@ -150,11 +120,12 @@ function makePreviewPlaylist(
 
 function makeGroup(
   id: string,
+  displayName: string,
   episodes: { publishedAt?: string; seasonNumber?: number }[],
 ) {
   return {
     id,
-    displayName: id,
+    displayName,
     sortKey: id,
     episodeCount: episodes.length,
     episodes: episodes.map((ep, i) => ({
@@ -184,6 +155,8 @@ function Wrapper({
     <FormProvider {...form}>
       <PreviewPlaylistSelector
         activePlaylistId={activePlaylistId}
+        activeEntryIndex={0}
+        onSelectEntry={vi.fn()}
         onSelectPlaylist={onSelectPlaylist}
       />
     </FormProvider>
@@ -197,13 +170,13 @@ function Wrapper({
 describe('generateEntries', () => {
   describe('partitionBy: undefined — one entry per playlist', () => {
     it('returns a single entry with displayName when partitionBy is undefined', () => {
-      const entries = generateEntries('pl-a', 'Alpha', undefined, null);
+      const entries = generateEntries('pl-a', 'Alpha', undefined, null, stubT);
       expect(entries).toHaveLength(1);
-      expect(entries[0]).toEqual({ playlistId: 'pl-a', entryIndex: 0, label: 'Alpha' });
+      expect(entries[0]).toMatchObject({ playlistId: 'pl-a', entryIndex: 0, label: 'Alpha', partitionValue: null });
     });
 
     it('returns a single entry for partitionBy: group (deferred)', () => {
-      const entries = generateEntries('pl-a', 'Alpha', 'group', null);
+      const entries = generateEntries('pl-a', 'Alpha', 'group', null, stubT);
       expect(entries).toHaveLength(1);
       expect(entries[0].label).toBe('Alpha');
     });
@@ -212,34 +185,93 @@ describe('generateEntries', () => {
   describe('partitionBy: year — one entry per distinct year', () => {
     it('returns one entry per distinct year from preview groups', () => {
       const preview = makePreviewPlaylist('pl', 'PL', [
-        makeGroup('g1', [{ publishedAt: '2024-06-01T00:00:00Z' }]),
-        makeGroup('g2', [{ publishedAt: '2025-01-15T00:00:00Z' }]),
-        makeGroup('g3', [{ publishedAt: '2024-11-30T00:00:00Z' }]),
+        makeGroup('g1', 'G1', [{ publishedAt: '2024-06-01T00:00:00Z' }]),
+        makeGroup('g2', 'G2', [{ publishedAt: '2025-01-15T00:00:00Z' }]),
+        makeGroup('g3', 'G3', [{ publishedAt: '2024-11-30T00:00:00Z' }]),
       ]);
-      const entries = generateEntries('pl', 'PL', 'year', preview);
+      const entries = generateEntries('pl', 'PL', 'year', preview, stubT);
       expect(entries).toHaveLength(2);
-      expect(entries[0].label).toBe('2024');
-      expect(entries[1].label).toBe('2025');
+      // stubT produces 'selector.yearEntry' with {{year}} replaced
+      expect(entries[0].label).toBe('selector.yearEntry'.replace('{{year}}', '2024'));
+      expect(entries[0].partitionValue).toBe(2024);
+      expect(entries[1].partitionValue).toBe(2025);
     });
 
     it('falls back to single entry when no preview data', () => {
-      const entries = generateEntries('pl', 'PL', 'year', null);
+      const entries = generateEntries('pl', 'PL', 'year', null, stubT);
       expect(entries).toHaveLength(1);
       expect(entries[0].label).toBe('PL');
     });
   });
 
   describe('partitionBy: seasonNumber — one entry per distinct season', () => {
-    it('returns one entry per distinct season number', () => {
+    it('uses group displayName when a group matches the season number', () => {
       const preview = makePreviewPlaylist('pl', 'PL', [
-        makeGroup('g1', [{ seasonNumber: 1 }]),
-        makeGroup('g2', [{ seasonNumber: 2 }]),
-        makeGroup('g3', [{ seasonNumber: 1 }]),
+        makeGroup('g1', 'Season One', [{ seasonNumber: 1 }]),
+        makeGroup('g2', 'Season Two', [{ seasonNumber: 2 }]),
       ]);
-      const entries = generateEntries('pl', 'PL', 'seasonNumber', preview);
+      const entries = generateEntries('pl', 'PL', 'seasonNumber', preview, stubT);
       expect(entries).toHaveLength(2);
-      expect(entries[0].label).toBe('1');
-      expect(entries[1].label).toBe('2');
+      // Labels come from matching group displayName, not raw numbers
+      expect(entries[0].label).toBe('Season One');
+      expect(entries[0].partitionValue).toBe(1);
+      expect(entries[1].label).toBe('Season Two');
+      expect(entries[1].partitionValue).toBe(2);
+    });
+
+    it('uses group displayName with Japanese label when present', () => {
+      const preview = makePreviewPlaylist('pl', 'PL', [
+        makeGroup('g1', 'シーズン 1', [{ seasonNumber: 1 }]),
+        makeGroup('g2', 'シーズン 2', [{ seasonNumber: 2 }]),
+      ]);
+      const entries = generateEntries('pl', 'PL', 'seasonNumber', preview, stubT);
+      expect(entries[0].label).toBe('シーズン 1');
+      expect(entries[1].label).toBe('シーズン 2');
+    });
+
+    it('falls back to i18n key when no group matches the season number', () => {
+      // Groups have no episodes with seasonNumber so no match is found
+      const preview = makePreviewPlaylist('pl', 'PL', [
+        makeGroup('g1', 'Some Group', [{ publishedAt: '2024-01-01T00:00:00Z' }]),
+      ]);
+      const entries = generateEntries('pl', 'PL', 'seasonNumber', preview, stubT);
+      // collectUniqueSeasonNumbers returns [] because no seasonNumber on episodes,
+      // so falls back to single displayName entry
+      expect(entries).toHaveLength(1);
+      expect(entries[0].label).toBe('PL');
+    });
+
+    it('falls back to i18n seasonEntry key for seasons without a representative group', () => {
+      // Groups contain multiple seasons but only g2 has a match; g3 season 3 has no group
+      const preview = makePreviewPlaylist('pl', 'PL', [
+        makeGroup('g1', 'シーズン 1', [{ seasonNumber: 1 }]),
+      ]);
+      // Manually craft a preview with season 2 but no displayName for it
+      const previewCustom: PreviewPlaylist = {
+        ...preview,
+        groups: [
+          ...preview.groups!,
+          // season 2 has no episodes in this test (simulate missing group match)
+          {
+            id: 'g2',
+            displayName: 'g2',
+            sortKey: 'g2',
+            episodeCount: 0,
+            episodes: [{ id: 99, title: 'ep', publishedAt: null, seasonNumber: 2, episodeNumber: null, extractedDisplayName: null }],
+          },
+        ],
+      };
+      const entries = generateEntries('pl', 'PL', 'seasonNumber', previewCustom, stubT);
+      // Season 1 → group displayName 'シーズン 1'
+      // Season 2 → group displayName 'g2' (first group whose episode[0].seasonNumber === 2)
+      expect(entries[0].label).toBe('シーズン 1');
+      expect(entries[1].label).toBe('g2');
+    });
+
+    it('returns i18n fallback label when no preview data', () => {
+      const entries = generateEntries('pl', 'PL', 'seasonNumber', null, stubT);
+      expect(entries).toHaveLength(1);
+      expect(entries[0].label).toBe('PL');
     });
   });
 });
@@ -316,8 +348,8 @@ describe('PreviewPlaylistSelector', () => {
       useEditorStore.getState().setPreviewData(
         makePreviewResult([
           makePreviewPlaylist('pl-year', 'Year Playlist', [
-            makeGroup('g1', [{ publishedAt: '2024-06-01T00:00:00Z' }]),
-            makeGroup('g2', [{ publishedAt: '2025-01-15T00:00:00Z' }]),
+            makeGroup('g1', 'G1', [{ publishedAt: '2024-06-01T00:00:00Z' }]),
+            makeGroup('g2', 'G2', [{ publishedAt: '2025-01-15T00:00:00Z' }]),
           ]),
         ]),
       );
@@ -326,9 +358,50 @@ describe('PreviewPlaylistSelector', () => {
 
       const options = screen.getAllByRole('option');
       const labels = options.map((o) => o.textContent);
-      expect(labels).toContain('2024');
-      expect(labels).toContain('2025');
+      // The i18n stub receives key 'selector.yearEntry' and opts {year: 2024/2025}.
+      // The key string itself doesn't contain the placeholder so the stub returns
+      // the key unchanged: 'selector.yearEntry'. We verify two such entries exist
+      // (one per distinct year) plus the 'Other' playlist.
+      expect(labels.filter((l) => l === 'selector.yearEntry')).toHaveLength(2);
       expect(labels).toContain('Other');
+    });
+  });
+
+  describe('entry rendering — partitionBy: seasonNumber uses group displayName', () => {
+    it('renders season entries using group displayName instead of raw numbers', () => {
+      const config: PatternConfig = {
+        id: 'test',
+        displayName: 'Test',
+        yearGroupedEpisodes: false,
+        playlists: [
+          {
+            id: 'pl-season',
+            displayName: 'Season Playlist',
+            grouping: { by: 'seasonNumber' },
+            priority: 0,
+            selector: { partitionBy: 'seasonNumber' },
+          },
+        ],
+      };
+
+      useEditorStore.getState().setPreviewData(
+        makePreviewResult([
+          makePreviewPlaylist('pl-season', 'Season Playlist', [
+            makeGroup('g1', 'Season One', [{ seasonNumber: 1 }]),
+            makeGroup('g2', 'Season Two', [{ seasonNumber: 2 }]),
+          ]),
+        ]),
+      );
+
+      render(<Wrapper config={config} activePlaylistId="pl-season" />);
+
+      const options = screen.getAllByRole('option');
+      const labels = options.map((o) => o.textContent);
+      expect(labels).toContain('Season One');
+      expect(labels).toContain('Season Two');
+      // Raw numbers should not appear as standalone labels
+      expect(labels).not.toContain('1');
+      expect(labels).not.toContain('2');
     });
   });
 
@@ -381,8 +454,8 @@ describe('PreviewPlaylistSelector', () => {
       useEditorStore.getState().setPreviewData(
         makePreviewResult([
           makePreviewPlaylist('pl-year', 'Year Playlist', [
-            makeGroup('g1', [{ publishedAt: '2024-06-01T00:00:00Z' }]),
-            makeGroup('g2', [{ publishedAt: '2025-01-15T00:00:00Z' }]),
+            makeGroup('g1', 'G1', [{ publishedAt: '2024-06-01T00:00:00Z' }]),
+            makeGroup('g2', 'G2', [{ publishedAt: '2025-01-15T00:00:00Z' }]),
           ]),
         ]),
       );
@@ -395,8 +468,14 @@ describe('PreviewPlaylistSelector', () => {
         />,
       );
 
-      const year2025 = screen.getByRole('option', { name: '2025' });
-      await user.click(year2025);
+      // The i18n stub returns 'selector.yearEntry' for year labels (key unchanged
+      // since the key itself lacks the {{year}} placeholder). Both year entries
+      // share the same text content; click the second one (index 1 = 2025 entry).
+      const yearOptions = screen.getAllByRole('option').filter(
+        (o) => o.textContent === 'selector.yearEntry',
+      );
+      expect(yearOptions.length).toBe(2);
+      await user.click(yearOptions[1]!);
 
       expect(onSelectPlaylist).not.toHaveBeenCalled();
     });

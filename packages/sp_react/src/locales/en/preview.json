@@ -37,5 +37,9 @@
   "feedLoading": "Loading feed...",
   "feedError": "Failed to load feed. Check the URL and try again.",
   "emptyFiltered": "No episodes match the current filters.",
-  "filteredCount": "{{filtered}} of {{total}} episodes passed filters"
+  "filteredCount": "{{filtered}} of {{total}} episodes passed filters",
+  "selector": {
+    "seasonEntry": "Season {{n}}",
+    "yearEntry": "{{year}}"
+  }
 }

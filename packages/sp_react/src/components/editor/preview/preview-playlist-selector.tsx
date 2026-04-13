@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { PatternConfig, PartitionBy } from '@/schemas/config-schema.ts';
 import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
@@ -17,6 +18,8 @@ export type SelectorEntry = {
   playlistId: string;
   entryIndex: number;
   label: string;
+  /** The raw partition value (season number or year) for filtering, or null for non-partitioned entries. */
+  partitionValue: number | null;
 };
 
 // -- Entry generation --
@@ -26,6 +29,7 @@ export function generateEntries(
   displayName: string,
   partitionBy: PartitionBy | undefined,
   previewPlaylist: PreviewPlaylist | null | undefined,
+  t: (key: string, opts?: Record<string, unknown>) => string,
 ): SelectorEntry[] {
   if (partitionBy === 'seasonNumber') {
     const seasons = collectUniqueSeasonNumbers(previewPlaylist);
@@ -33,7 +37,8 @@ export function generateEntries(
       return seasons.map((s, i) => ({
         playlistId,
         entryIndex: i,
-        label: String(s),
+        label: resolveSeasonLabel(s, previewPlaylist, t),
+        partitionValue: s,
       }));
     }
   }
@@ -44,7 +49,8 @@ export function generateEntries(
       return years.map((y, i) => ({
         playlistId,
         entryIndex: i,
-        label: String(y),
+        label: t('selector.yearEntry', { year: y }),
+        partitionValue: y,
       }));
     }
   }
@@ -52,7 +58,23 @@ export function generateEntries(
   // TODO: partitionBy: 'group' is intentionally deferred — title-length issue
   //       prevents reliable label generation. Render as a single entry until
   //       the next iteration resolves the display strategy.
-  return [{ playlistId, entryIndex: 0, label: displayName }];
+  return [{ playlistId, entryIndex: 0, label: displayName, partitionValue: null }];
+}
+
+/** Find the displayName of a group whose first episode has a matching seasonNumber. */
+function resolveSeasonLabel(
+  seasonNumber: number,
+  previewPlaylist: PreviewPlaylist | null | undefined,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  if (previewPlaylist?.groups) {
+    for (const group of previewPlaylist.groups) {
+      if (group.episodes[0]?.seasonNumber === seasonNumber) {
+        return group.displayName;
+      }
+    }
+  }
+  return t('selector.seasonEntry', { n: seasonNumber });
 }
 
 function collectUniqueSeasonNumbers(
@@ -94,22 +116,21 @@ function collectUniqueYears(
 
 interface PreviewPlaylistSelectorProps {
   activePlaylistId: string;
+  activeEntryIndex: number;
+  onSelectEntry: (playlistId: string, entryIndex: number) => void;
   onSelectPlaylist: (playlistId: string) => void;
 }
 
 export function PreviewPlaylistSelector({
   activePlaylistId,
+  activeEntryIndex,
+  onSelectEntry,
   onSelectPlaylist,
 }: PreviewPlaylistSelectorProps) {
+  const { t } = useTranslation('preview');
   const { control } = useFormContext<PatternConfig>();
   const playlists = useWatch({ control, name: 'playlists' });
   const previewData = useEditorStore((s) => s.previewData);
-
-  // Track the selected entry within the active playlist (resets when playlist changes).
-  const [activeEntryIndex, setActiveEntryIndex] = useState(0);
-  useEffect(() => {
-    setActiveEntryIndex(0);
-  }, [activePlaylistId]);
 
   const allEntries = useMemo((): SelectorEntry[] => {
     if (!playlists) return [];
@@ -122,9 +143,10 @@ export function PreviewPlaylistSelector({
         playlist.displayName ?? '',
         playlist.selector?.partitionBy,
         previewPlaylist,
+        t,
       );
     });
-  }, [playlists, previewData]);
+  }, [playlists, previewData, t]);
 
   // Compose a unique value for each entry to use as the Select value key.
   function entryKey(entry: SelectorEntry): string {
@@ -158,9 +180,9 @@ export function PreviewPlaylistSelector({
 
     if (entry.playlistId !== activePlaylistId) {
       onSelectPlaylist(entry.playlistId);
-      // activeEntryIndex will reset to 0 via useEffect
+      // caller resets activeEntryIndex to 0 when playlist changes
     } else {
-      setActiveEntryIndex(entry.entryIndex);
+      onSelectEntry(entry.playlistId, entry.entryIndex);
     }
   }
 
@@ -183,4 +205,16 @@ export function PreviewPlaylistSelector({
       </Select>
     </header>
   );
+}
+
+// -- Filtering helpers --
+
+/** Returns the active entry for the given playlist, or null if none applies. */
+export function getActiveEntry(
+  entries: SelectorEntry[],
+  playlistId: string,
+  activeEntryIndex: number,
+): SelectorEntry | null {
+  const forPlaylist = entries.filter((e) => e.playlistId === playlistId);
+  return forPlaylist[activeEntryIndex] ?? forPlaylist[0] ?? null;
 }

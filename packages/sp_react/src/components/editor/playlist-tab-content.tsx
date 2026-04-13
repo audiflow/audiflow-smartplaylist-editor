@@ -5,6 +5,7 @@ import type {
   PreviewPlaylist,
   PreviewEpisode,
   PreviewDebug,
+  PreviewGroup,
   FeedEpisode,
 } from '@/schemas/api-schema.ts';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
@@ -24,7 +25,11 @@ import {
 } from '@/components/ui/tabs.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { HighlightLayer } from '@/components/editor/preview/highlight-layer.tsx';
-import { PreviewPlaylistSelector } from '@/components/editor/preview/preview-playlist-selector.tsx';
+import {
+  PreviewPlaylistSelector,
+  generateEntries,
+  getActiveEntry,
+} from '@/components/editor/preview/preview-playlist-selector.tsx';
 
 interface PlaylistTabContentProps {
   index: number;
@@ -46,6 +51,12 @@ export function PlaylistTabContent({
   const resetActiveGroupContext = useEditorStore((s) => s.resetActiveGroupContext);
   const playlistId = useWatch({ control: useFormContext<PatternConfig>().control, name: `playlists.${index}.id` as const });
   const previewPlaylist = previewData?.playlists.find((p) => p.id === playlistId) ?? null;
+
+  // Active entry index is lifted here so filtering is co-located with PlaylistTree rendering.
+  const [activeEntryIndex, setActiveEntryIndex] = useState(0);
+  useEffect(() => {
+    setActiveEntryIndex(0);
+  }, [playlistId]);
   const ungroupedEpisodes = previewData?.ungrouped ?? [];
   const excludedEpisodes = previewData?.excluded ?? [];
   const globalDebug = previewData?.debug;
@@ -55,8 +66,10 @@ export function PlaylistTabContent({
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
 
+  const playlists = useWatch({ control, name: 'playlists' });
   const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.groupItem.prependSeasonNumber` as const }) ?? false;
   const yearBinding = (useWatch({ control, name: `playlists.${index}.groupListing.yearBinding` as const }) ?? 'none') as YearBinding;
+  const partitionBy = useWatch({ control, name: `playlists.${index}.selector.partitionBy` as const });
   const groupDefs = useWatch({ control, name: `playlists.${index}.grouping.staticClassifiers` as const });
   const defaultSortField = useWatch({ control, name: `playlists.${index}.episodeListing.sort.field` as const });
   const defaultSortOrder = useWatch({ control, name: `playlists.${index}.episodeListing.sort.order` as const });
@@ -138,6 +151,43 @@ export function PlaylistTabContent({
   const stableUngroupedCount = sp?.ungrouped.length ?? 0;
   const stableExcludedCount = sp?.excluded.length ?? 0;
 
+  // Derive filtered groups based on the active selector entry.
+  // generateEntries needs a translation function — use tp (preview namespace).
+  const filteredGroups = useMemo((): PreviewGroup[] | undefined => {
+    if (!sp) return undefined;
+    const allGroups = sp.playlist.groups ?? [];
+    if (!partitionBy || partitionBy === 'group') return allGroups;
+
+    const playlistConfig = playlists?.find((p) => p.id === playlistId);
+    if (!playlistConfig) return allGroups;
+
+    const entries = generateEntries(
+      playlistId,
+      playlistConfig.displayName ?? '',
+      partitionBy,
+      previewPlaylist,
+      tp,
+    );
+    const active = getActiveEntry(entries, playlistId, activeEntryIndex);
+    if (!active || active.partitionValue === null) return allGroups;
+
+    if (partitionBy === 'seasonNumber') {
+      return allGroups.filter(
+        (g) => g.episodes[0]?.seasonNumber === active.partitionValue,
+      );
+    }
+
+    if (partitionBy === 'year') {
+      return allGroups.filter((g) => {
+        const publishedAt = g.episodes[0]?.publishedAt;
+        if (!publishedAt) return false;
+        return new Date(publishedAt).getFullYear() === active.partitionValue;
+      });
+    }
+
+    return allGroups;
+  }, [sp, partitionBy, playlistId, playlists, previewPlaylist, activeEntryIndex, tp]);
+
   return (
     <div className="pt-2">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_460px]">
@@ -156,6 +206,8 @@ export function PlaylistTabContent({
               {playlistId && (
                 <PreviewPlaylistSelector
                   activePlaylistId={playlistId}
+                  activeEntryIndex={activeEntryIndex}
+                  onSelectEntry={(_pid, entryIndex) => setActiveEntryIndex(entryIndex)}
                   onSelectPlaylist={onSelectPlaylist ?? (() => { /* no-op when not wired */ })}
                 />
               )}
@@ -224,7 +276,13 @@ export function PlaylistTabContent({
                           </TabsTrigger>
                         </TabsList>
                         <TabsContent value="groups">
-                          <PlaylistTree playlists={[sp.playlist]} prependSeasonNumber={prependSeasonNumber} yearBinding={yearBinding} groupYearBindingOverrides={groupYearBindingOverrides} episodeSortRules={episodeSortRules} />
+                          <PlaylistTree
+                            playlists={[{ ...sp.playlist, groups: filteredGroups ?? sp.playlist.groups }]}
+                            prependSeasonNumber={prependSeasonNumber}
+                            yearBinding={yearBinding}
+                            groupYearBindingOverrides={groupYearBindingOverrides}
+                            episodeSortRules={episodeSortRules}
+                          />
                         </TabsContent>
                         <TabsContent value="ungrouped" data-preview-region="ungrouped">
                           {0 < stableUngroupedCount ? (
