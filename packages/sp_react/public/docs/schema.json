@@ -132,7 +132,7 @@
     },
     "GroupDef": {
       "type": "object",
-      "description": "A group definition. Groups with a pattern match episodes by title; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in order (first match wins). At most one catch-all should exist and should be placed last. Groups can customize display, episodeList, and numberingExtractor settings.",
+      "description": "A group definition. Groups with a pattern match episodes by title; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in order (first match wins). At most one catch-all should exist and should be placed last. Groups can override `groupListing`, `groupItem`, `episodeListing`, `episodeItem`, and `numberingExtractor` settings. Omitted fields use the playlist defaults.",
       "required": [
         "id",
         "displayName"
@@ -151,24 +151,31 @@
           "type": "string",
           "description": "A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Omit this field to create a catch-all group for unmatched episodes."
         },
-        "display": {
+        "groupListing": {
           "type": "object",
-          "description": "Custom display settings for this group's card. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for the group list (applied when this group appears in the list). Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
-            "showDateRange": {
-              "type": "boolean",
-              "description": "Show or hide date range on this group's card. When not set, uses the playlist default."
-            },
             "yearBinding": {
               "$ref": "#/$defs/YearBinding",
               "description": "Custom year-group relationship for this group. When not set, uses the playlist default."
             }
           }
         },
-        "episodeList": {
+        "groupItem": {
           "type": "object",
-          "description": "Custom episode list settings for this group. Omitted fields use the playlist defaults.",
+          "description": "Per-group overrides for this group's card. Omitted fields use the playlist defaults.",
+          "additionalProperties": false,
+          "properties": {
+            "showDateRange": {
+              "type": "boolean",
+              "description": "Show or hide date range on this group's card. When not set, uses the playlist default."
+            }
+          }
+        },
+        "episodeListing": {
+          "type": "object",
+          "description": "Per-group overrides for the episode list inside this group. Omitted fields use the playlist defaults.",
           "additionalProperties": false,
           "properties": {
             "showYearHeaders": {
@@ -178,7 +185,14 @@
             "sort": {
               "$ref": "#/$defs/EpisodeSortRule",
               "description": "Custom episode sort for this group. When not set, uses the playlist default."
-            },
+            }
+          }
+        },
+        "episodeItem": {
+          "type": "object",
+          "description": "Per-group overrides for individual episode rows inside this group. Omitted fields use the playlist defaults.",
+          "additionalProperties": false,
+          "properties": {
             "titleExtractor": {
               "$ref": "#/$defs/TitleExtractor",
               "description": "Custom episode title transformation for this group. When not set, uses the playlist default."
@@ -188,10 +202,6 @@
         "numberingExtractor": {
           "$ref": "#/$defs/NumberingExtractor",
           "description": "Custom number rule for this group. When not set, uses the playlist default."
-        },
-        "episodeExtractor": {
-          "$ref": "#/$defs/NumberingExtractor",
-          "description": "Deprecated v3 alias for 'numberingExtractor'. Use 'numberingExtractor' for new configs."
         }
       }
     },
@@ -403,18 +413,6 @@
             {
               "const": "titleClassifier",
               "description": "Groups episodes by matching titles against patterns defined in staticClassifiers."
-            },
-            {
-              "const": "rss",
-              "description": "Deprecated v3 alias for 'seasonNumber'."
-            },
-            {
-              "const": "category",
-              "description": "Deprecated v3 alias for 'titleClassifier'."
-            },
-            {
-              "const": "titleAppearanceOrder",
-              "description": "Deprecated v3 alias for 'titleDiscovery'."
             }
           ]
         },

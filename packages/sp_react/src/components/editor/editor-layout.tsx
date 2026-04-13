@@ -82,8 +82,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   } = useMemo(() => useEditorStore.getState(), []);
   const [jsonText, setJsonText] = useState('');
 
-  // Normalize legacy v3 field names (e.g. episodeExtractor, rss resolver type)
-  // through the Zod schema before seeding the form.
+  // Normalize the incoming config through the Zod schema (applies default
+   // transforms and coercions) before seeding the form.
   const normalizedInitialConfig = useMemo(() => {
     if (!initialConfig) return undefined;
     const parsed = patternConfigSchema.safeParse(initialConfig);

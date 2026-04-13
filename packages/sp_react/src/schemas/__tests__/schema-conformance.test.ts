@@ -45,14 +45,11 @@ function createValidator() {
 }
 
 describe('Zod enums match vendored playlist-definition schema', () => {
-  it('resolverTypes match schema (v5 values only)', () => {
+  it('resolverTypes match schema', () => {
     const groupingDef = defs.GroupingConfig as Record<string, unknown>;
     const groupingProps = groupingDef.properties as Record<string, Record<string, unknown>>;
     const schemaValues = extractEnum(groupingProps.by);
-    // Schema includes both v5 and deprecated v3 aliases; Zod only declares v5 values.
-    const legacyAliases = ['rss', 'category', 'titleAppearanceOrder'];
-    const v5Only = schemaValues.filter((v: string) => !legacyAliases.includes(v));
-    expect([...resolverTypeValues]).toEqual(v5Only);
+    expect([...resolverTypeValues]).toEqual(schemaValues);
   });
 
   it('partitionBy values match schema', () => {

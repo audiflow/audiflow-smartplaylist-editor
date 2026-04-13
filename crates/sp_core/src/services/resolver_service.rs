@@ -755,16 +755,9 @@ impl ResolverService {
     }
 
     fn find_resolver_by_type(&self, resolver_type: &str) -> Option<&dyn Resolver> {
-        // Normalize legacy v3 resolver type strings to v4 equivalents.
-        let normalized = match resolver_type {
-            "rss" => "seasonNumber",
-            "category" => "titleClassifier",
-            "titleAppearanceOrder" => "titleDiscovery",
-            other => other,
-        };
         self.resolvers
             .iter()
-            .find(|r| r.resolver_type() == normalized)
+            .find(|r| r.resolver_type() == resolver_type)
             .map(|r| r.as_ref())
     }
 

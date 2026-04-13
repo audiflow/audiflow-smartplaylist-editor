@@ -163,7 +163,7 @@ export function PlaylistTabContent({
   const filteredGroups = useMemo((): PreviewGroup[] | undefined => {
     if (!sp) return undefined;
     const allGroups = sp.playlist.groups ?? [];
-    if (!partitionBy || partitionBy === 'group') return allGroups;
+    if (!partitionBy) return allGroups;
 
     const playlistConfig = playlists?.find((p) => p.id === playlistId);
     if (!playlistConfig) return allGroups;
@@ -176,7 +176,17 @@ export function PlaylistTabContent({
       tp,
     );
     const active = getActiveEntry(entries, playlistId, activeEntryIndex);
-    if (!active || active.partitionValue === null) return allGroups;
+    if (!active) return allGroups;
+
+    if (partitionBy === 'group') {
+      // When partitioning by group, show only the chosen classifier's group.
+      // If the active entry carries no group id (e.g. fallback single entry),
+      // fall through and render the full group list.
+      if (!active.partitionGroupId) return allGroups;
+      return allGroups.filter((g) => g.id === active.partitionGroupId);
+    }
+
+    if (active.partitionValue === null) return allGroups;
 
     if (partitionBy === 'seasonNumber') {
       return allGroups.filter(

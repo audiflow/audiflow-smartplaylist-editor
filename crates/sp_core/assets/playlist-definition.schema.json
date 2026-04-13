@@ -202,10 +202,6 @@
         "numberingExtractor": {
           "$ref": "#/$defs/NumberingExtractor",
           "description": "Custom number rule for this group. When not set, uses the playlist default."
-        },
-        "episodeExtractor": {
-          "$ref": "#/$defs/NumberingExtractor",
-          "description": "Deprecated v3 alias for 'numberingExtractor'. Use 'numberingExtractor' for new configs."
         }
       }
     },
@@ -417,18 +413,6 @@
             {
               "const": "titleClassifier",
               "description": "Groups episodes by matching titles against patterns defined in staticClassifiers."
-            },
-            {
-              "const": "rss",
-              "description": "Deprecated v3 alias for 'seasonNumber'."
-            },
-            {
-              "const": "category",
-              "description": "Deprecated v3 alias for 'titleClassifier'."
-            },
-            {
-              "const": "titleAppearanceOrder",
-              "description": "Deprecated v3 alias for 'titleDiscovery'."
             }
           ]
         },
