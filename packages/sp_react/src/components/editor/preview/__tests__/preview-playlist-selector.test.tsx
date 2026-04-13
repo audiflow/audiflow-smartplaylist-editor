@@ -143,7 +143,7 @@ interface WrapperConfig {
   config: PatternConfig;
   activePlaylistId: string;
   activeEntryIndex?: number;
-  onSelectPlaylist?: (id: string) => void;
+  onSelectPlaylist?: (playlistId: string, entryIndex: number) => void;
   onSelectEntry?: (playlistId: string, entryIndex: number) => void;
 }
 
@@ -434,7 +434,8 @@ describe('PreviewPlaylistSelector', () => {
       const betaOption = screen.getByRole('option', { name: 'Beta' });
       await user.click(betaOption);
 
-      expect(onSelectPlaylist).toHaveBeenCalledWith('pl-b');
+      // Signature is now (playlistId, entryIndex); non-partitioned entry is 0.
+      expect(onSelectPlaylist).toHaveBeenCalledWith('pl-b', 0);
     });
 
     it('calls onSelectPlaylist when active is pl-1 and user clicks entry from pl-2', async () => {
@@ -461,7 +462,8 @@ describe('PreviewPlaylistSelector', () => {
       const pl2Option = screen.getByRole('option', { name: 'Playlist Two' });
       await user.click(pl2Option);
 
-      expect(onSelectPlaylist).toHaveBeenCalledWith('pl-2');
+      // Entry 0 is the default single entry for a non-partitioned playlist.
+      expect(onSelectPlaylist).toHaveBeenCalledWith('pl-2', 0);
     });
 
     it('calls onSelectEntry with new index when clicking a different entry within the same playlist', async () => {

@@ -375,9 +375,16 @@ describe('resolverTypeSchema', () => {
     expect(resolverTypeSchema.parse('year')).toBe('year');
   });
 
+  // The published JSON schema and the Rust resolver still accept the v3
+  // aliases; the React parser must accept them too so legacy configs keep
+  // loading until they are migrated.
+  it('accepts deprecated v3 aliases', () => {
+    expect(resolverTypeSchema.parse('rss')).toBe('rss');
+    expect(resolverTypeSchema.parse('category')).toBe('category');
+    expect(resolverTypeSchema.parse('titleAppearanceOrder')).toBe('titleAppearanceOrder');
+  });
+
   it('rejects invalid values', () => {
-    expect(() => resolverTypeSchema.parse('rss')).toThrow();
-    expect(() => resolverTypeSchema.parse('category')).toThrow();
     expect(() => resolverTypeSchema.parse('invalid')).toThrow();
   });
 });

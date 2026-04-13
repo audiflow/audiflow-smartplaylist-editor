@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { PatternConfig, PartitionBy } from '@/schemas/config-schema.ts';
@@ -49,7 +49,7 @@ export function generateEntries(
       return years.map((y, i) => ({
         playlistId,
         entryIndex: i,
-        label: t('selector.yearEntry', { year: y }),
+        label: resolveYearLabel(y, previewPlaylist, t),
         partitionValue: y,
       }));
     }
@@ -59,6 +59,30 @@ export function generateEntries(
   //       prevents reliable label generation. Render as a single entry until
   //       the next iteration resolves the display strategy.
   return [{ playlistId, entryIndex: 0, label: displayName, partitionValue: null }];
+}
+
+/**
+ * Find the displayName of the year-partitioned group matching the target year.
+ *
+ * The backend emits synthetic groups with `id: "year_{year}"` and a
+ * `displayName` computed from `selector.titleExtractor` (when configured).
+ * Prefer that label so editing `selector.titleExtractor` is visible in the
+ * selector. Fall back to a localized default when no custom extractor is set.
+ */
+function resolveYearLabel(
+  year: number,
+  previewPlaylist: PreviewPlaylist | null | undefined,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  if (previewPlaylist?.groups) {
+    const targetId = `year_${year}`;
+    for (const group of previewPlaylist.groups) {
+      if (group.id === targetId) {
+        return group.displayName;
+      }
+    }
+  }
+  return t('selector.yearEntry', { year });
 }
 
 /** Find the displayName of a group whose first episode has a matching seasonNumber. */
@@ -118,7 +142,12 @@ interface PreviewPlaylistSelectorProps {
   activePlaylistId: string;
   activeEntryIndex: number;
   onSelectEntry: (playlistId: string, entryIndex: number) => void;
-  onSelectPlaylist: (playlistId: string) => void;
+  /**
+   * Called when the user chooses an entry that belongs to a different playlist.
+   * `entryIndex` identifies which entry within the target playlist was picked
+   * so the caller can deep-link into it instead of defaulting to entry 0.
+   */
+  onSelectPlaylist: (playlistId: string, entryIndex: number) => void;
 }
 
 export function PreviewPlaylistSelector({
@@ -193,8 +222,9 @@ export function PreviewPlaylistSelector({
 
     const { playlistId, entryIndex } = parsed;
     if (playlistId !== activePlaylistId) {
-      onSelectPlaylist(playlistId);
-      // caller resets activeEntryIndex to 0 when playlist changes
+      // Forward the chosen entry so the target playlist opens with it
+      // preselected instead of snapping to entry 0.
+      onSelectPlaylist(playlistId, entryIndex);
     } else {
       onSelectEntry(playlistId, entryIndex);
     }

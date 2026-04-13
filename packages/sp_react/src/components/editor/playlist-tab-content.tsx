@@ -36,7 +36,7 @@ interface PlaylistTabContentProps {
   playlistCount: number;
   onRemove: () => void;
   isNewConfig?: boolean;
-  onSelectPlaylist?: (playlistId: string) => void;
+  onSelectPlaylist?: (playlistId: string, entryIndex: number) => void;
 }
 
 export function PlaylistTabContent({
@@ -53,10 +53,17 @@ export function PlaylistTabContent({
   const previewPlaylist = previewData?.playlists.find((p) => p.id === playlistId) ?? null;
 
   // Active entry index is lifted here so filtering is co-located with PlaylistTree rendering.
-  const [activeEntryIndex, setActiveEntryIndex] = useState(0);
+  const consumePendingEntryIndex = useEditorStore((s) => s.consumePendingEntryIndex);
+  const [activeEntryIndex, setActiveEntryIndex] = useState(
+    () => consumePendingEntryIndex(playlistId) ?? 0,
+  );
   useEffect(() => {
-    setActiveEntryIndex(0);
-  }, [playlistId]);
+    // When the user switches playlists, adopt any pending entry index that
+    // was stashed by a cross-playlist selector click; otherwise start fresh
+    // at 0. `consumePendingEntryIndex` clears the value after reading it.
+    const pending = consumePendingEntryIndex(playlistId);
+    setActiveEntryIndex(pending ?? 0);
+  }, [playlistId, consumePendingEntryIndex]);
   const ungroupedEpisodes = previewData?.ungrouped ?? [];
   const excludedEpisodes = previewData?.excluded ?? [];
   const globalDebug = previewData?.debug;
@@ -208,7 +215,7 @@ export function PlaylistTabContent({
                   activePlaylistId={playlistId}
                   activeEntryIndex={activeEntryIndex}
                   onSelectEntry={(_pid, entryIndex) => setActiveEntryIndex(entryIndex)}
-                  onSelectPlaylist={onSelectPlaylist ?? (() => { /* no-op when not wired */ })}
+                  onSelectPlaylist={onSelectPlaylist ?? ((_pid, _entryIndex) => { /* no-op when not wired */ })}
                 />
               )}
               <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>

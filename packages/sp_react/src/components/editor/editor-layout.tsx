@@ -632,10 +632,17 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
                   setActiveTab(`tab-${Math.min(index, lastIndex)}`);
                 }
               }}
-              onSelectPlaylist={(targetId) => {
+              onSelectPlaylist={(targetId, entryIndex) => {
                 const playlists = form.getValues('playlists');
                 const idx = playlists.findIndex((p) => p.id === targetId);
-                if (0 <= idx) setActiveTab(`tab-${idx}`);
+                if (0 <= idx) {
+                  // Stash the chosen entry index so PlaylistTabContent can
+                  // adopt it on mount instead of defaulting to 0.
+                  useEditorStore
+                    .getState()
+                    .setPendingEntryIndex(targetId, entryIndex);
+                  setActiveTab(`tab-${idx}`);
+                }
               }}
             />
           </TabsContent>

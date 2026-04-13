@@ -20,7 +20,13 @@ export const yearBindingSchema = z.enum(['none', 'pinToYear', 'splitByYear']);
 
 export const resolverTypeValues = ['seasonNumber', 'year', 'titleDiscovery', 'titleClassifier'] as const;
 
-export const resolverTypeSchema = z.enum(resolverTypeValues);
+// Deprecated v3 aliases still accepted by the published JSON schema and the
+// Rust resolver (`ResolverService::find_resolver_by_type` normalizes them).
+// Keep them in the React parser so existing configs that have not migrated
+// can still be loaded and saved by the editor.
+export const legacyResolverTypeValues = ['rss', 'category', 'titleAppearanceOrder'] as const;
+
+export const resolverTypeSchema = z.enum([...resolverTypeValues, ...legacyResolverTypeValues]);
 
 // -- Sort types --
 
