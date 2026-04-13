@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use crate::models::{
     EpisodeData, EpisodeFilterEntry, GroupDef, Grouping, PatternConfig, Playlist,
     PlaylistDefinition, PlaylistGroup, PlaylistPreviewResult, Presentation, PreviewGrouping,
-    SimpleEpisodeData, TitleExtractor,
+    SimpleEpisodeData, TitleExtractor, YearBinding,
 };
 
 /// Precompiled filter entry for efficient per-episode matching.
@@ -202,6 +202,12 @@ impl ResolverService {
                 resolver_type = Some(result.resolver_type.clone());
             }
 
+            // Overlay the enriched episodes on top of the raw lookup so the
+            // partition helpers (which read season_number / published_at)
+            // see the same values the resolver grouped on.
+            let overlay_storage: HashMap<i64, &dyn EpisodeData> =
+                Self::build_overlay_episode_by_id(episode_by_id, enriched_storage.as_deref());
+
             if definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) == Some("group") {
                 Self::add_split_playlists(
                     &mut all_playlists,
@@ -213,7 +219,7 @@ impl ResolverService {
                     &mut all_playlists,
                     definition,
                     &result,
-                    episode_by_id,
+                    &overlay_storage,
                 );
             }
 
@@ -301,11 +307,17 @@ impl ResolverService {
                 resolver_type = Some(result.resolver_type.clone());
             }
 
+            // Overlay the enriched episodes on the lookup so partition
+            // helpers (season/year) read the same season_number the
+            // resolver used for grouping instead of the raw feed value.
+            let overlay_storage: HashMap<i64, &dyn EpisodeData> =
+                Self::build_overlay_episode_by_id(episode_by_id, enriched_storage.as_deref());
+
             let playlist = self.build_preview_playlist(
                 definition,
                 &result,
                 playlist_results.len() as i32,
-                episode_by_id,
+                &overlay_storage,
             );
 
             playlist_results.push(PlaylistPreviewResult {
@@ -393,6 +405,10 @@ impl ResolverService {
         let year_binding = parse_year_binding(
             definition.group_listing.as_ref().and_then(|gl| gl.year_binding.as_deref()),
         );
+        // Pin every resolved group to its earliest year when the playlist
+        // opts in via `groupItem.pinToYear`, so consumers that render year
+        // sections honor the toggle instead of treating it as a no-op.
+        let year_override = Self::year_override_from_definition(definition);
 
         let unsorted_groups: Vec<PlaylistGroup> = result
             .playlists
@@ -403,7 +419,7 @@ impl ResolverService {
                 sort_key: p.sort_key,
                 episode_ids: p.episode_ids.clone(),
                 thumbnail_url: p.thumbnail_url.clone(),
-                year_override: None,
+                year_override: year_override.clone(),
                 show_year_headers: None,
                 show_date_range: false,
                 earliest_date: None,
@@ -486,6 +502,10 @@ impl ResolverService {
             .map(|gs| gs.iter().map(|g| (g.id.as_str(), g)).collect())
             .unwrap_or_default();
 
+        // Same pinToYear propagation as the preview path so runtime and
+        // preview agree on the emitted year_override.
+        let year_override = Self::year_override_from_definition(definition);
+
         let unsorted_groups: Vec<PlaylistGroup> = result
             .playlists
             .iter()
@@ -497,7 +517,7 @@ impl ResolverService {
                     sort_key: p.sort_key,
                     episode_ids: p.episode_ids.clone(),
                     thumbnail_url: p.thumbnail_url.clone(),
-                    year_override: None,
+                    year_override: year_override.clone(),
                     show_year_headers: g_def.and_then(|d| {
                         d.episode_listing.as_ref().and_then(|el| el.show_year_headers)
                     }),
@@ -600,17 +620,12 @@ impl ResolverService {
             .playlists
             .iter()
             .map(|playlist| {
-                let sorted_groups = playlist.groups.as_ref().map(|gs| {
-                    gs.iter()
-                        .map(|group| PlaylistGroup {
-                            episode_ids: sort_episode_ids_by_published_at(
-                                &group.episode_ids,
-                                episode_by_id,
-                            ),
-                            ..group.clone()
-                        })
-                        .collect()
-                });
+                // Recursively sort so partition sub-groups (where the real
+                // renderable groups live) get their episode_ids sorted too.
+                let sorted_groups = playlist
+                    .groups
+                    .as_ref()
+                    .map(|gs| Self::sort_groups_recursive(gs, episode_by_id));
 
                 Playlist {
                     episode_ids: sort_episode_ids_by_published_at(
@@ -633,6 +648,28 @@ impl ResolverService {
         }
     }
 
+    /// Sorts every group's episode_ids by publish date and descends into
+    /// `sub_groups` so partition containers don't mask unsorted children.
+    fn sort_groups_recursive(
+        groups: &[PlaylistGroup],
+        episode_by_id: &HashMap<i64, &dyn EpisodeData>,
+    ) -> Vec<PlaylistGroup> {
+        groups
+            .iter()
+            .map(|group| PlaylistGroup {
+                episode_ids: sort_episode_ids_by_published_at(
+                    &group.episode_ids,
+                    episode_by_id,
+                ),
+                sub_groups: group
+                    .sub_groups
+                    .as_ref()
+                    .map(|sg| Self::sort_groups_recursive(sg, episode_by_id)),
+                ..group.clone()
+            })
+            .collect()
+    }
+
     fn sort_preview_grouping(
         &self,
         grouping: &PreviewGrouping,
@@ -643,17 +680,10 @@ impl ResolverService {
             .iter()
             .map(|preview_result| {
                 let playlist = &preview_result.playlist;
-                let sorted_groups = playlist.groups.as_ref().map(|gs| {
-                    gs.iter()
-                        .map(|group| PlaylistGroup {
-                            episode_ids: sort_episode_ids_by_published_at(
-                                &group.episode_ids,
-                                episode_by_id,
-                            ),
-                            ..group.clone()
-                        })
-                        .collect()
-                });
+                let sorted_groups = playlist
+                    .groups
+                    .as_ref()
+                    .map(|gs| Self::sort_groups_recursive(gs, episode_by_id));
 
                 PlaylistPreviewResult {
                     definition_id: preview_result.definition_id.clone(),
@@ -713,6 +743,40 @@ impl ResolverService {
         self.patterns
             .iter()
             .find(|config| config.matches_podcast(guid, feed_url))
+    }
+
+    /// Maps the playlist-level `groupItem.pinToYear` toggle to a
+    /// `year_override` that downstream consumers can apply per group.
+    /// Returns `None` when the toggle is off or unset, keeping serialized
+    /// output minimal.
+    fn year_override_from_definition(definition: &PlaylistDefinition) -> Option<YearBinding> {
+        let pin_to_year = definition
+            .group_item
+            .as_ref()
+            .and_then(|gi| gi.pin_to_year)
+            .unwrap_or(false);
+        if pin_to_year {
+            Some(YearBinding::PinToYear)
+        } else {
+            None
+        }
+    }
+
+    /// Builds an episode lookup that prefers enriched values (extracted
+    /// season/episode numbers) over the raw feed episodes. Used by
+    /// partition helpers so they observe the same season_number the
+    /// resolver grouped on.
+    fn build_overlay_episode_by_id<'a>(
+        base: &HashMap<i64, &'a dyn EpisodeData>,
+        enriched: Option<&'a [SimpleEpisodeData]>,
+    ) -> HashMap<i64, &'a dyn EpisodeData> {
+        let mut out: HashMap<i64, &'a dyn EpisodeData> = base.clone();
+        if let Some(enriched) = enriched {
+            for ep in enriched {
+                out.insert(ep.id, ep as &dyn EpisodeData);
+            }
+        }
+        out
     }
 
     /// Enriches episodes using the definition's own episode extractor.

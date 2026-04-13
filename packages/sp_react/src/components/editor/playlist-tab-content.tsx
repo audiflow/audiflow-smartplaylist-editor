@@ -195,10 +195,18 @@ export function PlaylistTabContent({
     }
 
     if (partitionBy === 'year') {
+      // Match the backend's UTC-year bucketing. Prefer the synthetic
+      // year_{N} partition id; fall back to parsing publishedAt as UTC
+      // so the filter never drifts by browser timezone.
       return allGroups.filter((g) => {
+        const idMatch = g.id.match(/^year_(-?\d+)$/);
+        if (idMatch) {
+          const idYear = parseInt(idMatch[1], 10);
+          return idYear === active.partitionValue;
+        }
         const publishedAt = g.episodes[0]?.publishedAt;
         if (!publishedAt) return false;
-        return new Date(publishedAt).getFullYear() === active.partitionValue;
+        return new Date(publishedAt).getUTCFullYear() === active.partitionValue;
       });
     }
 

@@ -139,16 +139,33 @@ function collectUniqueYears(
   const seen = new Set<number>();
   const result: number[] = [];
   for (const group of previewPlaylist.groups) {
-    const publishedAt = group.episodes[0]?.publishedAt;
-    if (publishedAt) {
-      const year = new Date(publishedAt).getFullYear();
-      if (!seen.has(year)) {
-        seen.add(year);
-        result.push(year);
-      }
+    // Prefer the synthetic year_{N} partition ids emitted by the backend
+    // (which bucket by UTC year). Only fall back to parsing the episode
+    // date when a group predates partitioning, and in that fallback use
+    // UTC so the selector never drifts by browser timezone.
+    const year =
+      extractYearFromGroupId(group.id) ??
+      extractUtcYear(group.episodes[0]?.publishedAt);
+    if (year != null && !seen.has(year)) {
+      seen.add(year);
+      result.push(year);
     }
   }
   return result;
+}
+
+function extractYearFromGroupId(id: string): number | null {
+  const match = id.match(/^year_(-?\d+)$/);
+  if (!match) return null;
+  const value = parseInt(match[1], 10);
+  return Number.isFinite(value) ? value : null;
+}
+
+function extractUtcYear(publishedAt: string | undefined): number | null {
+  if (!publishedAt) return null;
+  const date = new Date(publishedAt);
+  const utcYear = date.getUTCFullYear();
+  return Number.isFinite(utcYear) ? utcYear : null;
 }
 
 // -- Component --
