@@ -107,7 +107,7 @@ function YearSection({
 
   return (
     <div>
-      <div data-preview-field="group-year-sections" className="sticky top-12 z-10 bg-muted/80 backdrop-blur-sm px-2 py-1.5 -mx-2 border-b">
+      <div data-preview-field="group-year-sections" className="sticky top-12 z-10 bg-muted/80 backdrop-blur-sm px-2 py-1.5 border-b">
         <span className="text-sm font-semibold">
           {year === 0 ? t('yearUnknown') : t('yearHeader', { year })}
         </span>
