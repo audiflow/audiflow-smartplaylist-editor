@@ -302,7 +302,20 @@ fn compute_extracted_display_names(
 ) -> HashMap<String, HashMap<i64, String>> {
     let mut result = HashMap::new();
     for definition in &config.playlists {
-        let title_ext = match definition.group_item.as_ref().and_then(|gi| gi.title_extractor.as_ref()) {
+        // Prefer the per-episode extractor so v5 `episodeItem.titleExtractor`
+        // is reflected in the preview episode list. Fall back to the group
+        // extractor for backwards-compatible configs that still rely on it.
+        let title_ext = definition
+            .episode_item
+            .as_ref()
+            .and_then(|ei| ei.title_extractor.as_ref())
+            .or_else(|| {
+                definition
+                    .group_item
+                    .as_ref()
+                    .and_then(|gi| gi.title_extractor.as_ref())
+            });
+        let title_ext = match title_ext {
             Some(e) => e,
             None => continue,
         };

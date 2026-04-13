@@ -265,16 +265,25 @@ function SortedEpisodeList({
 function EpisodeList({ episodes }: { episodes: PreviewEpisode[] }) {
   return (
     <ul data-preview-field="episode-order" className="ml-4 space-y-0.5 text-sm text-muted-foreground">
-      {episodes.map((ep) => (
-        <li key={ep.id} className="flex items-center gap-2">
-          <span data-preview-field="episode-title" className="truncate" title={ep.title}>{ep.title}</span>
-          {ep.publishedAt && (
-            <span className="text-xs text-muted-foreground/60 shrink-0">
-              {new Date(ep.publishedAt).toLocaleDateString()}
+      {episodes.map((ep) => {
+        // Prefer the server-computed `extractedDisplayName` so configuring
+        // `episodeItem.titleExtractor` (or a classifier-level override) is
+        // immediately visible in the preview list. Fall back to the raw
+        // feed title when no extractor applies.
+        const displayTitle = ep.extractedDisplayName ?? ep.title;
+        return (
+          <li key={ep.id} className="flex items-center gap-2">
+            <span data-preview-field="episode-title" className="truncate" title={ep.title}>
+              {displayTitle}
             </span>
-          )}
-        </li>
-      ))}
+            {ep.publishedAt && (
+              <span className="text-xs text-muted-foreground/60 shrink-0">
+                {new Date(ep.publishedAt).toLocaleDateString()}
+              </span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
