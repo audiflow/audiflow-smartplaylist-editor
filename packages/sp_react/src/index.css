@@ -159,7 +159,10 @@
 [data-active-fields~="group-card-season-prefix"] [data-preview-field="group-card-season-prefix"],
 [data-active-fields~="partition-entries"] [data-preview-field="partition-entries"],
 [data-active-fields~="episode-order"] [data-preview-field="episode-order"],
-[data-active-fields~="episode-title"] [data-preview-field="episode-title"] {
+[data-active-fields~="episode-title"] [data-preview-field="episode-title"],
+[data-active-fields~="filters-require"] [data-preview-field="filters-require"],
+[data-active-fields~="filters-exclude"] [data-preview-field="filters-exclude"],
+[data-active-fields~="group-card-date-range"] [data-preview-field="group-card-date-range"] {
   animation: preview-field-pulse 1s ease-out;
   border-radius: 8px;
 }
