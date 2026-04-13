@@ -138,7 +138,7 @@ export function PlaylistTabContent({
 
   return (
     <div className="pt-2">
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_460px]">
         {/* Config side */}
         <div className="space-y-4 lg:sticky lg:top-20 lg:h-[calc(100dvh-5.5rem)] lg:overflow-y-auto">
           <PlaylistForm index={index} playlistCount={playlistCount} onRemove={onRemove} isNewConfig={isNewConfig} />
@@ -152,8 +152,11 @@ export function PlaylistTabContent({
           >
             <div className="mx-auto w-full max-w-[420px]">
               {playlistDisplayName && (
-                <header data-preview-region="playlist-header" className="mb-3 px-1">
-                  <h2 className="text-sm font-semibold truncate">{playlistDisplayName}</h2>
+                <header
+                  data-preview-region="playlist-header"
+                  className="mb-3 border-b bg-background px-4 py-3"
+                >
+                  <h2 className="text-base font-semibold truncate">{playlistDisplayName}</h2>
                 </header>
               )}
               <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
