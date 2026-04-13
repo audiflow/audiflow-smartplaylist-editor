@@ -167,21 +167,21 @@ fn compute_enriched_episodes(
     episodes: &[SimpleEpisodeData],
     preview: &PreviewGrouping,
 ) -> HashMap<String, HashMap<i64, SimpleEpisodeData>> {
-    // Build a lookup from definition_id -> (group_id -> set of episode IDs)
+    // Build a lookup from definition_id -> (group_id -> set of episode IDs).
+    // When `selector.partitionBy` is `seasonNumber` or `year`, the real
+    // classifier IDs move into nested `sub_groups` under synthetic
+    // `season_*`/`year_*` parents, so we must walk the tree to preserve
+    // per-classifier IDs for downstream numberingExtractor lookups.
     let group_episode_ids: HashMap<&str, HashMap<&str, HashSet<i64>>> = preview
         .playlist_results
         .iter()
         .map(|pr| {
-            let groups: HashMap<&str, HashSet<i64>> = pr
-                .playlist
-                .groups
-                .as_ref()
-                .map(|gs| {
-                    gs.iter()
-                        .map(|g| (g.id.as_str(), g.episode_ids.iter().copied().collect()))
-                        .collect()
-                })
-                .unwrap_or_default();
+            let mut groups: HashMap<&str, HashSet<i64>> = HashMap::new();
+            if let Some(gs) = pr.playlist.groups.as_ref() {
+                for g in gs {
+                    collect_group_episode_ids(g, &mut groups);
+                }
+            }
             (pr.definition_id.as_str(), groups)
         })
         .collect();
@@ -218,6 +218,23 @@ fn compute_enriched_episodes(
         }
     }
     result
+}
+
+/// Recursively records each group's episode IDs into `out`, walking
+/// into `sub_groups` so classifier IDs under synthetic season/year
+/// partitions are still captured.
+fn collect_group_episode_ids<'a>(
+    group: &'a PlaylistGroup,
+    out: &mut HashMap<&'a str, HashSet<i64>>,
+) {
+    out.entry(group.id.as_str())
+        .or_default()
+        .extend(group.episode_ids.iter().copied());
+    if let Some(sub_groups) = &group.sub_groups {
+        for sg in sub_groups {
+            collect_group_episode_ids(sg, out);
+        }
+    }
 }
 
 fn enrich_with_extractor(

@@ -40,10 +40,21 @@ impl Resolver for TitleAppearanceResolver {
             .group_item
             .as_ref()
             .and_then(|gi| gi.title_extractor.as_ref());
+        // v5 introduces `grouping.discoveryHint` as the canonical fallback
+        // pattern for titleDiscovery. Preserve the legacy read from the
+        // first static classifier for configs that haven't migrated yet.
         let pattern_str = definition
-            .grouping.static_classifiers.as_ref()
-            .and_then(|g| g.first())
-            .and_then(|g| g.pattern.as_deref());
+            .grouping
+            .discovery_hint
+            .as_deref()
+            .or_else(|| {
+                definition
+                    .grouping
+                    .static_classifiers
+                    .as_ref()
+                    .and_then(|g| g.first())
+                    .and_then(|g| g.pattern.as_deref())
+            });
 
         // Need either a titleExtractor or a group pattern
         if title_extractor.is_none() && pattern_str.is_none() {

@@ -182,7 +182,18 @@ impl ResolverService {
                 None => continue,
             };
 
-            let result = match resolver.resolve(&filtered, Some(definition)) {
+            // Per-definition enrichment: apply this definition's numbering
+            // extractor so non-preview resolution sees the same extracted
+            // season/episode numbers that preview already uses. Without this,
+            // season-based grouping that relies on titles/descriptions
+            // behaves differently in production vs preview.
+            let enriched_storage = Self::enrich_for_definition(definition, &filtered);
+            let resolve_slice: Vec<&dyn EpisodeData> = match &enriched_storage {
+                Some(enriched) => enriched.iter().map(|e| e as &dyn EpisodeData).collect(),
+                None => filtered,
+            };
+
+            let result = match resolver.resolve(&resolve_slice, Some(definition)) {
                 Some(r) => r,
                 None => continue,
             };
@@ -804,8 +815,7 @@ impl ResolverService {
 
         season_map
             .iter()
-            .enumerate()
-            .map(|(i, (&season, sub_groups))| {
+            .map(|(&season, sub_groups)| {
                 let display_name = title_extractor
                     .and_then(|ext| {
                         // Find a representative episode for title extraction
@@ -826,7 +836,9 @@ impl ResolverService {
                 PlaylistGroup {
                     id: format!("season_{}", season),
                     display_name,
-                    sort_key: (i as i32) + 1,
+                    // Preserve the actual season number so UI labels like
+                    // "S13" stay correct for non-contiguous seasons.
+                    sort_key: season,
                     episode_ids: all_ids,
                     thumbnail_url: None,
                     year_override: None,
@@ -862,8 +874,7 @@ impl ResolverService {
 
         year_map
             .iter()
-            .enumerate()
-            .map(|(i, (&year, sub_groups))| {
+            .map(|(&year, sub_groups)| {
                 let display_name = title_extractor
                     .and_then(|ext| {
                         let rep_ep = sub_groups
@@ -883,7 +894,9 @@ impl ResolverService {
                 PlaylistGroup {
                     id: format!("year_{}", year),
                     display_name,
-                    sort_key: (i as i32) + 1,
+                    // Use the actual year as sort_key so downstream
+                    // consumers that rely on it see a real year value.
+                    sort_key: year,
                     episode_ids: all_ids,
                     thumbnail_url: None,
                     year_override: None,
