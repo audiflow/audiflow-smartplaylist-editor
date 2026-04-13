@@ -152,4 +152,18 @@ describe('editor-store — preview highlight', () => {
     const { activePreviewFields } = useEditorStore.getState();
     expect(activePreviewFields.filter((f) => f === 'group-sort')).toHaveLength(1);
   });
+
+  it('resets TTL on rapid re-focus, keeping field active past original expiry', async () => {
+    // First pulse with 50 ms TTL.
+    useEditorStore.getState().pulseActivePreviewField('x', 50);
+    // Re-pulse after 20 ms with a 100 ms TTL — this should cancel the 50 ms timer.
+    await new Promise((r) => setTimeout(r, 20));
+    useEditorStore.getState().pulseActivePreviewField('x', 100);
+    // 60 ms later: past the original 50 ms TTL but only 80 ms into the 100 ms TTL.
+    await new Promise((r) => setTimeout(r, 60));
+    expect(useEditorStore.getState().activePreviewFields).toContain('x');
+    // Another 60 ms: now 140 ms total since re-pulse, past the 100 ms TTL.
+    await new Promise((r) => setTimeout(r, 60));
+    expect(useEditorStore.getState().activePreviewFields).not.toContain('x');
+  });
 });

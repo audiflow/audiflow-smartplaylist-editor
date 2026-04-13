@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import type { PreviewResult } from '@/schemas/api-schema.ts';
 
+// Module-scope map so timer handles survive re-renders without entering React state.
+// Cancelling the previous timer for a field before registering a new one ensures
+// rapid re-focus extends the TTL rather than letting stale timeouts fire early.
+const pulseTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
 export type ActiveGroupContext = 'all' | string;
 
 interface EditorState {
@@ -73,16 +78,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setActivePreviewRegion: (region) =>
     set((state) => (state.activePreviewRegion === region ? {} : { activePreviewRegion: region })),
   pulseActivePreviewField: (field, ttlMs = 1000) => {
+    const existing = pulseTimers.get(field);
+    if (existing !== undefined) clearTimeout(existing);
     set((state) =>
       state.activePreviewFields.includes(field)
         ? {}
         : { activePreviewFields: [...state.activePreviewFields, field] },
     );
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      pulseTimers.delete(field);
       set((state) => ({
         activePreviewFields: state.activePreviewFields.filter((f) => f !== field),
       }));
     }, ttlMs);
+    pulseTimers.set(field, timer);
   },
   reset: () => set(initialState),
 }));
