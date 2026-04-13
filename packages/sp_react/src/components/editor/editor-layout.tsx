@@ -632,8 +632,8 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
         onValueChange={setActiveTab}
         className="mt-6"
       >
-        <div className="grid gap-6 lg:grid-cols-2 items-center">
-          <div className="flex items-center gap-2">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_460px] items-center">
+          <div className="flex min-w-0 items-center gap-2 flex-wrap">
             <TabsList>
               {fields.map((field, index) => (
                 <PlaylistTabTrigger
