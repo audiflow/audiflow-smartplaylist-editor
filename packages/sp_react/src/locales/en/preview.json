@@ -1,6 +1,5 @@
 {
   "title": "Preview",
-  "runPreview": "Run Preview",
   "idleMessage": "Run a preview to see how your configuration groups episodes.",
   "failed": "Preview failed: {{error}}",
   "ungroupedEpisodes": "Ungrouped Episodes",

@@ -40,7 +40,6 @@ import {
   ExternalLink,
   FormInput,
   Loader2,
-  Play,
   Plus,
   Save,
 } from 'lucide-react';
@@ -219,41 +218,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     toggleJsonMode();
   }, [isJsonMode, jsonText, form, toggleJsonMode, t]);
 
-  const handleRunPreview = useCallback(() => {
-    if (!feedUrl) {
-      toast.error(t('toastEnterFeedUrl'));
-      return;
-    }
-    let config: unknown;
-    if (isJsonMode) {
-      try {
-        config = JSON.parse(jsonText);
-      } catch {
-        toast.error(t('toastInvalidJsonPreview'));
-        return;
-      }
-    } else {
-      const parsed = patternConfigSchema.safeParse(form.getValues());
-      if (!parsed.success) {
-        toast.error(t('toastInvalidJsonPreview'));
-        return;
-      }
-      config = stripConditionalFields(parsed.data);
-    }
-    storePreviewRef.current.mutate(
-      { config: sanitizeConfig(config), feedUrl },
-      {
-        onError: (error) => {
-          toast.error(t('toastPreviewError', {
-            error: error instanceof Error ? error.message : 'Preview failed',
-            defaultValue: 'Preview failed: {{error}}',
-          }));
-        },
-      },
-    );
-  }, [isJsonMode, jsonText, form, feedUrl, t]);
-
-
   // Safe JSON parse for render-time props (avoids throwing during render)
   const parsedJsonConfig = useMemo(() => {
     if (!isJsonMode) return null;
@@ -357,18 +321,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [handleSave]);
-
-  // Cmd+Enter / Ctrl+Enter keyboard shortcut for preview
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleRunPreview();
-      }
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [handleRunPreview]);
 
   // Auto-run preview when opening an existing config.
   // Uses initialConfig.feedUrls directly (not the Zustand store's feedUrl) to
@@ -484,6 +436,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         />
 
         <div className="flex items-center justify-end gap-2">
+            <PreviewPendingIndicator />
             <Button
               onClick={() => void handleSave()}
               disabled={!isDirty || isSaving || !effectiveId}
@@ -496,7 +449,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
               )}
               {t('save', 'Save')}
             </Button>
-            <PreviewButton onClick={handleRunPreview} />
         </div>
       </div>
 
@@ -506,9 +458,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           feedUrls={initialConfig?.feedUrls ?? undefined}
           value={feedUrl}
           onChange={setFeedUrl}
-          onLoadFeed={() => {
-            /* feedQuery auto-fetches when feedUrl changes */
-          }}
           isLoading={feedQuery.isLoading}
         />
       </div>
@@ -734,18 +683,18 @@ function PreviewDebugStats() {
   );
 }
 
-function PreviewButton({ onClick }: { onClick: () => void }) {
+function PreviewPendingIndicator() {
   const isPending = useEditorStore((s) => s.previewPending);
   const { t } = useTranslation('editor');
+  if (!isPending) return null;
   return (
-    <Button onClick={onClick} disabled={isPending} aria-busy={isPending}>
-      {isPending ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      ) : (
-        <Play className="mr-2 h-4 w-4" />
-      )}
-      {t('runPreview')}
-    </Button>
+    <span
+      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+      aria-live="polite"
+    >
+      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      {t('previewUpdating', 'Updating preview…')}
+    </span>
   );
 }
 
