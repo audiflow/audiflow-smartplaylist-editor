@@ -39,6 +39,21 @@ describe('GroupContextBar', () => {
     expect(activeChip).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('marks inactive chips with aria-pressed="false"', () => {
+    render(
+      <GroupContextBar
+        groups={GROUPS}
+        active="g2"
+        allLabel="All groups"
+        addLabel="+ Add"
+        onSelect={() => {}}
+        onAdd={() => {}}
+      />,
+    );
+    const inactiveChip = screen.getByRole('button', { name: 'Group 1' });
+    expect(inactiveChip).toHaveAttribute('aria-pressed', 'false');
+  });
+
   it('calls onSelect with the chip id when clicked', () => {
     const onSelect = vi.fn();
     render(

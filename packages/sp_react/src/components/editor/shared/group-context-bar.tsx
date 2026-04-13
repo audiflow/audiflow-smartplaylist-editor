@@ -50,7 +50,7 @@ function Chip({ pressed, onClick, variant = 'normal', children }: ChipProps) {
   return (
     <button
       type="button"
-      aria-pressed={pressed ? 'true' : undefined}
+      aria-pressed={pressed ? 'true' : 'false'}
       onClick={onClick}
       className={cn(
         'rounded-full border px-3 py-1 text-xs transition-colors',
