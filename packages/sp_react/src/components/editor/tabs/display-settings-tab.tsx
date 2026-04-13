@@ -1,4 +1,5 @@
 import { useFormContext, useWatch } from 'react-hook-form';
+import type { FieldPath, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
@@ -16,6 +17,24 @@ import { useEditorStore } from '@/stores/editor-store.ts';
 import { usePreviewHighlight } from '@/hooks/use-preview-highlight.ts';
 import { PREVIEW_FIELDS } from '@/components/editor/preview/preview-field-ids.ts';
 
+// react-hook-form's generic resolution breaks on dynamically-composed paths; concentrate
+// the necessary casts in these two helpers so call sites stay readable.
+function watchPath<T>(
+  watch: UseFormReturn<PatternConfig>['watch'],
+  path: string,
+): T | undefined {
+  return watch(path as FieldPath<PatternConfig>) as T | undefined;
+}
+
+function setPath<T>(
+  setValue: UseFormReturn<PatternConfig>['setValue'],
+  path: string,
+  value: T,
+  options?: { shouldDirty?: boolean },
+): void {
+  setValue(path as FieldPath<PatternConfig>, value as never, options);
+}
+
 const YEAR_BINDING_OPTIONS = ['none', 'pinToYear', 'splitByYear'] as const;
 
 interface DisplaySettingsTabProps {
@@ -28,11 +47,11 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
   const { t } = useTranslation('editor');
 
   const playlistId = useWatch({ control, name: `${prefix}.id` as const });
-  const partitionBy = watch(`${prefix}.selector.partitionBy` as never) as string | undefined;
-  const resolverType = watch(`${prefix}.grouping.by` as never) as string | undefined;
+  const partitionBy = watchPath<string>(watch, `${prefix}.selector.partitionBy`);
+  const resolverType = watchPath<string>(watch, `${prefix}.grouping.by`);
   const staticClassifiers = (
-    watch(`${prefix}.grouping.staticClassifiers` as never) ?? []
-  ) as Array<{ id: string; displayName: string }>;
+    watchPath<Array<{ id: string; displayName: string }>>(watch, `${prefix}.grouping.staticClassifiers`) ?? []
+  );
 
   const activeContext = useEditorStore((s) => s.getActiveGroupContext(playlistId ?? ''));
   const setActiveContext = useEditorStore((s) => s.setActiveGroupContext);
@@ -159,12 +178,13 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
               onSelect={(id) => setActiveContext(playlistId ?? '', id)}
               onAdd={() => {
                 const newId = `group-${staticClassifiers.length + 1}`;
-                setValue(
-                  `${prefix}.grouping.staticClassifiers` as never,
+                setPath(
+                  setValue,
+                  `${prefix}.grouping.staticClassifiers`,
                   [
                     ...staticClassifiers,
                     { id: newId, displayName: `Group ${staticClassifiers.length + 1}` },
-                  ] as never,
+                  ],
                   { shouldDirty: true },
                 );
                 setActiveContext(playlistId ?? '', newId);
@@ -206,9 +226,9 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
       <div className="flex items-center gap-2" {...showDateRangeHl}>
         <Checkbox
           id={`playlist-${index}-group-${activeContext}-showDateRange`}
-          checked={watch(showDateRangeField as never) ?? false}
+          checked={watchPath<boolean>(watch, showDateRangeField) ?? false}
           onCheckedChange={(c) =>
-            setValue(showDateRangeField as never, !!c as never, { shouldDirty: true })
+            setPath(setValue, showDateRangeField, !!c, { shouldDirty: true })
           }
         />
         <HintLabel
@@ -256,9 +276,9 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
       <div className="flex items-center gap-2">
         <Checkbox
           id={`playlist-${index}-${activeContext}-showYearHeaders`}
-          checked={watch(yearHeadersPath as never) ?? false}
+          checked={watchPath<boolean>(watch, yearHeadersPath) ?? false}
           onCheckedChange={(c) =>
-            setValue(yearHeadersPath as never, !!c as never, { shouldDirty: true })
+            setPath(setValue, yearHeadersPath, !!c, { shouldDirty: true })
           }
         />
         <HintLabel
