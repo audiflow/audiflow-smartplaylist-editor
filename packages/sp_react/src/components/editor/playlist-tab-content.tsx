@@ -24,12 +24,14 @@ import {
 } from '@/components/ui/tabs.tsx';
 import { Badge } from '@/components/ui/badge.tsx';
 import { HighlightLayer } from '@/components/editor/preview/highlight-layer.tsx';
+import { PreviewPlaylistSelector } from '@/components/editor/preview/preview-playlist-selector.tsx';
 
 interface PlaylistTabContentProps {
   index: number;
   playlistCount: number;
   onRemove: () => void;
   isNewConfig?: boolean;
+  onSelectPlaylist?: (playlistId: string) => void;
 }
 
 export function PlaylistTabContent({
@@ -37,6 +39,7 @@ export function PlaylistTabContent({
   playlistCount,
   onRemove,
   isNewConfig,
+  onSelectPlaylist,
 }: PlaylistTabContentProps) {
   // Read preview data from Zustand store (isolated re-renders)
   const previewData = useEditorStore((s) => s.previewData);
@@ -52,7 +55,6 @@ export function PlaylistTabContent({
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
 
-  const playlistDisplayName = useWatch({ control, name: `playlists.${index}.displayName` as const }) ?? '';
   const prependSeasonNumber = useWatch({ control, name: `playlists.${index}.groupItem.prependSeasonNumber` as const }) ?? false;
   const yearBinding = (useWatch({ control, name: `playlists.${index}.groupListing.yearBinding` as const }) ?? 'none') as YearBinding;
   const groupDefs = useWatch({ control, name: `playlists.${index}.grouping.staticClassifiers` as const });
@@ -151,13 +153,11 @@ export function PlaylistTabContent({
             data-preview-root
           >
             <div className="mx-auto w-full max-w-[420px]">
-              {playlistDisplayName && (
-                <header
-                  data-preview-region="playlist-header"
-                  className="sticky top-0 z-20 mb-3 border-b bg-background/95 px-4 py-3 backdrop-blur-sm rounded-t"
-                >
-                  <h2 className="text-base font-semibold truncate">{playlistDisplayName}</h2>
-                </header>
+              {playlistId && (
+                <PreviewPlaylistSelector
+                  activePlaylistId={playlistId}
+                  onSelectPlaylist={onSelectPlaylist ?? (() => { /* no-op when not wired */ })}
+                />
               )}
               <Tabs value={activePreviewTab} onValueChange={setActivePreviewTab}>
                 <TabsList>

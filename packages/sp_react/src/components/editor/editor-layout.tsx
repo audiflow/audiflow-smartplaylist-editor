@@ -683,6 +683,10 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
                   setActiveTab(`tab-${Math.min(index, lastIndex)}`);
                 }
               }}
+              onSelectPlaylist={(targetId) => {
+                const idx = fields.findIndex((f) => f.id === targetId);
+                if (0 <= idx) setActiveTab(`tab-${idx}`);
+              }}
             />
           </TabsContent>
         ))}
