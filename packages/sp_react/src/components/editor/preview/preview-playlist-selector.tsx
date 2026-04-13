@@ -148,9 +148,22 @@ export function PreviewPlaylistSelector({
     });
   }, [playlists, previewData, t]);
 
-  // Compose a unique value for each entry to use as the Select value key.
+  // Compose a globally-unique value for each entry using '::' as a separator
+  // so that Radix onValueChange fires even when entryIndex collides across
+  // different playlists (e.g. two playlists both have their first entry at
+  // index 0 — the keys "pl-a::0" and "pl-b::0" are always distinct).
   function entryKey(entry: SelectorEntry): string {
-    return `${entry.playlistId}:${entry.entryIndex}`;
+    return `${entry.playlistId}::${entry.entryIndex}`;
+  }
+
+  // Parse a key produced by entryKey back into its components.
+  function parseEntryKey(key: string): { playlistId: string; entryIndex: number } | null {
+    const separatorIndex = key.lastIndexOf('::');
+    if (separatorIndex === -1) return null;
+    const playlistId = key.slice(0, separatorIndex);
+    const entryIndex = parseInt(key.slice(separatorIndex + 2), 10);
+    if (!playlistId || isNaN(entryIndex)) return null;
+    return { playlistId, entryIndex };
   }
 
   // The currently selected entry key: first entry for active playlist at the
@@ -163,8 +176,8 @@ export function PreviewPlaylistSelector({
       entriesForActive[activeEntryIndex] ?? entriesForActive[0];
     if (target) return entryKey(target);
     // Fallback when no preview data yet — look up displayName from form.
-    const pl = playlists?.find((p) => p.id === activePlaylistId);
-    return `${activePlaylistId}:0:${pl?.displayName ?? ''}`;
+    // Use '::' separator to stay consistent with entryKey format.
+    return `${activePlaylistId}::0`;
   }, [allEntries, activePlaylistId, activeEntryIndex, playlists]);
 
   const selectedLabel = useMemo((): string => {
@@ -175,14 +188,15 @@ export function PreviewPlaylistSelector({
   }, [allEntries, selectedKey, activePlaylistId, playlists]);
 
   function handleSelect(value: string): void {
-    const entry = allEntries.find((e) => entryKey(e) === value);
-    if (!entry) return;
+    const parsed = parseEntryKey(value);
+    if (!parsed) return;
 
-    if (entry.playlistId !== activePlaylistId) {
-      onSelectPlaylist(entry.playlistId);
+    const { playlistId, entryIndex } = parsed;
+    if (playlistId !== activePlaylistId) {
+      onSelectPlaylist(playlistId);
       // caller resets activeEntryIndex to 0 when playlist changes
     } else {
-      onSelectEntry(entry.playlistId, entry.entryIndex);
+      onSelectEntry(playlistId, entryIndex);
     }
   }
 

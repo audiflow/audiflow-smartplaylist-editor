@@ -142,21 +142,25 @@ function makeGroup(
 interface WrapperConfig {
   config: PatternConfig;
   activePlaylistId: string;
+  activeEntryIndex?: number;
   onSelectPlaylist?: (id: string) => void;
+  onSelectEntry?: (playlistId: string, entryIndex: number) => void;
 }
 
 function Wrapper({
   config,
   activePlaylistId,
+  activeEntryIndex = 0,
   onSelectPlaylist = vi.fn(),
+  onSelectEntry = vi.fn(),
 }: WrapperConfig) {
   const form = useForm<PatternConfig>({ defaultValues: config });
   return (
     <FormProvider {...form}>
       <PreviewPlaylistSelector
         activePlaylistId={activePlaylistId}
-        activeEntryIndex={0}
-        onSelectEntry={vi.fn()}
+        activeEntryIndex={activeEntryIndex}
+        onSelectEntry={onSelectEntry}
         onSelectPlaylist={onSelectPlaylist}
       />
     </FormProvider>
@@ -431,6 +435,79 @@ describe('PreviewPlaylistSelector', () => {
       await user.click(betaOption);
 
       expect(onSelectPlaylist).toHaveBeenCalledWith('pl-b');
+    });
+
+    it('calls onSelectPlaylist when active is pl-1 and user clicks entry from pl-2', async () => {
+      const user = userEvent.setup();
+      const onSelectPlaylist = vi.fn();
+      const config: PatternConfig = {
+        id: 'test',
+        displayName: 'Test',
+        yearGroupedEpisodes: false,
+        playlists: [
+          { id: 'pl-1', displayName: 'Playlist One', grouping: { by: 'seasonNumber' }, priority: 0 },
+          { id: 'pl-2', displayName: 'Playlist Two', grouping: { by: 'seasonNumber' }, priority: 1 },
+        ],
+      };
+
+      render(
+        <Wrapper
+          config={config}
+          activePlaylistId="pl-1"
+          onSelectPlaylist={onSelectPlaylist}
+        />,
+      );
+
+      const pl2Option = screen.getByRole('option', { name: 'Playlist Two' });
+      await user.click(pl2Option);
+
+      expect(onSelectPlaylist).toHaveBeenCalledWith('pl-2');
+    });
+
+    it('calls onSelectEntry with new index when clicking a different entry within the same playlist', async () => {
+      const user = userEvent.setup();
+      const onSelectEntry = vi.fn();
+      const config: PatternConfig = {
+        id: 'test',
+        displayName: 'Test',
+        yearGroupedEpisodes: false,
+        playlists: [
+          {
+            id: 'pl-1',
+            displayName: 'Playlist One',
+            grouping: { by: 'seasonNumber' },
+            priority: 0,
+            selector: { partitionBy: 'year' },
+          },
+        ],
+      };
+
+      useEditorStore.getState().setPreviewData(
+        makePreviewResult([
+          makePreviewPlaylist('pl-1', 'Playlist One', [
+            makeGroup('g1', 'G1', [{ publishedAt: '2023-03-01T00:00:00Z' }]),
+            makeGroup('g2', 'G2', [{ publishedAt: '2024-06-01T00:00:00Z' }]),
+          ]),
+        ]),
+      );
+
+      render(
+        <Wrapper
+          config={config}
+          activePlaylistId="pl-1"
+          activeEntryIndex={0}
+          onSelectEntry={onSelectEntry}
+        />,
+      );
+
+      // Two year entries are rendered; click the second one (entryIndex 1 = 2024).
+      const yearOptions = screen.getAllByRole('option').filter(
+        (o) => o.textContent === 'selector.yearEntry',
+      );
+      expect(yearOptions.length).toBe(2);
+      await user.click(yearOptions[1]!);
+
+      expect(onSelectEntry).toHaveBeenCalledWith('pl-1', 1);
     });
 
     it('does not call onSelectPlaylist when clicking a same-playlist year entry', async () => {
