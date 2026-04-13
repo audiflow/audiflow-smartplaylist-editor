@@ -154,7 +154,7 @@ export function PlaylistTabContent({
               {playlistDisplayName && (
                 <header
                   data-preview-region="playlist-header"
-                  className="mb-3 border-b bg-background px-4 py-3"
+                  className="sticky -top-4 z-20 -mx-4 mb-3 border-b bg-background/95 px-4 py-3 backdrop-blur-sm"
                 >
                   <h2 className="text-base font-semibold truncate">{playlistDisplayName}</h2>
                 </header>
