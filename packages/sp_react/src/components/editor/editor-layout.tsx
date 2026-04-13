@@ -684,7 +684,8 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
                 }
               }}
               onSelectPlaylist={(targetId) => {
-                const idx = fields.findIndex((f) => f.id === targetId);
+                const playlists = form.getValues('playlists');
+                const idx = playlists.findIndex((p) => p.id === targetId);
                 if (0 <= idx) setActiveTab(`tab-${idx}`);
               }}
             />
