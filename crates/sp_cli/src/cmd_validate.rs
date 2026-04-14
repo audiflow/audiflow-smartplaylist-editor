@@ -161,10 +161,7 @@ fn validate_pattern_id_integrity(patterns_dir: &Path) -> anyhow::Result<u32> {
         if !is_deterministic_id(&meta.id) {
             continue; // grandfathered
         }
-        let expected = derive_pattern_id(
-            meta.podcast_guid.as_deref(),
-            &meta.feed_urls,
-        );
+        let expected = derive_pattern_id(meta.podcast_guid.as_deref(), &meta.feed_urls);
         match expected {
             Some(expected_id) if meta.id != expected_id => {
                 println!(

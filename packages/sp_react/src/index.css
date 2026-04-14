@@ -122,3 +122,47 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Preview highlight: declarative attribute-selector approach.
+   HighlightLayer writes data-active-region and data-active-fields on its wrapper
+   div; CSS matches descendant [data-preview-region] / [data-preview-field] nodes
+   without any imperative DOM manipulation. This avoids ref-timing races and
+   multi-instance conflicts when several HighlightLayer wrappers are mounted. */
+
+[data-active-region] [data-preview-region] {
+  /* default: no outline */
+}
+
+/* Match when the wrapper's active region equals the element's region key */
+[data-active-region="playlist-header"] [data-preview-region="playlist-header"],
+[data-active-region="filters"] [data-preview-region="filters"],
+[data-active-region="group-list"] [data-preview-region="group-list"],
+[data-active-region="selector-bridge"] [data-preview-region="selector-bridge"],
+[data-active-region="ungrouped"] [data-preview-region="ungrouped"] {
+  outline: 2px solid rgba(14, 165, 233, 0.35);
+  outline-offset: 4px;
+  border-radius: 12px;
+  transition: outline-color 120ms ease-out;
+}
+
+@keyframes preview-field-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.6); }
+  60%  { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+}
+
+/* data-active-fields uses space-separated token matching (~=) so multiple
+   simultaneous field pulses are supported with a single attribute value. */
+[data-active-fields~="group-sort"] [data-preview-field="group-sort"],
+[data-active-fields~="group-year-sections"] [data-preview-field="group-year-sections"],
+[data-active-fields~="group-list-order"] [data-preview-field="group-list-order"],
+[data-active-fields~="group-card-season-prefix"] [data-preview-field="group-card-season-prefix"],
+[data-active-fields~="partition-entries"] [data-preview-field="partition-entries"],
+[data-active-fields~="episode-order"] [data-preview-field="episode-order"],
+[data-active-fields~="episode-title"] [data-preview-field="episode-title"],
+[data-active-fields~="filters-require"] [data-preview-field="filters-require"],
+[data-active-fields~="filters-exclude"] [data-preview-field="filters-exclude"],
+[data-active-fields~="group-card-date-range"] [data-preview-field="group-card-date-range"] {
+  animation: preview-field-pulse 1s ease-out;
+  border-radius: 8px;
+}

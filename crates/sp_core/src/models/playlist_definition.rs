@@ -1,105 +1,187 @@
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 use super::group_def::GroupDef;
-use super::is_zero;
 use super::numbering_extractor::NumberingExtractor;
 use super::sort::{EpisodeSortRule, SortRule};
 use super::title_extractor::TitleExtractor;
 
-/// Deserializes the presentation field, normalizing legacy values.
-/// Maps "grouped" -> "combined" and "split" -> "separate".
-fn deserialize_presentation<'de, D>(deserializer: D) -> Result<String, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let raw = String::deserialize(deserializer)?;
-    Ok(match raw.as_str() {
-        "grouped" => "combined".to_owned(),
-        "split" => "separate".to_owned(),
-        _ => raw,
-    })
+/// Configuration for the selector dropdown in the app UI.
+///
+/// Controls how resolver groups map to selector entries:
+/// - No `partitionBy` -> single entry
+/// - `partitionBy: "seasonNumber"` -> one entry per season, groups as cards within
+/// - `partitionBy: "year"` -> one entry per year, groups as cards within
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectorConfig {
+    /// How to partition groups into selector entries.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub partition_by: Option<String>,
+
+    /// Generates display names for partitioned selector entries.
+    /// Used when partitionBy is "seasonNumber" or "year".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title_extractor: Option<TitleExtractor>,
 }
 
-/// Unified per-playlist definition with all fields strongly typed.
+/// Grouping configuration: how episodes are organized into groups.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupingConfig {
+    /// The grouping strategy.
+    /// Values: "seasonNumber", "year", "titleDiscovery", "titleClassifier".
+    #[serde(rename = "by")]
+    pub by: String,
+
+    /// Regex hint for titleDiscovery fallback.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub discovery_hint: Option<String>,
+
+    /// Configuration for extracting season and episode numbers.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub numbering_extractor: Option<NumberingExtractor>,
+
+    /// Static group definitions for titleClassifier-based grouping.
+    /// Also used by titleDiscovery for extraction pattern.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub static_classifiers: Option<Vec<GroupDef>>,
+}
+
+/// Group item display defaults.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupItemConfig {
+    /// Show date range on group cards.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_date_range: Option<bool>,
+
+    /// Pin group to its earliest year's section.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pin_to_year: Option<bool>,
+
+    /// Whether to prepend "S{n}" to resolver result names.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prepend_season_number: Option<bool>,
+
+    /// Configuration for extracting playlist/group display names.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title_extractor: Option<TitleExtractor>,
+}
+
+/// Episode item display defaults.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EpisodeItemConfig {
+    /// Configuration for extracting episode display names.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title_extractor: Option<TitleExtractor>,
+}
+
+/// Group listing settings.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupListingConfig {
+    /// How groups relate to year headers.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub year_binding: Option<String>,
+
+    /// Allow users to change sort order at runtime.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user_sortable: Option<bool>,
+
+    /// Sort rule for ordering groups.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sort: Option<SortRule>,
+}
+
+/// Episode listing settings.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EpisodeListingConfig {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_year_headers: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sort: Option<EpisodeSortRule>,
+}
+
+/// Unified per-playlist definition with all fields strongly typed (v5 only).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlaylistDefinition {
     pub id: String,
     pub display_name: String,
-    pub resolver_type: String,
-    /// Accepts legacy `playlistStructure` key and normalizes legacy values
-    /// (`grouped` -> `combined`, `split` -> `separate`).
-    #[serde(
-        alias = "playlistStructure",
-        deserialize_with = "deserialize_presentation"
-    )]
-    pub presentation: String,
 
-    /// Episode claiming order among siblings (lower = first, default: 0).
-    #[serde(default, skip_serializing_if = "is_zero")]
+    /// Episode claiming order among siblings (lower = first).
     pub priority: i32,
 
     /// Episode filters applied before resolver processing.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub episode_filters: Option<EpisodeFilters>,
 
-    /// Configuration for extracting playlist/group display names.
+    /// Grouping block: how episodes are organized into groups.
+    pub grouping: GroupingConfig,
+
+    /// Selector configuration controlling how groups map to dropdown entries.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub title_extractor: Option<TitleExtractor>,
+    pub selector: Option<SelectorConfig>,
 
-    /// Whether to prepend "S{n}" to resolver result names.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub prepend_season_number: bool,
-
-    /// Settings for the group list view (grouped mode only).
+    /// Group listing settings.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub group_list: Option<GroupListSettings>,
+    pub group_listing: Option<GroupListingConfig>,
 
-    /// Default episode list display and ordering settings.
+    /// Group item display defaults.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub episode_list: Option<EpisodeListSettings>,
+    pub group_item: Option<GroupItemConfig>,
 
-    /// Configuration for extracting season and episode numbers.
-    /// Accepts legacy `episodeExtractor` key for v3 backward compatibility.
-    #[serde(skip_serializing_if = "Option::is_none", alias = "episodeExtractor")]
-    pub numbering_extractor: Option<NumberingExtractor>,
-
-    /// Static group definitions for titleClassifier-based grouping.
+    /// Episode listing settings.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub groups: Option<Vec<GroupDef>>,
+    pub episode_listing: Option<EpisodeListingConfig>,
+
+    /// Episode item display defaults.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub episode_item: Option<EpisodeItemConfig>,
 }
 
 impl PlaylistDefinition {
-    /// Removes fields that are irrelevant to the current `resolver_type`.
+    /// Removes fields that are irrelevant to the current grouping strategy.
     ///
     /// This keeps form-state values safe (the editor preserves them for undo),
     /// but ensures persisted/previewed data is clean.
     ///
-    /// Conditional fields by resolver_type:
-    /// - `seasonNumber`:      numberingExtractor, titleExtractor
-    /// - `titleDiscovery`:    titleExtractor, groups (groups[0].pattern used as fallback)
-    /// - `titleClassifier`:   groups
-    /// - `year`:              titleExtractor
+    /// Conditional fields by grouping.by:
+    /// - `seasonNumber`:      numberingExtractor, groupItem.titleExtractor, groupItem.prependSeasonNumber
+    /// - `titleDiscovery`:    groupItem.titleExtractor, staticClassifiers
+    /// - `titleClassifier`:   staticClassifiers
+    /// - `year`:              groupItem.titleExtractor
     /// - others:              none of the above
     pub fn strip_conditional_fields(&mut self) {
-        let rt = self.resolver_type.as_str();
+        let by = self.grouping.by.clone();
 
         // numberingExtractor: only seasonNumber
-        if rt != "seasonNumber" {
-            self.numbering_extractor = None;
+        if by != "seasonNumber" {
+            self.grouping.numbering_extractor = None;
         }
 
-        // titleExtractor (top-level only): seasonNumber, titleDiscovery, or year
-        // Note: episodeList.titleExtractor is NOT stripped here -- it is an
-        // episode-list display setting independent of resolver type.
-        if rt != "seasonNumber" && rt != "titleDiscovery" && rt != "year" {
-            self.title_extractor = None;
+        // titleExtractor (group-level only): seasonNumber, titleDiscovery, or year
+        if by != "seasonNumber"
+            && by != "titleDiscovery"
+            && by != "year"
+            && let Some(gi) = &mut self.group_item
+        {
+            gi.title_extractor = None;
         }
 
-        // groups: titleClassifier uses full group definitions;
-        // titleDiscovery uses groups[0].pattern as a fallback extraction pattern
-        if rt != "titleClassifier" && rt != "titleDiscovery" {
-            self.groups = None;
+        // prependSeasonNumber: only meaningful for seasonNumber groups.
+        if by != "seasonNumber"
+            && let Some(gi) = &mut self.group_item
+        {
+            gi.prepend_season_number = None;
+        }
+
+        // staticClassifiers: titleClassifier or titleDiscovery
+        if by != "titleClassifier" && by != "titleDiscovery" {
+            self.grouping.static_classifiers = None;
         }
     }
 
@@ -136,64 +218,33 @@ pub struct EpisodeFilterEntry {
     pub description: Option<String>,
 }
 
-/// Settings for the group list view (grouped mode only).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GroupListSettings {
-    /// How groups relate to year headers.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub year_binding: Option<String>,
-
-    /// Allow users to change sort order at runtime.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub user_sortable: Option<bool>,
-
-    /// Show date range on group cards.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub show_date_range: Option<bool>,
-
-    /// Sort rule for ordering groups.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub sort: Option<SortRule>,
-}
-
-/// Default episode list display and ordering settings.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EpisodeListSettings {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub show_year_headers: Option<bool>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub sort: Option<EpisodeSortRule>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub title_extractor: Option<TitleExtractor>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn make_definition(resolver_type: &str) -> PlaylistDefinition {
+    fn make_definition(by: &str) -> PlaylistDefinition {
         let json = serde_json::json!({
             "id": "test",
             "displayName": "Test",
-            "resolverType": resolver_type,
-            "presentation": "combined",
-            "numberingExtractor": {
-                "source": "title",
-                "pattern": "(\\d+)",
-                "seasonGroup": 0,
-                "episodeGroup": 1
+            "priority": 0,
+            "grouping": {
+                "by": by,
+                "numberingExtractor": {
+                    "source": "title",
+                    "pattern": "(\\d+)",
+                    "seasonGroup": 0,
+                    "episodeGroup": 1
+                },
+                "staticClassifiers": [{ "id": "g1", "displayName": "G1", "pattern": { "source": "title", "pattern": ".*" } }]
             },
-            "titleExtractor": {
-                "source": "title",
-                "pattern": "(.+)",
-                "group": 1
+            "groupItem": {
+                "titleExtractor": {
+                    "source": "title",
+                    "pattern": "(.+)",
+                    "group": 1
+                }
             },
-            "groups": [{ "id": "g1", "displayName": "G1", "pattern": ".*" }],
-            "episodeList": {
+            "episodeItem": {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
@@ -209,31 +260,29 @@ mod tests {
         let mut def = make_definition("seasonNumber");
         def.strip_conditional_fields();
 
-        assert!(def.numbering_extractor.is_some());
-        assert!(def.title_extractor.is_some());
-        assert!(def.groups.is_none());
+        assert!(def.grouping.numbering_extractor.is_some());
+        assert!(def.group_item.as_ref().unwrap().title_extractor.is_some());
+        assert!(def.grouping.static_classifiers.is_none());
     }
 
     #[test]
-    fn title_discovery_keeps_title_extractor_and_groups() {
+    fn title_discovery_keeps_title_extractor_and_static_classifiers() {
         let mut def = make_definition("titleDiscovery");
         def.strip_conditional_fields();
 
-        assert!(def.numbering_extractor.is_none());
-        assert!(def.title_extractor.is_some());
-        assert!(def.groups.is_some());
+        assert!(def.grouping.numbering_extractor.is_none());
+        assert!(def.group_item.as_ref().unwrap().title_extractor.is_some());
+        assert!(def.grouping.static_classifiers.is_some());
     }
 
     #[test]
-    fn title_classifier_keeps_groups_only() {
+    fn title_classifier_keeps_static_classifiers_only() {
         let mut def = make_definition("titleClassifier");
         def.strip_conditional_fields();
 
-        assert!(def.numbering_extractor.is_none());
-        assert!(def.title_extractor.is_none());
-        assert!(def.groups.is_some());
-        // episodeList.titleExtractor is NOT stripped (independent of resolver)
-        assert!(def.episode_list.as_ref().unwrap().title_extractor.is_some());
+        assert!(def.grouping.numbering_extractor.is_none());
+        assert!(def.group_item.as_ref().unwrap().title_extractor.is_none());
+        assert!(def.grouping.static_classifiers.is_some());
     }
 
     #[test]
@@ -241,8 +290,47 @@ mod tests {
         let mut def = make_definition("year");
         def.strip_conditional_fields();
 
-        assert!(def.numbering_extractor.is_none());
-        assert!(def.title_extractor.is_some());
-        assert!(def.groups.is_none());
+        assert!(def.grouping.numbering_extractor.is_none());
+        assert!(def.group_item.as_ref().unwrap().title_extractor.is_some());
+        assert!(def.grouping.static_classifiers.is_none());
+    }
+
+    #[test]
+    fn v5_grouping_deserializes() {
+        let json = serde_json::json!({
+            "id": "test",
+            "displayName": "Test",
+            "priority": 0,
+            "grouping": {
+                "by": "seasonNumber",
+                "numberingExtractor": {
+                    "source": "title",
+                    "pattern": "(\\d+)",
+                    "seasonGroup": 0,
+                    "episodeGroup": 1
+                }
+            },
+            "groupItem": {
+                "showDateRange": true,
+                "titleExtractor": {
+                    "source": "title",
+                    "pattern": "(.+)",
+                    "group": 1
+                }
+            },
+            "episodeItem": {
+                "titleExtractor": {
+                    "source": "title",
+                    "pattern": "(.+)",
+                    "group": 1
+                }
+            }
+        });
+        let def: PlaylistDefinition = serde_json::from_value(json).unwrap();
+        assert_eq!(def.grouping.by, "seasonNumber");
+        assert!(def.grouping.numbering_extractor.is_some());
+        assert!(def.group_item.as_ref().unwrap().title_extractor.is_some());
+        assert!(def.episode_item.as_ref().unwrap().title_extractor.is_some());
+        assert!(def.group_item.as_ref().unwrap().show_date_range.unwrap());
     }
 }

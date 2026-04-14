@@ -17,7 +17,12 @@ where
     }
 
     let mut dirs: Vec<PathBuf> = std::fs::read_dir(patterns_dir)
-        .map_err(|e| anyhow::anyhow!("Failed to read patterns directory {}: {e}", patterns_dir.display()))?
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to read patterns directory {}: {e}",
+                patterns_dir.display()
+            )
+        })?
         .filter_map(|e| e.ok())
         .map(|e| e.path())
         .filter(|p| p.is_dir())

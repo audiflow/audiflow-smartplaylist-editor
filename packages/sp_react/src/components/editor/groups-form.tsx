@@ -12,7 +12,10 @@ interface GroupsFormProps {
   index: number;
 }
 
-const EMPTY_GROUP = { id: '', displayName: '', pattern: '' };
+// New groups start without a pattern (catch-all). The user can set both
+// source and regex via the group-def-card UI, which keeps the Matcher object
+// in a consistent shape when populated.
+const EMPTY_GROUP = { id: '', displayName: '' };
 
 export function GroupsForm({ index }: GroupsFormProps) {
   const { watch, control, getValues } = useFormContext<PatternConfig>();
@@ -21,7 +24,7 @@ export function GroupsForm({ index }: GroupsFormProps) {
 
   const { fields, append, remove, move, replace } = useFieldArray({
     control,
-    name: `${prefix}.groups`,
+    name: `${prefix}.grouping.staticClassifiers`,
   });
 
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
@@ -30,12 +33,12 @@ export function GroupsForm({ index }: GroupsFormProps) {
     id: field.id,
     displayName:
       watch(
-        `${prefix}.groups.${index}.displayName` as `playlists.${number}.groups.${number}.displayName`,
+        `${prefix}.grouping.staticClassifiers.${index}.displayName` as `playlists.${number}.grouping.staticClassifiers.${number}.displayName`,
       ) || field.id,
   }));
 
   function handleReorderConfirm(orderedIds: string[]) {
-    const currentGroups = getValues(`${prefix}.groups`) ?? [];
+    const currentGroups = getValues(`${prefix}.grouping.staticClassifiers`) ?? [];
     const idToIndex = new Map(fields.map((f, i) => [f.id, i]));
     const reordered = orderedIds.map((id) => currentGroups[idToIndex.get(id)!]);
     replace(reordered);

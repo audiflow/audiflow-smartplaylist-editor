@@ -1,5 +1,5 @@
-use axum::extract::{Query, State};
 use axum::Json;
+use axum::extract::{Query, State};
 use serde::Deserialize;
 use url::form_urlencoded;
 
@@ -27,9 +27,8 @@ pub async fn search_podcasts(
     let limit = query.limit.unwrap_or(25).clamp(1, 200);
 
     let encoded_term: String = form_urlencoded::byte_serialize(term.as_bytes()).collect();
-    let url = format!(
-        "https://itunes.apple.com/search?media=podcast&term={encoded_term}&limit={limit}",
-    );
+    let url =
+        format!("https://itunes.apple.com/search?media=podcast&term={encoded_term}&limit={limit}",);
 
     let response = state
         .http_client

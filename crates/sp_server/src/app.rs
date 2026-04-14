@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 
 use crate::services::{DiskFeedCacheService, FileWatcherService, LocalConfigRepository};
 use sp_core::schema::Validator;

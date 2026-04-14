@@ -15,11 +15,8 @@ const DEFAULT_CONFIG: PatternConfig = {
     {
       id: 'playlist-1',
       displayName: 'Test Playlist',
-      resolverType: 'seasonNumber',
-      presentation: 'combined',
+      grouping: { by: 'seasonNumber' },
       priority: 0,
-      prependSeasonNumber: false,
-      groups: [],
     },
   ],
 };
@@ -64,10 +61,17 @@ describe('PlaylistForm', () => {
   });
 
   describe('Tabs', () => {
-    it('renders 5 tabs (no separate Groups tab)', () => {
+    it('renders 4 tabs: Basic, Filters, Organize, Display', () => {
       renderPlaylistForm();
       const tabs = screen.getAllByRole('tab');
-      expect(tabs.length).toBe(5);
+      expect(tabs.length).toBe(4);
+      const names = tabs.map((t) => t.textContent?.trim());
+      expect(names).toEqual(['Basic', 'Filters', 'Organize', 'Display']);
+    });
+
+    it('does not render an Episode List tab', () => {
+      renderPlaylistForm();
+      expect(screen.queryByRole('tab', { name: /episode list/i })).toBeNull();
     });
 
     it('shows Organize tab as default for saved playlists', () => {
@@ -111,14 +115,7 @@ describe('PlaylistForm', () => {
       expect(screen.getByText(/how to organize/i)).toBeInTheDocument();
     });
 
-    it('renders presentation select dropdown', async () => {
-      const user = userEvent.setup();
-      renderPlaylistForm();
-      await switchToTab(user, /organize/i);
-      expect(screen.getByText(/how groups appear/i)).toBeInTheDocument();
-    });
-
-});
+  });
 
   describe('DisplayOptions', () => {
     it('renders showYearHeaders checkbox', async () => {

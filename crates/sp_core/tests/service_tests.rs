@@ -3,9 +3,9 @@ use std::collections::HashMap;
 use chrono::{TimeZone, Utc};
 
 use sp_core::models::{
-    EpisodeFilterEntry, EpisodeFilters, GroupListSettings, PatternConfig, PatternMeta,
-    PlaylistDefinition, PlaylistGroup, Presentation, SimpleEpisodeData, SortField, SortOrder,
-    SortRule, YearBinding,
+    EpisodeFilterEntry, EpisodeFilters, GroupListingConfig, GroupingConfig, PatternConfig,
+    PatternMeta, PlaylistDefinition, PlaylistGroup, Presentation, SimpleEpisodeData, SortField,
+    SortOrder, SortRule, YearBinding,
 };
 use sp_core::resolvers::{RssResolver, YearResolver};
 use sp_core::services::{
@@ -158,6 +158,7 @@ fn make_group(id: &str, name: &str, sort_key: i32, episode_ids: Vec<i64>) -> Pla
         earliest_date: None,
         latest_date: None,
         total_duration_ms: None,
+        sub_groups: None,
     }
 }
 
@@ -298,16 +299,19 @@ fn make_definition(id: &str) -> PlaylistDefinition {
     PlaylistDefinition {
         id: id.to_string(),
         display_name: id.to_string(),
-        resolver_type: "seasonNumber".to_string(),
-        presentation: "separate".to_string(),
+        grouping: GroupingConfig {
+            by: "seasonNumber".to_string(),
+            discovery_hint: None,
+            numbering_extractor: None,
+            static_classifiers: None,
+        },
+        selector: None,
         priority: 0,
         episode_filters: None,
-        title_extractor: None,
-        prepend_season_number: false,
-        group_list: None,
-        episode_list: None,
-        numbering_extractor: None,
-        groups: None,
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
     }
 }
 
@@ -471,16 +475,19 @@ fn resolver_matches_config_by_feed_url() {
         playlists: vec![PlaylistDefinition {
             id: "main".to_string(),
             display_name: "Main".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "separate".to_string(),
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -508,16 +515,19 @@ fn resolver_matches_config_by_guid() {
         playlists: vec![PlaylistDefinition {
             id: "main".to_string(),
             display_name: "Main".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "separate".to_string(),
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -547,8 +557,13 @@ fn resolver_filters_by_require_regex() {
             PlaylistDefinition {
                 id: "bonus".to_string(),
                 display_name: "Bonus".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -557,18 +572,21 @@ fn resolver_filters_by_require_regex() {
                     }]),
                     exclude: None,
                 }),
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
             PlaylistDefinition {
                 id: "main".to_string(),
                 display_name: "Main".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 0,
                 episode_filters: Some(EpisodeFilters {
                     require: None,
@@ -577,12 +595,10 @@ fn resolver_filters_by_require_regex() {
                         description: None,
                     }]),
                 }),
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
         ],
     }]);
@@ -626,8 +642,13 @@ fn resolver_filter_regex_is_case_insensitive() {
         playlists: vec![PlaylistDefinition {
             id: "bonus".to_string(),
             display_name: "Bonus".to_string(),
-            resolver_type: "year".to_string(),
-            presentation: "separate".to_string(),
+            grouping: GroupingConfig {
+                by: "year".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: Some(EpisodeFilters {
                 require: Some(vec![EpisodeFilterEntry {
@@ -636,12 +657,10 @@ fn resolver_filter_regex_is_case_insensitive() {
                 }]),
                 exclude: None,
             }),
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -680,22 +699,30 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
             PlaylistDefinition {
                 id: "all".to_string(),
                 display_name: "All".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 0,
                 episode_filters: None,
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
             PlaylistDefinition {
                 id: "bonus".to_string(),
                 display_name: "Bonus".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -704,12 +731,10 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                     }]),
                     exclude: None,
                 }),
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
         ],
     }]);
@@ -752,21 +777,23 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
         playlists: vec![PlaylistDefinition {
             id: "regular".to_string(),
             display_name: "Regular Series".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "combined".to_string(),
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: Some(GroupListSettings {
+            group_listing: Some(GroupListingConfig {
                 year_binding: Some("pinToYear".to_string()),
                 user_sortable: None,
-                show_date_range: None,
                 sort: None,
             }),
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -806,47 +833,6 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
 }
 
 #[test]
-fn resolver_split_structure_produces_multiple_playlists() {
-    let service = make_resolver_service(vec![PatternConfig {
-        id: "test".to_string(),
-        podcast_guid: None,
-        feed_urls: Some(vec!["https://example.com/feed".to_string()]),
-        year_grouped_episodes: false,
-        playlists: vec![PlaylistDefinition {
-            id: "all".to_string(),
-            display_name: "All".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "separate".to_string(),
-            priority: 0,
-            episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
-        }],
-    }]);
-
-    let eps = vec![
-        make_rss_episode(1, 1, "S1E1", 1, 1),
-        make_rss_episode(2, 2, "S2E1", 3, 1),
-    ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
-        .iter()
-        .map(|e| e as &dyn sp_core::models::EpisodeData)
-        .collect();
-
-    let result = service
-        .resolve_smart_playlists(None, "https://example.com/feed", &refs)
-        .unwrap();
-
-    // Split mode: each season is a separate top-level playlist
-    assert_eq!(result.playlists.len(), 2);
-    assert!(result.playlists[0].groups.is_none());
-}
-
-#[test]
 fn resolver_episode_ids_sorted_by_published_at_in_output() {
     let service = make_resolver_service(vec![PatternConfig {
         id: "test".to_string(),
@@ -856,16 +842,19 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
         playlists: vec![PlaylistDefinition {
             id: "all".to_string(),
             display_name: "All".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "separate".to_string(),
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -898,16 +887,19 @@ fn resolver_sorts_ungrouped_episode_ids() {
         playlists: vec![PlaylistDefinition {
             id: "series".to_string(),
             display_name: "Series".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "separate".to_string(),
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -992,16 +984,19 @@ fn preview_returns_preview_grouping_with_single_playlist() {
         playlists: vec![PlaylistDefinition {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "combined".to_string(),
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -1036,8 +1031,13 @@ fn preview_tracks_claimed_by_others() {
             PlaylistDefinition {
                 id: "priority-a".to_string(),
                 display_name: "Priority A".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -1046,18 +1046,21 @@ fn preview_tracks_claimed_by_others() {
                     }]),
                     exclude: None,
                 }),
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
             PlaylistDefinition {
                 id: "priority-b".to_string(),
                 display_name: "Priority B".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 5,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -1066,12 +1069,10 @@ fn preview_tracks_claimed_by_others() {
                     }]),
                     exclude: None,
                 }),
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
         ],
     }]);
@@ -1124,16 +1125,19 @@ fn preview_sorts_episode_ids_by_published_at() {
         playlists: vec![PlaylistDefinition {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
-            resolver_type: "seasonNumber".to_string(),
-            presentation: "combined".to_string(),
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
             priority: 0,
             episode_filters: None,
-            title_extractor: None,
-            prepend_season_number: false,
-            group_list: None,
-            episode_list: None,
-            numbering_extractor: None,
-            groups: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -1170,8 +1174,13 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
             PlaylistDefinition {
                 id: "bonus".to_string(),
                 display_name: "Bonus".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 10,
                 episode_filters: Some(EpisodeFilters {
                     require: Some(vec![EpisodeFilterEntry {
@@ -1180,26 +1189,27 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                     }]),
                     exclude: None,
                 }),
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
             PlaylistDefinition {
                 id: "all".to_string(),
                 display_name: "All".to_string(),
-                resolver_type: "year".to_string(),
-                presentation: "separate".to_string(),
+                grouping: GroupingConfig {
+                    by: "year".to_string(),
+                    discovery_hint: None,
+                    numbering_extractor: None,
+                    static_classifiers: None,
+                },
+                selector: None,
                 priority: 0,
                 episode_filters: None, // fallback
-                title_extractor: None,
-                prepend_season_number: false,
-                group_list: None,
-                episode_list: None,
-                numbering_extractor: None,
-                groups: None,
+                group_listing: None,
+                group_item: None,
+                episode_listing: None,
+                episode_item: None,
             },
         ],
     }]);
@@ -1235,4 +1245,150 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
         .unwrap();
     // Fallback (no filters) always has empty claimed_by_others
     assert!(all_result.claimed_by_others.is_empty());
+}
+
+// =========================================================================
+// Partition by seasonNumber tests
+// =========================================================================
+
+#[test]
+fn partition_by_season_creates_sub_groups() {
+    use sp_core::models::{EpisodeData, SelectorConfig, TitleExtractor};
+    use sp_core::resolvers::TitleAppearanceResolver;
+
+    // Primary resolver: titleDiscovery (groups by professor name)
+    // Selector: partitionBy seasonNumber (organize groups under seasons)
+    let def = PlaylistDefinition {
+        id: "by_prof".to_string(),
+        display_name: "By Professor".to_string(),
+        grouping: GroupingConfig {
+            by: "titleDiscovery".to_string(),
+            discovery_hint: None,
+            numbering_extractor: None,
+            static_classifiers: None,
+        },
+        selector: Some(SelectorConfig {
+            partition_by: Some("seasonNumber".to_string()),
+            title_extractor: Some(TitleExtractor {
+                source: "seasonNumber".to_string(),
+                pattern: None,
+                group: 0,
+                template: Some("Season {value}".to_string()),
+                fallback: None,
+                fallback_value: None,
+            }),
+        }),
+        priority: 0,
+        episode_filters: None,
+        group_listing: None,
+        group_item: Some(sp_core::models::GroupItemConfig {
+            show_date_range: None,
+            pin_to_year: None,
+            prepend_season_number: None,
+            title_extractor: Some(TitleExtractor {
+                source: "title".to_string(),
+                pattern: Some(r"\[(\w+)".to_string()),
+                group: 1,
+                template: None,
+                fallback: None,
+                fallback_value: None,
+            }),
+        }),
+        episode_listing: None,
+        episode_item: None,
+    };
+
+    let episodes = vec![
+        SimpleEpisodeData {
+            id: 1,
+            title: "[ProfA 1] Topic".to_string(),
+            description: None,
+            season_number: Some(1),
+            episode_number: Some(1),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 2,
+            title: "[ProfA 2] Topic".to_string(),
+            description: None,
+            season_number: Some(1),
+            episode_number: Some(2),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 1, 8, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 3,
+            title: "[ProfB 1] Topic".to_string(),
+            description: None,
+            season_number: Some(1),
+            episode_number: Some(3),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 1, 15, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 4,
+            title: "[ProfC 1] Topic".to_string(),
+            description: None,
+            season_number: Some(2),
+            episode_number: Some(1),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 6, 1, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+        SimpleEpisodeData {
+            id: 5,
+            title: "[ProfC 2] Topic".to_string(),
+            description: None,
+            season_number: Some(2),
+            episode_number: Some(2),
+            published_at: Some(Utc.with_ymd_and_hms(2024, 6, 8, 0, 0, 0).unwrap()),
+            image_url: None,
+        },
+    ];
+
+    let config = PatternConfig {
+        id: "test".to_string(),
+        podcast_guid: None,
+        feed_urls: Some(vec!["https://example.com/feed".to_string()]),
+        year_grouped_episodes: false,
+        playlists: vec![def],
+    };
+
+    let resolvers: Vec<Box<dyn sp_core::resolvers::Resolver>> = vec![
+        Box::new(RssResolver),
+        Box::new(TitleAppearanceResolver),
+        Box::new(YearResolver),
+    ];
+
+    let refs: Vec<&dyn EpisodeData> = episodes.iter().map(|e| e as &dyn EpisodeData).collect();
+    let service = ResolverService::new(resolvers, vec![config]);
+    let result = service
+        .resolve_smart_playlists(None, "https://example.com/feed", &refs)
+        .expect("should produce grouping");
+
+    // Should have 1 playlist (combined mode since partitionBy != "group")
+    assert_eq!(result.playlists.len(), 1);
+    let playlist = &result.playlists[0];
+
+    // Top-level groups should be seasons (partitions)
+    let groups = playlist.groups.as_ref().expect("should have groups");
+    assert_eq!(groups.len(), 2);
+
+    // Season 1 partition should have sub-groups: ProfA, ProfB
+    let s1 = &groups[0];
+    assert_eq!(s1.episode_ids.len(), 3);
+    let s1_subs = s1
+        .sub_groups
+        .as_ref()
+        .expect("season 1 should have sub_groups");
+    assert_eq!(s1_subs.len(), 2);
+
+    // Season 2 partition should have sub-group: ProfC
+    let s2 = &groups[1];
+    assert_eq!(s2.episode_ids.len(), 2);
+    let s2_subs = s2
+        .sub_groups
+        .as_ref()
+        .expect("season 2 should have sub_groups");
+    assert_eq!(s2_subs.len(), 1);
 }

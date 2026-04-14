@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/schemas/config-schema.ts';
@@ -35,6 +35,9 @@ interface GroupDefCardProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
+  /** Called after the id field commits on blur so parents can migrate any
+   *  references keyed on the old id (e.g. activeContext in the store). */
+  onIdCommit?: (oldId: string, newId: string) => void;
 }
 
 export function GroupDefCard({
@@ -45,14 +48,23 @@ export function GroupDefCard({
   onMoveUp,
   onMoveDown,
   onRemove,
+  onIdCommit,
 }: GroupDefCardProps) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
-  const prefix = `playlists.${playlistIndex}.groups.${groupIndex}` as const;
+  const prefix = `playlists.${playlistIndex}.grouping.staticClassifiers.${groupIndex}` as const;
 
-  const yearBinding = watch(`${prefix}.display.yearBinding`);
-  const episodeSort = watch(`${prefix}.episodeList.sort` as any);
-  const titleExtractor = watch(`${prefix}.episodeList.titleExtractor` as any);
+  // The id field commits on blur rather than on change so that external lookups
+  // keyed on the id (activeContext tracking, override maps) don't tear mid-typing.
+  const committedId = watch(`${prefix}.id`) ?? '';
+  const [idDraft, setIdDraft] = useState(committedId);
+  useEffect(() => {
+    setIdDraft(committedId);
+  }, [committedId]);
+
+  const yearBinding = watch(`${prefix}.groupListing.yearBinding`);
+  const episodeSort = watch(`${prefix}.episodeListing.sort` as any);
+  const titleExtractor = watch(`${prefix}.episodeItem.titleExtractor` as any);
   const numberingExtractor = watch(`${prefix}.numberingExtractor` as any);
 
   const expandedOverrides = useMemo(() => {
@@ -106,7 +118,13 @@ export function GroupDefCard({
             </HintLabel>
             <Input
               id={`group-${playlistIndex}-${groupIndex}-id`}
-              {...register(`${prefix}.id`)}
+              value={idDraft}
+              onChange={(e) => setIdDraft(e.target.value)}
+              onBlur={() => {
+                if (idDraft === committedId) return;
+                setValue(`${prefix}.id`, idDraft, { shouldDirty: true });
+                onIdCommit?.(committedId, idDraft);
+              }}
             />
           </div>
 
@@ -126,16 +144,48 @@ export function GroupDefCard({
 
         <div className="space-y-1.5">
           <HintLabel
-            htmlFor={`group-${playlistIndex}-${groupIndex}-pattern`}
+            htmlFor={`group-${playlistIndex}-${groupIndex}-pattern-pattern`}
             hint="groupPattern"
           >
             {t('groupPattern')}
           </HintLabel>
-          <Input
-            id={`group-${playlistIndex}-${groupIndex}-pattern`}
-            {...register(`${prefix}.pattern`)}
-            placeholder={t('placeholderRegex')}
-          />
+          <div className="grid grid-cols-[minmax(0,8rem)_1fr] gap-3">
+            <Select
+              value={watch(`${prefix}.pattern.source`) ?? 'title'}
+              onValueChange={(val) => {
+                const currentPattern = watch(`${prefix}.pattern.pattern`) ?? '';
+                setValue(
+                  `${prefix}.pattern`,
+                  { source: val as 'title' | 'description', pattern: currentPattern },
+                  { shouldDirty: true },
+                );
+              }}
+            >
+              <SelectTrigger
+                id={`group-${playlistIndex}-${groupIndex}-pattern-source`}
+                aria-label={t('titleExtractorSource')}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="title">{t('source_title')}</SelectItem>
+                <SelectItem value="description">{t('source_description')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              id={`group-${playlistIndex}-${groupIndex}-pattern-pattern`}
+              value={watch(`${prefix}.pattern.pattern`) ?? ''}
+              onChange={(e) => {
+                const currentSource = watch(`${prefix}.pattern.source`) ?? 'title';
+                setValue(
+                  `${prefix}.pattern`,
+                  { source: currentSource, pattern: e.target.value },
+                  { shouldDirty: true },
+                );
+              }}
+              placeholder={t('placeholderRegex')}
+            />
+          </div>
         </div>
 
         <h5 className="text-xs font-medium text-muted-foreground">
@@ -146,9 +196,9 @@ export function GroupDefCard({
           <div className="flex items-center gap-2">
             <Checkbox
               id={`group-${playlistIndex}-${groupIndex}-showYearHeaders`}
-              checked={watch(`${prefix}.episodeList.showYearHeaders`) ?? false}
+              checked={watch(`${prefix}.episodeListing.showYearHeaders`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.episodeList.showYearHeaders`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.episodeListing.showYearHeaders`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel
@@ -162,9 +212,9 @@ export function GroupDefCard({
           <div className="flex items-center gap-2">
             <Checkbox
               id={`group-${playlistIndex}-${groupIndex}-showDateRange`}
-              checked={watch(`${prefix}.display.showDateRange`) ?? false}
+              checked={watch(`${prefix}.groupItem.showDateRange`) ?? false}
               onCheckedChange={(checked) =>
-                setValue(`${prefix}.display.showDateRange`, !!checked, { shouldDirty: true })
+                setValue(`${prefix}.groupItem.showDateRange`, !!checked, { shouldDirty: true })
               }
             />
             <HintLabel
@@ -184,10 +234,10 @@ export function GroupDefCard({
             </AccordionTrigger>
             <AccordionContent>
               <Select
-                value={watch(`${prefix}.display.yearBinding`) ?? 'none'}
+                value={watch(`${prefix}.groupListing.yearBinding`) ?? 'none'}
                 onValueChange={(v) =>
                   setValue(
-                    `${prefix}.display.yearBinding`,
+                    `${prefix}.groupListing.yearBinding`,
                     v === 'none' ? undefined : (v as YearBinding),
                     { shouldDirty: true },
                   )
@@ -218,12 +268,13 @@ export function GroupDefCard({
           {/* Title Extractor Override */}
           <AccordionItem value="titleExtractor">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
-              {t('groupTitleExtractor')} <HintIcon hint="groupTitleExtractor" />
+              {t('episodeTitleExtractor')} <HintIcon hint="groupTitleExtractor" />
             </AccordionTrigger>
             <AccordionContent>
               <TitleExtractorForm
-                fieldPath={`${prefix}.episodeList.titleExtractor`}
+                fieldPath={`${prefix}.episodeItem.titleExtractor`}
                 idPrefix={`group-title-ext-${playlistIndex}-${groupIndex}`}
+                labelKey="episodeTitleExtractor"
               />
             </AccordionContent>
           </AccordionItem>
@@ -250,7 +301,7 @@ function GroupEpisodeSortOverride({ prefix }: { prefix: string }) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
 
-  const sort = watch(`${prefix}.episodeList.sort` as any);
+  const sort = watch(`${prefix}.episodeListing.sort` as any);
   const isEnabled = sort != null;
 
   return (
@@ -263,10 +314,10 @@ function GroupEpisodeSortOverride({ prefix }: { prefix: string }) {
           size="sm"
           onClick={() => {
             if (isEnabled) {
-              setValue(`${prefix}.episodeList.sort` as any, undefined, { shouldDirty: true });
+              setValue(`${prefix}.episodeListing.sort` as any, undefined, { shouldDirty: true });
             } else {
               setValue(
-                `${prefix}.episodeList.sort` as any,
+                `${prefix}.episodeListing.sort` as any,
                 { field: 'publishedAt', order: 'ascending' },
                 { shouldDirty: true },
               );
@@ -284,7 +335,7 @@ function GroupEpisodeSortOverride({ prefix }: { prefix: string }) {
             <Select
               value={sort?.field ?? 'publishedAt'}
               onValueChange={(val) =>
-                setValue(`${prefix}.episodeList.sort.field` as any, val as EpisodeSortField, {
+                setValue(`${prefix}.episodeListing.sort.field` as any, val as EpisodeSortField, {
                   shouldDirty: true,
                 })
               }
@@ -307,7 +358,7 @@ function GroupEpisodeSortOverride({ prefix }: { prefix: string }) {
             <Select
               value={sort?.order ?? 'ascending'}
               onValueChange={(val) =>
-                setValue(`${prefix}.episodeList.sort.order` as any, val as SortOrder, {
+                setValue(`${prefix}.episodeListing.sort.order` as any, val as SortOrder, {
                   shouldDirty: true,
                 })
               }

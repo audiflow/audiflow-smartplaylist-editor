@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://audiflow.app/schema/v4/pattern-index.json",
+  "$id": "https://audiflow.app/schema/v5/pattern-index.json",
   "title": "SmartPlaylist Pattern Index",
   "description": "Root meta.json at the top level of the config data repository. Lists all available pattern configs with summary information for efficient discovery. The mobile app fetches this file first and uses feedUrlHint for fast pre-filtering before loading individual pattern files. Deployed to static hosting (GitHub Pages for production, GCS for dev/staging).",
   "type": "object",

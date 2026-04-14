@@ -8,7 +8,9 @@ use sp_core::models::PatternMeta;
 /// Rejects empty strings, `.`, `..`, and strings containing `/`, `\`, or null bytes.
 fn validate_path_segment(segment: &str) -> anyhow::Result<()> {
     if segment.is_empty()
-        || !segment.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+        || !segment
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
     {
         anyhow::bail!("Invalid pattern ID: {segment:?}");
     }
@@ -26,8 +28,10 @@ fn repo_relative_path(path: &Path) -> anyhow::Result<(String, PathBuf)> {
     if !output.status.success() {
         anyhow::bail!("Not a git repository");
     }
-    let toplevel = std::fs::canonicalize(PathBuf::from(String::from_utf8_lossy(&output.stdout).trim()))
-        .map_err(|e| anyhow::anyhow!("Failed to resolve git toplevel: {e}"))?;
+    let toplevel = std::fs::canonicalize(PathBuf::from(
+        String::from_utf8_lossy(&output.stdout).trim(),
+    ))
+    .map_err(|e| anyhow::anyhow!("Failed to resolve git toplevel: {e}"))?;
     let abs_path = std::fs::canonicalize(path)
         .map_err(|e| anyhow::anyhow!("Failed to resolve {}: {e}", path.display()))?;
     let relative = abs_path
@@ -37,7 +41,11 @@ fn repo_relative_path(path: &Path) -> anyhow::Result<(String, PathBuf)> {
 }
 
 /// Runs `git diff --name-only` against a previous ref, scoped to the patterns directory.
-fn git_diff_names(previous_ref: &str, patterns_dir: &Path, repo_root: &Path) -> anyhow::Result<String> {
+fn git_diff_names(
+    previous_ref: &str,
+    patterns_dir: &Path,
+    repo_root: &Path,
+) -> anyhow::Result<String> {
     let output = Command::new("git")
         .current_dir(repo_root)
         .args(["diff", previous_ref, "--name-only", "--"])
@@ -53,7 +61,11 @@ fn git_diff_names(previous_ref: &str, patterns_dir: &Path, repo_root: &Path) -> 
 
 /// Retrieves file content at a previous git ref. Returns `None` if the file
 /// did not exist at that ref.
-fn git_show_file(previous_ref: &str, file_path: &str, repo_root: &Path) -> anyhow::Result<Option<String>> {
+fn git_show_file(
+    previous_ref: &str,
+    file_path: &str,
+    repo_root: &Path,
+) -> anyhow::Result<Option<String>> {
     let output = Command::new("git")
         .current_dir(repo_root)
         .args(["show", &format!("{previous_ref}:{file_path}")])
@@ -127,10 +139,7 @@ fn compute_version_bumps(
 
 /// Writes updated `dataVersion` into each changed pattern's `meta.json`.
 /// Skips patterns whose `meta.json` no longer exists on disk (deleted patterns).
-fn apply_pattern_bumps(
-    patterns_dir: &Path,
-    bumps: &HashMap<String, i32>,
-) -> anyhow::Result<()> {
+fn apply_pattern_bumps(patterns_dir: &Path, bumps: &HashMap<String, i32>) -> anyhow::Result<()> {
     for (id, new_version) in bumps {
         let meta_path = patterns_dir.join(id).join("meta.json");
         if !meta_path.exists() {
@@ -165,11 +174,12 @@ fn apply_root_bump(
     let prev_root_path = format!("{patterns_dir_name}/meta.json");
     let prev_root_version = match git_show_file(previous_ref, &prev_root_path, repo_root)? {
         Some(content) => {
-            let value: serde_json::Value = serde_json::from_str(&content)
-                .map_err(|e| anyhow::anyhow!("Failed to parse {previous_ref}:{prev_root_path}: {e}"))?;
-            value["dataVersion"]
-                .as_i64()
-                .ok_or_else(|| anyhow::anyhow!("Missing or invalid dataVersion in {previous_ref}:{prev_root_path}"))? as i32
+            let value: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
+                anyhow::anyhow!("Failed to parse {previous_ref}:{prev_root_path}: {e}")
+            })?;
+            value["dataVersion"].as_i64().ok_or_else(|| {
+                anyhow::anyhow!("Missing or invalid dataVersion in {previous_ref}:{prev_root_path}")
+            })? as i32
         }
         None => 0,
     };
@@ -188,17 +198,13 @@ fn apply_root_bump(
             if meta_path.exists() {
                 match std::fs::read_to_string(&meta_path)
                     .map_err(anyhow::Error::from)
-                    .and_then(|c| {
-                        serde_json::from_str::<PatternMeta>(&c).map_err(Into::into)
-                    }) {
+                    .and_then(|c| serde_json::from_str::<PatternMeta>(&c).map_err(Into::into))
+                {
                     Ok(meta) => {
                         pattern["playlistCount"] = serde_json::json!(meta.playlists.len());
                     }
                     Err(e) => {
-                        eprintln!(
-                            "Warning: failed to read {}: {e}",
-                            meta_path.display()
-                        );
+                        eprintln!("Warning: failed to read {}: {e}", meta_path.display());
                     }
                 }
             }
@@ -273,8 +279,13 @@ pub fn run(patterns_dir: &str, previous_ref: &str, json: bool) -> anyhow::Result
     let bumps = compute_version_bumps(&changed_ids, &previous_versions);
 
     apply_pattern_bumps(&patterns_path, &bumps)?;
-    let new_root_version =
-        apply_root_bump(&patterns_path, &bumps, previous_ref, &patterns_dir_name, &repo_root)?;
+    let new_root_version = apply_root_bump(
+        &patterns_path,
+        &bumps,
+        previous_ref,
+        &patterns_dir_name,
+        &repo_root,
+    )?;
 
     let results: Vec<BumpResult> = changed_ids
         .iter()
@@ -563,10 +574,9 @@ mod tests {
         assert_eq!(meta["dataVersion"], 2);
 
         // Verify root meta was bumped
-        let root: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(patterns.join("meta.json")).unwrap(),
-        )
-        .unwrap();
+        let root: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(patterns.join("meta.json")).unwrap())
+                .unwrap();
         assert_eq!(root["dataVersion"], 2);
         assert_eq!(root["patterns"][0]["dataVersion"], 2);
         // "main" and "bonus" in playlists array

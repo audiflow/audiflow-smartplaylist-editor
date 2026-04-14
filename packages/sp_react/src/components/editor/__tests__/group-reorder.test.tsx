@@ -13,7 +13,11 @@ function FormWrapper({
   groups,
 }: {
   children: (args: { playlistIndex: number }) => ReactNode;
-  groups: Array<{ id: string; displayName: string; pattern: string }>;
+  groups: Array<{
+    id: string;
+    displayName: string;
+    pattern: { source: 'title' | 'description'; pattern: string };
+  }>;
 }) {
   const form = useForm<PatternConfig>({
     defaultValues: {
@@ -23,8 +27,10 @@ function FormWrapper({
         {
           id: 'playlist-1',
           displayName: 'Test Playlist',
-          resolverType: 'category',
-          groups,
+          grouping: {
+            by: 'titleClassifier',
+            staticClassifiers: groups,
+          },
         },
       ],
     },
@@ -35,9 +41,9 @@ function FormWrapper({
 
 describe('GroupDefCard up/down buttons', () => {
   const groups = [
-    { id: 'g1', displayName: 'Group A', pattern: 'a' },
-    { id: 'g2', displayName: 'Group B', pattern: 'b' },
-    { id: 'g3', displayName: 'Group C', pattern: 'c' },
+    { id: 'g1', displayName: 'Group A', pattern: { source: 'title' as const, pattern: 'a' } },
+    { id: 'g2', displayName: 'Group B', pattern: { source: 'title' as const, pattern: 'b' } },
+    { id: 'g3', displayName: 'Group C', pattern: { source: 'title' as const, pattern: 'c' } },
   ];
 
   it('disables up button for first item', () => {

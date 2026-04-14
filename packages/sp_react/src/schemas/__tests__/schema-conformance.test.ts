@@ -4,12 +4,15 @@ import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
-  presentationSchema,
+  partitionByValues,
   yearBindingSchema,
   resolverTypeValues,
   sortFieldSchema,
   sortOrderSchema,
   episodeSortFieldSchema,
+  groupingConfigSchema,
+  groupItemConfigSchema,
+  episodeItemConfigSchema,
 } from '../config-schema';
 
 // Load canonical playlist-definition.schema.json from sp_core
@@ -42,17 +45,18 @@ function createValidator() {
 }
 
 describe('Zod enums match vendored playlist-definition schema', () => {
-  it('resolverTypes match schema (v4 values present, legacy aliases allowed)', () => {
-    const schemaValues = extractEnum(topProps.resolverType);
-    // Schema includes both v4 and deprecated v3 aliases; Zod only declares v4 values.
-    const legacyAliases = ['rss', 'category', 'titleAppearanceOrder'];
-    const v4Only = schemaValues.filter((v: string) => !legacyAliases.includes(v));
-    expect([...resolverTypeValues]).toEqual(v4Only);
+  it('resolverTypes match schema', () => {
+    const groupingDef = defs.GroupingConfig as Record<string, unknown>;
+    const groupingProps = groupingDef.properties as Record<string, Record<string, unknown>>;
+    const schemaValues = extractEnum(groupingProps.by);
+    expect([...resolverTypeValues]).toEqual(schemaValues);
   });
 
-  it('presentation values match schema', () => {
-    const schemaValues = extractEnum(topProps.presentation);
-    expect(presentationSchema.options).toEqual(schemaValues);
+  it('partitionBy values match schema', () => {
+    const selectorDef = defs.SelectorConfig as Record<string, unknown>;
+    const selectorProps = selectorDef.properties as Record<string, Record<string, unknown>>;
+    const schemaValues = extractEnum(selectorProps.partitionBy);
+    expect([...partitionByValues]).toEqual(schemaValues);
   });
 
   it('yearBinding values match schema', () => {
@@ -90,63 +94,112 @@ describe('Zod enums match vendored playlist-definition schema', () => {
   });
 });
 
-describe('Zod-parsed output validates against playlist-definition schema', () => {
-  const validate = createValidator();
+describe('v5-style playlist definition with Zod schemas', () => {
+  it('parses a v5-style playlist using grouping, groupItem, episodeItem', () => {
+    const input = {
+      id: 'professors',
+      displayName: 'Seasons',
+      priority: 0,
+      grouping: {
+        by: 'titleDiscovery',
+        discoveryHint: '【(?:出演：)?(.+?)(?:\\s*編.?)?】',
+      },
+      groupListing: {
+        sort: { field: 'playlistNumber', order: 'ascending' },
+        userSortable: true,
+      },
+      groupItem: {
+        showDateRange: true,
+        pinToYear: false,
+        prependSeasonNumber: false,
+        titleExtractor: {
+          source: 'title',
+          pattern: '【(?:出演：)?(.+?)\\s*編',
+          group: 1,
+        },
+      },
+      episodeListing: {
+        sort: { field: 'publishedAt', order: 'ascending' },
+        showYearHeaders: false,
+      },
+      episodeItem: {
+        titleExtractor: {
+          source: 'title',
+          pattern: '#\\d+(?:-\\d+)?\\s+(.+?)\\s*【',
+          group: 1,
+        },
+      },
+    };
 
-  it('minimal playlist definition validates directly', () => {
-    const parsed = playlistDefinitionSchema.parse({
-      id: 'main',
-      displayName: 'Main Episodes',
-      resolverType: 'seasonNumber',
-      presentation: 'combined',
-    });
-    const valid = validate(parsed);
-    expect(validate.errors).toBeNull();
-    expect(valid).toBe(true);
+    const parsed = playlistDefinitionSchema.parse(input);
+    expect(parsed.id).toBe('professors');
+    expect(parsed.grouping.by).toBe('titleDiscovery');
+    expect(parsed.grouping.discoveryHint).toBe('【(?:出演：)?(.+?)(?:\\s*編.?)?】');
+    expect(parsed.groupItem?.showDateRange).toBe(true);
+    expect(parsed.groupItem?.pinToYear).toBe(false);
+    expect(parsed.episodeItem?.titleExtractor?.pattern).toBe('#\\d+(?:-\\d+)?\\s+(.+?)\\s*【');
   });
 
-  it('full playlist definition validates directly', () => {
-    const parsed = playlistDefinitionSchema.parse({
-      id: 'seasons',
-      displayName: 'Seasons',
-      resolverType: 'seasonNumber',
-      presentation: 'combined',
-      priority: 100,
-      prependSeasonNumber: true,
-      episodeFilters: {
-        require: [{ title: 'S\\d+' }],
-        exclude: [{ title: 'Trailer' }],
-      },
-      groups: [
-        { id: 'main', displayName: 'Main', pattern: '^Main\\b' },
-        { id: 'other', displayName: 'Other' },
+  it('parses groupingConfigSchema independently', () => {
+    const input = {
+      by: 'titleClassifier',
+      staticClassifiers: [
+        { id: 'main', displayName: 'Main', pattern: { source: 'title', pattern: '^Main' } },
       ],
-      groupList: {
-        yearBinding: 'pinToYear',
+    };
+    const parsed = groupingConfigSchema.parse(input);
+    expect(parsed.by).toBe('titleClassifier');
+    expect(parsed.staticClassifiers).toHaveLength(1);
+  });
+
+  it('parses groupItemConfigSchema independently', () => {
+    const input = {
+      showDateRange: true,
+      pinToYear: true,
+      prependSeasonNumber: false,
+      titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+    };
+    const parsed = groupItemConfigSchema.parse(input);
+    expect(parsed.showDateRange).toBe(true);
+    expect(parsed.pinToYear).toBe(true);
+    expect(parsed.titleExtractor?.source).toBe('title');
+  });
+
+  it('parses episodeItemConfigSchema independently', () => {
+    const input = {
+      titleExtractor: { source: 'title', pattern: '#\\d+ (.+)', group: 1 },
+    };
+    const parsed = episodeItemConfigSchema.parse(input);
+    expect(parsed.titleExtractor?.pattern).toBe('#\\d+ (.+)');
+  });
+
+  it('accepts a v5 playlist with seasonNumber grouping and numberingExtractor', () => {
+    const input = {
+      id: 'regular',
+      displayName: 'Regular Series',
+      priority: 0,
+      grouping: {
+        by: 'seasonNumber',
+        numberingExtractor: {
+          source: 'title',
+          pattern: '【(\\d+)-(\\d+)】',
+          seasonGroup: 1,
+          episodeGroup: 2,
+          fallbackToRss: true,
+        },
+      },
+      groupListing: {
+        sort: { field: 'playlistNumber', order: 'ascending' },
         userSortable: true,
+      },
+      groupItem: {
         showDateRange: true,
-        sort: { field: 'playlistNumber', order: 'descending' },
       },
-      episodeList: {
-        showYearHeaders: true,
-        sort: { field: 'publishedAt', order: 'ascending' },
-      },
-      titleExtractor: {
-        source: 'title',
-        pattern: '\\[(.+?)\\]',
-        group: 1,
-        template: 'Season {value}',
-      },
-      numberingExtractor: {
-        source: 'title',
-        pattern: '\\[(\\d+)-(\\d+)\\]',
-        seasonGroup: 1,
-        episodeGroup: 2,
-        fallbackToRss: true,
-      },
-    });
-    const valid = validate(parsed);
-    expect(validate.errors).toBeNull();
-    expect(valid).toBe(true);
+    };
+
+    const parsed = playlistDefinitionSchema.parse(input);
+    expect(parsed.grouping.by).toBe('seasonNumber');
+    expect(parsed.grouping.numberingExtractor?.seasonGroup).toBe(1);
+    expect(parsed.groupItem?.showDateRange).toBe(true);
   });
 });

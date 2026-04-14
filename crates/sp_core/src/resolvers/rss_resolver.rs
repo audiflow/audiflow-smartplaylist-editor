@@ -26,7 +26,9 @@ impl Resolver for RssResolver {
         episodes: &[&dyn EpisodeData],
         definition: Option<&PlaylistDefinition>,
     ) -> Option<Grouping> {
-        let title_extractor = definition.and_then(|d| d.title_extractor.as_ref());
+        let title_extractor = definition
+            .and_then(|d| d.group_item.as_ref())
+            .and_then(|gi| gi.title_extractor.as_ref());
 
         let mut grouped: BTreeMap<i32, Vec<&dyn EpisodeData>> = BTreeMap::new();
         let mut ungrouped: Vec<i64> = Vec::new();

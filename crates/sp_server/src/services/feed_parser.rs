@@ -1,7 +1,7 @@
 use chrono::TimeZone;
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// Parses an RSS feed into the JSON format the React app expects.
 ///
@@ -46,11 +46,10 @@ pub fn parse_feed(content: &str) -> Vec<Value> {
                     image_url = None;
                 } else if inside_item {
                     // Handle itunes:image as empty element with href attr
-                    if local == "image" && prefix.as_deref() == Some("itunes")
-                        && let Some(attr) = e
-                            .attributes()
-                            .flatten()
-                            .find(|a| a.key.as_ref() == b"href")
+                    if local == "image"
+                        && prefix.as_deref() == Some("itunes")
+                        && let Some(attr) =
+                            e.attributes().flatten().find(|a| a.key.as_ref() == b"href")
                     {
                         image_url = String::from_utf8(attr.value.to_vec()).ok();
                     }
@@ -63,8 +62,14 @@ pub fn parse_feed(content: &str) -> Vec<Value> {
                 }
                 let text = e.unescape().unwrap_or_default().trim().to_string();
                 apply_text_content(
-                    &text, &current_element, &mut title, &mut description,
-                    &mut guid, &mut pub_date, &mut season_number, &mut episode_number,
+                    &text,
+                    &current_element,
+                    &mut title,
+                    &mut description,
+                    &mut guid,
+                    &mut pub_date,
+                    &mut season_number,
+                    &mut episode_number,
                 );
             }
             Ok(Event::CData(ref e)) => {
@@ -73,8 +78,14 @@ pub fn parse_feed(content: &str) -> Vec<Value> {
                 }
                 let text = String::from_utf8_lossy(e.as_ref()).trim().to_string();
                 apply_text_content(
-                    &text, &current_element, &mut title, &mut description,
-                    &mut guid, &mut pub_date, &mut season_number, &mut episode_number,
+                    &text,
+                    &current_element,
+                    &mut title,
+                    &mut description,
+                    &mut guid,
+                    &mut pub_date,
+                    &mut season_number,
+                    &mut episode_number,
                 );
             }
             Ok(Event::End(ref e)) => {
@@ -176,8 +187,8 @@ fn parse_rfc2822_manual(input: &str) -> Option<String> {
         let offset_seconds = parts.get(4).map(|tz| parse_tz_offset(tz)).unwrap_or(0);
         let offset = chrono::FixedOffset::east_opt(offset_seconds)?;
 
-        let dt = chrono::NaiveDate::from_ymd_opt(year, month, day)?
-            .and_hms_opt(hour, minute, second)?;
+        let dt =
+            chrono::NaiveDate::from_ymd_opt(year, month, day)?.and_hms_opt(hour, minute, second)?;
         let with_tz = offset.from_local_datetime(&dt).single()?;
         return Some(with_tz.to_rfc3339());
     }

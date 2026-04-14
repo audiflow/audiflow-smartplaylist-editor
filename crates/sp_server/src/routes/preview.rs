@@ -1,15 +1,17 @@
 use std::collections::{HashMap, HashSet};
 
-use axum::extract::State;
 use axum::Json;
+use axum::extract::State;
 use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
 use sp_core::models::{
-    EpisodeData, NumberingExtractor, PatternConfig, Playlist, PlaylistGroup, PlaylistPreviewResult,
-    PreviewGrouping, SimpleEpisodeData,
+    EpisodeData, GroupDef, NumberingExtractor, PatternConfig, Playlist, PlaylistGroup,
+    PlaylistPreviewResult, PreviewGrouping, SimpleEpisodeData,
 };
-use sp_core::resolvers::{CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver};
+use sp_core::resolvers::{
+    CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver,
+};
 use sp_core::services::ResolverService;
 
 /// POST /api/configs/preview -- previews smart playlists from config + feed.
@@ -32,9 +34,8 @@ pub async fn preview_config(
         .filter(|s| !s.is_empty())
         .ok_or_else(|| AppError::bad_request("Missing or invalid \"feedUrl\" field"))?;
 
-    let mut config: PatternConfig =
-        serde_json::from_value(Value::Object(config_json.clone()))
-            .map_err(|e| AppError::bad_request(format!("Invalid config: {e}")))?;
+    let mut config: PatternConfig = serde_json::from_value(Value::Object(config_json.clone()))
+        .map_err(|e| AppError::bad_request(format!("Invalid config: {e}")))?;
     for playlist in &mut config.playlists {
         playlist.strip_conditional_fields();
     }
@@ -61,20 +62,19 @@ pub async fn preview_config(
     if 0 < parse_failures
         && let Some(debug) = result.get_mut("debug").and_then(|d| d.as_object_mut())
     {
-        debug.insert(
-            "parseFailures".to_string(),
-            Value::from(parse_failures),
-        );
+        debug.insert("parseFailures".to_string(), Value::from(parse_failures));
     }
 
     Ok(Json(result))
 }
 
-fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_feed_url: &str) -> Value {
-    let episode_refs: Vec<&dyn EpisodeData> = episodes
-        .iter()
-        .map(|e| e as &dyn EpisodeData)
-        .collect();
+fn run_preview(
+    config: &PatternConfig,
+    episodes: &[SimpleEpisodeData],
+    request_feed_url: &str,
+) -> Value {
+    let episode_refs: Vec<&dyn EpisodeData> =
+        episodes.iter().map(|e| e as &dyn EpisodeData).collect();
 
     let resolvers: Vec<Box<dyn Resolver>> = vec![
         Box::new(RssResolver),
@@ -86,7 +86,12 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
     let service = ResolverService::new(resolvers, vec![config.clone()]);
     let result = service.resolve_for_preview(
         config.podcast_guid.as_deref(),
-        config.feed_urls.as_ref().and_then(|u| u.first()).map(|s| s.as_str()).unwrap_or(request_feed_url),
+        config
+            .feed_urls
+            .as_ref()
+            .and_then(|u| u.first())
+            .map(|s| s.as_str())
+            .unwrap_or(request_feed_url),
         &episode_refs,
     );
 
@@ -108,7 +113,7 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
     // Pre-compute per-definition enriched episodes (extracted season/episode numbers)
     // and extracted display names so preview serialization reflects what the resolver saw.
     let enriched_episodes = compute_enriched_episodes(config, episodes, &result);
-    let extracted_display_names = compute_extracted_display_names(config, episodes);
+    let extracted_display_names = compute_extracted_display_names(config, episodes, &result);
 
     let grouped_ids = collect_grouped_ids(&result);
     let ungrouped_set: HashSet<i64> = result.ungrouped_episode_ids.iter().copied().collect();
@@ -167,21 +172,21 @@ fn compute_enriched_episodes(
     episodes: &[SimpleEpisodeData],
     preview: &PreviewGrouping,
 ) -> HashMap<String, HashMap<i64, SimpleEpisodeData>> {
-    // Build a lookup from definition_id -> (group_id -> set of episode IDs)
+    // Build a lookup from definition_id -> (group_id -> set of episode IDs).
+    // When `selector.partitionBy` is `seasonNumber` or `year`, the real
+    // classifier IDs move into nested `sub_groups` under synthetic
+    // `season_*`/`year_*` parents, so we must walk the tree to preserve
+    // per-classifier IDs for downstream numberingExtractor lookups.
     let group_episode_ids: HashMap<&str, HashMap<&str, HashSet<i64>>> = preview
         .playlist_results
         .iter()
         .map(|pr| {
-            let groups: HashMap<&str, HashSet<i64>> = pr
-                .playlist
-                .groups
-                .as_ref()
-                .map(|gs| {
-                    gs.iter()
-                        .map(|g| (g.id.as_str(), g.episode_ids.iter().copied().collect()))
-                        .collect()
-                })
-                .unwrap_or_default();
+            let mut groups: HashMap<&str, HashSet<i64>> = HashMap::new();
+            if let Some(gs) = pr.playlist.groups.as_ref() {
+                for g in gs {
+                    collect_group_episode_ids(g, &mut groups);
+                }
+            }
             (pr.definition_id.as_str(), groups)
         })
         .collect();
@@ -191,23 +196,21 @@ fn compute_enriched_episodes(
         let mut map = HashMap::new();
 
         // Definition-level extractor: applies to all episodes (skip already-enriched)
-        if let Some(ext) = &definition.numbering_extractor {
+        if let Some(ext) = definition.grouping.numbering_extractor.as_ref() {
             enrich_with_extractor(ext, episodes, &mut map, false);
         }
 
         // Group-level extractors: scoped to that group's resolved episodes,
         // overwriting any definition-level entry
-        if let Some(groups) = &definition.groups
+        if let Some(groups) = definition.grouping.static_classifiers.as_ref()
             && let Some(def_groups) = group_episode_ids.get(definition.id.as_str())
         {
             for group in groups {
                 if let Some(ext) = &group.numbering_extractor
                     && let Some(ep_ids) = def_groups.get(group.id.as_str())
                 {
-                    let group_episodes: Vec<&SimpleEpisodeData> = episodes
-                        .iter()
-                        .filter(|e| ep_ids.contains(&e.id))
-                        .collect();
+                    let group_episodes: Vec<&SimpleEpisodeData> =
+                        episodes.iter().filter(|e| ep_ids.contains(&e.id)).collect();
                     enrich_group_episodes(ext, &group_episodes, &mut map);
                 }
             }
@@ -218,6 +221,23 @@ fn compute_enriched_episodes(
         }
     }
     result
+}
+
+/// Recursively records each group's episode IDs into `out`, walking
+/// into `sub_groups` so classifier IDs under synthetic season/year
+/// partitions are still captured.
+fn collect_group_episode_ids<'a>(
+    group: &'a PlaylistGroup,
+    out: &mut HashMap<&'a str, HashSet<i64>>,
+) {
+    out.entry(group.id.as_str())
+        .or_default()
+        .extend(group.episode_ids.iter().copied());
+    if let Some(sub_groups) = &group.sub_groups {
+        for sg in sub_groups {
+            collect_group_episode_ids(sg, out);
+        }
+    }
 }
 
 fn enrich_with_extractor(
@@ -278,24 +298,60 @@ fn enrich_group_episodes(
 
 /// Computes display names per definition using per-definition enriched
 /// episodes so that titleExtractors reading seasonNumber/episodeNumber
-/// see the same values the resolver used for grouping.
+/// see the same values the resolver used for grouping. When a classifier
+/// sets its own `episodeItem.titleExtractor`, episodes resolved into that
+/// classifier group use the override instead of the playlist default so
+/// preview reflects the same per-classifier rule consumers honor.
 fn compute_extracted_display_names(
     config: &PatternConfig,
     episodes: &[SimpleEpisodeData],
+    preview: &PreviewGrouping,
 ) -> HashMap<String, HashMap<i64, String>> {
+    // definition_id -> (episode_id -> classifier_id that claimed it)
+    let classifier_by_episode: HashMap<&str, HashMap<i64, &str>> = preview
+        .playlist_results
+        .iter()
+        .map(|pr| {
+            let mut m: HashMap<i64, &str> = HashMap::new();
+            if let Some(groups) = pr.playlist.groups.as_ref() {
+                for g in groups {
+                    collect_classifier_episode_ids(g, &mut m);
+                }
+            }
+            (pr.definition_id.as_str(), m)
+        })
+        .collect();
+
     let mut result = HashMap::new();
     for definition in &config.playlists {
-        let title_ext = match &definition.title_extractor {
-            Some(e) => e,
-            None => continue,
-        };
-        let compiled_title = title_ext.compile();
+        let playlist_extractor = definition
+            .episode_item
+            .as_ref()
+            .and_then(|ei| ei.title_extractor.as_ref());
 
-        // Enrich episodes with this definition's episode extractor
+        let classifier_map: HashMap<&str, &GroupDef> = definition
+            .grouping
+            .static_classifiers
+            .as_deref()
+            .map(|cs| cs.iter().map(|c| (c.id.as_str(), c)).collect())
+            .unwrap_or_default();
+
+        // Short-circuit when no extractor (playlist or per-classifier) applies.
+        let has_classifier_extractor = classifier_map.values().any(|c| {
+            c.episode_item
+                .as_ref()
+                .and_then(|ei| ei.title_extractor.as_ref())
+                .is_some()
+        });
+        if playlist_extractor.is_none() && !has_classifier_extractor {
+            continue;
+        }
+
+        // Enrich episodes with this definition's numbering extractor
         // (mirrors what the resolver does) so title extraction sees
         // the same season/episode numbers the resolver used.
         let enriched: Option<Vec<SimpleEpisodeData>> =
-            definition.numbering_extractor.as_ref().map(|ext| {
+            definition.grouping.numbering_extractor.as_ref().map(|ext| {
                 let compiled_ep = ext.compile();
                 episodes
                     .iter()
@@ -319,15 +375,76 @@ fn compute_extracted_display_names(
             });
 
         let source: &[SimpleEpisodeData] = enriched.as_deref().unwrap_or(episodes);
+        let episode_to_classifier = classifier_by_episode
+            .get(definition.id.as_str())
+            .cloned()
+            .unwrap_or_default();
+
         let mut names = HashMap::new();
         for episode in source {
-            if let Some(name) = compiled_title.extract(episode) {
+            // Prefer the classifier-level extractor when the episode landed
+            // in a classifier that defines one; fall back to the playlist
+            // default otherwise.
+            let classifier = episode_to_classifier
+                .get(&episode.id)
+                .and_then(|cid| classifier_map.get(cid).copied());
+            let classifier_title_extractor = classifier
+                .and_then(|c| c.episode_item.as_ref())
+                .and_then(|ei| ei.title_extractor.as_ref());
+            let extractor = classifier_title_extractor.or(playlist_extractor);
+            let Some(extractor) = extractor else {
+                continue;
+            };
+
+            // Re-enrich this episode with the classifier's own numbering
+            // extractor (if any) so a classifier-level titleExtractor
+            // reading seasonNumber/episodeNumber sees values that match
+            // the group it actually resolved into, not stale playlist-level
+            // numbers that may belong to a different classifier.
+            let episode_cow = classifier
+                .and_then(|c| c.numbering_extractor.as_ref())
+                .and_then(|ne| {
+                    let r = ne.compile().extract(episode);
+                    if !r.has_values() {
+                        return None;
+                    }
+                    Some(SimpleEpisodeData {
+                        id: episode.id,
+                        title: episode.title.clone(),
+                        description: episode.description.clone(),
+                        season_number: r.season_number.or(episode.season_number),
+                        episode_number: r.episode_number.or(episode.episode_number),
+                        published_at: episode.published_at,
+                        image_url: episode.image_url.clone(),
+                    })
+                });
+            let episode_for_title: &SimpleEpisodeData = episode_cow.as_ref().unwrap_or(episode);
+            if let Some(name) = extractor.compile().extract(episode_for_title) {
                 names.insert(episode.id, name);
             }
         }
         result.insert(definition.id.clone(), names);
     }
     result
+}
+
+/// Records the classifier id that contains each episode (only direct
+/// children, not synthetic season/year partition parents). Partition
+/// parents have synthetic ids like `season_*` / `year_*` that do not
+/// appear in `grouping.staticClassifiers`, so they are skipped and we
+/// recurse into their sub_groups where the real classifier ids live.
+fn collect_classifier_episode_ids<'a>(group: &'a PlaylistGroup, out: &mut HashMap<i64, &'a str>) {
+    let is_synthetic = group.id.starts_with("season_") || group.id.starts_with("year_");
+    if !is_synthetic {
+        for &id in &group.episode_ids {
+            out.insert(id, group.id.as_str());
+        }
+    }
+    if let Some(sub_groups) = &group.sub_groups {
+        for sg in sub_groups {
+            collect_classifier_episode_ids(sg, out);
+        }
+    }
 }
 
 fn collect_grouped_ids(result: &PreviewGrouping) -> HashSet<i64> {
@@ -385,8 +502,7 @@ fn serialize_preview_result(
         base["claimedByOthers"] = Value::Array(claimed);
     }
 
-    let filter_matched =
-        pr.playlist.episode_ids.len() + pr.claimed_by_others.len();
+    let filter_matched = pr.playlist.episode_ids.len() + pr.claimed_by_others.len();
     base["debug"] = serde_json::json!({
         "filterMatched": filter_matched,
         "episodeCount": pr.playlist.episode_ids.len(),
@@ -442,28 +558,32 @@ fn serialize_group(
         })
         .collect();
 
-    serde_json::json!({
+    let mut obj = serde_json::json!({
         "id": group.id,
         "displayName": group.display_name,
         "sortKey": group.sort_key,
         "episodeCount": group.episode_count(),
         "episodes": episodes_json,
-    })
+    });
+
+    if let Some(sub_groups) = &group.sub_groups {
+        let sub_groups_json: Vec<Value> = sub_groups
+            .iter()
+            .map(|sg| serialize_group(sg, episode_by_id, enriched_by_id, extracted_names))
+            .collect();
+        obj["subGroups"] = Value::Array(sub_groups_json);
+    }
+
+    obj
 }
 
-fn serialize_episode(
-    episode: &SimpleEpisodeData,
-    extracted_display_name: Option<&str>,
-) -> Value {
+fn serialize_episode(episode: &SimpleEpisodeData, extracted_display_name: Option<&str>) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("id".to_string(), Value::from(episode.id));
     obj.insert("title".to_string(), Value::String(episode.title.clone()));
 
     if let Some(dt) = episode.published_at {
-        obj.insert(
-            "publishedAt".to_string(),
-            Value::String(dt.to_rfc3339()),
-        );
+        obj.insert("publishedAt".to_string(), Value::String(dt.to_rfc3339()));
     }
     if let Some(sn) = episode.season_number {
         obj.insert("seasonNumber".to_string(), Value::from(sn));

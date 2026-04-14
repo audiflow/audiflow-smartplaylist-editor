@@ -1,5 +1,21 @@
 import '@testing-library/jest-dom/vitest';
 import { afterAll, afterEach, beforeAll } from 'vitest';
+
+// Radix UI uses the Pointer Events API which jsdom does not implement. Patch the
+// minimum surface that Radix's event handlers check so pointerdown / pointerup
+// events complete without throwing and Select, Dialog etc. open correctly.
+if (!window.Element.prototype.hasPointerCapture) {
+  window.Element.prototype.hasPointerCapture = () => false;
+}
+if (!window.Element.prototype.setPointerCapture) {
+  window.Element.prototype.setPointerCapture = () => undefined;
+}
+if (!window.Element.prototype.releasePointerCapture) {
+  window.Element.prototype.releasePointerCapture = () => undefined;
+}
+// Radix UI Tooltip / Popover / Select portal checks scrollWidth/scrollHeight
+// which jsdom returns 0 for all elements. This is fine for tests; the portals
+// still mount, just with zero dimensions.
 import { server } from '@/mocks/server.ts';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';

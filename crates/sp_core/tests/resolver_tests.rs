@@ -1,7 +1,7 @@
 use chrono::{TimeZone, Utc};
 use sp_core::models::{
-    EpisodeData, GroupDef, PlaylistDefinition, SimpleEpisodeData, SortField, SortOrder,
-    TitleExtractor,
+    EpisodeData, GroupDef, GroupItemConfig, GroupingConfig, Matcher, PlaylistDefinition,
+    SimpleEpisodeData, SortField, SortOrder, TitleExtractor,
 };
 use sp_core::resolvers::{
     CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver,
@@ -72,20 +72,23 @@ fn as_refs(episodes: &[SimpleEpisodeData]) -> Vec<&dyn EpisodeData> {
     episodes.iter().map(|e| e as &dyn EpisodeData).collect()
 }
 
-fn minimal_definition(resolver_type: &str) -> PlaylistDefinition {
+fn minimal_definition(by: &str) -> PlaylistDefinition {
     PlaylistDefinition {
         id: "test".to_string(),
         display_name: "Test".to_string(),
-        resolver_type: resolver_type.to_string(),
-        presentation: "separate".to_string(),
+        grouping: GroupingConfig {
+            by: by.to_string(),
+            discovery_hint: None,
+            numbering_extractor: None,
+            static_classifiers: None,
+        },
+        selector: None,
         priority: 0,
         episode_filters: None,
-        title_extractor: None,
-        prepend_season_number: false,
-        group_list: None,
-        episode_list: None,
-        numbering_extractor: None,
-        groups: None,
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
     }
 }
 
@@ -211,13 +214,18 @@ fn rss_seasons_sorted_by_season_number() {
 fn rss_uses_title_extractor_for_display_names() {
     let resolver = RssResolver;
     let mut def = minimal_definition("seasonNumber");
-    def.title_extractor = Some(TitleExtractor {
-        source: "title".to_string(),
-        pattern: Some(r"(.+?) \d+$".to_string()),
-        group: 1,
-        template: None,
-        fallback: None,
-        fallback_value: None,
+    def.group_item = Some(GroupItemConfig {
+        show_date_range: None,
+        pin_to_year: None,
+        prepend_season_number: None,
+        title_extractor: Some(TitleExtractor {
+            source: "title".to_string(),
+            pattern: Some(r"(.+?) \d+$".to_string()),
+            group: 1,
+            template: None,
+            fallback: None,
+            fallback_value: None,
+        }),
     });
 
     let episodes = vec![
@@ -268,7 +276,7 @@ fn category_returns_none_without_definition() {
 }
 
 #[test]
-fn category_returns_none_without_groups() {
+fn category_returns_none_without_static_classifiers() {
     let resolver = CategoryResolver;
     let def = minimal_definition("titleClassifier");
     let episodes = vec![make_episode(1, "Episode 1")];
@@ -278,10 +286,10 @@ fn category_returns_none_without_groups() {
 }
 
 #[test]
-fn category_returns_none_when_groups_empty() {
+fn category_returns_none_when_static_classifiers_empty() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![]);
+    def.grouping.static_classifiers = Some(vec![]);
     let episodes = vec![make_episode(1, "Episode 1")];
     let refs = as_refs(&episodes);
     let result = resolver.resolve(&refs, Some(&def));
@@ -292,29 +300,41 @@ fn category_returns_none_when_groups_empty() {
 fn category_groups_episodes_by_pattern() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![
+    def.grouping.static_classifiers = Some(vec![
         GroupDef {
             id: "saturday".to_string(),
             display_name: "Saturday".to_string(),
-            pattern: Some(r"Saturday".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"Saturday".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "news_talk".to_string(),
             display_name: "News Talk".to_string(),
-            pattern: Some(r"News Talk".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"News Talk".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "other".to_string(),
             display_name: "Other".to_string(),
             pattern: None,
-            display: None,
-            episode_list: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
     ]);
@@ -342,12 +362,17 @@ fn category_groups_episodes_by_pattern() {
 fn category_ungrouped_when_no_fallback_group() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "saturday".to_string(),
         display_name: "Saturday".to_string(),
-        pattern: Some(r"Saturday".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"Saturday".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
 
@@ -365,21 +390,31 @@ fn category_ungrouped_when_no_fallback_group() {
 fn category_first_match_wins() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![
+    def.grouping.static_classifiers = Some(vec![
         GroupDef {
             id: "first".to_string(),
             display_name: "First".to_string(),
-            pattern: Some(r"Hello".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"Hello".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "second".to_string(),
             display_name: "Second".to_string(),
-            pattern: Some(r"Hello World".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"Hello World".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
     ]);
@@ -396,29 +431,41 @@ fn category_first_match_wins() {
 fn category_assigns_incrementing_sort_keys() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![
+    def.grouping.static_classifiers = Some(vec![
         GroupDef {
             id: "alpha".to_string(),
             display_name: "Alpha".to_string(),
-            pattern: Some(r"AAA".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"AAA".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "beta".to_string(),
             display_name: "Beta".to_string(),
-            pattern: Some(r"BBB".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"BBB".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "other".to_string(),
             display_name: "Other".to_string(),
             pattern: None,
-            display: None,
-            episode_list: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
     ]);
@@ -441,21 +488,28 @@ fn category_assigns_incrementing_sort_keys() {
 fn category_fallback_collects_unmatched() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![
+    def.grouping.static_classifiers = Some(vec![
         GroupDef {
             id: "matched".to_string(),
             display_name: "Matched".to_string(),
-            pattern: Some(r"AAA".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"AAA".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "fallback".to_string(),
             display_name: "Fallback".to_string(),
             pattern: None,
-            display: None,
-            episode_list: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
     ]);
@@ -478,29 +532,44 @@ fn category_fallback_collects_unmatched() {
 fn category_skips_empty_pattern_groups_in_sort_keys() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![
+    def.grouping.static_classifiers = Some(vec![
         GroupDef {
             id: "alpha".to_string(),
             display_name: "Alpha".to_string(),
-            pattern: Some(r"AAA".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"AAA".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "beta".to_string(),
             display_name: "Beta".to_string(),
-            pattern: Some(r"BBB".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"BBB".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
         GroupDef {
             id: "gamma".to_string(),
             display_name: "Gamma".to_string(),
-            pattern: Some(r"CCC".to_string()),
-            display: None,
-            episode_list: None,
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"CCC".to_string(),
+            }),
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
             numbering_extractor: None,
         },
     ]);
@@ -614,13 +683,18 @@ fn year_sort_key_is_year_value() {
 fn year_uses_title_extractor_for_display_names() {
     let resolver = YearResolver;
     let mut def = minimal_definition("year");
-    def.title_extractor = Some(TitleExtractor {
-        source: "title".to_string(),
-        pattern: Some(r"^(\w+)".to_string()),
-        group: 1,
-        template: None,
-        fallback: None,
-        fallback_value: None,
+    def.group_item = Some(GroupItemConfig {
+        show_date_range: None,
+        pin_to_year: None,
+        prepend_season_number: None,
+        title_extractor: Some(TitleExtractor {
+            source: "title".to_string(),
+            pattern: Some(r"^(\w+)".to_string()),
+            group: 1,
+            template: None,
+            fallback: None,
+            fallback_value: None,
+        }),
     });
 
     let episodes = vec![make_episode_with_date(1, "Spring 2024", 2024, 4, 1)];
@@ -671,12 +745,17 @@ fn title_appearance_returns_none_without_extractor_or_pattern() {
 fn title_appearance_groups_by_first_appearance_using_pattern() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("titleDiscovery");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
 
@@ -715,12 +794,17 @@ fn title_appearance_groups_by_first_appearance_using_pattern() {
 fn title_appearance_non_matching_go_to_ungrouped() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("titleDiscovery");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
 
@@ -738,12 +822,17 @@ fn title_appearance_non_matching_go_to_ungrouped() {
 fn title_appearance_returns_none_when_no_matches() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("titleDiscovery");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
 
@@ -760,12 +849,17 @@ fn title_appearance_returns_none_when_no_matches() {
 fn title_appearance_episodes_without_date_appended_at_end() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("titleDiscovery");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
 
@@ -785,13 +879,18 @@ fn title_appearance_episodes_without_date_appended_at_end() {
 fn title_appearance_uses_title_extractor() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("titleDiscovery");
-    def.title_extractor = Some(TitleExtractor {
-        source: "title".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-        group: 1,
-        template: None,
-        fallback: None,
-        fallback_value: None,
+    def.group_item = Some(GroupItemConfig {
+        show_date_range: None,
+        pin_to_year: None,
+        prepend_season_number: None,
+        title_extractor: Some(TitleExtractor {
+            source: "title".to_string(),
+            pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
+            group: 1,
+            template: None,
+            fallback: None,
+            fallback_value: None,
+        }),
     });
 
     let episodes = vec![
@@ -811,12 +910,17 @@ fn title_appearance_uses_title_extractor() {
 fn title_appearance_playlist_ids_use_appearance_prefix() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("titleDiscovery");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
 
@@ -846,12 +950,17 @@ fn rss_empty_episodes_returns_none() {
 fn category_empty_episodes_returns_none() {
     let resolver = CategoryResolver;
     let mut def = minimal_definition("titleClassifier");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "g".to_string(),
         display_name: "G".to_string(),
-        pattern: Some(r"x".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"x".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
     let refs: Vec<&dyn EpisodeData> = vec![];
@@ -869,12 +978,17 @@ fn year_empty_episodes_returns_none() {
 fn title_appearance_empty_episodes_returns_none() {
     let resolver = TitleAppearanceResolver;
     let mut def = minimal_definition("titleDiscovery");
-    def.groups = Some(vec![GroupDef {
+    def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-        display: None,
-        episode_list: None,
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
         numbering_extractor: None,
     }]);
     let refs: Vec<&dyn EpisodeData> = vec![];

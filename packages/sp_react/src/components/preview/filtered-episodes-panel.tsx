@@ -18,7 +18,7 @@ export function FilteredEpisodesPanel({
 
   if (feedState === 'idle') {
     return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
+      <p data-preview-region="filters" className="text-sm text-muted-foreground py-4 text-center">
         {t('noFeedLoaded')}
       </p>
     );
@@ -26,7 +26,7 @@ export function FilteredEpisodesPanel({
 
   if (feedState === 'loading') {
     return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
+      <p data-preview-region="filters" className="text-sm text-muted-foreground py-4 text-center">
         {t('feedLoading')}
       </p>
     );
@@ -34,7 +34,7 @@ export function FilteredEpisodesPanel({
 
   if (feedState === 'error') {
     return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
+      <p data-preview-region="filters" className="text-sm text-muted-foreground py-4 text-center">
         {t('feedError')}
       </p>
     );
@@ -42,14 +42,14 @@ export function FilteredEpisodesPanel({
 
   if (episodes.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
+      <p data-preview-region="filters" className="text-sm text-muted-foreground py-4 text-center">
         {t('emptyFiltered')}
       </p>
     );
   }
 
   return (
-    <div className="space-y-1">
+    <div data-preview-region="filters" className="space-y-1">
       <p className="text-xs text-muted-foreground mb-2">
         {t('filteredCount', { filtered: episodes.length, total: totalCount })}
       </p>

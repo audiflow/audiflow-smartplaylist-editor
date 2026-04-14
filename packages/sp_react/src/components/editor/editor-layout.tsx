@@ -13,11 +13,13 @@ import {
   useSavePlaylist,
   useSavePatternMeta,
   useCreatePattern,
+  useDeletePlaylist,
 } from '@/api/queries.ts';
 import { useStorePreview } from '@/hooks/use-store-preview.ts';
 import { sanitizeConfig, stripConditionalFields } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
+import { PatternDangerZone } from '@/components/editor/pattern-danger-zone.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { ConflictDialog } from '@/components/editor/conflict-dialog.tsx';
@@ -40,7 +42,6 @@ import {
   ExternalLink,
   FormInput,
   Loader2,
-  Play,
   Plus,
   Save,
 } from 'lucide-react';
@@ -83,8 +84,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   } = useMemo(() => useEditorStore.getState(), []);
   const [jsonText, setJsonText] = useState('');
 
-  // Normalize legacy v3 field names (e.g. episodeExtractor, rss resolver type)
-  // through the Zod schema before seeding the form.
+  // Normalize the incoming config through the Zod schema (applies default
+   // transforms and coercions) before seeding the form.
   const normalizedInitialConfig = useMemo(() => {
     if (!initialConfig) return undefined;
     const parsed = patternConfigSchema.safeParse(initialConfig);
@@ -108,6 +109,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const savePlaylistMutation = useSavePlaylist();
   const savePatternMetaMutation = useSavePatternMeta();
   const createPatternMutation = useCreatePattern();
+  const deletePlaylistMutation = useDeletePlaylist();
 
   // Watch form fields for header display and save button
   const formId = useWatch({ control: form.control, name: 'id' });
@@ -160,7 +162,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [assembledConfigQuery.data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pre-compute normalized reference for dirty comparison.
-  // Zod parse applies all defaults (priority: 0, showYearHeaders: false, etc.)
+  // Zod parse applies all defaults (showYearHeaders: false, etc.)
   // so both sides have the same shape regardless of which tabs have been mounted.
   const normalizedLastLoaded = useMemo(() => {
     if (!lastLoadedConfig) return undefined;
@@ -219,41 +221,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     toggleJsonMode();
   }, [isJsonMode, jsonText, form, toggleJsonMode, t]);
 
-  const handleRunPreview = useCallback(() => {
-    if (!feedUrl) {
-      toast.error(t('toastEnterFeedUrl'));
-      return;
-    }
-    let config: unknown;
-    if (isJsonMode) {
-      try {
-        config = JSON.parse(jsonText);
-      } catch {
-        toast.error(t('toastInvalidJsonPreview'));
-        return;
-      }
-    } else {
-      const parsed = patternConfigSchema.safeParse(form.getValues());
-      if (!parsed.success) {
-        toast.error(t('toastInvalidJsonPreview'));
-        return;
-      }
-      config = stripConditionalFields(parsed.data);
-    }
-    storePreviewRef.current.mutate(
-      { config: sanitizeConfig(config), feedUrl },
-      {
-        onError: (error) => {
-          toast.error(t('toastPreviewError', {
-            error: error instanceof Error ? error.message : 'Preview failed',
-            defaultValue: 'Preview failed: {{error}}',
-          }));
-        },
-      },
-    );
-  }, [isJsonMode, jsonText, form, feedUrl, t]);
-
-
   // Safe JSON parse for render-time props (avoids throwing during render)
   const parsedJsonConfig = useMemo(() => {
     if (!isJsonMode) return null;
@@ -279,7 +246,13 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       void form.trigger();
       return;
     }
-    const snapshot = structuredClone(isJsonMode ? parsed.data : stripConditionalFields(parsed.data));
+    const stripped = isJsonMode ? parsed.data : stripConditionalFields(parsed.data);
+    // Auto-assign priority from playlist array order so users never need to
+    // set it manually -- the order in the editor *is* the priority.
+    const snapshot = structuredClone({
+      ...stripped,
+      playlists: stripped.playlists.map((pl, index) => ({ ...pl, priority: index })),
+    });
 
     setSaving(true);
     try {
@@ -297,6 +270,24 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
             },
           },
         });
+      }
+
+      // Delete playlist files for playlists the user removed from the form.
+      // Without this, removed playlists disappear from meta.json but their
+      // {patternId}/playlists/{id}.json files stay on disk as orphans and the
+      // server endpoint that updates meta later re-lists no-longer-existing files.
+      if (!isNewConfig) {
+        const previousIds = new Set(
+          lastLoadedConfig?.playlists.map((p) => p.id) ?? [],
+        );
+        const currentIds = new Set(snapshot.playlists.map((p) => p.id));
+        const removedIds = [...previousIds].filter((id) => !currentIds.has(id));
+        for (const removedId of removedIds) {
+          await deletePlaylistMutation.mutateAsync({
+            patternId: effectiveId,
+            playlistId: removedId,
+          });
+        }
       }
 
       for (const playlist of snapshot.playlists) {
@@ -338,7 +329,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } finally {
       setSaving(false);
     }
-  }, [effectiveId, isSaving, isJsonMode, isNewConfig, parsedJsonConfig, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, navigate, setSaving, setDirty, setLastSavedAt, t]);
+  }, [effectiveId, isSaving, isJsonMode, isNewConfig, parsedJsonConfig, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, deletePlaylistMutation, lastLoadedConfig, navigate, setSaving, setDirty, setLastSavedAt, t]);
 
   // Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -351,18 +342,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [handleSave]);
-
-  // Cmd+Enter / Ctrl+Enter keyboard shortcut for preview
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleRunPreview();
-      }
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [handleRunPreview]);
 
   // Auto-run preview when opening an existing config.
   // Uses initialConfig.feedUrls directly (not the Zustand store's feedUrl) to
@@ -400,40 +379,86 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     };
   }, [configId, normalizedInitialConfig, t]);
 
-  // Debounced auto-preview via form.watch() subscription.
+  // Shared preview trigger used by form-mode form.watch(), JSON-mode jsonText
+  // changes, and feedUrl switches. Returns without mutating when the same
+  // (feedUrl, config) pair was already previewed, guarding against redundant
+  // requests across the three entry points. Marks the auto-preview ref so
+  // later triggers (typing a feed URL on a saved config that had none) are
+  // not gated by a never-fired initial auto-preview.
+  const triggerPreview = useCallback(
+    (rawConfig: unknown) => {
+      if (!feedUrl) return;
+      const parsed = patternConfigSchema.safeParse(rawConfig);
+      if (!parsed.success) return;
+      const config = stripConditionalFields(parsed.data);
+      const key = `${feedUrl}\0${JSON.stringify(config)}`;
+      if (key === lastPreviewedValuesRef.current) return;
+      lastPreviewedValuesRef.current = key;
+      hasAutoPreviewedRef.current = true;
+      storePreviewRef.current.mutate(
+        { config: sanitizeConfig(config), feedUrl },
+        {
+          onError: (error) => {
+            toast.error(t('toastPreviewError', {
+              error: error instanceof Error ? error.message : 'Preview failed',
+              defaultValue: 'Preview failed: {{error}}',
+            }));
+          },
+        },
+      );
+    },
+    [feedUrl, t],
+  );
+
+  // Debounced auto-preview via form.watch() subscription (form mode only).
   // Uses a subscription + setTimeout instead of useWatch to avoid re-rendering
   // the entire editor on every keystroke.
   useEffect(() => {
+    if (isJsonMode) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const subscription = form.watch(() => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        if (!feedUrl || isJsonMode) return;
-        if (configId !== null && !hasAutoPreviewedRef.current) return;
-        const parsed = patternConfigSchema.safeParse(form.getValues());
-        if (!parsed.success) return;
-        const config = stripConditionalFields(parsed.data);
-        const key = `${feedUrl}\0${JSON.stringify(config)}`;
-        if (key === lastPreviewedValuesRef.current) return;
-        lastPreviewedValuesRef.current = key;
-        storePreviewRef.current.mutate(
-          { config: sanitizeConfig(config), feedUrl },
-          {
-            onError: (error) => {
-              toast.error(t('toastPreviewError', {
-                error: error instanceof Error ? error.message : 'Preview failed',
-                defaultValue: 'Preview failed: {{error}}',
-              }));
-            },
-          },
-        );
+        triggerPreview(form.getValues());
       }, 400);
     });
     return () => {
       clearTimeout(timer);
       subscription.unsubscribe();
     };
-  }, [form, feedUrl, isJsonMode, configId, t]);
+  }, [form, isJsonMode, triggerPreview]);
+
+  // Debounced auto-preview for JSON-mode edits. Parses jsonText and mirrors
+  // the form-mode path so users editing advanced fields in JSON can still
+  // validate their changes against live preview.
+  useEffect(() => {
+    if (!isJsonMode) return;
+    const timer = setTimeout(() => {
+      let raw: unknown;
+      try {
+        raw = JSON.parse(jsonText);
+      } catch {
+        return;
+      }
+      triggerPreview(raw);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [jsonText, isJsonMode, triggerPreview]);
+
+  // Fire preview when the feed URL changes, even if the config itself is
+  // unchanged. Without this, switching feeds via the FeedUrlInput dropdown
+  // or pasting a new URL leaves the preview bound to the previous feed
+  // until the user edits an unrelated form field.
+  useEffect(() => {
+    if (!feedUrl) return;
+    const source = isJsonMode ? (() => {
+      try { return JSON.parse(jsonText); } catch { return null; }
+    })() : form.getValues();
+    if (source === null) return;
+    triggerPreview(source);
+    // jsonText intentionally omitted: only feedUrl switches should refire here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedUrl, triggerPreview]);
 
   // Normalize server payload through Zod for consistent v3-to-v4 migration.
   const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
@@ -478,6 +503,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         />
 
         <div className="flex items-center justify-end gap-2">
+            <PreviewPendingIndicator />
             <Button
               onClick={() => void handleSave()}
               disabled={!isDirty || isSaving || !effectiveId}
@@ -490,7 +516,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
               )}
               {t('save', 'Save')}
             </Button>
-            <PreviewButton onClick={handleRunPreview} />
         </div>
       </div>
 
@@ -500,9 +525,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
           feedUrls={initialConfig?.feedUrls ?? undefined}
           value={feedUrl}
           onChange={setFeedUrl}
-          onLoadFeed={() => {
-            /* feedQuery auto-fetches when feedUrl changes */
-          }}
           isLoading={feedQuery.isLoading}
         />
       </div>
@@ -520,6 +542,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         <FormProvider {...form}>
           <PatternSettingsCard configId={configId} />
           <PlaylistSection isNewConfig={isNewConfig} />
+          {!isNewConfig && configId && (
+            <PatternDangerZone
+              patternId={configId}
+              displayName={formDisplayName || null}
+            />
+          )}
         </FormProvider>
       )}
 
@@ -619,19 +647,6 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
   const [activeTab, setActiveTab] = useState('tab-0');
   const [reorderOpen, setReorderOpen] = useState(false);
 
-  const [hasSeparatePresentation, setHasSeparatePresentation] = useState(() =>
-    form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false,
-  );
-  useEffect(() => {
-    const subscription = form.watch((_values, { name }) => {
-      if (!name || name.includes('presentation') || name === 'playlists') {
-        const has = form.getValues('playlists')?.some((p) => p?.presentation === 'separate') ?? false;
-        setHasSeparatePresentation(has);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
-
   return (
     <>
       <Tabs
@@ -639,8 +654,8 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
         onValueChange={setActiveTab}
         className="mt-6"
       >
-        <div className="grid gap-6 lg:grid-cols-2 items-center">
-          <div className="flex items-center gap-2">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_460px] items-center">
+          <div className="flex min-w-0 items-center gap-2 flex-wrap">
             <TabsList>
               {fields.map((field, index) => (
                 <PlaylistTabTrigger
@@ -665,8 +680,6 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
               type="button"
               variant="outline"
               size="sm"
-              disabled={hasSeparatePresentation}
-              title={hasSeparatePresentation ? t('addDisabledSeparate') : undefined}
               onClick={() => {
                 append({ ...DEFAULT_PLAYLIST, priority: fields.length });
                 setActiveTab(`tab-${fields.length}`);
@@ -690,6 +703,18 @@ function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
                 const lastIndex = fields.length - 2;
                 if (0 <= lastIndex) {
                   setActiveTab(`tab-${Math.min(index, lastIndex)}`);
+                }
+              }}
+              onSelectPlaylist={(targetId, entryIndex) => {
+                const playlists = form.getValues('playlists');
+                const idx = playlists.findIndex((p) => p.id === targetId);
+                if (0 <= idx) {
+                  // Stash the chosen entry index so PlaylistTabContent can
+                  // adopt it on mount instead of defaulting to 0.
+                  useEditorStore
+                    .getState()
+                    .setPendingEntryIndex(targetId, entryIndex);
+                  setActiveTab(`tab-${idx}`);
                 }
               }}
             />
@@ -738,18 +763,18 @@ function PreviewDebugStats() {
   );
 }
 
-function PreviewButton({ onClick }: { onClick: () => void }) {
+function PreviewPendingIndicator() {
   const isPending = useEditorStore((s) => s.previewPending);
   const { t } = useTranslation('editor');
+  if (!isPending) return null;
   return (
-    <Button onClick={onClick} disabled={isPending} aria-busy={isPending}>
-      {isPending ? (
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-      ) : (
-        <Play className="mr-2 h-4 w-4" />
-      )}
-      {t('runPreview')}
-    </Button>
+    <span
+      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+      aria-live="polite"
+    >
+      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      {t('previewUpdating', 'Updating preview…')}
+    </span>
   );
 }
 

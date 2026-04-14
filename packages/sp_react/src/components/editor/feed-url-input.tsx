@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Label } from '@/components/ui/label.tsx';
 import {
@@ -15,7 +14,6 @@ interface FeedUrlInputProps {
   feedUrls?: string[];
   value: string;
   onChange: (url: string) => void;
-  onLoadFeed: () => void;
   isLoading: boolean;
 }
 
@@ -23,44 +21,45 @@ export function FeedUrlInput({
   feedUrls,
   value,
   onChange,
-  onLoadFeed,
   isLoading,
 }: FeedUrlInputProps) {
   const { t } = useTranslation('editor');
   const hasPredefined = feedUrls && 0 < feedUrls.length;
 
   return (
-    <div className="flex gap-2 items-end">
-      <div className="flex-1 space-y-1.5">
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
         <Label>{t('feedUrl')}</Label>
-        {hasPredefined ? (
-          <Select value={value} onValueChange={onChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={t('selectFeedUrl')} />
-            </SelectTrigger>
-            <SelectContent>
-              {feedUrls.map((url) => (
-                <SelectItem key={url} value={url}>
-                  {url}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <Input
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={t('placeholderFeedUrl')}
-          />
+        {isLoading && (
+          <span
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"
+            aria-live="polite"
+          >
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            {t('feedLoading', 'Loading feed…')}
+          </span>
         )}
       </div>
-      <Button onClick={onLoadFeed} disabled={!value || isLoading}>
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          t('loadFeed')
-        )}
-      </Button>
+      {hasPredefined ? (
+        <Select value={value} onValueChange={onChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={t('selectFeedUrl')} />
+          </SelectTrigger>
+          <SelectContent>
+            {feedUrls.map((url) => (
+              <SelectItem key={url} value={url}>
+                {url}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={t('placeholderFeedUrl')}
+        />
+      )}
     </div>
   );
 }

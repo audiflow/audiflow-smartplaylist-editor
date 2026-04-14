@@ -2,7 +2,7 @@ use std::path::Path;
 
 use axum::body::Body;
 use axum::extract::State;
-use axum::http::{header, Method, Request, StatusCode};
+use axum::http::{Method, Request, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use rust_embed::RustEmbed;
 
@@ -31,10 +31,7 @@ pub fn has_embedded_index() -> bool {
 /// - Files with extensions are served with appropriate content types.
 /// - Extensionless paths serve `index.html` (SPA fallback).
 /// - Missing assets (paths with extensions) return 404 directly.
-pub async fn static_handler(
-    State(state): State<SharedState>,
-    request: Request<Body>,
-) -> Response {
+pub async fn static_handler(State(state): State<SharedState>, request: Request<Body>) -> Response {
     if !matches!(request.method(), &Method::GET | &Method::HEAD) {
         return StatusCode::METHOD_NOT_ALLOWED.into_response();
     }
@@ -111,7 +108,9 @@ fn serve_from_embedded(path: &str, has_extension: bool) -> Response {
 /// Canonicalizes both paths when possible so symlinks and normalization
 /// differences cannot bypass the prefix check.
 fn is_safe_path(base_dir: &Path, candidate: &Path) -> bool {
-    let canonical_base = base_dir.canonicalize().unwrap_or_else(|_| base_dir.to_path_buf());
+    let canonical_base = base_dir
+        .canonicalize()
+        .unwrap_or_else(|_| base_dir.to_path_buf());
     match candidate.canonicalize() {
         Ok(resolved) => resolved.starts_with(&canonical_base),
         // File doesn't exist yet; reject any traversal or root/prefix components
@@ -203,11 +202,23 @@ mod tests {
 
     #[test]
     fn mime_from_path_returns_correct_types() {
-        assert_eq!(mime_from_path(Path::new("index.html")), "text/html; charset=utf-8");
-        assert_eq!(mime_from_path(Path::new("app.js")), "application/javascript; charset=utf-8");
-        assert_eq!(mime_from_path(Path::new("style.css")), "text/css; charset=utf-8");
+        assert_eq!(
+            mime_from_path(Path::new("index.html")),
+            "text/html; charset=utf-8"
+        );
+        assert_eq!(
+            mime_from_path(Path::new("app.js")),
+            "application/javascript; charset=utf-8"
+        );
+        assert_eq!(
+            mime_from_path(Path::new("style.css")),
+            "text/css; charset=utf-8"
+        );
         assert_eq!(mime_from_path(Path::new("data.json")), "application/json");
         assert_eq!(mime_from_path(Path::new("image.png")), "image/png");
-        assert_eq!(mime_from_path(Path::new("unknown.xyz")), "application/octet-stream");
+        assert_eq!(
+            mime_from_path(Path::new("unknown.xyz")),
+            "application/octet-stream"
+        );
     }
 }

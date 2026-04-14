@@ -36,12 +36,25 @@ impl Resolver for TitleAppearanceResolver {
     ) -> Option<Grouping> {
         let definition = definition?;
 
-        let title_extractor = definition.title_extractor.as_ref();
-        let pattern_str = definition
-            .groups
+        let title_extractor = definition
+            .group_item
             .as_ref()
-            .and_then(|g| g.first())
-            .and_then(|g| g.pattern.as_deref());
+            .and_then(|gi| gi.title_extractor.as_ref());
+        // v5 introduces `grouping.discoveryHint` as the canonical fallback
+        // pattern for titleDiscovery. Preserve the legacy read from the
+        // first static classifier for configs that haven't migrated yet.
+        // titleDiscovery always matches against the episode title, so the
+        // Matcher's `source` field is intentionally ignored when falling back
+        // to the first static classifier's pattern — only the regex string is read.
+        let pattern_str = definition.grouping.discovery_hint.as_deref().or_else(|| {
+            definition
+                .grouping
+                .static_classifiers
+                .as_ref()
+                .and_then(|g| g.first())
+                .and_then(|g| g.pattern.as_ref())
+                .map(|m| m.pattern.as_str())
+        });
 
         // Need either a titleExtractor or a group pattern
         if title_extractor.is_none() && pattern_str.is_none() {
@@ -64,7 +77,7 @@ fn resolve_by_appearance(
         .filter(|e| e.published_at().is_some())
         .copied()
         .collect();
-    with_date.sort_by_key(|a| a.published_at().unwrap());
+    with_date.sort_by_key(|a| a.published_at());
 
     let without_date: Vec<&dyn EpisodeData> = episodes
         .iter()
@@ -73,10 +86,7 @@ fn resolve_by_appearance(
         .collect();
 
     // Process all episodes: dated first (oldest to newest), then undated
-    let all_episodes: Vec<&dyn EpisodeData> = with_date
-        .into_iter()
-        .chain(without_date)
-        .collect();
+    let all_episodes: Vec<&dyn EpisodeData> = with_date.into_iter().chain(without_date).collect();
 
     // Pre-compile regexes once before the episode loop
     let compiled_group_regex = pattern_str.and_then(|p| Regex::new(p).ok());

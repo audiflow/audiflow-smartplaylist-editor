@@ -1,5 +1,5 @@
-use axum::extract::{Query, State};
 use axum::Json;
+use axum::extract::{Query, State};
 
 use crate::app::{AppError, SharedState};
 
@@ -20,11 +20,14 @@ pub async fn fetch_feed(
         .ok_or_else(|| AppError::bad_request("Missing required query parameter: url"))?;
 
     // Basic URL validation
-    let parsed = url::Url::parse(&url)
-        .map_err(|_| AppError::bad_request("Invalid URL"))?;
+    let parsed = url::Url::parse(&url).map_err(|_| AppError::bad_request("Invalid URL"))?;
     match parsed.scheme() {
         "http" | "https" => {}
-        _ => return Err(AppError::bad_request("Only http and https URLs are allowed")),
+        _ => {
+            return Err(AppError::bad_request(
+                "Only http and https URLs are allowed",
+            ));
+        }
     }
 
     let episodes = state

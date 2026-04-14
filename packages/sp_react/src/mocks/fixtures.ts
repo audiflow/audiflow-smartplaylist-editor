@@ -40,38 +40,31 @@ export const PATTERN_IDENTIFIERS: PatternIdentifiers[] = [
 export const PLAYLIST_SEASON: PlaylistDefinition = {
   id: 'seasons',
   displayName: 'By Season',
-  resolverType: 'seasonNumber',
-  presentation: 'separate',
+  grouping: {
+    by: 'seasonNumber',
+  },
   priority: 0,
-  prependSeasonNumber: false,
-  groups: [
-    {
-      id: 'season-1',
-      displayName: 'Season 1',
-      pattern: '^S01',
-    },
-  ],
 };
 
 export const PLAYLIST_CATEGORY: PlaylistDefinition = {
   id: 'topics',
   displayName: 'By Topic',
-  resolverType: 'titleClassifier',
-  presentation: 'combined',
+  grouping: {
+    by: 'titleClassifier',
+    staticClassifiers: [
+      {
+        id: 'interviews',
+        displayName: 'Interviews',
+        pattern: { source: 'title', pattern: 'interview' },
+      },
+      {
+        id: 'deep-dives',
+        displayName: 'Deep Dives',
+        pattern: { source: 'title', pattern: 'deep.dive' },
+      },
+    ],
+  },
   priority: 1,
-  prependSeasonNumber: false,
-  groups: [
-    {
-      id: 'interviews',
-      displayName: 'Interviews',
-      pattern: 'interview',
-    },
-    {
-      id: 'deep-dives',
-      displayName: 'Deep Dives',
-      pattern: 'deep.dive',
-    },
-  ],
 };
 
 // -- Full pattern config --

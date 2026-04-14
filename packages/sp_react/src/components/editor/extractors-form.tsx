@@ -16,13 +16,13 @@ export function ExtractorsForm({ index }: ExtractorsFormProps) {
     <div className="space-y-6">
       <h3 className="text-sm font-semibold">{t('extractorsSection')}</h3>
       <TitleExtractorForm
-        fieldPath={`playlists.${index}.titleExtractor`}
+        fieldPath={`playlists.${index}.groupItem.titleExtractor`}
         idPrefix={`title-ext-${index}`}
-        resolverType={watch(`playlists.${index}.resolverType`)}
+        resolverType={watch(`playlists.${index}.grouping.by`) ?? undefined}
         showCategoryNote
       />
       <NumberingExtractorForm
-        fieldPath={`playlists.${index}.numberingExtractor`}
+        fieldPath={`playlists.${index}.grouping.numberingExtractor`}
         idPrefix={`ep-ext-${index}`}
       />
     </div>

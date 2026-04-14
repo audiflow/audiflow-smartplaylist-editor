@@ -22,6 +22,7 @@ This document covers:
 - Validate configs at runtime via `sp_core::schema::Validator`
 - Expose playlist-definition schema via `GET /api/schema` endpoint
 - Mirror schemas as Zod 4 schemas in `sp_react` (`src/schemas/config-schema.ts`)
+- Regenerate schema HTML docs via `make schema-doc`
 
 ## Non-responsibilities
 
@@ -38,9 +39,10 @@ This document covers:
   3. sp_core conformance tests (`crates/sp_core/tests/schema_tests.rs`)
   4. sp_react Zod schema (`packages/sp_react/src/schemas/config-schema.ts`)
   5. sp_react conformance tests
+  6. Schema HTML docs (`make schema-doc`)
 - Consumer repos (audiflow, data repos) must update their vendored copies after schema changes
-- Valid resolver types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`
-- Shared `$defs` in playlist-definition schema: `GroupDef`, `SortSpec`, `SortRule`, `SortCondition`, `TitleExtractor`, `NumberingExtractor`
+- Valid resolver types (via `grouping.by`): `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`
+- Shared `$defs` in playlist-definition schema: `EpisodeFilterEntry`, `YearBinding`, `GroupDef`, `SortOrder`, `SortRule`, `EpisodeSortRule`, `TitleExtractor`, `NumberingExtractor`, `SelectorConfig`, `GroupingConfig`, `GroupListingConfig`, `GroupItemConfig`, `EpisodeListingConfig`, `EpisodeItemConfig`
 
 ## Consumer adoption process
 
@@ -55,6 +57,7 @@ This document covers:
 - docs/integration/smartplaylist-contract.md -- file structure the schemas validate
 - docs/architecture/module-boundaries.md -- sp_core owns schemas, sp_react mirrors as Zod
 - docs/development/change-workflow.md -- steps for schema changes
+- docs/schema-reference.md -- complete field-level schema reference (v5)
 
 ## When to update
 

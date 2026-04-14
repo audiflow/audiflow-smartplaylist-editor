@@ -52,13 +52,25 @@ export const previewEpisodeSchema = z.object({
   extractedDisplayName: z.string().nullish(),
 });
 
-export const previewGroupSchema = z.object({
-  id: z.string(),
-  displayName: z.string(),
-  sortKey: z.union([z.string(), z.number()]),
-  episodeCount: z.number(),
-  episodes: z.array(previewEpisodeSchema),
-});
+export type PreviewGroup = {
+  id: string;
+  displayName: string;
+  sortKey: string | number;
+  episodeCount: number;
+  episodes: z.infer<typeof previewEpisodeSchema>[];
+  subGroups?: PreviewGroup[];
+};
+
+export const previewGroupSchema: z.ZodType<PreviewGroup> = z.lazy(() =>
+  z.object({
+    id: z.string(),
+    displayName: z.string(),
+    sortKey: z.union([z.string(), z.number()]),
+    episodeCount: z.number(),
+    episodes: z.array(previewEpisodeSchema),
+    subGroups: z.array(previewGroupSchema).optional(),
+  }),
+);
 
 export const claimedEpisodeSchema = z.object({
   id: z.number(),
@@ -123,7 +135,7 @@ export type PatternSummary = z.infer<typeof patternSummarySchema>;
 export type PatternMeta = z.infer<typeof patternMetaSchema>;
 export type FeedEpisode = z.infer<typeof feedEpisodeSchema>;
 export type PreviewEpisode = z.infer<typeof previewEpisodeSchema>;
-export type PreviewGroup = z.infer<typeof previewGroupSchema>;
+// PreviewGroup is defined above (recursive type)
 export type PreviewPlaylist = z.infer<typeof previewPlaylistSchema>;
 export type ClaimedEpisode = z.infer<typeof claimedEpisodeSchema>;
 export type PlaylistDebug = z.infer<typeof playlistDebugSchema>;

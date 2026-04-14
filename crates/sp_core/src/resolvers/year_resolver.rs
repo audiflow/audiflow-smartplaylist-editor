@@ -28,7 +28,9 @@ impl Resolver for YearResolver {
         episodes: &[&dyn EpisodeData],
         definition: Option<&PlaylistDefinition>,
     ) -> Option<Grouping> {
-        let title_extractor = definition.and_then(|d| d.title_extractor.as_ref());
+        let title_extractor = definition
+            .and_then(|d| d.group_item.as_ref())
+            .and_then(|gi| gi.title_extractor.as_ref());
 
         let mut grouped: BTreeMap<i32, Vec<&dyn EpisodeData>> = BTreeMap::new();
         let mut ungrouped: Vec<i64> = Vec::new();
@@ -52,12 +54,11 @@ impl Resolver for YearResolver {
         let mut playlists: Vec<Playlist> = grouped
             .iter()
             .map(|(&year, eps)| {
-                let display_name =
-                    super::extract_display_name_with_fallback(
-                        year.to_string(),
-                        eps,
-                        title_extractor,
-                    );
+                let display_name = super::extract_display_name_with_fallback(
+                    year.to_string(),
+                    eps,
+                    title_extractor,
+                );
                 Playlist::new(
                     format!("year_{}", year),
                     display_name,
@@ -77,4 +78,3 @@ impl Resolver for YearResolver {
         })
     }
 }
-

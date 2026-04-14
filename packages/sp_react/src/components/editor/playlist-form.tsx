@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig } from '@/schemas/config-schema.ts';
@@ -9,8 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs.t
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion.tsx';
 import { BasicSettingsTab } from '@/components/editor/tabs/basic-settings-tab.tsx';
 import { EpisodeFilterTab } from '@/components/editor/tabs/episode-filter-tab.tsx';
-import { EpisodeListTab } from '@/components/editor/tabs/episode-list-tab.tsx';
-import { ResolverTab } from '@/components/editor/tabs/resolver-tab.tsx';
+import { OrganizeTab } from '@/components/editor/tabs/organize-tab.tsx';
 import { DisplaySettingsTab } from '@/components/editor/tabs/display-settings-tab.tsx';
 import { Trash2 } from 'lucide-react';
 
@@ -22,6 +21,13 @@ interface PlaylistFormProps {
 }
 
 const EMPTY_TITLES: readonly string[] = [];
+
+const TAB_TO_REGION: Record<string, string | null> = {
+  basic: 'playlist-header',
+  filters: 'filters',
+  organize: 'group-list',
+  display: 'group-list',
+};
 
 function ErrorDot({ visible, label }: { visible: boolean; label: string }) {
   if (!visible) return null;
@@ -38,6 +44,14 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
   const { formState } = useFormContext<PatternConfig>();
 
   const feedUrl = useEditorStore((s) => s.feedUrl);
+  const setActivePreviewRegion = useEditorStore((s) => s.setActivePreviewRegion);
+  const defaultTab = isNewConfig ? 'basic' : 'organize';
+
+  useEffect(() => {
+    setActivePreviewRegion(TAB_TO_REGION[defaultTab] ?? null);
+    return () => setActivePreviewRegion(null);
+  }, [setActivePreviewRegion, defaultTab]);
+
   const feedQuery = useFeed(feedUrl || null);
   const episodeTitles = useMemo(
     () => feedQuery.data?.map((ep) => ep.title) ?? EMPTY_TITLES,
@@ -47,13 +61,18 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
   const errors = formState.errors.playlists?.[index];
   const hasBasicError = !!(errors?.id || errors?.displayName);
   const hasFilterError = !!errors?.episodeFilters;
-  const hasEpisodeListError = !!(errors?.episodeList?.sort || errors?.episodeList?.titleExtractor);
-  const hasResolverError = !!(errors?.resolverType || errors?.presentation || errors?.numberingExtractor || errors?.titleExtractor || errors?.groups);
-  const hasDisplayError = !!(errors?.prependSeasonNumber || errors?.episodeList?.showYearHeaders || errors?.groupList?.yearBinding || errors?.groupList?.showDateRange || errors?.groupList?.userSortable);
+  const hasOrganizeError = !!(errors?.grouping || errors?.selector?.partitionBy);
+  const hasDisplayError = !!(
+    errors?.selector?.titleExtractor
+    || errors?.groupListing
+    || errors?.groupItem
+    || errors?.episodeListing
+    || errors?.episodeItem
+  );
 
   return (
     <div className="space-y-4">
-      <Tabs defaultValue={isNewConfig ? 'basic' : 'resolver'}>
+      <Tabs defaultValue={defaultTab} onValueChange={(v) => setActivePreviewRegion(TAB_TO_REGION[v] ?? null)}>
         <TabsList className="w-full">
           <TabsTrigger value="basic">
             {t('tab.basicSettings')}
@@ -63,13 +82,9 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
             {t('tab.episodeFilters')}
             <ErrorDot visible={hasFilterError} label={t('tab.hasErrors')} />
           </TabsTrigger>
-          <TabsTrigger value="episode-list">
-            {t('tab.episodeList')}
-            <ErrorDot visible={hasEpisodeListError} label={t('tab.hasErrors')} />
-          </TabsTrigger>
-          <TabsTrigger value="resolver">
-            {t('tab.resolver')}
-            <ErrorDot visible={hasResolverError} label={t('tab.hasErrors')} />
+          <TabsTrigger value="organize">
+            {t('tab.organize')}
+            <ErrorDot visible={hasOrganizeError} label={t('tab.hasErrors')} />
           </TabsTrigger>
           <TabsTrigger value="display">
             {t('tab.displaySettings')}
@@ -83,11 +98,8 @@ export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: Pl
         <TabsContent value="filters">
           <EpisodeFilterTab index={index} episodeTitles={episodeTitles} />
         </TabsContent>
-        <TabsContent value="episode-list">
-          <EpisodeListTab index={index} />
-        </TabsContent>
-        <TabsContent value="resolver">
-          <ResolverTab index={index} playlistCount={playlistCount} />
+        <TabsContent value="organize">
+          <OrganizeTab index={index} playlistCount={playlistCount} />
         </TabsContent>
         <TabsContent value="display">
           <DisplaySettingsTab index={index} />

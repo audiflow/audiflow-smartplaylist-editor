@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import type { PreviewResult } from '@/schemas/api-schema.ts';
 
+// Module-scope map so timer handles survive re-renders without entering React state.
+// Cancelling the previous timer for a field before registering a new one ensures
+// rapid re-focus extends the TTL rather than letting stale timeouts fire early.
+const pulseTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+export type ActiveGroupContext = 'all' | string;
+
 interface EditorState {
   isJsonMode: boolean;
   feedUrl: string;
@@ -11,6 +18,11 @@ interface EditorState {
   conflictPath: string | null;
   previewData: PreviewResult | null;
   previewPending: boolean;
+  activeGroupContexts: Record<string, ActiveGroupContext>;
+  // Pending selector entry index per playlist. Allows cross-playlist selector
+  // clicks to deep-link into a specific entry (e.g. a year/season partition)
+  // instead of always landing on entry 0 after the tab switch.
+  pendingEntryIndexes: Record<string, number>;
   toggleJsonMode: () => void;
   setFeedUrl: (url: string) => void;
   setDirty: (dirty: boolean) => void;
@@ -20,6 +32,15 @@ interface EditorState {
   clearConflict: () => void;
   setPreviewData: (data: PreviewResult | null) => void;
   setPreviewPending: (pending: boolean) => void;
+  getActiveGroupContext: (playlistId: string) => ActiveGroupContext;
+  setActiveGroupContext: (playlistId: string, context: ActiveGroupContext) => void;
+  resetActiveGroupContext: (playlistId: string) => void;
+  setPendingEntryIndex: (playlistId: string, entryIndex: number) => void;
+  consumePendingEntryIndex: (playlistId: string) => number | null;
+  activePreviewRegion: string | null;
+  activePreviewFields: string[];
+  setActivePreviewRegion: (region: string | null) => void;
+  pulseActivePreviewField: (field: string, ttlMs?: number) => void;
   reset: () => void;
 }
 
@@ -33,9 +54,13 @@ const initialState = {
   conflictPath: null as string | null,
   previewData: null as PreviewResult | null,
   previewPending: false,
+  activeGroupContexts: {} as Record<string, ActiveGroupContext>,
+  pendingEntryIndexes: {} as Record<string, number>,
+  activePreviewRegion: null as string | null,
+  activePreviewFields: [] as string[],
 };
 
-export const useEditorStore = create<EditorState>((set) => ({
+export const useEditorStore = create<EditorState>((set, get) => ({
   ...initialState,
   toggleJsonMode: () => set((state) => ({ isJsonMode: !state.isJsonMode })),
   setFeedUrl: (url) => set((state) => (state.feedUrl === url ? {} : { feedUrl: url })),
@@ -46,5 +71,47 @@ export const useEditorStore = create<EditorState>((set) => ({
   clearConflict: () => set({ conflictDetected: false, conflictPath: null }),
   setPreviewData: (data) => set({ previewData: data }),
   setPreviewPending: (pending) => set((state) => (state.previewPending === pending ? {} : { previewPending: pending })),
+  getActiveGroupContext: (playlistId) => get().activeGroupContexts[playlistId] ?? 'all',
+  setActiveGroupContext: (playlistId, context) =>
+    set((state) => ({
+      activeGroupContexts: { ...state.activeGroupContexts, [playlistId]: context },
+    })),
+  resetActiveGroupContext: (playlistId) =>
+    set((state) => {
+      if (!(playlistId in state.activeGroupContexts)) return {};
+      const { [playlistId]: _removed, ...rest } = state.activeGroupContexts;
+      return { activeGroupContexts: rest };
+    }),
+  setPendingEntryIndex: (playlistId, entryIndex) =>
+    set((state) => ({
+      pendingEntryIndexes: { ...state.pendingEntryIndexes, [playlistId]: entryIndex },
+    })),
+  consumePendingEntryIndex: (playlistId) => {
+    const current = get().pendingEntryIndexes[playlistId];
+    if (current === undefined) return null;
+    set((state) => {
+      const { [playlistId]: _removed, ...rest } = state.pendingEntryIndexes;
+      return { pendingEntryIndexes: rest };
+    });
+    return current;
+  },
+  setActivePreviewRegion: (region) =>
+    set((state) => (state.activePreviewRegion === region ? {} : { activePreviewRegion: region })),
+  pulseActivePreviewField: (field, ttlMs = 1000) => {
+    const existing = pulseTimers.get(field);
+    if (existing !== undefined) clearTimeout(existing);
+    set((state) =>
+      state.activePreviewFields.includes(field)
+        ? {}
+        : { activePreviewFields: [...state.activePreviewFields, field] },
+    );
+    const timer = setTimeout(() => {
+      pulseTimers.delete(field);
+      set((state) => ({
+        activePreviewFields: state.activePreviewFields.filter((f) => f !== field),
+      }));
+    }, ttlMs);
+    pulseTimers.set(field, timer);
+  },
   reset: () => set(initialState),
 }));

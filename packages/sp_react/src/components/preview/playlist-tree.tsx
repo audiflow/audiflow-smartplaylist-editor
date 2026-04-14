@@ -38,7 +38,7 @@ export function PlaylistTree({
   const { t } = useTranslation('preview');
 
   return (
-    <div className="w-full space-y-4">
+    <div data-preview-region="group-list" className="w-full space-y-4">
       {playlists.map((playlist) => (
         <div key={playlist.id}>
           {playlist.groups && 0 < playlist.groups.length ? (
@@ -107,7 +107,7 @@ function YearSection({
 
   return (
     <div>
-      <div className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm px-2 py-1.5 -mx-2 border-b">
+      <div data-preview-field="group-year-sections" className="sticky top-12 z-10 bg-muted/80 backdrop-blur-sm px-2 py-1.5 border-b">
         <span className="text-sm font-semibold">
           {year === 0 ? t('yearUnknown') : t('yearHeader', { year })}
         </span>
@@ -131,21 +131,28 @@ function YearGroupEntryList({
   return (
     <Accordion type="multiple" className="ml-4">
       {entries.map((entry, idx) => (
-        <AccordionItem key={`${entry.group.id}-${idx}`} value={`${entry.group.id}-${idx}`}>
+        <AccordionItem data-preview-field="group-list-order" key={`${entry.group.id}-${idx}`} value={`${entry.group.id}-${idx}`}>
           <AccordionTrigger>
             <div className="flex items-center gap-2">
-              <span>{formatGroupName(entry.group, prependSeasonNumber)}</span>
+              <span data-preview-field="group-card-season-prefix">{formatGroupName(entry.group, prependSeasonNumber)}</span>
               <Badge variant="secondary">
                 {t('episodes', { count: entry.episodeCount })}
               </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <SortedEpisodeList
-              groupId={entry.group.id}
-              episodes={entry.filteredEpisodes ?? entry.group.episodes}
-              episodeSortRules={episodeSortRules}
-            />
+            {entry.group.subGroups && 0 < entry.group.subGroups.length ? (
+              <SubGroupList
+                subGroups={filterSubGroupsByEpisodes(entry.group.subGroups, entry.filteredEpisodes)}
+                episodeSortRules={episodeSortRules}
+              />
+            ) : (
+              <SortedEpisodeList
+                groupId={entry.group.id}
+                episodes={entry.filteredEpisodes ?? entry.group.episodes}
+                episodeSortRules={episodeSortRules}
+              />
+            )}
           </AccordionContent>
         </AccordionItem>
       ))}
@@ -153,8 +160,44 @@ function YearGroupEntryList({
   );
 }
 
+/// Narrows each sub-group's episodes to the slice that a splitByYear
+/// year-bucket contains, so year accordions only show the selected
+/// year's contents inside partitioned sub-groups. When no filtering is
+/// active (no filteredEpisodes), returns the original sub-groups.
+function filterSubGroupsByEpisodes(
+  subGroups: PreviewGroup[],
+  filteredEpisodes: PreviewEpisode[] | undefined,
+): PreviewGroup[] {
+  if (!filteredEpisodes) return subGroups;
+  const allowedIds = new Set(filteredEpisodes.map((ep) => ep.id));
+  return subGroups.map((sub) => {
+    const filtered = sub.episodes.filter((ep) => allowedIds.has(ep.id));
+    const nestedSubGroups = sub.subGroups
+      ? filterSubGroupsByEpisodes(sub.subGroups, filteredEpisodes)
+      : undefined;
+    return {
+      ...sub,
+      episodes: filtered,
+      episodeCount: filtered.length + (nestedSubGroups?.reduce((a, g) => a + g.episodeCount, 0) ?? 0),
+      subGroups: nestedSubGroups,
+    };
+  });
+}
+
 function formatGroupName(group: PreviewGroup, prependSeasonNumber: boolean): string {
-  if (prependSeasonNumber && typeof group.sortKey === 'number' && group.id.startsWith('season_')) {
+  // Synthetic partition parents (season_*/year_* groups that carry sub_groups)
+  // already embed their season in displayName ("Season N" or custom selector
+  // titleExtractor output). Skip the prefix there or the preview shows
+  // "S1 Season 1" / "S1 S1 Specials".
+  const isPartitionParent =
+    (group.id.startsWith('season_') || group.id.startsWith('year_'))
+    && 0 < (group.subGroups?.length ?? 0);
+  if (
+    prependSeasonNumber
+    && typeof group.sortKey === 'number'
+    && group.id.startsWith('season_')
+    && !isPartitionParent
+  ) {
     return `S${group.sortKey} ${group.displayName}`;
   }
   return group.displayName;
@@ -174,19 +217,60 @@ function GroupList({
   return (
     <Accordion type="multiple" className="ml-4">
       {groups.map((group) => (
-        <AccordionItem key={group.id} value={group.id}>
+        <AccordionItem data-preview-field="group-list-order" key={group.id} value={group.id}>
           <AccordionTrigger>
             <div className="flex items-center gap-2">
-              <span>{formatGroupName(group, prependSeasonNumber)}</span>
+              <span data-preview-field="group-card-season-prefix">{formatGroupName(group, prependSeasonNumber)}</span>
               <Badge variant="secondary">
                 {t('episodes', { count: group.episodeCount })}
               </Badge>
             </div>
           </AccordionTrigger>
           <AccordionContent>
+            {group.subGroups && 0 < group.subGroups.length ? (
+              <SubGroupList
+                subGroups={group.subGroups}
+                episodeSortRules={episodeSortRules}
+              />
+            ) : (
+              <SortedEpisodeList
+                groupId={group.id}
+                episodes={group.episodes}
+                episodeSortRules={episodeSortRules}
+              />
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
+}
+
+function SubGroupList({
+  subGroups,
+  episodeSortRules,
+}: {
+  subGroups: PreviewGroup[];
+  episodeSortRules?: ReadonlyMap<string, EpisodeSortRule>;
+}) {
+  const { t } = useTranslation('preview');
+
+  return (
+    <Accordion type="multiple" className="ml-4">
+      {subGroups.map((sub) => (
+        <AccordionItem key={sub.id} value={sub.id}>
+          <AccordionTrigger>
+            <div className="flex items-center gap-2">
+              <span>{sub.displayName}</span>
+              <Badge variant="outline">
+                {t('episodes', { count: sub.episodeCount })}
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
             <SortedEpisodeList
-              groupId={group.id}
-              episodes={group.episodes}
+              groupId={sub.id}
+              episodes={sub.episodes}
               episodeSortRules={episodeSortRules}
             />
           </AccordionContent>
@@ -216,17 +300,26 @@ function SortedEpisodeList({
 
 function EpisodeList({ episodes }: { episodes: PreviewEpisode[] }) {
   return (
-    <ul className="ml-4 space-y-0.5 text-sm text-muted-foreground">
-      {episodes.map((ep) => (
-        <li key={ep.id} className="flex items-center gap-2">
-          <span className="truncate" title={ep.title}>{ep.title}</span>
-          {ep.publishedAt && (
-            <span className="text-xs text-muted-foreground/60 shrink-0">
-              {new Date(ep.publishedAt).toLocaleDateString()}
+    <ul data-preview-field="episode-order" className="ml-4 space-y-0.5 text-sm text-muted-foreground">
+      {episodes.map((ep) => {
+        // Prefer the server-computed `extractedDisplayName` so configuring
+        // `episodeItem.titleExtractor` (or a classifier-level override) is
+        // immediately visible in the preview list. Fall back to the raw
+        // feed title when no extractor applies.
+        const displayTitle = ep.extractedDisplayName ?? ep.title;
+        return (
+          <li key={ep.id} className="flex items-center gap-2">
+            <span data-preview-field="episode-title" className="truncate" title={ep.title}>
+              {displayTitle}
             </span>
-          )}
-        </li>
-      ))}
+            {ep.publishedAt && (
+              <span className="text-xs text-muted-foreground/60 shrink-0">
+                {new Date(ep.publishedAt).toLocaleDateString()}
+              </span>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

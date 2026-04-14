@@ -19,6 +19,7 @@ deployed via GitHub Pages). The `audiflow` Flutter app consumes configs from hos
 - Local API server for config CRUD, feed fetching, and live preview
 - CLI tools for validation, formatting, serving, and version bumping
 - Cross-pattern uniqueness enforcement (podcastGuid, feedUrls)
+- Schema HTML doc generation (`make schema-doc`)
 
 ## Non-responsibilities
 
@@ -51,6 +52,7 @@ make test                          # All tests
 ## Key references
 
 - docs/overview.md -- Purpose, concepts, entry points
+- docs/schema-reference.md -- Complete v5 schema field reference
 - docs/architecture/system-overview.md -- Data flow and design constraints
 - docs/architecture/module-boundaries.md -- Crate/package boundaries
 - docs/integration/editor-to-schema.md -- Schema ownership and update process

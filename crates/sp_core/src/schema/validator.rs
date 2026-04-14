@@ -46,13 +46,14 @@ impl Validator {
     /// Creates a validator using schemas embedded at compile time.
     /// The binary is self-contained and does not need schema files on disk.
     pub fn from_embedded() -> Result<Self, Box<dyn std::error::Error>> {
-        let compile =
-            |content: &str, name: &str| -> Result<JsonSchemaValidator, Box<dyn std::error::Error>> {
-                let schema: Value = serde_json::from_str(content)?;
-                let validator = JsonSchemaValidator::new(&schema)
-                    .map_err(|e| format!("failed to compile embedded schema {name}: {e}"))?;
-                Ok(validator)
-            };
+        let compile = |content: &str,
+                       name: &str|
+         -> Result<JsonSchemaValidator, Box<dyn std::error::Error>> {
+            let schema: Value = serde_json::from_str(content)?;
+            let validator = JsonSchemaValidator::new(&schema)
+                .map_err(|e| format!("failed to compile embedded schema {name}: {e}"))?;
+            Ok(validator)
+        };
 
         Ok(Self {
             pattern_index: compile(PATTERN_INDEX_SCHEMA, "pattern-index")?,

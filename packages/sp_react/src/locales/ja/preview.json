@@ -1,6 +1,5 @@
 {
   "title": "プレビュー",
-  "runPreview": "プレビュー実行",
   "idleMessage": "プレビューを実行して、設定がエピソードをどのようにグループ化するか確認してください。",
   "failed": "プレビューに失敗しました: {{error}}",
   "ungroupedEpisodes": "未グループ化エピソード",
@@ -37,5 +36,9 @@
   "feedLoading": "フィードを読み込み中...",
   "feedError": "フィードの読み込みに失敗しました。URLを確認して再試行してください。",
   "emptyFiltered": "現在のフィルタに一致するエピソードはありません。",
-  "filteredCount": "{{total}}件中{{filtered}}件のエピソードがフィルタを通過"
+  "filteredCount": "{{total}}件中{{filtered}}件のエピソードがフィルタを通過",
+  "selector": {
+    "seasonEntry": "シーズン {{n}}",
+    "yearEntry": "{{year}} 年"
+  }
 }

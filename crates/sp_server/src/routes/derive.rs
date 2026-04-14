@@ -11,9 +11,7 @@ use crate::app::AppError;
 ///
 /// Request:  `{ "podcastGuid": "...", "feedUrls": ["..."] }`
 /// Response: `{ "id": "a1b2c3d4e5f6", "source": "podcastGuid" | "feedUrls" }`
-pub async fn derive_pattern_id_handler(
-    Json(body): Json<Value>,
-) -> Result<Json<Value>, AppError> {
+pub async fn derive_pattern_id_handler(Json(body): Json<Value>) -> Result<Json<Value>, AppError> {
     if !body.is_object() {
         return Err(AppError::bad_request("Request body must be a JSON object"));
     }
@@ -21,9 +19,9 @@ pub async fn derive_pattern_id_handler(
     let guid = match body.get("podcastGuid") {
         None => None,
         Some(value) => {
-            let s = value.as_str().ok_or_else(|| {
-                AppError::bad_request("\"podcastGuid\" must be a string")
-            })?;
+            let s = value
+                .as_str()
+                .ok_or_else(|| AppError::bad_request("\"podcastGuid\" must be a string"))?;
             let s = s.trim();
             if s.is_empty() { None } else { Some(s) }
         }
@@ -32,9 +30,9 @@ pub async fn derive_pattern_id_handler(
     let feed_urls: Vec<String> = match body.get("feedUrls") {
         None => Vec::new(),
         Some(value) => {
-            let arr = value.as_array().ok_or_else(|| {
-                AppError::bad_request("\"feedUrls\" must be an array of strings")
-            })?;
+            let arr = value
+                .as_array()
+                .ok_or_else(|| AppError::bad_request("\"feedUrls\" must be an array of strings"))?;
 
             let mut urls = Vec::with_capacity(arr.len());
             for entry in arr {
