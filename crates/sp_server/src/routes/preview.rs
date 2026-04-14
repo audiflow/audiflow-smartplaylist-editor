@@ -379,16 +379,41 @@ fn compute_extracted_display_names(
             // Prefer the classifier-level extractor when the episode landed
             // in a classifier that defines one; fall back to the playlist
             // default otherwise.
-            let classifier_extractor = episode_to_classifier
+            let classifier = episode_to_classifier
                 .get(&episode.id)
-                .and_then(|cid| classifier_map.get(cid))
+                .and_then(|cid| classifier_map.get(cid).copied());
+            let classifier_title_extractor = classifier
                 .and_then(|c| c.episode_item.as_ref())
                 .and_then(|ei| ei.title_extractor.as_ref());
-            let extractor = classifier_extractor.or(playlist_extractor);
+            let extractor = classifier_title_extractor.or(playlist_extractor);
             let Some(extractor) = extractor else {
                 continue;
             };
-            if let Some(name) = extractor.compile().extract(episode) {
+
+            // Re-enrich this episode with the classifier's own numbering
+            // extractor (if any) so a classifier-level titleExtractor
+            // reading seasonNumber/episodeNumber sees values that match
+            // the group it actually resolved into, not stale playlist-level
+            // numbers that may belong to a different classifier.
+            let episode_cow = classifier
+                .and_then(|c| c.numbering_extractor.as_ref())
+                .and_then(|ne| {
+                    let r = ne.compile().extract(episode);
+                    if !r.has_values() {
+                        return None;
+                    }
+                    Some(SimpleEpisodeData {
+                        id: episode.id,
+                        title: episode.title.clone(),
+                        description: episode.description.clone(),
+                        season_number: r.season_number.or(episode.season_number),
+                        episode_number: r.episode_number.or(episode.episode_number),
+                        published_at: episode.published_at,
+                        image_url: episode.image_url.clone(),
+                    })
+                });
+            let episode_for_title: &SimpleEpisodeData = episode_cow.as_ref().unwrap_or(episode);
+            if let Some(name) = extractor.compile().extract(episode_for_title) {
                 names.insert(episode.id, name);
             }
         }
