@@ -151,7 +151,7 @@ function extractYearFromGroupId(id: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-function extractUtcYear(publishedAt: string | undefined): number | null {
+function extractUtcYear(publishedAt: string | null | undefined): number | null {
   if (!publishedAt) return null;
   const date = new Date(publishedAt);
   const utcYear = date.getUTCFullYear();

@@ -63,7 +63,9 @@ export function SortForm(props: SortFormProps) {
     ? props.idPrefix
     : `sort-${'index' in props ? props.index : ''}`;
 
-  const sort = watch(resolvedFieldPath as never) as { field: string; order: SortOrder } | undefined;
+  const sort = watch(resolvedFieldPath as never) as unknown as
+    | { field: string; order: SortOrder }
+    | undefined;
   const isEnabled = sort != null;
 
   function handleToggle() {
@@ -130,7 +132,7 @@ export function SortForm(props: SortFormProps) {
             <Select
               value={sort?.order ?? 'ascending'}
               onValueChange={(val) =>
-                setValue(`${resolvedFieldPath}.order` as never, val as SortOrder, { shouldDirty: true })
+                setValue(`${resolvedFieldPath}.order` as never, val as never, { shouldDirty: true })
               }
             >
               <SelectTrigger id={`${resolvedIdPrefix}-order`} className="w-full">
