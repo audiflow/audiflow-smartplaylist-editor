@@ -30,6 +30,7 @@ export function generateEntries(
   partitionBy: PartitionBy | undefined,
   previewPlaylist: PreviewPlaylist | null | undefined,
   t: (key: string, opts?: Record<string, unknown>) => string,
+  hasCustomSelectorTitleExtractor: boolean = false,
 ): SelectorEntry[] {
   if (partitionBy === 'seasonNumber') {
     const seasons = collectUniqueSeasonNumbers(previewPlaylist);
@@ -37,7 +38,7 @@ export function generateEntries(
       return seasons.map((s, i) => ({
         playlistId,
         entryIndex: i,
-        label: resolveSeasonLabel(s, previewPlaylist, t),
+        label: resolveSeasonLabel(s, previewPlaylist, t, hasCustomSelectorTitleExtractor),
         partitionValue: s,
       }));
     }
@@ -49,7 +50,7 @@ export function generateEntries(
       return years.map((y, i) => ({
         playlistId,
         entryIndex: i,
-        label: resolveYearLabel(y, previewPlaylist, t),
+        label: resolveYearLabel(y, previewPlaylist, t, hasCustomSelectorTitleExtractor),
         partitionValue: y,
       }));
     }
@@ -70,8 +71,12 @@ function resolveYearLabel(
   year: number,
   previewPlaylist: PreviewPlaylist | null | undefined,
   t: (key: string, opts?: Record<string, unknown>) => string,
+  hasCustomSelectorTitleExtractor: boolean,
 ): string {
-  if (previewPlaylist?.groups) {
+  // Only trust the server's displayName when the user configured a custom
+  // extractor. Otherwise the backend emits English defaults like "Year N"
+  // that would override the localized preview.selector.yearEntry string.
+  if (hasCustomSelectorTitleExtractor && previewPlaylist?.groups) {
     const targetId = `year_${year}`;
     for (const group of previewPlaylist.groups) {
       if (group.id === targetId) {
@@ -87,8 +92,11 @@ function resolveSeasonLabel(
   seasonNumber: number,
   previewPlaylist: PreviewPlaylist | null | undefined,
   t: (key: string, opts?: Record<string, unknown>) => string,
+  hasCustomSelectorTitleExtractor: boolean,
 ): string {
-  if (previewPlaylist?.groups) {
+  // Mirrors resolveYearLabel: keep localized fallback unless the user set
+  // a custom selector.titleExtractor that produced the group's label.
+  if (hasCustomSelectorTitleExtractor && previewPlaylist?.groups) {
     for (const group of previewPlaylist.groups) {
       if (group.episodes[0]?.seasonNumber === seasonNumber) {
         return group.displayName;
@@ -181,12 +189,15 @@ export function PreviewPlaylistSelector({
       const previewPlaylist = previewData?.playlists.find(
         (p) => p.id === playlist.id,
       );
+      const hasCustomSelectorTitleExtractor =
+        playlist.selector?.titleExtractor != null;
       return generateEntries(
         playlist.id,
         playlist.displayName ?? '',
         playlist.selector?.partitionBy,
         previewPlaylist,
         t,
+        hasCustomSelectorTitleExtractor,
       );
     });
   }, [playlists, previewData, t]);

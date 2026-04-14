@@ -174,6 +174,7 @@ export function PlaylistTabContent({
       partitionBy,
       previewPlaylist,
       tp,
+      playlistConfig.selector?.titleExtractor != null,
     );
     const active = getActiveEntry(entries, playlistId, activeEntryIndex);
     if (!active) return allGroups;

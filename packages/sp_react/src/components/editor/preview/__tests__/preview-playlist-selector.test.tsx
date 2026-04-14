@@ -196,6 +196,22 @@ describe('generateEntries', () => {
       expect(entries[1].partitionValue).toBe(2025);
     });
 
+    it('prefers server displayName when a custom selector titleExtractor is set', () => {
+      const preview = makePreviewPlaylist('pl', 'PL', [
+        {
+          id: 'year_2024',
+          displayName: 'Custom 2024 label',
+          sortKey: 2024,
+          episodeCount: 1,
+          episodes: [
+            { id: 1, title: 'ep', publishedAt: '2024-06-01T00:00:00Z', seasonNumber: null, episodeNumber: null, extractedDisplayName: null },
+          ],
+        },
+      ]);
+      const entries = generateEntries('pl', 'PL', 'year', preview, stubT, true);
+      expect(entries[0].label).toBe('Custom 2024 label');
+    });
+
     it('falls back to single entry when no preview data', () => {
       const entries = generateEntries('pl', 'PL', 'year', null, stubT);
       expect(entries).toHaveLength(1);
@@ -204,32 +220,31 @@ describe('generateEntries', () => {
   });
 
   describe('partitionBy: seasonNumber — one entry per distinct season', () => {
-    it('uses group displayName when a group matches the season number', () => {
+    it('uses localized i18n label when no custom extractor is set', () => {
       const preview = makePreviewPlaylist('pl', 'PL', [
         makeGroup('g1', 'Season One', [{ seasonNumber: 1 }]),
         makeGroup('g2', 'Season Two', [{ seasonNumber: 2 }]),
       ]);
       const entries = generateEntries('pl', 'PL', 'seasonNumber', preview, stubT);
       expect(entries).toHaveLength(2);
-      // Labels come from matching group displayName, not raw numbers
-      expect(entries[0].label).toBe('Season One');
+      // Labels come from the localized i18n template, not server defaults
+      expect(entries[0].label).toBe('selector.seasonEntry'.replace('{{n}}', '1'));
       expect(entries[0].partitionValue).toBe(1);
-      expect(entries[1].label).toBe('Season Two');
+      expect(entries[1].label).toBe('selector.seasonEntry'.replace('{{n}}', '2'));
       expect(entries[1].partitionValue).toBe(2);
     });
 
-    it('uses group displayName with Japanese label when present', () => {
+    it('uses server displayName when a custom selector titleExtractor is set', () => {
       const preview = makePreviewPlaylist('pl', 'PL', [
         makeGroup('g1', 'シーズン 1', [{ seasonNumber: 1 }]),
         makeGroup('g2', 'シーズン 2', [{ seasonNumber: 2 }]),
       ]);
-      const entries = generateEntries('pl', 'PL', 'seasonNumber', preview, stubT);
+      const entries = generateEntries('pl', 'PL', 'seasonNumber', preview, stubT, true);
       expect(entries[0].label).toBe('シーズン 1');
       expect(entries[1].label).toBe('シーズン 2');
     });
 
-    it('falls back to i18n key when no group matches the season number', () => {
-      // Groups have no episodes with seasonNumber so no match is found
+    it('falls back to single displayName entry when no seasonNumber on episodes', () => {
       const preview = makePreviewPlaylist('pl', 'PL', [
         makeGroup('g1', 'Some Group', [{ publishedAt: '2024-01-01T00:00:00Z' }]),
       ]);
@@ -240,17 +255,14 @@ describe('generateEntries', () => {
       expect(entries[0].label).toBe('PL');
     });
 
-    it('falls back to i18n seasonEntry key for seasons without a representative group', () => {
-      // Groups contain multiple seasons but only g2 has a match; g3 season 3 has no group
+    it('mixes matched and fallback labels under a custom extractor', () => {
       const preview = makePreviewPlaylist('pl', 'PL', [
         makeGroup('g1', 'シーズン 1', [{ seasonNumber: 1 }]),
       ]);
-      // Manually craft a preview with season 2 but no displayName for it
       const previewCustom: PreviewPlaylist = {
         ...preview,
         groups: [
           ...preview.groups!,
-          // season 2 has no episodes in this test (simulate missing group match)
           {
             id: 'g2',
             displayName: 'g2',
@@ -260,9 +272,7 @@ describe('generateEntries', () => {
           },
         ],
       };
-      const entries = generateEntries('pl', 'PL', 'seasonNumber', previewCustom, stubT);
-      // Season 1 → group displayName 'シーズン 1'
-      // Season 2 → group displayName 'g2' (first group whose episode[0].seasonNumber === 2)
+      const entries = generateEntries('pl', 'PL', 'seasonNumber', previewCustom, stubT, true);
       expect(entries[0].label).toBe('シーズン 1');
       expect(entries[1].label).toBe('g2');
     });
@@ -367,7 +377,7 @@ describe('PreviewPlaylistSelector', () => {
   });
 
   describe('entry rendering — partitionBy: seasonNumber uses group displayName', () => {
-    it('renders season entries using group displayName instead of raw numbers', () => {
+    it('renders season entries using group displayName when custom selector titleExtractor is configured', () => {
       const config: PatternConfig = {
         id: 'test',
         displayName: 'Test',
@@ -378,7 +388,12 @@ describe('PreviewPlaylistSelector', () => {
             displayName: 'Season Playlist',
             grouping: { by: 'seasonNumber' },
             priority: 0,
-            selector: { partitionBy: 'seasonNumber' },
+            selector: {
+              partitionBy: 'seasonNumber',
+              // Custom extractor opts the playlist into server-provided labels
+              // rather than the localized "selector.seasonEntry" fallback.
+              titleExtractor: { source: 'title', pattern: '(.+)' },
+            },
           },
         ],
       };

@@ -161,7 +161,19 @@ function YearGroupEntryList({
 }
 
 function formatGroupName(group: PreviewGroup, prependSeasonNumber: boolean): string {
-  if (prependSeasonNumber && typeof group.sortKey === 'number' && group.id.startsWith('season_')) {
+  // Synthetic partition parents (season_*/year_* groups that carry sub_groups)
+  // already embed their season in displayName ("Season N" or custom selector
+  // titleExtractor output). Skip the prefix there or the preview shows
+  // "S1 Season 1" / "S1 S1 Specials".
+  const isPartitionParent =
+    (group.id.startsWith('season_') || group.id.startsWith('year_'))
+    && 0 < (group.subGroups?.length ?? 0);
+  if (
+    prependSeasonNumber
+    && typeof group.sortKey === 'number'
+    && group.id.startsWith('season_')
+    && !isPartitionParent
+  ) {
     return `S${group.sortKey} ${group.displayName}`;
   }
   return group.displayName;
