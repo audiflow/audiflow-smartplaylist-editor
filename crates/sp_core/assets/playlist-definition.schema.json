@@ -51,12 +51,12 @@
     },
     "episodeFilters": {
       "type": "object",
-      "description": "Rules applied before organizing episodes. Having any filter makes this definition run before filter-less ones. Within each rule, all fields must match (AND). Across rules: require includes only when ALL rules match (AND); exclude rejects if ANY rule matches (OR).",
+      "description": "Rules applied before organizing episodes. Having any filter makes this definition run before filter-less ones. Within each rule, all fields must match (AND). Across rules: require includes when ANY rule matches (OR); exclude rejects if ANY rule matches (OR).",
       "additionalProperties": false,
       "properties": {
         "require": {
           "type": "array",
-          "description": "Include rules (AND). An episode is included only when it matches ALL rules. Within each rule, all fields must match (AND).",
+          "description": "Include rules (OR). An episode is included when it matches ANY rule. Within each rule, all fields must match (AND).",
           "items": {
             "$ref": "#/$defs/EpisodeFilterEntry"
           }
