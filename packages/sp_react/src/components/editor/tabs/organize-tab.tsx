@@ -166,7 +166,12 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
           </>
         ) : (
           isTitleClassifier && 0 <= selectedGroupIndex ? (
+            // Key by array index so React remounts the card when the user
+            // switches chips. The card's RHF `register()` inputs bind
+            // defaultValue at mount time, so a stable element would
+            // otherwise keep the previous group's displayName in the DOM.
             <GroupDefCard
+              key={`group-def-${selectedGroupIndex}`}
               playlistIndex={index}
               groupIndex={selectedGroupIndex}
               isFirst={selectedGroupIndex === 0}
