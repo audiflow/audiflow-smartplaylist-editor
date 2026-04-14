@@ -19,19 +19,12 @@ describe('SelectorBridge', () => {
     expect(screen.getByText('title-extractor-form')).toBeInTheDocument();
   });
 
-  it('renders a "not applicable" notice when partitionBy is undefined or "group"', () => {
-    const { rerender } = render(
+  it('renders a "not applicable" notice when partitionBy is undefined', () => {
+    render(
       <SelectorBridge partitionBy={undefined} partitionByLabel="(none)">
         <div>should-not-render</div>
       </SelectorBridge>,
     );
     expect(screen.queryByText('should-not-render')).not.toBeInTheDocument();
-
-    rerender(
-      <SelectorBridge partitionBy="group" partitionByLabel="group">
-        <div>also-should-not-render</div>
-      </SelectorBridge>,
-    );
-    expect(screen.queryByText('also-should-not-render')).not.toBeInTheDocument();
   });
 });

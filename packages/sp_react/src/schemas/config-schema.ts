@@ -81,12 +81,19 @@ export const numberingExtractorSchema = z.object({
   fallbackToRss: z.boolean().nullish().transform((v) => v ?? false),
 });
 
+// -- Matcher --
+
+export const matcherSchema = z.object({
+  source: z.enum(['title', 'description']),
+  pattern: z.string(),
+});
+
 // -- Group definition --
 
 export const groupDefSchema = z.object({
   id: z.string(),
   displayName: z.string(),
-  pattern: z.string().optional(),
+  pattern: matcherSchema.optional(),
   groupListing: z
     .object({
       yearBinding: yearBindingSchema.optional(),
@@ -113,7 +120,7 @@ export const groupDefSchema = z.object({
 
 // -- Selector config --
 
-export const partitionByValues = ['group', 'seasonNumber', 'year'] as const;
+export const partitionByValues = ['seasonNumber', 'year'] as const;
 
 export const partitionBySchema = z.enum(partitionByValues);
 
@@ -200,6 +207,7 @@ export type EpisodeSortRule = z.infer<typeof episodeSortRuleSchema>;
 export type EpisodeFilterEntry = z.infer<typeof episodeFilterEntrySchema>;
 export type EpisodeFilters = z.infer<typeof episodeFiltersSchema>;
 export type GroupDef = z.infer<typeof groupDefSchema>;
+export type Matcher = z.infer<typeof matcherSchema>;
 export type TitleExtractor = z.infer<typeof titleExtractorSchema>;
 export type NumberingExtractor = z.infer<typeof numberingExtractorSchema>;
 export type PartitionBy = z.infer<typeof partitionBySchema>;

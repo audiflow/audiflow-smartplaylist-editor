@@ -179,11 +179,6 @@ describe('generateEntries', () => {
       expect(entries[0]).toMatchObject({ playlistId: 'pl-a', entryIndex: 0, label: 'Alpha', partitionValue: null });
     });
 
-    it('returns a single entry for partitionBy: group (deferred)', () => {
-      const entries = generateEntries('pl-a', 'Alpha', 'group', null, stubT);
-      expect(entries).toHaveLength(1);
-      expect(entries[0].label).toBe('Alpha');
-    });
   });
 
   describe('partitionBy: year — one entry per distinct year', () => {

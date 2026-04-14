@@ -144,7 +144,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
     const input = {
       by: 'titleClassifier',
       staticClassifiers: [
-        { id: 'main', displayName: 'Main', pattern: '^Main' },
+        { id: 'main', displayName: 'Main', pattern: { source: 'title', pattern: '^Main' } },
       ],
     };
     const parsed = groupingConfigSchema.parse(input);

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useEditorStore } from '@/stores/editor-store.ts';
 
-type PartitionBy = 'group' | 'seasonNumber' | 'year' | undefined;
+type PartitionBy = 'seasonNumber' | 'year' | undefined;
 
 interface SelectorBridgeProps {
   partitionBy: PartitionBy;

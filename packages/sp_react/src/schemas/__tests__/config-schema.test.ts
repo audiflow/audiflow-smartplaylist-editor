@@ -35,7 +35,7 @@ describe('playlistDefinitionSchema', () => {
       grouping: {
         by: 'titleClassifier',
         staticClassifiers: [
-          { id: 'g1', displayName: 'Group 1', pattern: 'pattern1' },
+          { id: 'g1', displayName: 'Group 1', pattern: { source: 'title', pattern: 'pattern1' } },
         ],
       },
       priority: 5,
@@ -269,7 +269,7 @@ describe('groupDefSchema', () => {
     const result = groupDefSchema.parse({
       id: 'bonus',
       displayName: 'Bonus',
-      pattern: 'Bonus.*',
+      pattern: { source: 'title', pattern: 'Bonus.*' },
       groupListing: {
         yearBinding: 'splitByYear',
       },
@@ -286,7 +286,7 @@ describe('groupDefSchema', () => {
         episodeGroup: 1,
       },
     });
-    expect(result.pattern).toBe('Bonus.*');
+    expect(result.pattern).toEqual({ source: 'title', pattern: 'Bonus.*' });
     expect(result.groupItem?.showDateRange).toBe(true);
     expect(result.groupListing?.yearBinding).toBe('splitByYear');
     expect(result.episodeListing?.showYearHeaders).toBe(true);

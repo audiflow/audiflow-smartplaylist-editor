@@ -58,6 +58,8 @@ interface TitleExtractorFormProps {
   idPrefix: string;
   showCategoryNote?: boolean;
   resolverType?: string;
+  /** i18n key for the form heading. Defaults to 'titleExtractor' ("Group name rule"). */
+  labelKey?: string;
 }
 
 export function TitleExtractorForm({
@@ -65,6 +67,7 @@ export function TitleExtractorForm({
   idPrefix,
   showCategoryNote,
   resolverType,
+  labelKey = 'titleExtractor',
 }: TitleExtractorFormProps) {
   const { watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
@@ -126,7 +129,7 @@ export function TitleExtractorForm({
   if (showCategoryNote && resolverType === 'titleClassifier') {
     return (
       <div className="space-y-2">
-        <h4 className="text-sm font-medium">{t('titleExtractor')}</h4>
+        <h4 className="text-sm font-medium">{t(labelKey)}</h4>
         <p className="text-muted-foreground text-sm">
           {t('titleExtractorDisabledNote')}
         </p>
@@ -137,7 +140,7 @@ export function TitleExtractorForm({
   if (!extractor) {
     return (
       <div className="space-y-2">
-        <h4 className="text-sm font-medium">{t('titleExtractor')}</h4>
+        <h4 className="text-sm font-medium">{t(labelKey)}</h4>
         <Button
           type="button"
           variant="outline"
@@ -159,7 +162,7 @@ export function TitleExtractorForm({
   return (
     <div className="space-y-3">
       <h4 className="text-sm font-medium">
-        <HintLabel hint="titleExtractor">{t('titleExtractor')}</HintLabel>
+        <HintLabel hint="titleExtractor">{t(labelKey)}</HintLabel>
       </h4>
 
       {steps.map((step, stepIndex) => (
@@ -168,6 +171,7 @@ export function TitleExtractorForm({
           step={step}
           stepIndex={stepIndex}
           idPrefix={idPrefix}
+          labelKey={labelKey}
           onUpdate={(patch) => updateStep(stepIndex, patch)}
           onRemove={() => handleRemove(stepIndex)}
         />
@@ -200,6 +204,7 @@ interface TitleExtractorStepProps {
   step: TitleExtractor;
   stepIndex: number;
   idPrefix: string;
+  labelKey: string;
   onUpdate: (patch: Partial<TitleExtractor>) => void;
   onRemove: () => void;
 }
@@ -208,6 +213,7 @@ function TitleExtractorStep({
   step,
   stepIndex,
   idPrefix,
+  labelKey,
   onUpdate,
   onRemove,
 }: TitleExtractorStepProps) {
@@ -215,7 +221,7 @@ function TitleExtractorStep({
 
   const label =
     stepIndex === 0
-      ? t('titleExtractor')
+      ? t(labelKey)
       : t('fallbackStep', { number: stepIndex });
 
   return (

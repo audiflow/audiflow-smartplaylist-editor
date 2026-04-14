@@ -20,11 +20,6 @@ export type SelectorEntry = {
   label: string;
   /** The raw partition value (season number or year) for filtering, or null for non-partitioned entries. */
   partitionValue: number | null;
-  /**
-   * The group id this entry maps to when `partitionBy === 'group'`. Lets the
-   * filtering layer narrow preview groups down to the chosen classifier.
-   */
-  partitionGroupId?: string;
 };
 
 // -- Entry generation --
@@ -56,19 +51,6 @@ export function generateEntries(
         entryIndex: i,
         label: resolveYearLabel(y, previewPlaylist, t),
         partitionValue: y,
-      }));
-    }
-  }
-
-  if (partitionBy === 'group') {
-    const groups = previewPlaylist?.groups ?? [];
-    if (0 < groups.length) {
-      return groups.map((group, i) => ({
-        playlistId,
-        entryIndex: i,
-        label: group.displayName,
-        partitionValue: null,
-        partitionGroupId: group.id,
       }));
     }
   }

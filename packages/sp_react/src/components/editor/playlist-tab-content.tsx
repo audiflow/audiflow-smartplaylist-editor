@@ -178,14 +178,6 @@ export function PlaylistTabContent({
     const active = getActiveEntry(entries, playlistId, activeEntryIndex);
     if (!active) return allGroups;
 
-    if (partitionBy === 'group') {
-      // When partitioning by group, show only the chosen classifier's group.
-      // If the active entry carries no group id (e.g. fallback single entry),
-      // fall through and render the full group list.
-      if (!active.partitionGroupId) return allGroups;
-      return allGroups.filter((g) => g.id === active.partitionGroupId);
-    }
-
     if (active.partitionValue === null) return allGroups;
 
     if (partitionBy === 'seasonNumber') {
