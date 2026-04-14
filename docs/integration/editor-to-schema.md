@@ -23,7 +23,6 @@ This document covers:
 - Expose playlist-definition schema via `GET /api/schema` endpoint
 - Mirror schemas as Zod 4 schemas in `sp_react` (`src/schemas/config-schema.ts`)
 - Regenerate schema HTML docs via `make schema-doc`
-- Sync schemas to/from the data repo via `make sync-schema`
 
 ## Non-responsibilities
 

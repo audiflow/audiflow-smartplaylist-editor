@@ -1,6 +1,6 @@
 .PHONY: help deps dev-server dev-ui dev build test test-rust test-react \
 	lint clippy validate format format-check build-web clean \
-	sync-schema schema-doc
+	schema-doc
 
 # Ports
 SERVER_PORT ?= 8080
@@ -80,9 +80,6 @@ validate: ## Validate configs in data directory against schema
 	cargo run -- validate --data-dir $(DATA_DIR)
 
 # -- Schema ------------------------------------------------------------------
-
-sync-schema: ## Copy schemas from data repo into editor (DATA_DIR as source)
-	DATA_DIR=$(DATA_DIR) bash scripts/sync_schema.sh
 
 schema-doc: ## Regenerate schema HTML docs from local schema files
 	bash scripts/generate_schema_doc.sh

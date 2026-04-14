@@ -57,7 +57,6 @@ All checks must pass before submitting a PR. Use `make lint` and `make test` as 
 ```bash
 make test          # All tests (Rust + React)
 make lint          # All linters (clippy + oxlint + tsc)
-make sync-schema   # Copy schemas from data repo into editor
 make schema-doc    # Regenerate schema HTML docs
 make validate      # Validate configs in data directory
 make format        # Format JSON configs in data directory
