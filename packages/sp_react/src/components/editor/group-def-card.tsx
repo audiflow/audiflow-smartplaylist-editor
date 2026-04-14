@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/schemas/config-schema.ts';
@@ -35,6 +35,9 @@ interface GroupDefCardProps {
   onMoveUp: () => void;
   onMoveDown: () => void;
   onRemove: () => void;
+  /** Called after the id field commits on blur so parents can migrate any
+   *  references keyed on the old id (e.g. activeContext in the store). */
+  onIdCommit?: (oldId: string, newId: string) => void;
 }
 
 export function GroupDefCard({
@@ -45,10 +48,19 @@ export function GroupDefCard({
   onMoveUp,
   onMoveDown,
   onRemove,
+  onIdCommit,
 }: GroupDefCardProps) {
   const { register, watch, setValue } = useFormContext<PatternConfig>();
   const { t } = useTranslation('editor');
   const prefix = `playlists.${playlistIndex}.grouping.staticClassifiers.${groupIndex}` as const;
+
+  // The id field commits on blur rather than on change so that external lookups
+  // keyed on the id (activeContext tracking, override maps) don't tear mid-typing.
+  const committedId = watch(`${prefix}.id`) ?? '';
+  const [idDraft, setIdDraft] = useState(committedId);
+  useEffect(() => {
+    setIdDraft(committedId);
+  }, [committedId]);
 
   const yearBinding = watch(`${prefix}.groupListing.yearBinding`);
   const episodeSort = watch(`${prefix}.episodeListing.sort` as any);
@@ -106,7 +118,13 @@ export function GroupDefCard({
             </HintLabel>
             <Input
               id={`group-${playlistIndex}-${groupIndex}-id`}
-              {...register(`${prefix}.id`)}
+              value={idDraft}
+              onChange={(e) => setIdDraft(e.target.value)}
+              onBlur={() => {
+                if (idDraft === committedId) return;
+                setValue(`${prefix}.id`, idDraft, { shouldDirty: true });
+                onIdCommit?.(committedId, idDraft);
+              }}
             />
           </div>
 
@@ -218,12 +236,13 @@ export function GroupDefCard({
           {/* Title Extractor Override */}
           <AccordionItem value="titleExtractor">
             <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground">
-              {t('groupTitleExtractor')} <HintIcon hint="groupTitleExtractor" />
+              {t('episodeTitleExtractor')} <HintIcon hint="groupTitleExtractor" />
             </AccordionTrigger>
             <AccordionContent>
               <TitleExtractorForm
                 fieldPath={`${prefix}.episodeItem.titleExtractor`}
                 idPrefix={`group-title-ext-${playlistIndex}-${groupIndex}`}
+                labelKey="episodeTitleExtractor"
               />
             </AccordionContent>
           </AccordionItem>

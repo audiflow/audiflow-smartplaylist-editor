@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils.ts';
 
 export interface GroupChipData {
@@ -32,9 +33,14 @@ export function GroupContextBar({
           {g.displayName}
         </Chip>
       ))}
-      <Chip onClick={onAdd} variant="add">
+      <button
+        type="button"
+        onClick={onAdd}
+        className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs transition-colors bg-background hover:bg-accent"
+      >
+        <Plus className="h-3.5 w-3.5" />
         {addLabel}
-      </Chip>
+      </button>
     </div>
   );
 }
@@ -42,7 +48,7 @@ export function GroupContextBar({
 interface ChipProps {
   pressed?: boolean;
   onClick: () => void;
-  variant?: 'normal' | 'default-scope' | 'add';
+  variant?: 'normal' | 'default-scope';
   children: React.ReactNode;
 }
 
@@ -55,7 +61,6 @@ function Chip({ pressed, onClick, variant = 'normal', children }: ChipProps) {
       className={cn(
         'rounded-full border px-3 py-1 text-xs transition-colors',
         variant === 'default-scope' && 'italic',
-        variant === 'add' && 'border-dashed text-muted-foreground',
         pressed
           ? 'bg-amber-600 text-white border-amber-600'
           : 'bg-background hover:bg-accent',

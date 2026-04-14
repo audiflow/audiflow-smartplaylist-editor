@@ -4,6 +4,7 @@ import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
+import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
 import { GroupDefCard } from '@/components/editor/group-def-card.tsx';
@@ -15,7 +16,7 @@ import { usePreviewHighlight } from '@/hooks/use-preview-highlight.ts';
 import { PREVIEW_FIELDS } from '@/components/editor/preview/preview-field-ids.ts';
 
 const RESOLVER_TYPES = ['seasonNumber', 'year', 'titleDiscovery', 'titleClassifier'] as const;
-const PARTITION_OPTIONS = ['group', 'seasonNumber', 'year'] as const;
+const PARTITION_OPTIONS = ['none', 'seasonNumber', 'year'] as const;
 
 interface OrganizeTabProps {
   index: number;
@@ -30,6 +31,7 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
   const playlistId = useWatch({ control, name: `${prefix}.id` as const });
   const grouping = watch(`${prefix}.grouping`);
   const resolverType = grouping?.by;
+  const discoveryHint = watch(`${prefix}.grouping.discoveryHint`);
   const partitionBy = watch(`${prefix}.selector.partitionBy`);
   const staticClassifiers = (grouping?.staticClassifiers ?? []) as Array<{ id: string; displayName: string }>;
 
@@ -86,16 +88,36 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
           </Select>
         </div>
 
+        {resolverType === 'titleDiscovery' ? (
+          <div className="space-y-2">
+            <HintLabel htmlFor={`playlist-${index}-discoveryHint`} hint="discoveryHint">
+              {t('discoveryHint')}
+            </HintLabel>
+            <Input
+              id={`playlist-${index}-discoveryHint`}
+              value={discoveryHint ?? ''}
+              onChange={(e) =>
+                setValue(
+                  `${prefix}.grouping.discoveryHint`,
+                  e.target.value === '' ? undefined : e.target.value,
+                  { shouldDirty: true },
+                )
+              }
+              placeholder={t('discoveryHintPlaceholder')}
+            />
+          </div>
+        ) : null}
+
         <div className="space-y-2">
           <HintLabel htmlFor={`playlist-${index}-partitionBy`} hint="partitionBy">
             {t('partitionBy')}
           </HintLabel>
           <Select
-            value={partitionBy ?? 'group'}
+            value={partitionBy ?? 'none'}
             onValueChange={(v) =>
               setValue(
                 `${prefix}.selector.partitionBy`,
-                v as typeof PARTITION_OPTIONS[number],
+                v === 'none' ? undefined : (v as 'seasonNumber' | 'year'),
                 { shouldDirty: true },
               )
             }
@@ -154,6 +176,11 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
               onRemove={() => {
                 remove(selectedGroupIndex);
                 resetActiveContext(playlistId ?? '');
+              }}
+              onIdCommit={(oldId, newId) => {
+                if (activeContext === oldId) {
+                  setActiveContext(playlistId ?? '', newId);
+                }
               }}
             />
           ) : null
