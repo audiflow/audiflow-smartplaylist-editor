@@ -358,40 +358,84 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     };
   }, [configId, normalizedInitialConfig, t]);
 
-  // Debounced auto-preview via form.watch() subscription.
+  // Shared preview trigger used by form-mode form.watch(), JSON-mode jsonText
+  // changes, and feedUrl switches. Returns without mutating when the same
+  // (feedUrl, config) pair was already previewed, guarding against redundant
+  // requests across the three entry points.
+  const triggerPreview = useCallback(
+    (rawConfig: unknown) => {
+      if (!feedUrl) return;
+      if (configId !== null && !hasAutoPreviewedRef.current) return;
+      const parsed = patternConfigSchema.safeParse(rawConfig);
+      if (!parsed.success) return;
+      const config = stripConditionalFields(parsed.data);
+      const key = `${feedUrl}\0${JSON.stringify(config)}`;
+      if (key === lastPreviewedValuesRef.current) return;
+      lastPreviewedValuesRef.current = key;
+      storePreviewRef.current.mutate(
+        { config: sanitizeConfig(config), feedUrl },
+        {
+          onError: (error) => {
+            toast.error(t('toastPreviewError', {
+              error: error instanceof Error ? error.message : 'Preview failed',
+              defaultValue: 'Preview failed: {{error}}',
+            }));
+          },
+        },
+      );
+    },
+    [feedUrl, configId, t],
+  );
+
+  // Debounced auto-preview via form.watch() subscription (form mode only).
   // Uses a subscription + setTimeout instead of useWatch to avoid re-rendering
   // the entire editor on every keystroke.
   useEffect(() => {
+    if (isJsonMode) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const subscription = form.watch(() => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        if (!feedUrl || isJsonMode) return;
-        if (configId !== null && !hasAutoPreviewedRef.current) return;
-        const parsed = patternConfigSchema.safeParse(form.getValues());
-        if (!parsed.success) return;
-        const config = stripConditionalFields(parsed.data);
-        const key = `${feedUrl}\0${JSON.stringify(config)}`;
-        if (key === lastPreviewedValuesRef.current) return;
-        lastPreviewedValuesRef.current = key;
-        storePreviewRef.current.mutate(
-          { config: sanitizeConfig(config), feedUrl },
-          {
-            onError: (error) => {
-              toast.error(t('toastPreviewError', {
-                error: error instanceof Error ? error.message : 'Preview failed',
-                defaultValue: 'Preview failed: {{error}}',
-              }));
-            },
-          },
-        );
+        triggerPreview(form.getValues());
       }, 400);
     });
     return () => {
       clearTimeout(timer);
       subscription.unsubscribe();
     };
-  }, [form, feedUrl, isJsonMode, configId, t]);
+  }, [form, isJsonMode, triggerPreview]);
+
+  // Debounced auto-preview for JSON-mode edits. Parses jsonText and mirrors
+  // the form-mode path so users editing advanced fields in JSON can still
+  // validate their changes against live preview.
+  useEffect(() => {
+    if (!isJsonMode) return;
+    const timer = setTimeout(() => {
+      let raw: unknown;
+      try {
+        raw = JSON.parse(jsonText);
+      } catch {
+        return;
+      }
+      triggerPreview(raw);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [jsonText, isJsonMode, triggerPreview]);
+
+  // Fire preview when the feed URL changes, even if the config itself is
+  // unchanged. Without this, switching feeds via the FeedUrlInput dropdown
+  // or pasting a new URL leaves the preview bound to the previous feed
+  // until the user edits an unrelated form field.
+  useEffect(() => {
+    if (!feedUrl) return;
+    const source = isJsonMode ? (() => {
+      try { return JSON.parse(jsonText); } catch { return null; }
+    })() : form.getValues();
+    if (source === null) return;
+    triggerPreview(source);
+    // jsonText intentionally omitted: only feedUrl switches should refire here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedUrl, triggerPreview]);
 
   // Normalize server payload through Zod for consistent v3-to-v4 migration.
   const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
