@@ -483,7 +483,7 @@ fn resolver_matches_config_by_feed_url() {
             numbering_extractor: None,
             static_classifiers: None,
         },
-        selector: Some(sp_core::models::SelectorConfig { partition_by: Some("group".to_string()), title_extractor: None }),
+        selector: None,
         priority: 0,
         episode_filters: None,
         group_listing: None,
@@ -523,7 +523,7 @@ fn resolver_matches_config_by_guid() {
                 numbering_extractor: None,
                 static_classifiers: None,
             },
-            selector: Some(sp_core::models::SelectorConfig { partition_by: Some("group".to_string()), title_extractor: None }),
+            selector: None,
             priority: 0,
             episode_filters: None,
             group_listing: None,
@@ -650,7 +650,7 @@ fn resolver_filter_regex_is_case_insensitive() {
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
-                selector: Some(sp_core::models::SelectorConfig { partition_by: Some("group".to_string()), title_extractor: None }),
+                selector: None,
                 priority: 0,
                 episode_filters: Some(EpisodeFilters {
                 require: Some(vec![EpisodeFilterEntry {
@@ -835,50 +835,6 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
 }
 
 #[test]
-fn resolver_split_structure_produces_multiple_playlists() {
-    let service = make_resolver_service(vec![PatternConfig {
-        id: "test".to_string(),
-        podcast_guid: None,
-        feed_urls: Some(vec!["https://example.com/feed".to_string()]),
-        year_grouped_episodes: false,
-        playlists: vec![PlaylistDefinition {
-            id: "all".to_string(),
-            display_name: "All".to_string(),
-            grouping: GroupingConfig {
-                by: "seasonNumber".to_string(),
-                discovery_hint: None,
-                numbering_extractor: None,
-                static_classifiers: None,
-            },
-            selector: Some(sp_core::models::SelectorConfig { partition_by: Some("group".to_string()), title_extractor: None }),
-            priority: 0,
-            episode_filters: None,
-            group_listing: None,
-            group_item: None,
-            episode_listing: None,
-            episode_item: None,
-        }],
-    }]);
-
-    let eps = vec![
-        make_rss_episode(1, 1, "S1E1", 1, 1),
-        make_rss_episode(2, 2, "S2E1", 3, 1),
-    ];
-    let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
-        .iter()
-        .map(|e| e as &dyn sp_core::models::EpisodeData)
-        .collect();
-
-    let result = service
-        .resolve_smart_playlists(None, "https://example.com/feed", &refs)
-        .unwrap();
-
-    // Split mode: each season is a separate top-level playlist
-    assert_eq!(result.playlists.len(), 2);
-    assert!(result.playlists[0].groups.is_none());
-}
-
-#[test]
 fn resolver_episode_ids_sorted_by_published_at_in_output() {
     let service = make_resolver_service(vec![PatternConfig {
         id: "test".to_string(),
@@ -894,7 +850,7 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
                 numbering_extractor: None,
                 static_classifiers: None,
             },
-            selector: Some(sp_core::models::SelectorConfig { partition_by: Some("group".to_string()), title_extractor: None }),
+            selector: None,
             priority: 0,
             episode_filters: None,
             group_listing: None,
@@ -939,7 +895,7 @@ fn resolver_sorts_ungrouped_episode_ids() {
                 numbering_extractor: None,
                 static_classifiers: None,
             },
-            selector: Some(sp_core::models::SelectorConfig { partition_by: Some("group".to_string()), title_extractor: None }),
+            selector: None,
             priority: 0,
             episode_filters: None,
             group_listing: None,
@@ -1249,7 +1205,7 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
-                selector: Some(sp_core::models::SelectorConfig { partition_by: Some("group".to_string()), title_extractor: None }),
+                selector: None,
                 priority: 0,
                 episode_filters: None, // fallback
                 group_listing: None,
