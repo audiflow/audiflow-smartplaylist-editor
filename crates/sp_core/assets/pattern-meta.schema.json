@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://audiflow.app/schema/v4/pattern-meta.json",
+  "$id": "https://audiflow.app/schema/v5/pattern-meta.json",
   "title": "SmartPlaylist Pattern Meta",
   "description": "Per-config metadata file at {patternId}/meta.json. Contains feed matching rules to identify the podcast, and an ordered list of playlist definitions. The app uses podcastGuid and feedUrls for matching.",
   "type": "object",
