@@ -101,9 +101,9 @@ name = "audiflow-smartplaylist-core"
 version = "5.0.0"
 dependencies = [
  "chrono",
+ "fancy-regex",
  "jsonschema",
  "md5",
- "regex",
  "serde",
  "serde_json",
  "sha2",

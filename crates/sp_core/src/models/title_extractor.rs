@@ -1,4 +1,4 @@
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use super::episode_data::EpisodeData;
@@ -118,7 +118,7 @@ impl<'a> CompiledTitleExtractor<'a> {
 
     fn extract_with_regex(&self, value: &str) -> Option<String> {
         let regex = self.regex.as_ref()?;
-        let captures = regex.captures(value)?;
+        let captures = regex.captures(value).ok().flatten()?;
 
         let group = self.extractor.group as usize;
         captures.get(group).map(|m| m.as_str().to_string())
