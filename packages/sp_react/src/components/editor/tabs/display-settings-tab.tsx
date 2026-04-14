@@ -69,8 +69,8 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
 
       <div {...selectorTitleExtractorHl}>
         <SelectorBridge
-          partitionBy={partitionBy as 'group' | 'seasonNumber' | 'year' | undefined}
-          partitionByLabel={t(`partitionBy_${partitionBy ?? 'group'}`)}
+          partitionBy={partitionBy as 'seasonNumber' | 'year' | undefined}
+          partitionByLabel={t(`partitionBy_${partitionBy ?? 'none'}`)}
         >
           <TitleExtractorForm
             fieldPath={`${prefix}.selector.titleExtractor`}
@@ -271,7 +271,11 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
     <section className="space-y-3">
       <h5 className="text-sm font-semibold">{t('subsection.episodes')}</h5>
       <div {...episodeListingSortHl}>
-        <SortForm fieldPath={sortPath} idPrefix={`ep-sort-${index}-${activeContext}`} />
+        <SortForm
+          fieldPath={sortPath}
+          idPrefix={`ep-sort-${index}-${activeContext}`}
+          scope="episode"
+        />
       </div>
       <div className="flex items-center gap-2">
         <Checkbox
@@ -292,6 +296,7 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
         <TitleExtractorForm
           fieldPath={titleExtractorPath}
           idPrefix={`ep-title-${index}-${activeContext}`}
+          labelKey="episodeTitleExtractor"
         />
       </div>
     </section>
