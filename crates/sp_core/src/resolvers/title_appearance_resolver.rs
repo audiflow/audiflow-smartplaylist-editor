@@ -1,4 +1,4 @@
-use regex::Regex;
+use fancy_regex::Regex;
 
 use crate::models::{
     CompiledTitleExtractor, EpisodeData, Grouping, Playlist, PlaylistDefinition, SortField,
@@ -153,7 +153,7 @@ fn extract_playlist_name(
 
     // Fall back to pre-compiled group pattern regex
     if let Some(regex) = compiled_regex {
-        let captures = regex.captures(episode.title())?;
+        let captures = regex.captures(episode.title()).ok().flatten()?;
         if 1 <= captures.len() {
             // captures.len() includes the full match at index 0,
             // so len() >= 2 means there is at least one capture group

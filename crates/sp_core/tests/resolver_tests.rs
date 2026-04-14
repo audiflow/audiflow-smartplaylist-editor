@@ -589,6 +589,43 @@ fn category_skips_empty_pattern_groups_in_sort_keys() {
     assert_eq!(result.playlists[1].sort_key, 2);
 }
 
+#[test]
+fn category_pattern_supports_negative_lookahead() {
+    // Guard against a future regression that swaps the server regex
+    // engine back to the `regex` crate, which cannot compile
+    // lookaround. This asserts the pattern actually constrains which
+    // episodes match — if the engine rejected the pattern, every
+    // episode would fall through to the ungrouped bucket.
+    let resolver = CategoryResolver;
+    let mut def = minimal_definition("titleClassifier");
+    def.grouping.static_classifiers = Some(vec![GroupDef {
+        id: "non_recap".to_string(),
+        display_name: "Not a recap".to_string(),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"^(?!Recap)".to_string(),
+        }),
+        group_listing: None,
+        group_item: None,
+        episode_listing: None,
+        episode_item: None,
+        numbering_extractor: None,
+    }]);
+    let episodes = vec![
+        make_episode(1, "Recap of Episode 1"),
+        make_episode(2, "Live show"),
+        make_episode(3, "Recap of Episode 2"),
+        make_episode(4, "Another live show"),
+    ];
+    let refs = as_refs(&episodes);
+    let result = resolver.resolve(&refs, Some(&def)).unwrap();
+
+    assert_eq!(result.playlists.len(), 1);
+    assert_eq!(result.playlists[0].id, "non_recap");
+    assert_eq!(result.playlists[0].episode_ids, vec![2, 4]);
+    assert_eq!(result.ungrouped_episode_ids, vec![1, 3]);
+}
+
 // ============================================================
 // YearResolver Tests
 // ============================================================

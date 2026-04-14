@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use regex::{Regex, RegexBuilder};
+use fancy_regex::Regex;
 
 use std::collections::BTreeMap;
 
@@ -18,26 +18,31 @@ struct CompiledFilterEntry {
 
 impl CompiledFilterEntry {
     fn compile(entry: &EpisodeFilterEntry) -> Self {
+        // fancy-regex's RegexBuilder does not expose case_insensitive; use
+        // the inline (?i) flag so the pattern itself requests the same
+        // behavior that the old regex crate's RegexBuilder configured.
+        fn build(pattern: &str) -> Option<Regex> {
+            Regex::new(&format!("(?i){pattern}")).ok()
+        }
         Self {
-            title: entry
-                .title
-                .as_ref()
-                .and_then(|p| RegexBuilder::new(p).case_insensitive(true).build().ok()),
-            description: entry
-                .description
-                .as_ref()
-                .and_then(|p| RegexBuilder::new(p).case_insensitive(true).build().ok()),
+            title: entry.title.as_deref().and_then(build),
+            description: entry.description.as_deref().and_then(build),
         }
     }
 
     fn matches(&self, episode: &dyn EpisodeData) -> bool {
+        // fancy-regex returns Result<bool> for is_match (the VM fallback can
+        // hit a backtrack limit). Treat any compile/runtime error as a
+        // non-match so a malformed pattern does not crash the resolver.
         if let Some(ref regex) = self.title
-            && !regex.is_match(episode.title())
+            && !regex.is_match(episode.title()).unwrap_or(false)
         {
             return false;
         }
         if let Some(ref regex) = self.description
-            && !regex.is_match(episode.description().unwrap_or(""))
+            && !regex
+                .is_match(episode.description().unwrap_or(""))
+                .unwrap_or(false)
         {
             return false;
         }

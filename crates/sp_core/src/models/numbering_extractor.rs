@@ -1,4 +1,4 @@
-use regex::Regex;
+use fancy_regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use super::episode_data::EpisodeData;
@@ -186,7 +186,7 @@ impl<'a> CompiledNumberingExtractor<'a> {
             Some(r) => r,
             None => return NumberingExtractionResult::default(),
         };
-        let captures = match regex.captures(value) {
+        let captures = match regex.captures(value).ok().flatten() {
             Some(c) => c,
             None => return NumberingExtractionResult::default(),
         };
@@ -223,7 +223,7 @@ impl<'a> CompiledNumberingExtractor<'a> {
             Some(r) => r,
             None => return NumberingExtractionResult::default(),
         };
-        let captures = match regex.captures(value) {
+        let captures = match regex.captures(value).ok().flatten() {
             Some(c) => c,
             None => return NumberingExtractionResult::default(),
         };

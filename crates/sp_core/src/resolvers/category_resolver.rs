@@ -1,4 +1,4 @@
-use regex::Regex;
+use fancy_regex::Regex;
 
 use crate::models::{
     EpisodeData, GroupDef, Grouping, Playlist, PlaylistDefinition, SortField, SortOrder, SortRule,
@@ -74,7 +74,7 @@ fn resolve_with_groups(
                 "description" => episode.description().unwrap_or(""),
                 _ => episode.title(),
             };
-            if pg.regex.is_match(haystack) {
+            if pg.regex.is_match(haystack).unwrap_or(false) {
                 grouped.entry(pg.id.clone()).or_default().push(episode.id());
                 matched = true;
                 break;
