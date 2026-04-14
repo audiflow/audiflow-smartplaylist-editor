@@ -361,17 +361,19 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // Shared preview trigger used by form-mode form.watch(), JSON-mode jsonText
   // changes, and feedUrl switches. Returns without mutating when the same
   // (feedUrl, config) pair was already previewed, guarding against redundant
-  // requests across the three entry points.
+  // requests across the three entry points. Marks the auto-preview ref so
+  // later triggers (typing a feed URL on a saved config that had none) are
+  // not gated by a never-fired initial auto-preview.
   const triggerPreview = useCallback(
     (rawConfig: unknown) => {
       if (!feedUrl) return;
-      if (configId !== null && !hasAutoPreviewedRef.current) return;
       const parsed = patternConfigSchema.safeParse(rawConfig);
       if (!parsed.success) return;
       const config = stripConditionalFields(parsed.data);
       const key = `${feedUrl}\0${JSON.stringify(config)}`;
       if (key === lastPreviewedValuesRef.current) return;
       lastPreviewedValuesRef.current = key;
+      hasAutoPreviewedRef.current = true;
       storePreviewRef.current.mutate(
         { config: sanitizeConfig(config), feedUrl },
         {
@@ -384,7 +386,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         },
       );
     },
-    [feedUrl, configId, t],
+    [feedUrl, t],
   );
 
   // Debounced auto-preview via form.watch() subscription (form mode only).

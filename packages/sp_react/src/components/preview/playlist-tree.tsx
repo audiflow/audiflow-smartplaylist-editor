@@ -143,7 +143,7 @@ function YearGroupEntryList({
           <AccordionContent>
             {entry.group.subGroups && 0 < entry.group.subGroups.length ? (
               <SubGroupList
-                subGroups={entry.group.subGroups}
+                subGroups={filterSubGroupsByEpisodes(entry.group.subGroups, entry.filteredEpisodes)}
                 episodeSortRules={episodeSortRules}
               />
             ) : (
@@ -158,6 +158,30 @@ function YearGroupEntryList({
       ))}
     </Accordion>
   );
+}
+
+/// Narrows each sub-group's episodes to the slice that a splitByYear
+/// year-bucket contains, so year accordions only show the selected
+/// year's contents inside partitioned sub-groups. When no filtering is
+/// active (no filteredEpisodes), returns the original sub-groups.
+function filterSubGroupsByEpisodes(
+  subGroups: PreviewGroup[],
+  filteredEpisodes: PreviewEpisode[] | undefined,
+): PreviewGroup[] {
+  if (!filteredEpisodes) return subGroups;
+  const allowedIds = new Set(filteredEpisodes.map((ep) => ep.id));
+  return subGroups.map((sub) => {
+    const filtered = sub.episodes.filter((ep) => allowedIds.has(ep.id));
+    const nestedSubGroups = sub.subGroups
+      ? filterSubGroupsByEpisodes(sub.subGroups, filteredEpisodes)
+      : undefined;
+    return {
+      ...sub,
+      episodes: filtered,
+      episodeCount: filtered.length + (nestedSubGroups?.reduce((a, g) => a + g.episodeCount, 0) ?? 0),
+      subGroups: nestedSubGroups,
+    };
+  });
 }
 
 function formatGroupName(group: PreviewGroup, prependSeasonNumber: boolean): string {

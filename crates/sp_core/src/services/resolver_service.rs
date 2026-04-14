@@ -73,8 +73,13 @@ impl CompiledFilters {
     }
 
     fn matches(&self, episode: &dyn EpisodeData) -> bool {
+        // The schema documents require/exclude as OR across entries: an
+        // episode is included when it matches ANY require rule and is
+        // excluded when it matches ANY exclude rule. Keep the runtime
+        // aligned with that contract so multi-rule configs authored
+        // against the v5 schema behave as the schema text advertises.
         let require_ok = self.require.is_empty()
-            || self.require.iter().all(|f| f.matches(episode));
+            || self.require.iter().any(|f| f.matches(episode));
         let exclude_ok = self.exclude.is_empty()
             || !self.exclude.iter().any(|f| f.matches(episode));
         require_ok && exclude_ok

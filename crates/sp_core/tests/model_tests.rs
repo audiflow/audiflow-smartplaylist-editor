@@ -444,11 +444,15 @@ mod filter_semantics {
     }
 
     #[test]
-    fn require_and_semantics_all_entries_must_match() {
+    fn require_or_semantics_any_entry_matches() {
+        // Matches the schema contract: `require` across entries is OR.
+        // An episode is included when ANY rule matches; each rule's
+        // own fields are still AND internally.
         let episodes = vec![
             ep(1, "alpha episode"),
             ep(2, "beta episode"),
             ep(3, "alpha standalone"),
+            ep(4, "gamma"),
         ];
 
         let require = Some(vec![
@@ -464,11 +468,9 @@ mod filter_semantics {
 
         let ids = filtered_ids(require, None, &episodes);
         assert!(ids.contains(&1), "alpha episode matches both entries");
-        assert!(!ids.contains(&2), "beta episode only matches second entry");
-        assert!(
-            !ids.contains(&3),
-            "alpha standalone only matches first entry"
-        );
+        assert!(ids.contains(&2), "beta episode matches the second entry");
+        assert!(ids.contains(&3), "alpha standalone matches the first entry");
+        assert!(!ids.contains(&4), "gamma matches no require entry");
     }
 
     #[test]
@@ -518,6 +520,7 @@ mod filter_semantics {
             ep(1, "special alpha episode"),
             ep(2, "special beta episode"),
             ep(3, "gamma episode"),
+            ep(4, "nothing relevant"),
         ];
 
         let require = Some(vec![
@@ -538,15 +541,19 @@ mod filter_semantics {
         let ids = filtered_ids(require, exclude, &episodes);
         assert!(
             ids.contains(&1),
-            "special alpha episode passes all require and not excluded"
+            "special alpha episode matches both require entries and is not excluded"
         );
         assert!(
             !ids.contains(&2),
-            "special beta episode passes require but is excluded"
+            "special beta episode matches require but is excluded by beta"
         );
         assert!(
-            !ids.contains(&3),
-            "gamma episode only matches second require entry"
+            ids.contains(&3),
+            "gamma episode matches the second require entry (OR) and is not excluded"
+        );
+        assert!(
+            !ids.contains(&4),
+            "nothing relevant matches no require entry"
         );
     }
 }

@@ -69,12 +69,13 @@ describe('filterEpisodes', () => {
     expect(result).toHaveLength(5);
   });
 
-  it('applies require entries with AND semantics across multiple entries', () => {
+  it('applies require entries with OR semantics across multiple entries', () => {
     const result = filterEpisodes(episodes, {
-      require: [{ title: 'Season' }, { title: 'Episode 1' }],
+      require: [{ title: 'Bonus' }, { title: 'Episode 1' }],
     });
-    // Must match BOTH: "Season" AND "Episode 1"
-    expect(result.map((e) => e.id)).toEqual([1, 4]);
+    // Matches ANY rule: "Bonus" (id 3) or "Episode 1" (ids 1, 4).
+    // Within a rule, all fields would still AND (not exercised here).
+    expect(result.map((e) => e.id)).toEqual([1, 3, 4]);
   });
 
   it('does not exclude all episodes when exclude entry has only invalid regex', () => {
