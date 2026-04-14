@@ -9,7 +9,6 @@ use super::title_extractor::TitleExtractor;
 ///
 /// Controls how resolver groups map to selector entries:
 /// - No `partitionBy` -> single entry
-/// - `partitionBy: "group"` -> one entry per group
 /// - `partitionBy: "seasonNumber"` -> one entry per season, groups as cards within
 /// - `partitionBy: "year"` -> one entry per year, groups as cards within
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -227,7 +226,7 @@ mod tests {
                     "seasonGroup": 0,
                     "episodeGroup": 1
                 },
-                "staticClassifiers": [{ "id": "g1", "displayName": "G1", "pattern": ".*" }]
+                "staticClassifiers": [{ "id": "g1", "displayName": "G1", "pattern": { "source": "title", "pattern": ".*" } }]
             },
             "groupItem": {
                 "titleExtractor": {

@@ -69,7 +69,7 @@ describe('OrganizeTab', () => {
       grouping: {
         by: 'titleClassifier',
         staticClassifiers: [
-          { id: 'g1', displayName: 'Group 1', pattern: 'foo' },
+          { id: 'g1', displayName: 'Group 1', pattern: { source: 'title', pattern: 'foo' } },
         ],
       },
     });

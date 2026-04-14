@@ -206,7 +206,7 @@ describe('stripConditionalFields', () => {
       grouping: {
         by: 'titleDiscovery',
         numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
-        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: { source: 'title', pattern: '.*' } }],
       },
       groupItem: {
         titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
@@ -225,7 +225,7 @@ describe('stripConditionalFields', () => {
     const config = makeConfig({
       grouping: {
         by: 'titleClassifier',
-        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: { source: 'title', pattern: '.*' } }],
       },
     });
 
@@ -238,7 +238,7 @@ describe('stripConditionalFields', () => {
     const config = makeConfig({
       grouping: {
         by: 'seasonNumber',
-        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: { source: 'title', pattern: '.*' } }],
       },
     });
 
@@ -252,7 +252,7 @@ describe('stripConditionalFields', () => {
       grouping: {
         by: 'year',
         numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
-        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: '.*' }],
+        staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: { source: 'title', pattern: '.*' } }],
       },
     });
 

@@ -27,7 +27,7 @@
     },
     "selector": {
       "$ref": "#/$defs/SelectorConfig",
-      "description": "Controls how resolver groups map to selector dropdown entries. When absent, all groups appear as cards inside a single entry. When partitionBy is 'group', each group becomes its own entry. When partitionBy is 'seasonNumber' or 'year', groups are organized under partition entries."
+      "description": "Controls how resolver groups map to selector dropdown entries. When absent, all groups appear as cards inside a single entry. When partitionBy is 'seasonNumber' or 'year', groups are organized under partition entries."
     },
     "grouping": {
       "$ref": "#/$defs/GroupingConfig",
@@ -130,9 +130,34 @@
         }
       ]
     },
+    "Matcher": {
+      "type": "object",
+      "description": "A regex pattern plus the episode field it is evaluated against. Used by GroupDef.pattern to route episodes into the group.",
+      "required": ["source", "pattern"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "description": "Which episode field to read the text from.",
+          "oneOf": [
+            {
+              "const": "title",
+              "description": "Match against the episode title."
+            },
+            {
+              "const": "description",
+              "description": "Match against the episode description."
+            }
+          ]
+        },
+        "pattern": {
+          "type": "string",
+          "description": "A regex tested against the selected source field. Episodes whose source matches are assigned to this group."
+        }
+      }
+    },
     "GroupDef": {
       "type": "object",
-      "description": "A group definition. Groups with a pattern match episodes by title; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in order (first match wins). At most one catch-all should exist and should be placed last. Groups can override `groupListing`, `groupItem`, `episodeListing`, `episodeItem`, and `numberingExtractor` settings. Omitted fields use the playlist defaults.",
+      "description": "A group definition. Groups with a matcher pattern match episodes against a chosen source field; a group without a pattern serves as a catch-all for unmatched episodes. Groups are evaluated in order (first match wins). At most one catch-all should exist and should be placed last. Groups can override `groupListing`, `groupItem`, `episodeListing`, `episodeItem`, and `numberingExtractor` settings. Omitted fields use the playlist defaults.",
       "required": [
         "id",
         "displayName"
@@ -148,8 +173,8 @@
           "description": "The name shown to users for this group in the app. For titleClassifier, this is always used as-is (not overridden by titleExtractor)."
         },
         "pattern": {
-          "type": "string",
-          "description": "A text pattern matched against episode titles. Episodes matching this pattern are assigned to this group. Omit this field to create a catch-all group for unmatched episodes."
+          "$ref": "#/$defs/Matcher",
+          "description": "A regex pattern and source field used to assign episodes to this group. Omit this field entirely to create a catch-all group for unmatched episodes."
         },
         "groupListing": {
           "type": "object",
@@ -381,11 +406,11 @@
         "partitionBy": {
           "description": "How to partition groups into selector entries.",
           "type": "string",
-          "enum": ["group", "seasonNumber", "year"]
+          "enum": ["seasonNumber", "year"]
         },
         "titleExtractor": {
           "$ref": "#/$defs/TitleExtractor",
-          "description": "Generates display names for partitioned selector entries. Used when partitionBy is 'seasonNumber' or 'year'. Not needed for 'group' (group names are used directly)."
+          "description": "Generates display names for partitioned selector entries."
         }
       }
     },

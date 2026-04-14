@@ -12,7 +12,10 @@ interface GroupsFormProps {
   index: number;
 }
 
-const EMPTY_GROUP = { id: '', displayName: '', pattern: '' };
+// New groups start without a pattern (catch-all). The user can set both
+// source and regex via the group-def-card UI, which keeps the Matcher object
+// in a consistent shape when populated.
+const EMPTY_GROUP = { id: '', displayName: '' };
 
 export function GroupsForm({ index }: GroupsFormProps) {
   const { watch, control, getValues } = useFormContext<PatternConfig>();

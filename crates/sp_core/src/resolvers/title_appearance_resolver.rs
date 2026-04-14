@@ -43,6 +43,9 @@ impl Resolver for TitleAppearanceResolver {
         // v5 introduces `grouping.discoveryHint` as the canonical fallback
         // pattern for titleDiscovery. Preserve the legacy read from the
         // first static classifier for configs that haven't migrated yet.
+        // titleDiscovery always matches against the episode title, so the
+        // Matcher's `source` field is intentionally ignored when falling back
+        // to the first static classifier's pattern — only the regex string is read.
         let pattern_str = definition
             .grouping
             .discovery_hint
@@ -53,7 +56,8 @@ impl Resolver for TitleAppearanceResolver {
                     .static_classifiers
                     .as_ref()
                     .and_then(|g| g.first())
-                    .and_then(|g| g.pattern.as_deref())
+                    .and_then(|g| g.pattern.as_ref())
+                    .map(|m| m.pattern.as_str())
             });
 
         // Need either a titleExtractor or a group pattern

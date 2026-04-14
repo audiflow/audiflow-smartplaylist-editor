@@ -18,7 +18,7 @@ fn playlist_definition_full_round_trip() {
                 {
                     "id": "main",
                     "displayName": "Main",
-                    "pattern": "^\\[\\d+-\\d+\\]"
+                    "pattern": { "source": "title", "pattern": "^\\[\\d+-\\d+\\]" }
                 }
             ]
         },

@@ -23,6 +23,7 @@ pub use episode_data::{EpisodeData, SimpleEpisodeData};
 pub use numbering_extractor::{CompiledNumberingExtractor, NumberingExtractionResult, NumberingExtractor};
 pub use group_def::{
     GroupDef, GroupDefEpisodeItem, GroupDefEpisodeListing, GroupDefGroupItem, GroupDefGroupListing,
+    Matcher,
 };
 pub use pattern_config::PatternConfig;
 pub use pattern_meta::PatternMeta;

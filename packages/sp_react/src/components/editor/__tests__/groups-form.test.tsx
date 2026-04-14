@@ -17,9 +17,9 @@ const CONFIG_WITH_GROUPS: PatternConfig = {
       grouping: {
         by: 'titleClassifier',
         staticClassifiers: [
-          { id: 'group-a', displayName: 'Group A', pattern: 'pattern-a' },
-          { id: 'group-b', displayName: 'Group B', pattern: 'pattern-b' },
-          { id: 'group-c', displayName: 'Group C', pattern: 'pattern-c' },
+          { id: 'group-a', displayName: 'Group A', pattern: { source: 'title', pattern: 'pattern-a' } },
+          { id: 'group-b', displayName: 'Group B', pattern: { source: 'title', pattern: 'pattern-b' } },
+          { id: 'group-c', displayName: 'Group C', pattern: { source: 'title', pattern: 'pattern-c' } },
         ],
       },
       priority: 0,
@@ -36,7 +36,7 @@ function buildSingleGroupConfig(): PatternConfig {
         grouping: {
           ...CONFIG_WITH_GROUPS.playlists[0].grouping,
           staticClassifiers: [
-            { id: 'only', displayName: 'Only Group', pattern: 'p' },
+            { id: 'only', displayName: 'Only Group', pattern: { source: 'title', pattern: 'p' } },
           ],
         },
       },

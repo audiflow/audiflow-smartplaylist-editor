@@ -1,7 +1,7 @@
 use chrono::{TimeZone, Utc};
 use sp_core::models::{
-    EpisodeData, GroupDef, GroupItemConfig, GroupingConfig, PlaylistDefinition, SimpleEpisodeData,
-    SortField, SortOrder, TitleExtractor,
+    EpisodeData, GroupDef, GroupItemConfig, GroupingConfig, Matcher, PlaylistDefinition,
+    SimpleEpisodeData, SortField, SortOrder, TitleExtractor,
 };
 use sp_core::resolvers::{
     CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver,
@@ -304,7 +304,10 @@ fn category_groups_episodes_by_pattern() {
         GroupDef {
             id: "saturday".to_string(),
             display_name: "Saturday".to_string(),
-            pattern: Some(r"Saturday".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"Saturday".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -314,7 +317,10 @@ fn category_groups_episodes_by_pattern() {
         GroupDef {
             id: "news_talk".to_string(),
             display_name: "News Talk".to_string(),
-            pattern: Some(r"News Talk".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"News Talk".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -359,7 +365,10 @@ fn category_ungrouped_when_no_fallback_group() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "saturday".to_string(),
         display_name: "Saturday".to_string(),
-        pattern: Some(r"Saturday".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"Saturday".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,
@@ -385,7 +394,10 @@ fn category_first_match_wins() {
         GroupDef {
             id: "first".to_string(),
             display_name: "First".to_string(),
-            pattern: Some(r"Hello".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"Hello".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -395,7 +407,10 @@ fn category_first_match_wins() {
         GroupDef {
             id: "second".to_string(),
             display_name: "Second".to_string(),
-            pattern: Some(r"Hello World".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"Hello World".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -420,7 +435,10 @@ fn category_assigns_incrementing_sort_keys() {
         GroupDef {
             id: "alpha".to_string(),
             display_name: "Alpha".to_string(),
-            pattern: Some(r"AAA".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"AAA".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -430,7 +448,10 @@ fn category_assigns_incrementing_sort_keys() {
         GroupDef {
             id: "beta".to_string(),
             display_name: "Beta".to_string(),
-            pattern: Some(r"BBB".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"BBB".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -471,7 +492,10 @@ fn category_fallback_collects_unmatched() {
         GroupDef {
             id: "matched".to_string(),
             display_name: "Matched".to_string(),
-            pattern: Some(r"AAA".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"AAA".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -512,7 +536,10 @@ fn category_skips_empty_pattern_groups_in_sort_keys() {
         GroupDef {
             id: "alpha".to_string(),
             display_name: "Alpha".to_string(),
-            pattern: Some(r"AAA".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"AAA".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -522,7 +549,10 @@ fn category_skips_empty_pattern_groups_in_sort_keys() {
         GroupDef {
             id: "beta".to_string(),
             display_name: "Beta".to_string(),
-            pattern: Some(r"BBB".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"BBB".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -532,7 +562,10 @@ fn category_skips_empty_pattern_groups_in_sort_keys() {
         GroupDef {
             id: "gamma".to_string(),
             display_name: "Gamma".to_string(),
-            pattern: Some(r"CCC".to_string()),
+            pattern: Some(Matcher {
+                source: "title".to_string(),
+                pattern: r"CCC".to_string(),
+            }),
             group_listing: None,
             group_item: None,
             episode_listing: None,
@@ -715,7 +748,10 @@ fn title_appearance_groups_by_first_appearance_using_pattern() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,
@@ -761,7 +797,10 @@ fn title_appearance_non_matching_go_to_ungrouped() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,
@@ -786,7 +825,10 @@ fn title_appearance_returns_none_when_no_matches() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,
@@ -810,7 +852,10 @@ fn title_appearance_episodes_without_date_appended_at_end() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,
@@ -868,7 +913,10 @@ fn title_appearance_playlist_ids_use_appearance_prefix() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,
@@ -905,7 +953,10 @@ fn category_empty_episodes_returns_none() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "g".to_string(),
         display_name: "G".to_string(),
-        pattern: Some(r"x".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"x".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,
@@ -930,7 +981,10 @@ fn title_appearance_empty_episodes_returns_none() {
     def.grouping.static_classifiers = Some(vec![GroupDef {
         id: "extract".to_string(),
         display_name: "Extract".to_string(),
-        pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
+        pattern: Some(Matcher {
+            source: "title".to_string(),
+            pattern: r"\[(\w+)\s+\d+\]".to_string(),
+        }),
         group_listing: None,
         group_item: None,
         episode_listing: None,

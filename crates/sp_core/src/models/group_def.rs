@@ -4,6 +4,14 @@ use super::numbering_extractor::NumberingExtractor;
 use super::sort::EpisodeSortRule;
 use super::title_extractor::TitleExtractor;
 
+/// Matches episode content by regex against a selected source field.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Matcher {
+    pub source: String,
+    pub pattern: String,
+}
+
 /// Static group definition within a playlist.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -12,7 +20,7 @@ pub struct GroupDef {
     pub display_name: String,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub pattern: Option<String>,
+    pub pattern: Option<Matcher>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group_listing: Option<GroupDefGroupListing>,

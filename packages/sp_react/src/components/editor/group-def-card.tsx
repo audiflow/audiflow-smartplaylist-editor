@@ -144,16 +144,48 @@ export function GroupDefCard({
 
         <div className="space-y-1.5">
           <HintLabel
-            htmlFor={`group-${playlistIndex}-${groupIndex}-pattern`}
+            htmlFor={`group-${playlistIndex}-${groupIndex}-pattern-pattern`}
             hint="groupPattern"
           >
             {t('groupPattern')}
           </HintLabel>
-          <Input
-            id={`group-${playlistIndex}-${groupIndex}-pattern`}
-            {...register(`${prefix}.pattern`)}
-            placeholder={t('placeholderRegex')}
-          />
+          <div className="grid grid-cols-[minmax(0,8rem)_1fr] gap-3">
+            <Select
+              value={watch(`${prefix}.pattern.source`) ?? 'title'}
+              onValueChange={(val) => {
+                const currentPattern = watch(`${prefix}.pattern.pattern`) ?? '';
+                setValue(
+                  `${prefix}.pattern`,
+                  { source: val as 'title' | 'description', pattern: currentPattern },
+                  { shouldDirty: true },
+                );
+              }}
+            >
+              <SelectTrigger
+                id={`group-${playlistIndex}-${groupIndex}-pattern-source`}
+                aria-label={t('titleExtractorSource')}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="title">{t('source_title')}</SelectItem>
+                <SelectItem value="description">{t('source_description')}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              id={`group-${playlistIndex}-${groupIndex}-pattern-pattern`}
+              value={watch(`${prefix}.pattern.pattern`) ?? ''}
+              onChange={(e) => {
+                const currentSource = watch(`${prefix}.pattern.source`) ?? 'title';
+                setValue(
+                  `${prefix}.pattern`,
+                  { source: currentSource, pattern: e.target.value },
+                  { shouldDirty: true },
+                );
+              }}
+              placeholder={t('placeholderRegex')}
+            />
+          </div>
         </div>
 
         <h5 className="text-xs font-medium text-muted-foreground">

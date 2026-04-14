@@ -16,6 +16,7 @@ pub struct CategoryResolver;
 
 struct PatternGroup {
     regex: Regex,
+    source: String,
     id: String,
     display_name: String,
     show_year_headers: Option<bool>,
@@ -71,7 +72,11 @@ fn resolve_with_groups(
     for &episode in episodes {
         let mut matched = false;
         for pg in &pattern_groups {
-            if pg.regex.is_match(episode.title()) {
+            let haystack = match pg.source.as_str() {
+                "description" => episode.description().unwrap_or(""),
+                _ => episode.title(),
+            };
+            if pg.regex.is_match(haystack) {
                 grouped
                     .entry(pg.id.clone())
                     .or_default()
@@ -137,10 +142,11 @@ fn build_pattern_groups(group_defs: &[GroupDef]) -> Vec<PatternGroup> {
     group_defs
         .iter()
         .filter_map(|g| {
-            let pattern = g.pattern.as_ref()?;
-            let regex = Regex::new(pattern).ok()?;
+            let matcher = g.pattern.as_ref()?;
+            let regex = Regex::new(&matcher.pattern).ok()?;
             Some(PatternGroup {
                 regex,
+                source: matcher.source.clone(),
                 id: g.id.clone(),
                 display_name: g.display_name.clone(),
                 show_year_headers: g.episode_listing.as_ref().and_then(|el| el.show_year_headers),

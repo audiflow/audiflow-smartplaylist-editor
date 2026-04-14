@@ -55,12 +55,12 @@ export const PLAYLIST_CATEGORY: PlaylistDefinition = {
       {
         id: 'interviews',
         displayName: 'Interviews',
-        pattern: 'interview',
+        pattern: { source: 'title', pattern: 'interview' },
       },
       {
         id: 'deep-dives',
         displayName: 'Deep Dives',
-        pattern: 'deep.dive',
+        pattern: { source: 'title', pattern: 'deep.dive' },
       },
     ],
   },
