@@ -238,14 +238,13 @@ Optional. Controls how groups map to dropdown entries in the app UI. When absent
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `partitionBy` | enum | `"group"`, `"seasonNumber"`, or `"year"`. |
+| `partitionBy` | enum | `"seasonNumber"` or `"year"`. |
 | `titleExtractor` | object | Generates display names for partitioned entries. Used with `seasonNumber` or `year`. See [TitleExtractor](#titleextractor). |
 
 **partitionBy values:**
 
 | Value | Behavior |
 |-------|----------|
-| `"group"` | Each group becomes its own dropdown entry. |
 | `"seasonNumber"` | Groups are organized under season-number entries. |
 | `"year"` | Groups are organized under year entries. |
 | _(absent)_ | Single entry containing all groups as cards. |
@@ -262,7 +261,7 @@ Optional. Controls how groups map to dropdown entries in the app UI. When absent
 }
 ```
 
-**Legacy note:** Replaces v4 `presentation`. `"combined"` maps to no selector; `"separate"` maps to `{ "partitionBy": "group" }`.
+**Legacy note:** Replaces v4 `presentation`. `"combined"` maps to no selector.
 
 ---
 
@@ -385,7 +384,7 @@ The following top-level fields are accepted as aliases during v4-to-v5 migration
 | `resolverType` | `grouping.by` | Direct rename. |
 | `groups` | `grouping.staticClassifiers` | Direct rename. |
 | `numberingExtractor` | `grouping.numberingExtractor` | Moved into grouping block. |
-| `presentation` | `selector` | `"combined"` = no selector; `"separate"` = `{ partitionBy: "group" }`. |
+| `presentation` | `selector` | `"combined"` = no selector. |
 | `groupList` | `groupListing` + `groupItem` | Split: collection settings to `groupListing`, item settings to `groupItem`. |
 | `groupList.yearBinding` | `groupListing.sectionBy` | Expanded to support multiple sectioning axes. |
 | `groupList.showDateRange` | `groupItem.showDateRange` | Moved from collection to item level. |

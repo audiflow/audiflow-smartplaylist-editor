@@ -101,7 +101,7 @@ episodeFilters     filter episodes before processing
        |           - staticClassifiers: manual group definitions (titleClassifier)
        |
     selector       organize groups into dropdown entries
-       |           - partitionBy: group | seasonNumber | year
+       |           - partitionBy: seasonNumber | year
        |           - titleExtractor: names for partitioned entries
        |
     display        how things look
@@ -146,7 +146,7 @@ Optional. Controls how groups map to dropdown entries.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `partitionBy` | enum | `group`, `seasonNumber`, `year`. Absent = single entry |
+| `partitionBy` | enum | `seasonNumber`, `year`. Absent = single entry |
 | `titleExtractor` | object | Names for partitioned entries (seasonNumber/year) |
 
 ### groupListing
@@ -215,7 +215,6 @@ During transition, v4 field names are accepted as aliases:
 
 Legacy `presentation` values derive `selector`:
 - `"combined"` -> no selector (single entry)
-- `"separate"` -> `selector: { partitionBy: "group" }`
 
 ## Per-Classifier Overrides
 
