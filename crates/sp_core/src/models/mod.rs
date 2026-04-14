@@ -1,6 +1,6 @@
 pub mod episode_data;
-pub mod numbering_extractor;
 pub mod group_def;
+pub mod numbering_extractor;
 pub mod pattern_config;
 pub mod pattern_meta;
 pub mod pattern_summary;
@@ -20,18 +20,20 @@ pub(crate) fn is_zero(v: &i32) -> bool {
 }
 
 pub use episode_data::{EpisodeData, SimpleEpisodeData};
-pub use numbering_extractor::{CompiledNumberingExtractor, NumberingExtractionResult, NumberingExtractor};
 pub use group_def::{
     GroupDef, GroupDefEpisodeItem, GroupDefEpisodeListing, GroupDefGroupItem, GroupDefGroupListing,
     Matcher,
+};
+pub use numbering_extractor::{
+    CompiledNumberingExtractor, NumberingExtractionResult, NumberingExtractor,
 };
 pub use pattern_config::PatternConfig;
 pub use pattern_meta::PatternMeta;
 pub use pattern_summary::PatternSummary;
 pub use playlist::{Grouping, Playlist, PlaylistGroup, Presentation, YearBinding};
 pub use playlist_definition::{
-    EpisodeFilterEntry, EpisodeFilters, EpisodeItemConfig, EpisodeListingConfig,
-    GroupItemConfig, GroupListingConfig, GroupingConfig, PlaylistDefinition, SelectorConfig,
+    EpisodeFilterEntry, EpisodeFilters, EpisodeItemConfig, EpisodeListingConfig, GroupItemConfig,
+    GroupListingConfig, GroupingConfig, PlaylistDefinition, SelectorConfig,
 };
 pub use preview_grouping::{PlaylistPreviewResult, PreviewGrouping};
 pub use root_meta::RootMeta;

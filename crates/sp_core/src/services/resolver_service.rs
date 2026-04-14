@@ -78,10 +78,9 @@ impl CompiledFilters {
         // excluded when it matches ANY exclude rule. Keep the runtime
         // aligned with that contract so multi-rule configs authored
         // against the v5 schema behave as the schema text advertises.
-        let require_ok = self.require.is_empty()
-            || self.require.iter().any(|f| f.matches(episode));
-        let exclude_ok = self.exclude.is_empty()
-            || !self.exclude.iter().any(|f| f.matches(episode));
+        let require_ok = self.require.is_empty() || self.require.iter().any(|f| f.matches(episode));
+        let exclude_ok =
+            self.exclude.is_empty() || !self.exclude.iter().any(|f| f.matches(episode));
         require_ok && exclude_ok
     }
 }
@@ -214,19 +213,13 @@ impl ResolverService {
             // partition bucketing honors per-classifier season overrides.
             let classifier_enriched =
                 Self::enrich_for_classifiers(definition, &result, episode_by_id);
-            let overlay_storage: HashMap<i64, &dyn EpisodeData> =
-                Self::build_overlay_episode_by_id(
-                    episode_by_id,
-                    enriched_storage.as_deref(),
-                    classifier_enriched.as_deref(),
-                );
-
-            self.add_grouped_playlist(
-                &mut all_playlists,
-                definition,
-                &result,
-                &overlay_storage,
+            let overlay_storage: HashMap<i64, &dyn EpisodeData> = Self::build_overlay_episode_by_id(
+                episode_by_id,
+                enriched_storage.as_deref(),
+                classifier_enriched.as_deref(),
             );
+
+            self.add_grouped_playlist(&mut all_playlists, definition, &result, &overlay_storage);
 
             all_ungrouped_ids.extend(&result.ungrouped_episode_ids);
 
@@ -281,11 +274,7 @@ impl ResolverService {
             let filtered = Self::filter_episodes(episodes, &compiled_filters, &claimed_ids);
 
             if filtered.is_empty() {
-                self.add_empty_preview_result(
-                    &mut playlist_results,
-                    definition,
-                    claimed_by_others,
-                );
+                self.add_empty_preview_result(&mut playlist_results, definition, claimed_by_others);
                 continue;
             }
 
@@ -320,12 +309,11 @@ impl ResolverService {
             // serializer enriches per-classifier display values.
             let classifier_enriched =
                 Self::enrich_for_classifiers(definition, &result, episode_by_id);
-            let overlay_storage: HashMap<i64, &dyn EpisodeData> =
-                Self::build_overlay_episode_by_id(
-                    episode_by_id,
-                    enriched_storage.as_deref(),
-                    classifier_enriched.as_deref(),
-                );
+            let overlay_storage: HashMap<i64, &dyn EpisodeData> = Self::build_overlay_episode_by_id(
+                episode_by_id,
+                enriched_storage.as_deref(),
+                classifier_enriched.as_deref(),
+            );
 
             let playlist = self.build_preview_playlist(
                 definition,
@@ -343,7 +331,12 @@ impl ResolverService {
             all_ungrouped_ids.extend(&result.ungrouped_episode_ids);
 
             if definition.has_filters() {
-                self.claim_episodes(&result, &definition.id, &mut claimed_ids, &mut claimed_by_map);
+                self.claim_episodes(
+                    &result,
+                    &definition.id,
+                    &mut claimed_ids,
+                    &mut claimed_by_map,
+                );
             }
         }
 
@@ -413,7 +406,10 @@ impl ResolverService {
     ) -> Playlist {
         let presentation = Presentation::Combined;
         let year_binding = parse_year_binding(
-            definition.group_listing.as_ref().and_then(|gl| gl.year_binding.as_deref()),
+            definition
+                .group_listing
+                .as_ref()
+                .and_then(|gl| gl.year_binding.as_deref()),
         );
         // Pin every resolved group to its earliest year when the playlist
         // opts in via `groupItem.pinToYear`, so consumers that render year
@@ -439,11 +435,18 @@ impl ResolverService {
             })
             .collect();
 
-        let sort_rule = definition.group_listing.as_ref().and_then(|gl| gl.sort.as_ref());
+        let sort_rule = definition
+            .group_listing
+            .as_ref()
+            .and_then(|gl| gl.sort.as_ref());
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
 
         // Apply partitioning if configured
-        let groups = match definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) {
+        let groups = match definition
+            .selector
+            .as_ref()
+            .and_then(|s| s.partition_by.as_deref())
+        {
             Some("seasonNumber") => {
                 let title_ext = definition
                     .selector
@@ -461,7 +464,11 @@ impl ResolverService {
             _ => groups,
         };
 
-        let all_episode_ids: Vec<i64> = groups.iter().flat_map(|g| g.episode_ids.iter()).copied().collect();
+        let all_episode_ids: Vec<i64> = groups
+            .iter()
+            .flat_map(|g| g.episode_ids.iter())
+            .copied()
+            .collect();
 
         Playlist {
             id: definition.id.clone(),
@@ -471,8 +478,16 @@ impl ResolverService {
             thumbnail_url: None,
             presentation,
             year_binding,
-            show_year_headers: definition.episode_listing.as_ref().and_then(|el| el.show_year_headers).unwrap_or(false),
-            show_date_range: definition.group_item.as_ref().and_then(|gi| gi.show_date_range).unwrap_or(false),
+            show_year_headers: definition
+                .episode_listing
+                .as_ref()
+                .and_then(|el| el.show_year_headers)
+                .unwrap_or(false),
+            show_date_range: definition
+                .group_item
+                .as_ref()
+                .and_then(|gi| gi.show_date_range)
+                .unwrap_or(false),
             groups: Some(groups),
         }
     }
@@ -501,10 +516,15 @@ impl ResolverService {
     ) {
         let presentation = Presentation::Combined;
         let year_binding = parse_year_binding(
-            definition.group_listing.as_ref().and_then(|gl| gl.year_binding.as_deref()),
+            definition
+                .group_listing
+                .as_ref()
+                .and_then(|gl| gl.year_binding.as_deref()),
         );
         let group_def_map: HashMap<&str, &GroupDef> = definition
-            .grouping.static_classifiers.as_ref()
+            .grouping
+            .static_classifiers
+            .as_ref()
             .map(|gs| gs.iter().map(|g| (g.id.as_str(), g)).collect())
             .unwrap_or_default();
 
@@ -525,11 +545,19 @@ impl ResolverService {
                     thumbnail_url: p.thumbnail_url.clone(),
                     year_override: year_override.clone(),
                     show_year_headers: g_def.and_then(|d| {
-                        d.episode_listing.as_ref().and_then(|el| el.show_year_headers)
+                        d.episode_listing
+                            .as_ref()
+                            .and_then(|el| el.show_year_headers)
                     }),
                     show_date_range: g_def
                         .and_then(|d| d.group_item.as_ref().and_then(|g| g.show_date_range))
-                        .unwrap_or_else(|| definition.group_item.as_ref().and_then(|gi| gi.show_date_range).unwrap_or(false)),
+                        .unwrap_or_else(|| {
+                            definition
+                                .group_item
+                                .as_ref()
+                                .and_then(|gi| gi.show_date_range)
+                                .unwrap_or(false)
+                        }),
                     earliest_date: None,
                     latest_date: None,
                     total_duration_ms: None,
@@ -538,11 +566,18 @@ impl ResolverService {
             })
             .collect();
 
-        let sort_rule = definition.group_listing.as_ref().and_then(|gl| gl.sort.as_ref());
+        let sort_rule = definition
+            .group_listing
+            .as_ref()
+            .and_then(|gl| gl.sort.as_ref());
         let groups = sort_groups(&unsorted_groups, sort_rule, episode_by_id);
 
         // Apply partitioning if configured
-        let groups = match definition.selector.as_ref().and_then(|s| s.partition_by.as_deref()) {
+        let groups = match definition
+            .selector
+            .as_ref()
+            .and_then(|s| s.partition_by.as_deref())
+        {
             Some("seasonNumber") => {
                 let title_ext = definition
                     .selector
@@ -560,7 +595,11 @@ impl ResolverService {
             _ => groups,
         };
 
-        let all_episode_ids: Vec<i64> = groups.iter().flat_map(|g| g.episode_ids.iter()).copied().collect();
+        let all_episode_ids: Vec<i64> = groups
+            .iter()
+            .flat_map(|g| g.episode_ids.iter())
+            .copied()
+            .collect();
 
         all_playlists.push(Playlist {
             id: definition.id.clone(),
@@ -570,8 +609,16 @@ impl ResolverService {
             thumbnail_url: None,
             presentation: presentation.clone(),
             year_binding: year_binding.clone(),
-            show_year_headers: definition.episode_listing.as_ref().and_then(|el| el.show_year_headers).unwrap_or(false),
-            show_date_range: definition.group_item.as_ref().and_then(|gi| gi.show_date_range).unwrap_or(false),
+            show_year_headers: definition
+                .episode_listing
+                .as_ref()
+                .and_then(|el| el.show_year_headers)
+                .unwrap_or(false),
+            show_date_range: definition
+                .group_item
+                .as_ref()
+                .and_then(|gi| gi.show_date_range)
+                .unwrap_or(false),
             groups: Some(groups),
         });
     }
@@ -622,10 +669,7 @@ impl ResolverService {
         groups
             .iter()
             .map(|group| PlaylistGroup {
-                episode_ids: sort_episode_ids_by_published_at(
-                    &group.episode_ids,
-                    episode_by_id,
-                ),
+                episode_ids: sort_episode_ids_by_published_at(&group.episode_ids, episode_by_id),
                 sub_groups: group
                     .sub_groups
                     .as_ref()
@@ -700,11 +744,7 @@ impl ResolverService {
         }
     }
 
-    fn find_matching_config(
-        &self,
-        guid: Option<&str>,
-        feed_url: &str,
-    ) -> Option<&PatternConfig> {
+    fn find_matching_config(&self, guid: Option<&str>, feed_url: &str) -> Option<&PatternConfig> {
         self.patterns
             .iter()
             .find(|config| config.matches_podcast(guid, feed_url))

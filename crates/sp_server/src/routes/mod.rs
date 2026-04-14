@@ -8,10 +8,10 @@ pub mod podcast;
 pub mod preview;
 pub mod schema;
 
+use axum::Router;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::{get, post, put};
-use axum::Router;
 use tower_http::cors::CorsLayer;
 
 use crate::app::SharedState;

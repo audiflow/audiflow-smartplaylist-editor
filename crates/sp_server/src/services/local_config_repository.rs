@@ -75,11 +75,7 @@ impl LocalConfigRepository {
     }
 
     /// Returns a playlist definition as a raw JSON value.
-    pub fn get_playlist_json(
-        &self,
-        pattern_id: &str,
-        playlist_id: &str,
-    ) -> Result<Value, Error> {
+    pub fn get_playlist_json(&self, pattern_id: &str, playlist_id: &str) -> Result<Value, Error> {
         validate_path_segment(pattern_id, "patternId")?;
         validate_path_segment(playlist_id, "playlistId")?;
         let path = self
@@ -121,11 +117,7 @@ impl LocalConfigRepository {
     }
 
     /// Writes pattern meta JSON to disk using atomic write.
-    pub fn save_pattern_meta(
-        &self,
-        pattern_id: &str,
-        json: &Value,
-    ) -> Result<(), Error> {
+    pub fn save_pattern_meta(&self, pattern_id: &str, json: &Value) -> Result<(), Error> {
         validate_path_segment(pattern_id, "patternId")?;
         let path = self.patterns_dir.join(pattern_id).join("meta.json");
         atomic_write_json(&path, json)
@@ -139,16 +131,15 @@ impl LocalConfigRepository {
 
     /// Returns true if a pattern directory already exists on disk.
     pub fn pattern_exists(&self, pattern_id: &str) -> bool {
-        self.patterns_dir.join(pattern_id).join("meta.json").exists()
+        self.patterns_dir
+            .join(pattern_id)
+            .join("meta.json")
+            .exists()
     }
 
     /// Creates a new pattern directory with playlists/ subdir and
     /// writes the initial meta.json.
-    pub fn create_pattern(
-        &self,
-        pattern_id: &str,
-        meta_json: &Value,
-    ) -> Result<(), Error> {
+    pub fn create_pattern(&self, pattern_id: &str, meta_json: &Value) -> Result<(), Error> {
         validate_path_segment(pattern_id, "patternId")?;
         let pattern_dir = self.patterns_dir.join(pattern_id);
         std::fs::create_dir_all(&pattern_dir).map_err(Error::Io)?;
@@ -163,11 +154,7 @@ impl LocalConfigRepository {
     // -- Delete methods --
 
     /// Deletes a playlist file from disk.
-    pub fn delete_playlist(
-        &self,
-        pattern_id: &str,
-        playlist_id: &str,
-    ) -> Result<(), Error> {
+    pub fn delete_playlist(&self, pattern_id: &str, playlist_id: &str) -> Result<(), Error> {
         validate_path_segment(pattern_id, "patternId")?;
         validate_path_segment(playlist_id, "playlistId")?;
         let path = self
@@ -402,7 +389,8 @@ mod tests {
         let tmp = setup_test_dir();
         let repo = LocalConfigRepository::new(tmp.path());
 
-        let playlist = json!({"id": "fmt-test", "displayName": "Fmt", "grouping": {"by": "seasonNumber"}});
+        let playlist =
+            json!({"id": "fmt-test", "displayName": "Fmt", "grouping": {"by": "seasonNumber"}});
         repo.save_playlist("test-pattern", "fmt-test", &playlist)
             .unwrap();
 

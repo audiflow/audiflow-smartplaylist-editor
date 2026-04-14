@@ -55,7 +55,13 @@ fn playlist_definition_full_round_trip() {
     let def: PlaylistDefinition = serde_json::from_value(json_val.clone()).unwrap();
     assert_eq!(def.id, "main");
     assert_eq!(def.priority, 1);
-    assert!(def.group_item.as_ref().unwrap().prepend_season_number.unwrap());
+    assert!(
+        def.group_item
+            .as_ref()
+            .unwrap()
+            .prepend_season_number
+            .unwrap()
+    );
     assert!(def.grouping.static_classifiers.is_some());
     assert_eq!(def.grouping.static_classifiers.as_ref().unwrap().len(), 1);
 

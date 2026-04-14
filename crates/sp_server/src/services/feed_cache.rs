@@ -71,8 +71,7 @@ impl DiskFeedCacheService {
     fn read_cache(&self, hash: &str) -> Option<Vec<Value>> {
         let meta_path = self.meta_path(hash);
         let meta_content = std::fs::read_to_string(&meta_path).ok()?;
-        let meta: serde_json::Map<String, Value> =
-            serde_json::from_str(&meta_content).ok()?;
+        let meta: serde_json::Map<String, Value> = serde_json::from_str(&meta_content).ok()?;
 
         let fetched_at_str = meta.get("fetchedAt")?.as_str()?;
         let fetched_at = chrono::DateTime::parse_from_rfc3339(fetched_at_str)
@@ -94,16 +93,11 @@ impl DiskFeedCacheService {
     /// Data is written before meta so a crash between writes leaves
     /// stale meta (safe cache miss) rather than fresh meta pointing
     /// to stale data.
-    fn write_cache(
-        &self,
-        hash: &str,
-        url: &str,
-        episodes: &[Value],
-    ) -> Result<(), Error> {
+    fn write_cache(&self, hash: &str, url: &str, episodes: &[Value]) -> Result<(), Error> {
         std::fs::create_dir_all(&self.cache_dir).map_err(Error::Io)?;
 
-        let data = serde_json::to_string(episodes)
-            .map_err(|e| Error::Io(std::io::Error::other(e)))?;
+        let data =
+            serde_json::to_string(episodes).map_err(|e| Error::Io(std::io::Error::other(e)))?;
         let meta = serde_json::to_string(&serde_json::json!({
             "url": url,
             "fetchedAt": chrono::Utc::now().to_rfc3339(),
@@ -168,10 +162,8 @@ mod tests {
     #[test]
     fn read_cache_returns_none_when_no_cache() {
         let tmp = TempDir::new().unwrap();
-        let service = DiskFeedCacheService::new(
-            tmp.path().to_path_buf(),
-            Duration::from_secs(3600),
-        );
+        let service =
+            DiskFeedCacheService::new(tmp.path().to_path_buf(), Duration::from_secs(3600));
         let result = service.read_cache("nonexistent_hash");
         assert!(result.is_none());
     }
@@ -179,10 +171,8 @@ mod tests {
     #[test]
     fn write_and_read_cache_round_trip() {
         let tmp = TempDir::new().unwrap();
-        let service = DiskFeedCacheService::new(
-            tmp.path().to_path_buf(),
-            Duration::from_secs(3600),
-        );
+        let service =
+            DiskFeedCacheService::new(tmp.path().to_path_buf(), Duration::from_secs(3600));
 
         let episodes = vec![serde_json::json!({
             "id": 0,
@@ -204,19 +194,13 @@ mod tests {
     #[test]
     fn read_cache_returns_none_when_stale() {
         let tmp = TempDir::new().unwrap();
-        let service = DiskFeedCacheService::new(
-            tmp.path().to_path_buf(),
-            Duration::from_secs(3600),
-        );
+        let service =
+            DiskFeedCacheService::new(tmp.path().to_path_buf(), Duration::from_secs(3600));
 
         let hash = hash_url("https://example.com/feed.xml");
 
         // Write data file
-        std::fs::write(
-            tmp.path().join(format!("{hash}.json")),
-            r#"[{"id": 0}]"#,
-        )
-        .unwrap();
+        std::fs::write(tmp.path().join(format!("{hash}.json")), r#"[{"id": 0}]"#).unwrap();
 
         // Write meta with fetchedAt two hours in the past (stale)
         let past = chrono::Utc::now() - chrono::Duration::hours(2);
@@ -237,24 +221,14 @@ mod tests {
     #[test]
     fn corrupted_cache_treated_as_miss() {
         let tmp = TempDir::new().unwrap();
-        let service = DiskFeedCacheService::new(
-            tmp.path().to_path_buf(),
-            Duration::from_secs(3600),
-        );
+        let service =
+            DiskFeedCacheService::new(tmp.path().to_path_buf(), Duration::from_secs(3600));
 
         let hash = hash_url("https://example.com/feed.xml");
 
         // Write corrupted meta
-        std::fs::write(
-            tmp.path().join(format!("{hash}.meta")),
-            "not valid json",
-        )
-        .unwrap();
-        std::fs::write(
-            tmp.path().join(format!("{hash}.json")),
-            "[{\"id\": 0}]",
-        )
-        .unwrap();
+        std::fs::write(tmp.path().join(format!("{hash}.meta")), "not valid json").unwrap();
+        std::fs::write(tmp.path().join(format!("{hash}.json")), "[{\"id\": 0}]").unwrap();
 
         let cached = service.read_cache(&hash);
         assert!(cached.is_none());
@@ -263,10 +237,8 @@ mod tests {
     #[test]
     fn corrupted_data_file_treated_as_miss() {
         let tmp = TempDir::new().unwrap();
-        let service = DiskFeedCacheService::new(
-            tmp.path().to_path_buf(),
-            Duration::from_secs(3600),
-        );
+        let service =
+            DiskFeedCacheService::new(tmp.path().to_path_buf(), Duration::from_secs(3600));
 
         let hash = hash_url("https://example.com/feed.xml");
 
@@ -294,10 +266,7 @@ mod tests {
     fn write_cache_creates_directory_if_missing() {
         let tmp = TempDir::new().unwrap();
         let cache_dir = tmp.path().join("nested").join("cache");
-        let service = DiskFeedCacheService::new(
-            cache_dir.clone(),
-            Duration::from_secs(3600),
-        );
+        let service = DiskFeedCacheService::new(cache_dir.clone(), Duration::from_secs(3600));
 
         let episodes = vec![serde_json::json!({"id": 0})];
         let hash = hash_url("https://example.com/feed.xml");

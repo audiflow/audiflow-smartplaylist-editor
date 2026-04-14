@@ -11,12 +11,7 @@ pub fn derive_pattern_id(podcast_guid: Option<&str>, feed_urls: &[String]) -> Op
     let input = podcast_guid
         .map(|g| g.trim())
         .filter(|g| !g.is_empty())
-        .or_else(|| {
-            feed_urls
-                .iter()
-                .map(|s| s.trim())
-                .find(|s| !s.is_empty())
-        })?;
+        .or_else(|| feed_urls.iter().map(|s| s.trim()).find(|s| !s.is_empty()))?;
     let digest = md5::compute(input.as_bytes());
     Some(format!("{digest:x}")[..12].to_string())
 }
@@ -25,7 +20,10 @@ pub fn derive_pattern_id(podcast_guid: Option<&str>, feed_urls: &[String]) -> Op
 /// (exactly 12 lowercase hex characters). Non-matching IDs are
 /// implicitly grandfathered.
 pub fn is_deterministic_id(id: &str) -> bool {
-    id.len() == 12 && id.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
+    id.len() == 12
+        && id
+            .chars()
+            .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
 }
 
 #[cfg(test)]
@@ -75,7 +73,8 @@ mod tests {
     fn skips_empty_feed_urls() {
         let urls = vec!["".to_string(), "https://example.com/feed.xml".to_string()];
         let id = derive_pattern_id(None, &urls).unwrap();
-        let expected = derive_pattern_id(None, &["https://example.com/feed.xml".to_string().into()]).unwrap();
+        let expected =
+            derive_pattern_id(None, &["https://example.com/feed.xml".to_string().into()]).unwrap();
         assert_eq!(id, expected);
     }
 

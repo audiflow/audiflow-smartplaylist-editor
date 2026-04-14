@@ -8,7 +8,12 @@ use sp_server::routes::create_router;
 use sp_server::services::{DiskFeedCacheService, FileWatcherService, LocalConfigRepository};
 
 /// Starts the web editor server bound to localhost.
-pub async fn run(data_dir: &str, host: &str, port: u16, static_dir: Option<&str>) -> anyhow::Result<()> {
+pub async fn run(
+    data_dir: &str,
+    host: &str,
+    port: u16,
+    static_dir: Option<&str>,
+) -> anyhow::Result<()> {
     let data_path = PathBuf::from(data_dir);
 
     // Verify patterns/meta.json exists
@@ -30,11 +35,8 @@ pub async fn run(data_dir: &str, host: &str, port: u16, static_dir: Option<&str>
 
     let schema_json = Validator::playlist_definition_schema_json().to_string();
 
-    let file_watcher = FileWatcherService::new(
-        data_path.clone(),
-        vec![".cache".to_string()],
-    )
-    .map_err(|e| anyhow::anyhow!("Failed to start file watcher: {e}"))?;
+    let file_watcher = FileWatcherService::new(data_path.clone(), vec![".cache".to_string()])
+        .map_err(|e| anyhow::anyhow!("Failed to start file watcher: {e}"))?;
 
     let static_path = static_dir.map(PathBuf::from);
 

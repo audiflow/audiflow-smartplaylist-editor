@@ -315,8 +315,6 @@ fn make_definition(id: &str) -> PlaylistDefinition {
     }
 }
 
-
-
 #[test]
 fn config_assembler_orders_by_meta_playlists() {
     let meta = PatternMeta {
@@ -477,19 +475,19 @@ fn resolver_matches_config_by_feed_url() {
         playlists: vec![PlaylistDefinition {
             id: "main".to_string(),
             display_name: "Main".to_string(),
-        grouping: GroupingConfig {
-            by: "seasonNumber".to_string(),
-            discovery_hint: None,
-            numbering_extractor: None,
-            static_classifiers: None,
-        },
-        selector: None,
-        priority: 0,
-        episode_filters: None,
-        group_listing: None,
-        group_item: None,
-        episode_listing: None,
-        episode_item: None,
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
+            priority: 0,
+            episode_filters: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -644,25 +642,25 @@ fn resolver_filter_regex_is_case_insensitive() {
         playlists: vec![PlaylistDefinition {
             id: "bonus".to_string(),
             display_name: "Bonus".to_string(),
-                grouping: GroupingConfig {
-                    by: "year".to_string(),
-                    discovery_hint: None,
-                    numbering_extractor: None,
-                    static_classifiers: None,
-                },
-                selector: None,
-                priority: 0,
-                episode_filters: Some(EpisodeFilters {
+            grouping: GroupingConfig {
+                by: "year".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
+            priority: 0,
+            episode_filters: Some(EpisodeFilters {
                 require: Some(vec![EpisodeFilterEntry {
                     title: Some("bonus".to_string()),
                     description: None,
                 }]),
                 exclude: None,
             }),
-                group_listing: None,
-                group_item: None,
-                episode_listing: None,
-                episode_item: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -779,23 +777,23 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
         playlists: vec![PlaylistDefinition {
             id: "regular".to_string(),
             display_name: "Regular Series".to_string(),
-                grouping: GroupingConfig {
-                    by: "seasonNumber".to_string(),
-                    discovery_hint: None,
-                    numbering_extractor: None,
-                    static_classifiers: None,
-                },
-                selector: None,
-                priority: 0,
-                episode_filters: None,
-                group_listing: Some(GroupListingConfig {
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
+            priority: 0,
+            episode_filters: None,
+            group_listing: Some(GroupListingConfig {
                 year_binding: Some("pinToYear".to_string()),
                 user_sortable: None,
                 sort: None,
             }),
-                group_item: None,
-                episode_listing: None,
-                episode_item: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -1127,19 +1125,19 @@ fn preview_sorts_episode_ids_by_published_at() {
         playlists: vec![PlaylistDefinition {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
-                grouping: GroupingConfig {
-                    by: "seasonNumber".to_string(),
-                    discovery_hint: None,
-                    numbering_extractor: None,
-                    static_classifiers: None,
-                },
-                selector: None,
-                priority: 0,
-                episode_filters: None,
-                group_listing: None,
-                group_item: None,
-                episode_listing: None,
-                episode_item: None,
+            grouping: GroupingConfig {
+                by: "seasonNumber".to_string(),
+                discovery_hint: None,
+                numbering_extractor: None,
+                static_classifiers: None,
+            },
+            selector: None,
+            priority: 0,
+            episode_filters: None,
+            group_listing: None,
+            group_item: None,
+            episode_listing: None,
+            episode_item: None,
         }],
     }]);
 
@@ -1302,32 +1300,47 @@ fn partition_by_season_creates_sub_groups() {
 
     let episodes = vec![
         SimpleEpisodeData {
-            id: 1, title: "[ProfA 1] Topic".to_string(), description: None,
-            season_number: Some(1), episode_number: Some(1),
+            id: 1,
+            title: "[ProfA 1] Topic".to_string(),
+            description: None,
+            season_number: Some(1),
+            episode_number: Some(1),
             published_at: Some(Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap()),
             image_url: None,
         },
         SimpleEpisodeData {
-            id: 2, title: "[ProfA 2] Topic".to_string(), description: None,
-            season_number: Some(1), episode_number: Some(2),
+            id: 2,
+            title: "[ProfA 2] Topic".to_string(),
+            description: None,
+            season_number: Some(1),
+            episode_number: Some(2),
             published_at: Some(Utc.with_ymd_and_hms(2024, 1, 8, 0, 0, 0).unwrap()),
             image_url: None,
         },
         SimpleEpisodeData {
-            id: 3, title: "[ProfB 1] Topic".to_string(), description: None,
-            season_number: Some(1), episode_number: Some(3),
+            id: 3,
+            title: "[ProfB 1] Topic".to_string(),
+            description: None,
+            season_number: Some(1),
+            episode_number: Some(3),
             published_at: Some(Utc.with_ymd_and_hms(2024, 1, 15, 0, 0, 0).unwrap()),
             image_url: None,
         },
         SimpleEpisodeData {
-            id: 4, title: "[ProfC 1] Topic".to_string(), description: None,
-            season_number: Some(2), episode_number: Some(1),
+            id: 4,
+            title: "[ProfC 1] Topic".to_string(),
+            description: None,
+            season_number: Some(2),
+            episode_number: Some(1),
             published_at: Some(Utc.with_ymd_and_hms(2024, 6, 1, 0, 0, 0).unwrap()),
             image_url: None,
         },
         SimpleEpisodeData {
-            id: 5, title: "[ProfC 2] Topic".to_string(), description: None,
-            season_number: Some(2), episode_number: Some(2),
+            id: 5,
+            title: "[ProfC 2] Topic".to_string(),
+            description: None,
+            season_number: Some(2),
+            episode_number: Some(2),
             published_at: Some(Utc.with_ymd_and_hms(2024, 6, 8, 0, 0, 0).unwrap()),
             image_url: None,
         },
@@ -1364,12 +1377,18 @@ fn partition_by_season_creates_sub_groups() {
     // Season 1 partition should have sub-groups: ProfA, ProfB
     let s1 = &groups[0];
     assert_eq!(s1.episode_ids.len(), 3);
-    let s1_subs = s1.sub_groups.as_ref().expect("season 1 should have sub_groups");
+    let s1_subs = s1
+        .sub_groups
+        .as_ref()
+        .expect("season 1 should have sub_groups");
     assert_eq!(s1_subs.len(), 2);
 
     // Season 2 partition should have sub-group: ProfC
     let s2 = &groups[1];
     assert_eq!(s2.episode_ids.len(), 2);
-    let s2_subs = s2.sub_groups.as_ref().expect("season 2 should have sub_groups");
+    let s2_subs = s2
+        .sub_groups
+        .as_ref()
+        .expect("season 2 should have sub_groups");
     assert_eq!(s2_subs.len(), 1);
 }

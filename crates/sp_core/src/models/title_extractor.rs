@@ -50,10 +50,7 @@ impl TitleExtractor {
     /// across many episodes.
     pub fn compile(&self) -> CompiledTitleExtractor<'_> {
         let regex = self.pattern.as_ref().and_then(|p| Regex::new(p).ok());
-        let fallback = self
-            .fallback
-            .as_ref()
-            .map(|f| Box::new(f.compile()));
+        let fallback = self.fallback.as_ref().map(|f| Box::new(f.compile()));
         CompiledTitleExtractor {
             extractor: self,
             regex,

@@ -51,10 +51,7 @@ impl FileWatcherService {
     /// The `ignore_patterns` parameter lists path prefixes to ignore
     /// (e.g., `.cache`). Files ending in `.tmp` are always ignored
     /// (produced by atomic writes).
-    pub fn new(
-        watch_dir: PathBuf,
-        ignore_patterns: Vec<String>,
-    ) -> Result<Self, notify::Error> {
+    pub fn new(watch_dir: PathBuf, ignore_patterns: Vec<String>) -> Result<Self, notify::Error> {
         let (sender, _) = broadcast::channel(100);
         let tx = sender.clone();
         let pending: Arc<Mutex<HashMap<String, FileChangeEvent>>> =
@@ -173,7 +170,10 @@ mod tests {
     fn to_relative_strips_base_prefix() {
         let base = Path::new("/data/configs");
         let path = Path::new("/data/configs/patterns/meta.json");
-        assert_eq!(to_relative(path, base), Some("patterns/meta.json".to_string()));
+        assert_eq!(
+            to_relative(path, base),
+            Some("patterns/meta.json".to_string())
+        );
     }
 
     #[test]

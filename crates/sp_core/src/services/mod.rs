@@ -12,4 +12,4 @@ pub use group_sorter::sort_groups;
 pub use helpers::parse_year_binding;
 pub use pattern_id::{derive_pattern_id, is_deterministic_id};
 pub use resolver_service::ResolverService;
-pub use uniqueness::{check_uniqueness, UniquenessConflict};
+pub use uniqueness::{UniquenessConflict, check_uniqueness};

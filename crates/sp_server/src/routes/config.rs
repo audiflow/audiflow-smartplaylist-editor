@@ -1,5 +1,5 @@
-use axum::extract::{Path, Query, State};
 use axum::Json;
+use axum::extract::{Path, Query, State};
 use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
@@ -9,9 +9,7 @@ use sp_core::schema::SchemaType;
 use sp_core::services::{check_uniqueness, derive_pattern_id};
 
 /// GET /api/configs/patterns -- returns pattern summaries.
-pub async fn list_patterns(
-    State(state): State<SharedState>,
-) -> Result<Json<Value>, AppError> {
+pub async fn list_patterns(State(state): State<SharedState>) -> Result<Json<Value>, AppError> {
     let patterns = state.config_repo.list_patterns()?;
     let json: Vec<Value> = patterns
         .iter()
@@ -25,9 +23,9 @@ pub async fn create_pattern(
     State(state): State<SharedState>,
     Json(body): Json<Value>,
 ) -> Result<(axum::http::StatusCode, Json<Value>), AppError> {
-    let obj = body.as_object().ok_or_else(|| {
-        AppError::bad_request("Request body must be a JSON object")
-    })?;
+    let obj = body
+        .as_object()
+        .ok_or_else(|| AppError::bad_request("Request body must be a JSON object"))?;
 
     let id = obj
         .get("id")
@@ -45,9 +43,9 @@ pub async fn create_pattern(
     let guid = match meta.get("podcastGuid") {
         None => None,
         Some(value) => {
-            let s = value.as_str().ok_or_else(|| {
-                AppError::bad_request("\"podcastGuid\" must be a string")
-            })?;
+            let s = value
+                .as_str()
+                .ok_or_else(|| AppError::bad_request("\"podcastGuid\" must be a string"))?;
             let s = s.trim();
             if s.is_empty() { None } else { Some(s) }
         }
@@ -55,9 +53,9 @@ pub async fn create_pattern(
     let feed_urls: Vec<String> = match meta.get("feedUrls") {
         None => Vec::new(),
         Some(value) => {
-            let arr = value.as_array().ok_or_else(|| {
-                AppError::bad_request("\"feedUrls\" must be an array of strings")
-            })?;
+            let arr = value
+                .as_array()
+                .ok_or_else(|| AppError::bad_request("\"feedUrls\" must be an array of strings"))?;
 
             let mut urls = Vec::with_capacity(arr.len());
             for entry in arr {
@@ -78,7 +76,11 @@ pub async fn create_pattern(
         Some(expected_id) if id != expected_id => {
             return Err(AppError::bad_request(format!(
                 "Pattern ID must be \"{expected_id}\" (derived from {}). Got \"{id}\".",
-                if guid.is_some() { "podcastGuid" } else { "feedUrls" },
+                if guid.is_some() {
+                    "podcastGuid"
+                } else {
+                    "feedUrls"
+                },
             )));
         }
         None => {
@@ -112,15 +114,15 @@ pub async fn create_pattern(
 
     // Normalize feedUrls: validate types, trim each entry, drop whitespace-only values.
     if let Some(v) = normalized_meta.get_mut("feedUrls") {
-        let arr = v.as_array().ok_or_else(|| {
-            AppError::bad_request("\"feedUrls\" must be an array of strings")
-        })?;
+        let arr = v
+            .as_array()
+            .ok_or_else(|| AppError::bad_request("\"feedUrls\" must be an array of strings"))?;
 
         let mut cleaned = Vec::with_capacity(arr.len());
         for entry in arr {
-            let url = entry.as_str().ok_or_else(|| {
-                AppError::bad_request("\"feedUrls\" must be an array of strings")
-            })?;
+            let url = entry
+                .as_str()
+                .ok_or_else(|| AppError::bad_request("\"feedUrls\" must be an array of strings"))?;
             let url = url.trim();
             if !url.is_empty() {
                 cleaned.push(Value::String(url.to_string()));
@@ -153,9 +155,7 @@ pub async fn create_pattern(
 
     // Add the new pattern to root meta.json
     let mut root_meta = state.config_repo.get_root_meta_json()?;
-    let patterns = root_meta
-        .get_mut("patterns")
-        .and_then(|v| v.as_array_mut());
+    let patterns = root_meta.get_mut("patterns").and_then(|v| v.as_array_mut());
 
     let playlists = meta
         .get("playlists")
@@ -263,9 +263,7 @@ pub async fn update_pattern_meta(
         existing_obj.insert("dataVersion".to_string(), dv);
     }
 
-    let errors = state
-        .validator
-        .validate(SchemaType::PatternMeta, &existing);
+    let errors = state.validator.validate(SchemaType::PatternMeta, &existing);
     if !errors.is_empty() {
         return Err(AppError::bad_request(format!(
             "Validation failed: {}",
@@ -409,8 +407,8 @@ pub async fn validate_config(
         return Err(AppError::bad_request("Request body is empty"));
     }
 
-    let value: Value = serde_json::from_str(&body)
-        .map_err(|_| AppError::bad_request("Invalid JSON"))?;
+    let value: Value =
+        serde_json::from_str(&body).map_err(|_| AppError::bad_request("Invalid JSON"))?;
 
     let schema_type_str = query.schema_type.as_deref().unwrap_or("playlistDefinition");
 
@@ -430,11 +428,13 @@ pub async fn validate_config(
 
 /// Adds a playlist ID to the pattern meta's playlists array if not already present,
 /// and updates the playlistCount in root meta.
-fn add_playlist_to_meta(state: &SharedState, pattern_id: &str, playlist_id: &str) -> Result<(), AppError> {
+fn add_playlist_to_meta(
+    state: &SharedState,
+    pattern_id: &str,
+    playlist_id: &str,
+) -> Result<(), AppError> {
     let mut meta = state.config_repo.get_pattern_meta_json(pattern_id)?;
-    let playlists = meta
-        .get_mut("playlists")
-        .and_then(|v| v.as_array_mut());
+    let playlists = meta.get_mut("playlists").and_then(|v| v.as_array_mut());
 
     let already_listed = playlists
         .as_ref()
@@ -458,7 +458,11 @@ fn add_playlist_to_meta(state: &SharedState, pattern_id: &str, playlist_id: &str
 
 /// Removes a playlist ID from the pattern meta's playlists array
 /// and updates the playlistCount in root meta.
-fn remove_playlist_from_meta(state: &SharedState, pattern_id: &str, playlist_id: &str) -> Result<(), AppError> {
+fn remove_playlist_from_meta(
+    state: &SharedState,
+    pattern_id: &str,
+    playlist_id: &str,
+) -> Result<(), AppError> {
     let mut meta = state.config_repo.get_pattern_meta_json(pattern_id)?;
     if let Some(playlists) = meta.get_mut("playlists").and_then(|v| v.as_array_mut()) {
         playlists.retain(|v| v.as_str() != Some(playlist_id));

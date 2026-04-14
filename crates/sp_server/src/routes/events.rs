@@ -2,8 +2,8 @@ use std::convert::Infallible;
 
 use axum::extract::State;
 use axum::response::sse::{Event, Sse};
-use tokio_stream::wrappers::BroadcastStream;
 use tokio_stream::StreamExt;
+use tokio_stream::wrappers::BroadcastStream;
 
 use crate::app::SharedState;
 

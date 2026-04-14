@@ -164,7 +164,9 @@ impl PlaylistDefinition {
         }
 
         // titleExtractor (group-level only): seasonNumber, titleDiscovery, or year
-        if by != "seasonNumber" && by != "titleDiscovery" && by != "year"
+        if by != "seasonNumber"
+            && by != "titleDiscovery"
+            && by != "year"
             && let Some(gi) = &mut self.group_item
         {
             gi.title_extractor = None;

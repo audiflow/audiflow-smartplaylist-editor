@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
-use axum::extract::State;
 use axum::Json;
+use axum::extract::State;
 use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
@@ -9,7 +9,9 @@ use sp_core::models::{
     EpisodeData, GroupDef, NumberingExtractor, PatternConfig, Playlist, PlaylistGroup,
     PlaylistPreviewResult, PreviewGrouping, SimpleEpisodeData,
 };
-use sp_core::resolvers::{CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver};
+use sp_core::resolvers::{
+    CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver,
+};
 use sp_core::services::ResolverService;
 
 /// POST /api/configs/preview -- previews smart playlists from config + feed.
@@ -32,9 +34,8 @@ pub async fn preview_config(
         .filter(|s| !s.is_empty())
         .ok_or_else(|| AppError::bad_request("Missing or invalid \"feedUrl\" field"))?;
 
-    let mut config: PatternConfig =
-        serde_json::from_value(Value::Object(config_json.clone()))
-            .map_err(|e| AppError::bad_request(format!("Invalid config: {e}")))?;
+    let mut config: PatternConfig = serde_json::from_value(Value::Object(config_json.clone()))
+        .map_err(|e| AppError::bad_request(format!("Invalid config: {e}")))?;
     for playlist in &mut config.playlists {
         playlist.strip_conditional_fields();
     }
@@ -61,20 +62,19 @@ pub async fn preview_config(
     if 0 < parse_failures
         && let Some(debug) = result.get_mut("debug").and_then(|d| d.as_object_mut())
     {
-        debug.insert(
-            "parseFailures".to_string(),
-            Value::from(parse_failures),
-        );
+        debug.insert("parseFailures".to_string(), Value::from(parse_failures));
     }
 
     Ok(Json(result))
 }
 
-fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_feed_url: &str) -> Value {
-    let episode_refs: Vec<&dyn EpisodeData> = episodes
-        .iter()
-        .map(|e| e as &dyn EpisodeData)
-        .collect();
+fn run_preview(
+    config: &PatternConfig,
+    episodes: &[SimpleEpisodeData],
+    request_feed_url: &str,
+) -> Value {
+    let episode_refs: Vec<&dyn EpisodeData> =
+        episodes.iter().map(|e| e as &dyn EpisodeData).collect();
 
     let resolvers: Vec<Box<dyn Resolver>> = vec![
         Box::new(RssResolver),
@@ -86,7 +86,12 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
     let service = ResolverService::new(resolvers, vec![config.clone()]);
     let result = service.resolve_for_preview(
         config.podcast_guid.as_deref(),
-        config.feed_urls.as_ref().and_then(|u| u.first()).map(|s| s.as_str()).unwrap_or(request_feed_url),
+        config
+            .feed_urls
+            .as_ref()
+            .and_then(|u| u.first())
+            .map(|s| s.as_str())
+            .unwrap_or(request_feed_url),
         &episode_refs,
     );
 
@@ -204,10 +209,8 @@ fn compute_enriched_episodes(
                 if let Some(ext) = &group.numbering_extractor
                     && let Some(ep_ids) = def_groups.get(group.id.as_str())
                 {
-                    let group_episodes: Vec<&SimpleEpisodeData> = episodes
-                        .iter()
-                        .filter(|e| ep_ids.contains(&e.id))
-                        .collect();
+                    let group_episodes: Vec<&SimpleEpisodeData> =
+                        episodes.iter().filter(|e| ep_ids.contains(&e.id)).collect();
                     enrich_group_episodes(ext, &group_episodes, &mut map);
                 }
             }
@@ -334,9 +337,12 @@ fn compute_extracted_display_names(
             .unwrap_or_default();
 
         // Short-circuit when no extractor (playlist or per-classifier) applies.
-        let has_classifier_extractor = classifier_map
-            .values()
-            .any(|c| c.episode_item.as_ref().and_then(|ei| ei.title_extractor.as_ref()).is_some());
+        let has_classifier_extractor = classifier_map.values().any(|c| {
+            c.episode_item
+                .as_ref()
+                .and_then(|ei| ei.title_extractor.as_ref())
+                .is_some()
+        });
         if playlist_extractor.is_none() && !has_classifier_extractor {
             continue;
         }
@@ -427,10 +433,7 @@ fn compute_extracted_display_names(
 /// parents have synthetic ids like `season_*` / `year_*` that do not
 /// appear in `grouping.staticClassifiers`, so they are skipped and we
 /// recurse into their sub_groups where the real classifier ids live.
-fn collect_classifier_episode_ids<'a>(
-    group: &'a PlaylistGroup,
-    out: &mut HashMap<i64, &'a str>,
-) {
+fn collect_classifier_episode_ids<'a>(group: &'a PlaylistGroup, out: &mut HashMap<i64, &'a str>) {
     let is_synthetic = group.id.starts_with("season_") || group.id.starts_with("year_");
     if !is_synthetic {
         for &id in &group.episode_ids {
@@ -499,8 +502,7 @@ fn serialize_preview_result(
         base["claimedByOthers"] = Value::Array(claimed);
     }
 
-    let filter_matched =
-        pr.playlist.episode_ids.len() + pr.claimed_by_others.len();
+    let filter_matched = pr.playlist.episode_ids.len() + pr.claimed_by_others.len();
     base["debug"] = serde_json::json!({
         "filterMatched": filter_matched,
         "episodeCount": pr.playlist.episode_ids.len(),
@@ -575,19 +577,13 @@ fn serialize_group(
     obj
 }
 
-fn serialize_episode(
-    episode: &SimpleEpisodeData,
-    extracted_display_name: Option<&str>,
-) -> Value {
+fn serialize_episode(episode: &SimpleEpisodeData, extracted_display_name: Option<&str>) -> Value {
     let mut obj = serde_json::Map::new();
     obj.insert("id".to_string(), Value::from(episode.id));
     obj.insert("title".to_string(), Value::String(episode.title.clone()));
 
     if let Some(dt) = episode.published_at {
-        obj.insert(
-            "publishedAt".to_string(),
-            Value::String(dt.to_rfc3339()),
-        );
+        obj.insert("publishedAt".to_string(), Value::String(dt.to_rfc3339()));
     }
     if let Some(sn) = episode.season_number {
         obj.insert("seasonNumber".to_string(), Value::from(sn));

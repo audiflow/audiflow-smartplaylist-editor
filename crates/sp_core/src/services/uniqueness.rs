@@ -27,12 +27,13 @@ fn find_guid_conflict(
 ) -> Option<UniquenessConflict> {
     let guid = candidate.podcast_guid.as_deref()?;
     others.iter().find_map(|other| {
-        (other.id != candidate.id && other.podcast_guid.as_deref() == Some(guid))
-            .then(|| UniquenessConflict {
+        (other.id != candidate.id && other.podcast_guid.as_deref() == Some(guid)).then(|| {
+            UniquenessConflict {
                 field: "podcastGuid",
                 value: guid.to_string(),
                 claimed_by: other.id.clone(),
-            })
+            }
+        })
     })
 }
 
@@ -47,12 +48,13 @@ fn find_feed_url_conflicts(
         .filter(|url| seen.insert(url.as_str()))
         .filter_map(|url| {
             others.iter().find_map(|other| {
-                (other.id != candidate.id && other.feed_urls.contains(url))
-                    .then(|| UniquenessConflict {
+                (other.id != candidate.id && other.feed_urls.contains(url)).then(|| {
+                    UniquenessConflict {
                         field: "feedUrls",
                         value: url.clone(),
                         claimed_by: other.id.clone(),
-                    })
+                    }
+                })
             })
         })
         .collect()
@@ -119,7 +121,11 @@ mod tests {
 
     #[test]
     fn detects_multiple_conflicts() {
-        let candidate = meta("a", Some("guid-x"), &["https://x.com/feed", "https://y.com/feed"]);
+        let candidate = meta(
+            "a",
+            Some("guid-x"),
+            &["https://x.com/feed", "https://y.com/feed"],
+        );
         let others = vec![
             meta("b", Some("guid-x"), &["https://b.com/feed"]),
             meta("c", None, &["https://y.com/feed"]),
