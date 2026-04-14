@@ -36,6 +36,18 @@ export function stripConditionalFields(config: PatternConfig): PatternConfig {
       // staticClassifiers: titleClassifier and titleDiscovery only
       if (rt !== 'titleClassifier' && rt !== 'titleDiscovery') {
         delete grouping.staticClassifiers;
+      } else if (grouping.staticClassifiers) {
+        // Drop matchers still being typed. A matcher is valid only when both
+        // `source` and a non-empty `pattern` are set; otherwise treat the
+        // group as a catch-all for the duration of the edit so preview
+        // requests never carry a half-built Matcher shape.
+        grouping.staticClassifiers = grouping.staticClassifiers.map((g) => {
+          if (g.pattern && (!g.pattern.source || !g.pattern.pattern)) {
+            const { pattern: _omit, ...rest } = g;
+            return rest;
+          }
+          return g;
+        });
       }
 
       stripped.grouping = grouping;

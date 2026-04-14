@@ -247,6 +247,28 @@ describe('stripConditionalFields', () => {
     expect(result.playlists[0].grouping.staticClassifiers).toBeUndefined();
   });
 
+  it('drops matcher objects that are missing the pattern string', () => {
+    const config = makeConfig({
+      grouping: {
+        by: 'titleClassifier',
+        staticClassifiers: [
+          // Half-built matcher: user picked a source but has not typed a regex yet.
+          { id: 'g1', displayName: 'Group 1', pattern: { source: 'description', pattern: '' } },
+          // Fully valid matcher.
+          { id: 'g2', displayName: 'Group 2', pattern: { source: 'title', pattern: 'foo' } },
+        ],
+      },
+    });
+
+    const result = stripConditionalFields(config);
+    const classifiers = result.playlists[0].grouping.staticClassifiers!;
+    expect(classifiers).toHaveLength(2);
+    // Half-built matcher becomes a catch-all (pattern key removed).
+    expect(classifiers[0].pattern).toBeUndefined();
+    // Valid matcher is preserved as-is.
+    expect(classifiers[1].pattern).toEqual({ source: 'title', pattern: 'foo' });
+  });
+
   it('does not mutate the original config', () => {
     const config = makeConfig({
       grouping: {
