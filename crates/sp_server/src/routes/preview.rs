@@ -6,8 +6,8 @@ use serde_json::Value;
 
 use crate::app::{AppError, SharedState};
 use sp_core::models::{
-    EpisodeData, NumberingExtractor, PatternConfig, Playlist, PlaylistGroup, PlaylistPreviewResult,
-    PreviewGrouping, SimpleEpisodeData,
+    EpisodeData, GroupDef, NumberingExtractor, PatternConfig, Playlist, PlaylistGroup,
+    PlaylistPreviewResult, PreviewGrouping, SimpleEpisodeData,
 };
 use sp_core::resolvers::{CategoryResolver, Resolver, RssResolver, TitleAppearanceResolver, YearResolver};
 use sp_core::services::ResolverService;
@@ -108,7 +108,7 @@ fn run_preview(config: &PatternConfig, episodes: &[SimpleEpisodeData], request_f
     // Pre-compute per-definition enriched episodes (extracted season/episode numbers)
     // and extracted display names so preview serialization reflects what the resolver saw.
     let enriched_episodes = compute_enriched_episodes(config, episodes, &result);
-    let extracted_display_names = compute_extracted_display_names(config, episodes);
+    let extracted_display_names = compute_extracted_display_names(config, episodes, &result);
 
     let grouped_ids = collect_grouped_ids(&result);
     let ungrouped_set: HashSet<i64> = result.ungrouped_episode_ids.iter().copied().collect();
@@ -295,24 +295,53 @@ fn enrich_group_episodes(
 
 /// Computes display names per definition using per-definition enriched
 /// episodes so that titleExtractors reading seasonNumber/episodeNumber
-/// see the same values the resolver used for grouping.
+/// see the same values the resolver used for grouping. When a classifier
+/// sets its own `episodeItem.titleExtractor`, episodes resolved into that
+/// classifier group use the override instead of the playlist default so
+/// preview reflects the same per-classifier rule consumers honor.
 fn compute_extracted_display_names(
     config: &PatternConfig,
     episodes: &[SimpleEpisodeData],
+    preview: &PreviewGrouping,
 ) -> HashMap<String, HashMap<i64, String>> {
+    // definition_id -> (episode_id -> classifier_id that claimed it)
+    let classifier_by_episode: HashMap<&str, HashMap<i64, &str>> = preview
+        .playlist_results
+        .iter()
+        .map(|pr| {
+            let mut m: HashMap<i64, &str> = HashMap::new();
+            if let Some(groups) = pr.playlist.groups.as_ref() {
+                for g in groups {
+                    collect_classifier_episode_ids(g, &mut m);
+                }
+            }
+            (pr.definition_id.as_str(), m)
+        })
+        .collect();
+
     let mut result = HashMap::new();
     for definition in &config.playlists {
-        let title_ext = match definition
+        let playlist_extractor = definition
             .episode_item
             .as_ref()
-            .and_then(|ei| ei.title_extractor.as_ref())
-        {
-            Some(e) => e,
-            None => continue,
-        };
-        let compiled_title = title_ext.compile();
+            .and_then(|ei| ei.title_extractor.as_ref());
 
-        // Enrich episodes with this definition's episode extractor
+        let classifier_map: HashMap<&str, &GroupDef> = definition
+            .grouping
+            .static_classifiers
+            .as_deref()
+            .map(|cs| cs.iter().map(|c| (c.id.as_str(), c)).collect())
+            .unwrap_or_default();
+
+        // Short-circuit when no extractor (playlist or per-classifier) applies.
+        let has_classifier_extractor = classifier_map
+            .values()
+            .any(|c| c.episode_item.as_ref().and_then(|ei| ei.title_extractor.as_ref()).is_some());
+        if playlist_extractor.is_none() && !has_classifier_extractor {
+            continue;
+        }
+
+        // Enrich episodes with this definition's numbering extractor
         // (mirrors what the resolver does) so title extraction sees
         // the same season/episode numbers the resolver used.
         let enriched: Option<Vec<SimpleEpisodeData>> =
@@ -340,15 +369,54 @@ fn compute_extracted_display_names(
             });
 
         let source: &[SimpleEpisodeData] = enriched.as_deref().unwrap_or(episodes);
+        let episode_to_classifier = classifier_by_episode
+            .get(definition.id.as_str())
+            .cloned()
+            .unwrap_or_default();
+
         let mut names = HashMap::new();
         for episode in source {
-            if let Some(name) = compiled_title.extract(episode) {
+            // Prefer the classifier-level extractor when the episode landed
+            // in a classifier that defines one; fall back to the playlist
+            // default otherwise.
+            let classifier_extractor = episode_to_classifier
+                .get(&episode.id)
+                .and_then(|cid| classifier_map.get(cid))
+                .and_then(|c| c.episode_item.as_ref())
+                .and_then(|ei| ei.title_extractor.as_ref());
+            let extractor = classifier_extractor.or(playlist_extractor);
+            let Some(extractor) = extractor else {
+                continue;
+            };
+            if let Some(name) = extractor.compile().extract(episode) {
                 names.insert(episode.id, name);
             }
         }
         result.insert(definition.id.clone(), names);
     }
     result
+}
+
+/// Records the classifier id that contains each episode (only direct
+/// children, not synthetic season/year partition parents). Partition
+/// parents have synthetic ids like `season_*` / `year_*` that do not
+/// appear in `grouping.staticClassifiers`, so they are skipped and we
+/// recurse into their sub_groups where the real classifier ids live.
+fn collect_classifier_episode_ids<'a>(
+    group: &'a PlaylistGroup,
+    out: &mut HashMap<i64, &'a str>,
+) {
+    let is_synthetic = group.id.starts_with("season_") || group.id.starts_with("year_");
+    if !is_synthetic {
+        for &id in &group.episode_ids {
+            out.insert(id, group.id.as_str());
+        }
+    }
+    if let Some(sub_groups) = &group.sub_groups {
+        for sg in sub_groups {
+            collect_classifier_episode_ids(sg, out);
+        }
+    }
 }
 
 fn collect_grouped_ids(result: &PreviewGrouping) -> HashSet<i64> {

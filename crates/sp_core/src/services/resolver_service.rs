@@ -204,9 +204,17 @@ impl ResolverService {
 
             // Overlay the enriched episodes on top of the raw lookup so the
             // partition helpers (which read season_number / published_at)
-            // see the same values the resolver grouped on.
+            // see the same values the resolver grouped on. Classifier-level
+            // extractors layer on top of the playlist-level pass so that
+            // partition bucketing honors per-classifier season overrides.
+            let classifier_enriched =
+                Self::enrich_for_classifiers(definition, &result, episode_by_id);
             let overlay_storage: HashMap<i64, &dyn EpisodeData> =
-                Self::build_overlay_episode_by_id(episode_by_id, enriched_storage.as_deref());
+                Self::build_overlay_episode_by_id(
+                    episode_by_id,
+                    enriched_storage.as_deref(),
+                    classifier_enriched.as_deref(),
+                );
 
             self.add_grouped_playlist(
                 &mut all_playlists,
@@ -302,8 +310,17 @@ impl ResolverService {
             // Overlay the enriched episodes on the lookup so partition
             // helpers (season/year) read the same season_number the
             // resolver used for grouping instead of the raw feed value.
+            // Classifier-level extractors layer on top for episodes that
+            // landed in their classifier group, matching how the preview
+            // serializer enriches per-classifier display values.
+            let classifier_enriched =
+                Self::enrich_for_classifiers(definition, &result, episode_by_id);
             let overlay_storage: HashMap<i64, &dyn EpisodeData> =
-                Self::build_overlay_episode_by_id(episode_by_id, enriched_storage.as_deref());
+                Self::build_overlay_episode_by_id(
+                    episode_by_id,
+                    enriched_storage.as_deref(),
+                    classifier_enriched.as_deref(),
+                );
 
             let playlist = self.build_preview_playlist(
                 definition,
@@ -708,10 +725,13 @@ impl ResolverService {
     /// Builds an episode lookup that prefers enriched values (extracted
     /// season/episode numbers) over the raw feed episodes. Used by
     /// partition helpers so they observe the same season_number the
-    /// resolver grouped on.
+    /// resolver grouped on. The classifier layer overrides the playlist
+    /// layer for any overlapping episode id so per-classifier extractors
+    /// win over the playlist-level default.
     fn build_overlay_episode_by_id<'a>(
         base: &HashMap<i64, &'a dyn EpisodeData>,
         enriched: Option<&'a [SimpleEpisodeData]>,
+        classifier_enriched: Option<&'a [SimpleEpisodeData]>,
     ) -> HashMap<i64, &'a dyn EpisodeData> {
         let mut out: HashMap<i64, &'a dyn EpisodeData> = base.clone();
         if let Some(enriched) = enriched {
@@ -719,14 +739,76 @@ impl ResolverService {
                 out.insert(ep.id, ep as &dyn EpisodeData);
             }
         }
+        if let Some(enriched) = classifier_enriched {
+            for ep in enriched {
+                out.insert(ep.id, ep as &dyn EpisodeData);
+            }
+        }
         out
     }
 
+    /// Applies per-classifier numbering extractors to episodes that landed
+    /// in their matching classifier group, layering the result on top of
+    /// an already-enriched slice produced by `enrich_for_definition`.
+    ///
+    /// Returns `None` when nothing needed enriching. Returned episodes
+    /// override any playlist-level enrichment for the same episode id,
+    /// so downstream partition helpers see the season_number the
+    /// classifier's own extractor produced (matching what preview
+    /// renders for that classifier's episodes).
+    fn enrich_for_classifiers(
+        definition: &PlaylistDefinition,
+        result: &Grouping,
+        episode_by_id: &HashMap<i64, &dyn EpisodeData>,
+    ) -> Option<Vec<SimpleEpisodeData>> {
+        let classifiers = definition.grouping.static_classifiers.as_ref()?;
+        if classifiers.is_empty() {
+            return None;
+        }
+
+        let mut classifier_by_id: HashMap<&str, &GroupDef> = HashMap::new();
+        for c in classifiers {
+            classifier_by_id.insert(c.id.as_str(), c);
+        }
+
+        let mut out: Vec<SimpleEpisodeData> = Vec::new();
+        for resolved_group in &result.playlists {
+            let Some(classifier) = classifier_by_id.get(resolved_group.id.as_str()) else {
+                continue;
+            };
+            let Some(extractor) = classifier.numbering_extractor.as_ref() else {
+                continue;
+            };
+            let compiled = extractor.compile();
+            for &id in &resolved_group.episode_ids {
+                let Some(ep) = episode_by_id.get(&id) else {
+                    continue;
+                };
+                let r = compiled.extract(*ep);
+                if !r.has_values() {
+                    continue;
+                }
+                out.push(SimpleEpisodeData {
+                    id: ep.id(),
+                    title: ep.title().to_string(),
+                    description: ep.description().map(|s| s.to_string()),
+                    season_number: r.season_number.or(ep.season_number()),
+                    episode_number: r.episode_number.or(ep.episode_number()),
+                    published_at: ep.published_at(),
+                    image_url: ep.image_url().map(|s| s.to_string()),
+                });
+            }
+        }
+
+        if out.is_empty() { None } else { Some(out) }
+    }
+
     /// Enriches episodes using the definition's own episode extractor.
-    /// Group-level extractors are intentionally excluded: they are
-    /// per-group display concerns (applied after grouping), not inputs
-    /// to the resolver's grouping logic.  Returns `None` when the
-    /// definition has no extractor, letting callers skip the copy.
+    /// Group-level extractors are intentionally excluded from this pass:
+    /// they are applied as a second layer via `enrich_for_classifiers`
+    /// only for episodes that actually landed in their classifier group,
+    /// so cross-group scan order cannot misroute them.  Returns `None`
+    /// when the definition has no extractor, letting callers skip the copy.
     fn enrich_for_definition(
         definition: &PlaylistDefinition,
         episodes: &[&dyn EpisodeData],
