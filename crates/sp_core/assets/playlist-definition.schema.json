@@ -39,7 +39,7 @@
     },
     "groupItem": {
       "$ref": "#/$defs/GroupItemConfig",
-      "description": "Defaults for individual group card display. Overridable per-classifier in grouping.staticClassifiers[].groupItem."
+      "description": "Defaults for individual group card display. Overridable per-classifier in staticClassifiers entries."
     },
     "episodeListing": {
       "$ref": "#/$defs/EpisodeListingConfig",
@@ -132,7 +132,7 @@
     },
     "Matcher": {
       "type": "object",
-      "description": "A regex pattern plus the episode field it is evaluated against. Used by GroupDef.pattern to route episodes into the group.",
+      "description": "A regex pattern plus the episode field it is evaluated against. Used by a group's pattern to route episodes into that group.",
       "required": ["source", "pattern"],
       "additionalProperties": false,
       "properties": {
@@ -443,7 +443,7 @@
         },
         "discoveryHint": {
           "type": "string",
-          "description": "Regex pattern for titleDiscovery fallback. Replaces the v4 groups[0].pattern overload."
+          "description": "Regex pattern used as a fallback hint for titleDiscovery when it cannot detect a recurring title segment on its own."
         },
         "numberingExtractor": {
           "$ref": "#/$defs/NumberingExtractor",
@@ -480,7 +480,7 @@
     },
     "GroupItemConfig": {
       "type": "object",
-      "description": "Default display settings for individual group cards. Overridable per-classifier in grouping.staticClassifiers[].groupItem.",
+      "description": "Default display settings for individual group cards. Overridable per-classifier in staticClassifiers entries.",
       "additionalProperties": false,
       "properties": {
         "showDateRange": {

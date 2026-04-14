@@ -1025,7 +1025,7 @@
             />
         </svg>
     <a href="#grouping_discoveryHint" onclick="anchorLink('grouping_discoveryHint')">discoveryHint</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Regex pattern for titleDiscovery fallback. Replaces the v4 groups[0].pattern overload.</p>
+<span class="description"><p>Regex pattern used as a fallback hint for titleDiscovery when it cannot detect a recurring title segment on its own.</p>
 </span>
         
 
@@ -3556,7 +3556,7 @@
             />
         </svg>
     <a href="#groupItem" onclick="anchorLink('groupItem')">groupItem</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Defaults for individual group card display. Overridable per-classifier in grouping.staticClassifiers[].groupItem.</p>
+<span class="description"><p>Defaults for individual group card display. Overridable per-classifier in staticClassifiers entries.</p>
 </span>
 
      <span class="badge badge-info no-additional">No Additional Properties</span>
@@ -3933,7 +3933,7 @@
             />
         </svg>
     <a href="#episodeFilters" onclick="anchorLink('episodeFilters')">episodeFilters</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Rules applied before organizing episodes. Having any filter makes this definition run before filter-less ones. Within each rule, all fields must match (AND). Across rules: require includes only when ALL rules match (AND); exclude rejects if ANY rule matches (OR).</p>
+<span class="description"><p>Rules applied before organizing episodes. Having any filter makes this definition run before filter-less ones. Within each rule, all fields must match (AND). Across rules: require includes when ANY rule matches (OR); exclude rejects if ANY rule matches (OR).</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span>
         
 
@@ -3970,7 +3970,7 @@
             />
         </svg>
     <a href="#episodeFilters_require" onclick="anchorLink('episodeFilters_require')">require</a></div><span class="badge badge-dark value-type">Type: array</span><br/>
-<span class="description"><p>Include rules (AND). An episode is included only when it matches ALL rules. Within each rule, all fields must match (AND).</p>
+<span class="description"><p>Include rules (OR). An episode is included when it matches ANY rule. Within each rule, all fields must match (AND).</p>
 </span>
         
 
@@ -4207,6 +4207,6 @@
 </div>
 
     <footer>
-        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-14 at 11:40:13 +0900</p>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-04-14 at 17:44:56 +0900</p>
     </footer></body>
 </html>
