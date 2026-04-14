@@ -58,8 +58,6 @@ fn resolve_with_groups(
 
     // Find the first fallback group (no pattern)
     let fallback = group_defs.iter().find(|g| g.pattern.is_none());
-    let fallback_id = fallback.map(|g| g.id.as_str());
-    let fallback_display_name = fallback.map(|g| g.display_name.as_str());
     let fallback_show_year_headers = fallback
         .and_then(|g| g.episode_listing.as_ref())
         .and_then(|el| el.show_year_headers);
@@ -77,16 +75,13 @@ fn resolve_with_groups(
                 _ => episode.title(),
             };
             if pg.regex.is_match(haystack) {
-                grouped
-                    .entry(pg.id.clone())
-                    .or_default()
-                    .push(episode.id());
+                grouped.entry(pg.id.clone()).or_default().push(episode.id());
                 matched = true;
                 break;
             }
         }
         if !matched {
-            if fallback_id.is_some() {
+            if fallback.is_some() {
                 fallback_ids.push(episode.id());
             } else {
                 ungrouped.push(episode.id());
@@ -116,10 +111,12 @@ fn resolve_with_groups(
     }
 
     // Add fallback group last
-    if !fallback_ids.is_empty() {
+    if let Some(fb) = fallback
+        && !fallback_ids.is_empty()
+    {
         let mut playlist = Playlist::new(
-            fallback_id.unwrap().to_string(),
-            fallback_display_name.unwrap().to_string(),
+            fb.id.clone(),
+            fb.display_name.clone(),
             playlists.len() as i32 + 1,
             fallback_ids,
         );
@@ -149,7 +146,10 @@ fn build_pattern_groups(group_defs: &[GroupDef]) -> Vec<PatternGroup> {
                 source: matcher.source.clone(),
                 id: g.id.clone(),
                 display_name: g.display_name.clone(),
-                show_year_headers: g.episode_listing.as_ref().and_then(|el| el.show_year_headers),
+                show_year_headers: g
+                    .episode_listing
+                    .as_ref()
+                    .and_then(|el| el.show_year_headers),
             })
         })
         .collect()

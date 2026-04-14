@@ -54,12 +54,11 @@ impl Resolver for YearResolver {
         let mut playlists: Vec<Playlist> = grouped
             .iter()
             .map(|(&year, eps)| {
-                let display_name =
-                    super::extract_display_name_with_fallback(
-                        year.to_string(),
-                        eps,
-                        title_extractor,
-                    );
+                let display_name = super::extract_display_name_with_fallback(
+                    year.to_string(),
+                    eps,
+                    title_extractor,
+                );
                 Playlist::new(
                     format!("year_{}", year),
                     display_name,
@@ -79,4 +78,3 @@ impl Resolver for YearResolver {
         })
     }
 }
-
