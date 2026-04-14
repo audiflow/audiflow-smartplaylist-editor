@@ -13,11 +13,13 @@ import {
   useSavePlaylist,
   useSavePatternMeta,
   useCreatePattern,
+  useDeletePlaylist,
 } from '@/api/queries.ts';
 import { useStorePreview } from '@/hooks/use-store-preview.ts';
 import { sanitizeConfig, stripConditionalFields } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
 import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
+import { PatternDangerZone } from '@/components/editor/pattern-danger-zone.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { ConflictDialog } from '@/components/editor/conflict-dialog.tsx';
@@ -107,6 +109,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const savePlaylistMutation = useSavePlaylist();
   const savePatternMetaMutation = useSavePatternMeta();
   const createPatternMutation = useCreatePattern();
+  const deletePlaylistMutation = useDeletePlaylist();
 
   // Watch form fields for header display and save button
   const formId = useWatch({ control: form.control, name: 'id' });
@@ -269,6 +272,24 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         });
       }
 
+      // Delete playlist files for playlists the user removed from the form.
+      // Without this, removed playlists disappear from meta.json but their
+      // {patternId}/playlists/{id}.json files stay on disk as orphans and the
+      // server endpoint that updates meta later re-lists no-longer-existing files.
+      if (!isNewConfig) {
+        const previousIds = new Set(
+          lastLoadedConfig?.playlists.map((p) => p.id) ?? [],
+        );
+        const currentIds = new Set(snapshot.playlists.map((p) => p.id));
+        const removedIds = [...previousIds].filter((id) => !currentIds.has(id));
+        for (const removedId of removedIds) {
+          await deletePlaylistMutation.mutateAsync({
+            patternId: effectiveId,
+            playlistId: removedId,
+          });
+        }
+      }
+
       for (const playlist of snapshot.playlists) {
         await savePlaylistMutation.mutateAsync({
           patternId: effectiveId,
@@ -308,7 +329,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } finally {
       setSaving(false);
     }
-  }, [effectiveId, isSaving, isJsonMode, isNewConfig, parsedJsonConfig, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, navigate, setSaving, setDirty, setLastSavedAt, t]);
+  }, [effectiveId, isSaving, isJsonMode, isNewConfig, parsedJsonConfig, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, deletePlaylistMutation, lastLoadedConfig, navigate, setSaving, setDirty, setLastSavedAt, t]);
 
   // Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -521,6 +542,12 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         <FormProvider {...form}>
           <PatternSettingsCard configId={configId} />
           <PlaylistSection isNewConfig={isNewConfig} />
+          {!isNewConfig && configId && (
+            <PatternDangerZone
+              patternId={configId}
+              displayName={formDisplayName || null}
+            />
+          )}
         </FormProvider>
       )}
 
