@@ -150,7 +150,7 @@ impl PlaylistDefinition {
     /// but ensures persisted/previewed data is clean.
     ///
     /// Conditional fields by grouping.by:
-    /// - `seasonNumber`:      numberingExtractor, groupItem.titleExtractor
+    /// - `seasonNumber`:      numberingExtractor, groupItem.titleExtractor, groupItem.prependSeasonNumber
     /// - `titleDiscovery`:    groupItem.titleExtractor, staticClassifiers
     /// - `titleClassifier`:   staticClassifiers
     /// - `year`:              groupItem.titleExtractor
@@ -168,6 +168,13 @@ impl PlaylistDefinition {
             && let Some(gi) = &mut self.group_item
         {
             gi.title_extractor = None;
+        }
+
+        // prependSeasonNumber: only meaningful for seasonNumber groups.
+        if by != "seasonNumber"
+            && let Some(gi) = &mut self.group_item
+        {
+            gi.prepend_season_number = None;
         }
 
         // staticClassifiers: titleClassifier or titleDiscovery

@@ -33,6 +33,13 @@ export function stripConditionalFields(config: PatternConfig): PatternConfig {
         }
       }
 
+      // groupItem.prependSeasonNumber: only meaningful for seasonNumber groups.
+      if (rt !== 'seasonNumber' && stripped.groupItem) {
+        const groupItem = { ...stripped.groupItem };
+        delete groupItem.prependSeasonNumber;
+        stripped.groupItem = groupItem;
+      }
+
       // staticClassifiers: titleClassifier and titleDiscovery only
       if (rt !== 'titleClassifier' && rt !== 'titleDiscovery') {
         delete grouping.staticClassifiers;

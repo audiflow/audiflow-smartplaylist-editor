@@ -126,18 +126,20 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2" {...groupItemPrependSeasonNumberHl}>
-            <Checkbox
-              id={`playlist-${index}-prependSeasonNumber`}
-              checked={watch(`${prefix}.groupItem.prependSeasonNumber`) ?? false}
-              onCheckedChange={(c) =>
-                setValue(`${prefix}.groupItem.prependSeasonNumber`, !!c, { shouldDirty: true })
-              }
-            />
-            <HintLabel htmlFor={`playlist-${index}-prependSeasonNumber`} hint="prependSeasonNumber">
-              {t('prependSeasonNumber')}
-            </HintLabel>
-          </div>
+          {resolverType === 'seasonNumber' ? (
+            <div className="flex items-center gap-2" {...groupItemPrependSeasonNumberHl}>
+              <Checkbox
+                id={`playlist-${index}-prependSeasonNumber`}
+                checked={watch(`${prefix}.groupItem.prependSeasonNumber`) ?? false}
+                onCheckedChange={(c) =>
+                  setValue(`${prefix}.groupItem.prependSeasonNumber`, !!c, { shouldDirty: true })
+                }
+              />
+              <HintLabel htmlFor={`playlist-${index}-prependSeasonNumber`} hint="prependSeasonNumber">
+                {t('prependSeasonNumber')}
+              </HintLabel>
+            </div>
+          ) : null}
 
           <div className="flex items-center gap-2">
             <Checkbox
@@ -152,10 +154,12 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
             </HintLabel>
           </div>
 
-          <TitleExtractorForm
-            fieldPath={`${prefix}.groupItem.titleExtractor`}
-            idPrefix={`group-title-${index}`}
-          />
+          {!isTitleClassifier && (
+            <TitleExtractorForm
+              fieldPath={`${prefix}.groupItem.titleExtractor`}
+              idPrefix={`group-title-${index}`}
+            />
+          )}
         </div>
       </ScopeZone>
 

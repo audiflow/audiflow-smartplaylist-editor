@@ -247,6 +247,30 @@ describe('stripConditionalFields', () => {
     expect(result.playlists[0].grouping.staticClassifiers).toBeUndefined();
   });
 
+  it('strips groupItem.prependSeasonNumber for non-seasonNumber resolvers', () => {
+    const config = makeConfig({
+      grouping: { by: 'titleClassifier' },
+      groupItem: { prependSeasonNumber: true, showDateRange: false },
+    });
+
+    const result = stripConditionalFields(config);
+
+    expect(result.playlists[0].groupItem?.prependSeasonNumber).toBeUndefined();
+    // Unrelated groupItem fields survive.
+    expect(result.playlists[0].groupItem?.showDateRange).toBe(false);
+  });
+
+  it('keeps groupItem.prependSeasonNumber for seasonNumber resolvers', () => {
+    const config = makeConfig({
+      grouping: { by: 'seasonNumber' },
+      groupItem: { prependSeasonNumber: true },
+    });
+
+    const result = stripConditionalFields(config);
+
+    expect(result.playlists[0].groupItem?.prependSeasonNumber).toBe(true);
+  });
+
   it('drops matcher objects that are missing the pattern string', () => {
     const config = makeConfig({
       grouping: {
