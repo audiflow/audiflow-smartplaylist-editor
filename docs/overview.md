@@ -47,7 +47,7 @@ operations (commit, push, PR) themselves.
 
 ## Key dependencies
 
-- **Rust**: serde, jsonschema, axum 0.8, tokio, reqwest, feed-rs, notify 7, clap, rust-embed, chrono, regex, md5
+- **Rust**: serde, jsonschema, axum 0.8, tokio, reqwest, feed-rs, notify 7, clap, rust-embed, chrono, fancy-regex, sha2, md5
 - **React**: React 19, TanStack Query/Router, Zustand, React Hook Form, Zod 4, CodeMirror 6, Tailwind v4, shadcn/ui, dnd-kit, i18next
 
 ## Read next

@@ -21,7 +21,7 @@
 - Feed fetching or caching
 
 #### Depends on
-- External crates: serde, jsonschema, regex, chrono, md5
+- External crates: serde, serde_json, jsonschema, fancy-regex, sha2, chrono, md5
 
 #### Used by
 - sp_server (models, resolvers, schema validation, services, uniqueness, pattern ID derivation)
