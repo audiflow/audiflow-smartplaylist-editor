@@ -42,7 +42,7 @@ This document covers:
   6. Schema HTML docs (`make schema-doc`)
 - Consumer repos (audiflow, data repos) must update their vendored copies after schema changes
 - Valid resolver types (via `grouping.by`): `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`
-- Shared `$defs` in playlist-definition schema: `EpisodeFilterEntry`, `YearBinding`, `GroupDef`, `SortOrder`, `SortRule`, `EpisodeSortRule`, `TitleExtractor`, `NumberingExtractor`, `SelectorConfig`, `GroupingConfig`, `GroupListingConfig`, `GroupItemConfig`, `EpisodeListingConfig`, `EpisodeItemConfig`
+- Shared `$defs` in playlist-definition schema: `EpisodeFilterEntry`, `YearBinding`, `Matcher`, `GroupDef`, `SortOrder`, `SortRule`, `EpisodeSortRule`, `TitleExtractor`, `NumberingExtractor`, `SelectorConfig`, `GroupingConfig`, `GroupListingConfig`, `GroupItemConfig`, `EpisodeListingConfig`, `EpisodeItemConfig`
 
 ## Consumer adoption process
 
