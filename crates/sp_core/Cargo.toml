@@ -12,8 +12,8 @@ name = "sp_core"
 [dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
-fancy-regex = "0.14"
-jsonschema = "0.29"
+fancy-regex = "0.17"
+jsonschema = "0.46"
 sha2 = "0.10"
 chrono = { version = "0.4", features = ["serde"] }
 md5 = "0.7"
