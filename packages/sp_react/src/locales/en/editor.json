@@ -114,7 +114,6 @@
   "episodeTitleExtractor": "Episode name rule",
   "titleExtractorSource": "Read from",
   "titleExtractorPattern": "Find pattern",
-  "titleExtractorGroup": "Use matched part #",
   "titleExtractorTemplate": "Format as",
   "titleExtractorFallbackValue": "Default name if no match",
   "addFallback": "Add fallback step",

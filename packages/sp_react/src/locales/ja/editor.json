@@ -114,7 +114,6 @@
   "episodeTitleExtractor": "エピソード名の生成ルール",
   "titleExtractorSource": "読み取り元",
   "titleExtractorPattern": "検索パターン",
-  "titleExtractorGroup": "使用するマッチ部分 #",
   "titleExtractorTemplate": "表示フォーマット",
   "titleExtractorFallbackValue": "マッチしない場合の名前",
   "addFallback": "代替ステップを追加",
