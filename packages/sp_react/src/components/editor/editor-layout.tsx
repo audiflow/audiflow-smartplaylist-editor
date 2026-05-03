@@ -226,8 +226,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Detect external changes while user has unsaved edits (conflict detection).
-  // Normalize the server payload through Zod so v3 legacy naming differences
-  // don't trigger false conflict warnings.
+  // Run the server payload through the same Zod parse used for the local form
+  // so default transforms don't surface as spurious conflict warnings.
   useEffect(() => {
     if (!assembledConfigQuery.data || !isDirty || isSaving) return;
     const parsed = patternConfigSchema.safeParse(assembledConfigQuery.data);
@@ -297,16 +297,6 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     toggleJsonMode();
   }, [isJsonMode, jsonText, form, toggleJsonMode, t]);
 
-  // Safe JSON parse for render-time props (avoids throwing during render)
-  const parsedJsonConfig = useMemo(() => {
-    if (!isJsonMode) return null;
-    try {
-      return JSON.parse(jsonText) as PatternConfig;
-    } catch {
-      return null;
-    }
-  }, [isJsonMode, jsonText]);
-
   // Save handler: persist each playlist + pattern meta to disk
   const handleSave = useCallback(async () => {
     if (!effectiveId || isSaving) return;
@@ -315,11 +305,34 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     // applied before saving, keeping save behavior consistent with preview.
     // stripConditionalFields removes fields hidden by the current resolverType
     // so they don't get persisted (form state retains them for undo).
-    const raw = isJsonMode && parsedJsonConfig ? parsedJsonConfig : form.getValues();
+    let raw: unknown;
+    if (isJsonMode) {
+      try {
+        raw = JSON.parse(jsonText);
+      } catch (e) {
+        toast.error(
+          t('toastInvalidJson', {
+            error: e instanceof Error ? e.message : 'Parse error',
+          }),
+        );
+        return;
+      }
+    } else {
+      raw = form.getValues();
+    }
     const parsed = patternConfigSchema.safeParse(raw);
     if (!parsed.success) {
-      // Trigger form validation so field errors surface in the UI
-      void form.trigger();
+      // Surface the first issue so JSON-mode users see why the save was rejected;
+      // in form mode also trigger the inline field error markers.
+      const first = parsed.error.issues[0];
+      toast.error(
+        t('toastValidationError', {
+          path: first?.path.join('.') || '(root)',
+          message: first?.message ?? 'Validation failed',
+          defaultValue: 'Validation error at {{path}}: {{message}}',
+        }),
+      );
+      if (!isJsonMode) void form.trigger();
       return;
     }
     const stripped = isJsonMode ? parsed.data : stripConditionalFields(parsed.data);
@@ -390,7 +403,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } finally {
       setSaving(false);
     }
-  }, [effectiveId, isSaving, isJsonMode, isNewConfig, parsedJsonConfig, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, deletePlaylistMutation, lastLoadedConfig, navigate, setSaving, setDirty, setLastSavedAt, t]);
+  }, [effectiveId, isSaving, isJsonMode, isNewConfig, jsonText, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, deletePlaylistMutation, lastLoadedConfig, navigate, setSaving, setDirty, setLastSavedAt, t]);
 
   // Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -521,7 +534,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedUrl, triggerPreview]);
 
-  // Normalize server payload through Zod for consistent v3-to-v4 migration.
+  // Normalize server payload through Zod so default transforms (e.g.
+  // yearGroupedEpisodes ?? false) are applied before reset/comparison.
   const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
     const parsed = patternConfigSchema.safeParse(raw);
     return parsed.success ? parsed.data : raw;

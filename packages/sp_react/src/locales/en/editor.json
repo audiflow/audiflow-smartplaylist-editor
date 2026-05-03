@@ -86,6 +86,7 @@
   "draftUnknownTime": "unknown time",
   "toastDraftRestoreFailed": "Failed to restore draft: {{error}}",
   "toastInvalidJson": "Invalid JSON: {{error}}",
+  "toastValidationError": "Validation error at {{path}}: {{message}}",
   "groupsSection": "Groups",
   "sortSection": "Sort",
   "extractorsSection": "Name & Number Rules",

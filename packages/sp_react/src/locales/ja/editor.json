@@ -86,6 +86,7 @@
   "draftUnknownTime": "不明な時刻",
   "toastDraftRestoreFailed": "下書きの復元に失敗しました: {{error}}",
   "toastInvalidJson": "無効な JSON: {{error}}",
+  "toastValidationError": "{{path}} で検証エラー: {{message}}",
   "groupsSection": "グループ",
   "sortSection": "並び順",
   "extractorsSection": "名前・番号ルール",
