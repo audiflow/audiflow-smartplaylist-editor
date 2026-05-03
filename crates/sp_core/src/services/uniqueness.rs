@@ -86,7 +86,7 @@ mod tests {
             podcast_guid: guid.map(|s| s.to_string()),
             feed_urls: feed_urls.iter().map(|s| s.to_string()).collect(),
             year_grouped_episodes: false,
-            show_episode_thumbnail: true,
+            show_episode_thumbnail: None,
             playlists: vec!["p1".to_string()],
         }
     }
