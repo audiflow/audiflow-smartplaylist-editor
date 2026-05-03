@@ -3,6 +3,7 @@ import type { FieldPath, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
+import { TriStateCheckbox } from '@/components/ui/tri-state-checkbox.tsx';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
@@ -154,7 +155,7 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
             </HintLabel>
           </div>
 
-          {!isTitleClassifier && (
+          {!isTitleClassifier && resolverType !== 'titleDiscovery' && (
             <TitleExtractorForm
               fieldPath={`${prefix}.groupItem.titleExtractor`}
               idPrefix={`group-title-${index}`}
@@ -223,6 +224,10 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
     ? `${prefix}.grouping.staticClassifiers.${selectedIdx}.groupItem.showDateRange`
     : `${prefix}.groupItem.showDateRange`;
 
+  const showThumbnailField = isSpecific
+    ? `${prefix}.grouping.staticClassifiers.${selectedIdx}.groupItem.showThumbnail`
+    : `${prefix}.groupItem.showThumbnail`;
+
   return (
     <section className="space-y-3">
       <h5 className="text-sm font-semibold">{t('subsection.groups')}</h5>
@@ -240,6 +245,22 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
           hint="showDateRange"
         >
           {t('showDateRange')}
+        </HintLabel>
+      </div>
+      <div className="flex items-center gap-2">
+        <TriStateCheckbox
+          id={`playlist-${index}-group-${activeContext}-showThumbnail`}
+          value={watchPath<boolean>(watch, showThumbnailField)}
+          onChange={(next) =>
+            setPath(setValue, showThumbnailField, next, { shouldDirty: true })
+          }
+          title={t('triStateHint')}
+        />
+        <HintLabel
+          htmlFor={`playlist-${index}-group-${activeContext}-showThumbnail`}
+          hint="showThumbnail"
+        >
+          {t('showThumbnail')}
         </HintLabel>
       </div>
     </section>
@@ -271,6 +292,10 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
     ? `${groupPrefix}.episodeItem.titleExtractor`
     : `${prefix}.episodeItem.titleExtractor`;
 
+  const episodeShowThumbnailPath = groupPrefix != null
+    ? `${groupPrefix}.episodeItem.showThumbnail`
+    : `${prefix}.episodeItem.showThumbnail`;
+
   return (
     <section className="space-y-3">
       <h5 className="text-sm font-semibold">{t('subsection.episodes')}</h5>
@@ -294,6 +319,22 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
           hint="showYearHeaders"
         >
           {t('showYearHeaders')}
+        </HintLabel>
+      </div>
+      <div className="flex items-center gap-2">
+        <TriStateCheckbox
+          id={`playlist-${index}-${activeContext}-episode-showThumbnail`}
+          value={watchPath<boolean>(watch, episodeShowThumbnailPath)}
+          onChange={(next) =>
+            setPath(setValue, episodeShowThumbnailPath, next, { shouldDirty: true })
+          }
+          title={t('triStateHint')}
+        />
+        <HintLabel
+          htmlFor={`playlist-${index}-${activeContext}-episode-showThumbnail`}
+          hint="showThumbnail"
+        >
+          {t('showThumbnail')}
         </HintLabel>
       </div>
       <div {...episodeItemTitleHl}>

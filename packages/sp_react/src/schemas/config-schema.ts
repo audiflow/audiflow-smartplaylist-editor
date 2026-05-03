@@ -52,7 +52,6 @@ export const episodeFiltersSchema = z.object({
 export type TitleExtractorInput = {
   source: string;
   pattern?: string | null;
-  group?: number;
   template?: string | null;
   fallback?: TitleExtractorInput | null;
   fallbackValue?: string | null;
@@ -63,7 +62,6 @@ export const titleExtractorSchema: z.ZodType<TitleExtractorInput> = z.lazy(
     z.object({
       source: z.string(),
       pattern: z.string().nullish(),
-      group: z.number().nullish().transform((v) => v ?? 0),
       template: z.string().nullish(),
       fallback: titleExtractorSchema.nullish(),
       fallbackValue: z.string().nullish(),
@@ -102,6 +100,7 @@ export const groupDefSchema = z.object({
   groupItem: z
     .object({
       showDateRange: z.boolean().optional(),
+      showThumbnail: z.boolean().optional(),
     })
     .optional(),
   episodeListing: z
@@ -113,6 +112,7 @@ export const groupDefSchema = z.object({
   episodeItem: z
     .object({
       titleExtractor: titleExtractorSchema.optional(),
+      showThumbnail: z.boolean().optional(),
     })
     .optional(),
   numberingExtractor: numberingExtractorSchema.optional(),
@@ -133,7 +133,6 @@ export const selectorConfigSchema = z.object({
 
 export const groupingConfigSchema = z.object({
   by: resolverTypeSchema,
-  discoveryHint: z.string().nullish(),
   numberingExtractor: numberingExtractorSchema.nullish(),
   staticClassifiers: z.array(groupDefSchema).nullish(),
 });
@@ -144,6 +143,7 @@ export const groupItemConfigSchema = z.object({
   showDateRange: z.boolean().optional(),
   pinToYear: z.boolean().optional(),
   prependSeasonNumber: z.boolean().optional(),
+  showThumbnail: z.boolean().optional(),
   titleExtractor: titleExtractorSchema.nullish(),
 });
 
@@ -151,6 +151,7 @@ export const groupItemConfigSchema = z.object({
 
 export const episodeItemConfigSchema = z.object({
   titleExtractor: titleExtractorSchema.nullish(),
+  showThumbnail: z.boolean().optional(),
 });
 
 // -- v5 groupListing config --
@@ -192,6 +193,7 @@ export const patternConfigSchema = z.object({
   podcastGuid: z.string().nullish(),
   feedUrls: z.array(z.string()).nullish(),
   yearGroupedEpisodes: z.boolean().nullish().transform((v) => v ?? false),
+  showEpisodeThumbnail: z.boolean().optional(),
   playlists: z.array(playlistDefinitionSchema),
 });
 

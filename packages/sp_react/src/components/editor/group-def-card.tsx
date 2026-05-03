@@ -5,6 +5,7 @@ import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel, HintIcon } from '@/components/editor/hint-label.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
+import { TriStateCheckbox } from '@/components/ui/tri-state-checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
 import {
@@ -222,6 +223,23 @@ export function GroupDefCard({
               hint="showDateRange"
             >
               {t('showDateRange')}
+            </HintLabel>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <TriStateCheckbox
+              id={`group-${playlistIndex}-${groupIndex}-showThumbnail`}
+              value={watch(`${prefix}.groupItem.showThumbnail`)}
+              onChange={(next) =>
+                setValue(`${prefix}.groupItem.showThumbnail`, next, { shouldDirty: true })
+              }
+              title={t('triStateHint')}
+            />
+            <HintLabel
+              htmlFor={`group-${playlistIndex}-${groupIndex}-showThumbnail`}
+              hint="showThumbnail"
+            >
+              {t('showThumbnail')}
             </HintLabel>
           </div>
         </div>

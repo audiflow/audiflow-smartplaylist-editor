@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
@@ -22,10 +21,6 @@ const schemaPath = resolve(
 );
 const schemaJson = JSON.parse(readFileSync(schemaPath, 'utf-8'));
 const defs = schemaJson.$defs as Record<string, Record<string, unknown>>;
-const topProps = schemaJson.properties as Record<
-  string,
-  Record<string, unknown>
->;
 
 function extractEnum(property: Record<string, unknown>): string[] {
   if ('enum' in property) {
@@ -37,11 +32,6 @@ function extractEnum(property: Record<string, unknown>): string[] {
     );
   }
   return [];
-}
-
-function createValidator() {
-  const ajv = new Ajv({ allErrors: true });
-  return ajv.compile(schemaJson);
 }
 
 describe('Zod enums match vendored playlist-definition schema', () => {
@@ -102,7 +92,6 @@ describe('v5-style playlist definition with Zod schemas', () => {
       priority: 0,
       grouping: {
         by: 'titleDiscovery',
-        discoveryHint: '【(?:出演：)?(.+?)(?:\\s*編.?)?】',
       },
       groupListing: {
         sort: { field: 'playlistNumber', order: 'ascending' },
@@ -115,7 +104,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
         titleExtractor: {
           source: 'title',
           pattern: '【(?:出演：)?(.+?)\\s*編',
-          group: 1,
+          template: '${1}',
         },
       },
       episodeListing: {
@@ -126,7 +115,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
         titleExtractor: {
           source: 'title',
           pattern: '#\\d+(?:-\\d+)?\\s+(.+?)\\s*【',
-          group: 1,
+          template: '${1}',
         },
       },
     };
@@ -134,7 +123,6 @@ describe('v5-style playlist definition with Zod schemas', () => {
     const parsed = playlistDefinitionSchema.parse(input);
     expect(parsed.id).toBe('professors');
     expect(parsed.grouping.by).toBe('titleDiscovery');
-    expect(parsed.grouping.discoveryHint).toBe('【(?:出演：)?(.+?)(?:\\s*編.?)?】');
     expect(parsed.groupItem?.showDateRange).toBe(true);
     expect(parsed.groupItem?.pinToYear).toBe(false);
     expect(parsed.episodeItem?.titleExtractor?.pattern).toBe('#\\d+(?:-\\d+)?\\s+(.+?)\\s*【');
@@ -157,7 +145,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
       showDateRange: true,
       pinToYear: true,
       prependSeasonNumber: false,
-      titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      titleExtractor: { source: 'title', pattern: '(.+)', template: '${1}' },
     };
     const parsed = groupItemConfigSchema.parse(input);
     expect(parsed.showDateRange).toBe(true);
@@ -167,7 +155,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
 
   it('parses episodeItemConfigSchema independently', () => {
     const input = {
-      titleExtractor: { source: 'title', pattern: '#\\d+ (.+)', group: 1 },
+      titleExtractor: { source: 'title', pattern: '#\\d+ (.+)', template: '${1}' },
     };
     const parsed = episodeItemConfigSchema.parse(input);
     expect(parsed.titleExtractor?.pattern).toBe('#\\d+ (.+)');
@@ -201,5 +189,19 @@ describe('v5-style playlist definition with Zod schemas', () => {
     expect(parsed.grouping.by).toBe('seasonNumber');
     expect(parsed.grouping.numberingExtractor?.seasonGroup).toBe(1);
     expect(parsed.groupItem?.showDateRange).toBe(true);
+  });
+});
+
+describe('showThumbnail JSON Schema fields', () => {
+  it('GroupItemConfig.showThumbnail is boolean with default true', () => {
+    const props = (defs.GroupItemConfig as Record<string, Record<string, unknown>>).properties as Record<string, Record<string, unknown>>;
+    expect(props.showThumbnail.type).toBe('boolean');
+    expect(props.showThumbnail.default).toBe(true);
+  });
+
+  it('EpisodeItemConfig.showThumbnail is boolean with default true', () => {
+    const props = (defs.EpisodeItemConfig as Record<string, Record<string, unknown>>).properties as Record<string, Record<string, unknown>>;
+    expect(props.showThumbnail.type).toBe('boolean');
+    expect(props.showThumbnail.default).toBe(true);
   });
 });

@@ -107,7 +107,7 @@ fn episode_sorter_null_dates_sort_after_dated_episodes() {
 
 #[test]
 fn episode_sorter_unknown_ids_sort_last() {
-    let eps = vec![SimpleEpisodeData {
+    let eps = [SimpleEpisodeData {
         id: 1,
         title: "A".into(),
         description: None,
@@ -301,7 +301,6 @@ fn make_definition(id: &str) -> PlaylistDefinition {
         display_name: id.to_string(),
         grouping: GroupingConfig {
             by: "seasonNumber".to_string(),
-            discovery_hint: None,
             numbering_extractor: None,
             static_classifiers: None,
         },
@@ -323,6 +322,7 @@ fn config_assembler_orders_by_meta_playlists() {
         podcast_guid: None,
         feed_urls: vec!["https://example.com".to_string()],
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec!["b".to_string(), "a".to_string()],
     };
 
@@ -341,6 +341,7 @@ fn config_assembler_appends_unlisted_playlists() {
         podcast_guid: None,
         feed_urls: vec!["https://example.com".to_string()],
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec!["a".to_string()],
     };
 
@@ -477,7 +478,6 @@ fn resolver_matches_config_by_feed_url() {
             display_name: "Main".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -517,7 +517,6 @@ fn resolver_matches_config_by_guid() {
             display_name: "Main".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -559,7 +558,6 @@ fn resolver_filters_by_require_regex() {
                 display_name: "Bonus".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -582,7 +580,6 @@ fn resolver_filters_by_require_regex() {
                 display_name: "Main".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -644,7 +641,6 @@ fn resolver_filter_regex_is_case_insensitive() {
             display_name: "Bonus".to_string(),
             grouping: GroupingConfig {
                 by: "year".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -701,7 +697,6 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 display_name: "All".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -718,7 +713,6 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 display_name: "Bonus".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -779,7 +773,6 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
             display_name: "Regular Series".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -844,7 +837,6 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
             display_name: "All".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -889,7 +881,6 @@ fn resolver_sorts_ungrouped_episode_ids() {
             display_name: "Series".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -964,7 +955,7 @@ fn preview_returns_none_for_empty_episodes() {
 fn preview_returns_none_when_no_config_matches() {
     let service = make_resolver_service(vec![]);
 
-    let eps = vec![make_rss_episode(1, 1, "S1E1", 1, 1)];
+    let eps = [make_rss_episode(1, 1, "S1E1", 1, 1)];
     let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
         .iter()
         .map(|e| e as &dyn sp_core::models::EpisodeData)
@@ -986,7 +977,6 @@ fn preview_returns_preview_grouping_with_single_playlist() {
             display_name: "Seasons".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -1033,7 +1023,6 @@ fn preview_tracks_claimed_by_others() {
                 display_name: "Priority A".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1056,7 +1045,6 @@ fn preview_tracks_claimed_by_others() {
                 display_name: "Priority B".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1127,7 +1115,6 @@ fn preview_sorts_episode_ids_by_published_at() {
             display_name: "Seasons".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -1176,7 +1163,6 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 display_name: "Bonus".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1199,7 +1185,6 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 display_name: "All".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1263,7 +1248,6 @@ fn partition_by_season_creates_sub_groups() {
         display_name: "By Professor".to_string(),
         grouping: GroupingConfig {
             by: "titleDiscovery".to_string(),
-            discovery_hint: None,
             numbering_extractor: None,
             static_classifiers: None,
         },
@@ -1272,8 +1256,7 @@ fn partition_by_season_creates_sub_groups() {
             title_extractor: Some(TitleExtractor {
                 source: "seasonNumber".to_string(),
                 pattern: None,
-                group: 0,
-                template: Some("Season {value}".to_string()),
+                template: Some("Season ${0}".to_string()),
                 fallback: None,
                 fallback_value: None,
             }),
@@ -1285,11 +1268,11 @@ fn partition_by_season_creates_sub_groups() {
             show_date_range: None,
             pin_to_year: None,
             prepend_season_number: None,
+            show_thumbnail: None,
             title_extractor: Some(TitleExtractor {
                 source: "title".to_string(),
                 pattern: Some(r"\[(\w+)".to_string()),
-                group: 1,
-                template: None,
+                template: Some("${1}".to_string()),
                 fallback: None,
                 fallback_value: None,
             }),

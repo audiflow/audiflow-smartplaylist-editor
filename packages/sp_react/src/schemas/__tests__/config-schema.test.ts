@@ -58,14 +58,14 @@ describe('playlistDefinitionSchema', () => {
         titleExtractor: {
           source: 'title',
           pattern: '\\[(.+?)\\]',
-          group: 1,
+          template: '${1}',
         },
       },
       episodeItem: {
         titleExtractor: {
           source: 'title',
           pattern: '#\\d+ (.+)',
-          group: 1,
+          template: '${1}',
         },
       },
     };
@@ -296,17 +296,17 @@ describe('groupDefSchema', () => {
 });
 
 describe('titleExtractorSchema', () => {
-  it('parses minimal title extractor with defaults', () => {
+  it('parses minimal title extractor', () => {
     const result = titleExtractorSchema.parse({ source: 'title' });
     expect(result.source).toBe('title');
-    expect(result.group).toBe(0);
+    expect(result.template).toBeUndefined();
   });
 
   it('parses title extractor with fallback (recursive)', () => {
     const input = {
       source: 'title',
       pattern: '\\[(.+?)\\]',
-      group: 1,
+      template: '${1}',
       fallback: {
         source: 'seasonNumber',
         template: 'Season {value}',
@@ -380,5 +380,91 @@ describe('resolverTypeSchema', () => {
     expect(() => resolverTypeSchema.parse('rss')).toThrow();
     expect(() => resolverTypeSchema.parse('category')).toThrow();
     expect(() => resolverTypeSchema.parse('titleAppearanceOrder')).toThrow();
+  });
+});
+
+describe('showThumbnail flags', () => {
+  it('parses showThumbnail on groupItem and episodeItem', () => {
+    const result = playlistDefinitionSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      priority: 0,
+      grouping: { by: 'seasonNumber' },
+      groupItem: { showThumbnail: false },
+      episodeItem: { showThumbnail: false },
+    });
+    expect(result.groupItem?.showThumbnail).toBe(false);
+    expect(result.episodeItem?.showThumbnail).toBe(false);
+  });
+
+  it('parses showThumbnail on per-group overrides', () => {
+    const result = playlistDefinitionSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      priority: 0,
+      grouping: {
+        by: 'titleClassifier',
+        staticClassifiers: [
+          {
+            id: 'g1',
+            displayName: 'G1',
+            pattern: { source: 'title', pattern: '.*' },
+            groupItem: { showThumbnail: false },
+            episodeItem: { showThumbnail: true },
+          },
+        ],
+      },
+    });
+    const g = result.grouping.staticClassifiers?.[0];
+    expect(g?.groupItem?.showThumbnail).toBe(false);
+    expect(g?.episodeItem?.showThumbnail).toBe(true);
+  });
+
+  it('parses explicit showEpisodeThumbnail values', () => {
+    const onResult = patternConfigSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      podcastGuid: 'g',
+      feedUrls: ['https://x'],
+      showEpisodeThumbnail: true,
+      playlists: [{
+        id: 'one',
+        displayName: 'One',
+        priority: 0,
+        grouping: { by: 'seasonNumber' },
+      }],
+    });
+    expect(onResult.showEpisodeThumbnail).toBe(true);
+
+    const offResult = patternConfigSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      podcastGuid: 'g',
+      feedUrls: ['https://x'],
+      showEpisodeThumbnail: false,
+      playlists: [{
+        id: 'one',
+        displayName: 'One',
+        priority: 0,
+        grouping: { by: 'seasonNumber' },
+      }],
+    });
+    expect(offResult.showEpisodeThumbnail).toBe(false);
+  });
+
+  it('leaves showEpisodeThumbnail undefined when absent', () => {
+    const result = patternConfigSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      podcastGuid: 'g',
+      feedUrls: ['https://x'],
+      playlists: [{
+        id: 'one',
+        displayName: 'One',
+        priority: 0,
+        grouping: { by: 'seasonNumber' },
+      }],
+    });
+    expect(result.showEpisodeThumbnail).toBeUndefined();
   });
 });

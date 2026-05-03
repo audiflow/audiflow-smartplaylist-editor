@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://audiflow.app/schema/v5/pattern-meta.json",
+  "$id": "https://audiflow.app/schema/v6/pattern-meta.json",
   "title": "SmartPlaylist Pattern Meta",
   "description": "Per-config metadata file at {patternId}/meta.json. Contains feed matching rules to identify the podcast, and an ordered list of playlist definitions. The app uses podcastGuid and feedUrls for matching.",
   "type": "object",
@@ -38,6 +38,11 @@
       "type": "boolean",
       "default": false,
       "description": "When enabled, the main episode list in the app groups episodes by their publication year with year headers. This is independent of playlist grouping and affects the default browsing experience. Useful for long-running podcasts."
+    },
+    "showEpisodeThumbnail": {
+      "type": "boolean",
+      "default": true,
+      "description": "When true (default), each episode row in the main podcast episode list shows the episode (or fallback podcast) thumbnail. When false, no thumbnail is rendered on these rows. The page header artwork is unaffected."
     },
     "playlists": {
       "type": "array",

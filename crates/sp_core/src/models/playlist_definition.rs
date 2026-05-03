@@ -33,10 +33,6 @@ pub struct GroupingConfig {
     #[serde(rename = "by")]
     pub by: String,
 
-    /// Regex hint for titleDiscovery fallback.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discovery_hint: Option<String>,
-
     /// Configuration for extracting season and episode numbers.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub numbering_extractor: Option<NumberingExtractor>,
@@ -63,6 +59,10 @@ pub struct GroupItemConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub prepend_season_number: Option<bool>,
 
+    /// Per-playlist default for showing thumbnails on group cards. None = use schema default (true).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_thumbnail: Option<bool>,
+
     /// Configuration for extracting playlist/group display names.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title_extractor: Option<TitleExtractor>,
@@ -72,6 +72,10 @@ pub struct GroupItemConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EpisodeItemConfig {
+    /// Per-playlist default for showing thumbnails on in-group episode rows. None = use schema default (true).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_thumbnail: Option<bool>,
+
     /// Configuration for extracting episode display names.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title_extractor: Option<TitleExtractor>,
@@ -105,7 +109,7 @@ pub struct EpisodeListingConfig {
     pub sort: Option<EpisodeSortRule>,
 }
 
-/// Unified per-playlist definition with all fields strongly typed (v5 only).
+/// Unified per-playlist definition with all fields strongly typed (v6 schema).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlaylistDefinition {
@@ -241,14 +245,14 @@ mod tests {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             },
             "episodeItem": {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             }
         });
@@ -315,14 +319,14 @@ mod tests {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             },
             "episodeItem": {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             }
         });
@@ -332,5 +336,40 @@ mod tests {
         assert!(def.group_item.as_ref().unwrap().title_extractor.is_some());
         assert!(def.episode_item.as_ref().unwrap().title_extractor.is_some());
         assert!(def.group_item.as_ref().unwrap().show_date_range.unwrap());
+    }
+
+    #[test]
+    fn show_thumbnail_round_trips_on_group_and_episode_items() {
+        let json = serde_json::json!({
+            "id": "test",
+            "displayName": "Test",
+            "priority": 0,
+            "grouping": { "by": "seasonNumber" },
+            "groupItem": { "showThumbnail": false },
+            "episodeItem": { "showThumbnail": false }
+        });
+        let def: PlaylistDefinition = serde_json::from_value(json).unwrap();
+        assert_eq!(def.group_item.as_ref().unwrap().show_thumbnail, Some(false));
+        assert_eq!(def.episode_item.as_ref().unwrap().show_thumbnail, Some(false));
+
+        let out = serde_json::to_value(&def).unwrap();
+        assert_eq!(out["groupItem"]["showThumbnail"], serde_json::json!(false));
+        assert_eq!(out["episodeItem"]["showThumbnail"], serde_json::json!(false));
+    }
+
+    #[test]
+    fn show_thumbnail_absent_serializes_omitted() {
+        let json = serde_json::json!({
+            "id": "test",
+            "displayName": "Test",
+            "priority": 0,
+            "grouping": { "by": "seasonNumber" },
+            "groupItem": { "showDateRange": true },
+            "episodeItem": {}
+        });
+        let def: PlaylistDefinition = serde_json::from_value(json).unwrap();
+        assert!(def.group_item.as_ref().unwrap().show_thumbnail.is_none());
+        let out = serde_json::to_value(&def).unwrap();
+        assert!(out["groupItem"].get("showThumbnail").is_none());
     }
 }

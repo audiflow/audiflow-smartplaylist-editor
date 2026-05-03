@@ -122,3 +122,60 @@ fn playlist_definition_with_additional_properties_fails() {
     let errors = v.validate(SchemaType::PlaylistDefinition, &def);
     assert!(!errors.is_empty());
 }
+
+#[test]
+fn pattern_meta_accepts_show_episode_thumbnail() {
+    let validator = Validator::from_embedded().unwrap();
+    let base = serde_json::json!({
+        "dataVersion": 1,
+        "id": "abc",
+        "feedUrls": ["https://example.com/rss"],
+        "playlists": ["p1"]
+    });
+
+    let mut with_true = base.clone();
+    with_true["showEpisodeThumbnail"] = serde_json::json!(true);
+    let errs = validator.validate(SchemaType::PatternMeta, &with_true);
+    assert!(errs.is_empty(), "true should be accepted: {:?}", errs);
+
+    let mut with_false = base.clone();
+    with_false["showEpisodeThumbnail"] = serde_json::json!(false);
+    let errs = validator.validate(SchemaType::PatternMeta, &with_false);
+    assert!(errs.is_empty(), "false should be accepted: {:?}", errs);
+
+    let mut with_string = base.clone();
+    with_string["showEpisodeThumbnail"] = serde_json::json!("yes");
+    let errs = validator.validate(SchemaType::PatternMeta, &with_string);
+    assert!(!errs.is_empty(), "string should be rejected");
+}
+
+#[test]
+fn playlist_definition_accepts_show_thumbnail_everywhere() {
+    let validator = Validator::from_embedded().unwrap();
+    let doc = serde_json::json!({
+        "id": "test",
+        "displayName": "Test",
+        "priority": 0,
+        "grouping": {
+            "by": "titleClassifier",
+            "staticClassifiers": [
+                {
+                    "id": "g1",
+                    "displayName": "G1",
+                    "pattern": { "source": "title", "pattern": ".*" },
+                    "groupItem": { "showThumbnail": false },
+                    "episodeItem": { "showThumbnail": true }
+                }
+            ]
+        },
+        "groupItem": { "showThumbnail": false },
+        "episodeItem": { "showThumbnail": false }
+    });
+    let errs = validator.validate(SchemaType::PlaylistDefinition, &doc);
+    assert!(errs.is_empty(), "expected accept, got: {:?}", errs);
+
+    let mut bad = doc.clone();
+    bad["groupItem"]["showThumbnail"] = serde_json::json!("nope");
+    let errs = validator.validate(SchemaType::PlaylistDefinition, &bad);
+    assert!(!errs.is_empty(), "non-boolean must be rejected");
+}

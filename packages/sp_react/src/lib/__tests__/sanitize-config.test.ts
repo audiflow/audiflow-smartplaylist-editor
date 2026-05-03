@@ -172,7 +172,7 @@ describe('stripConditionalFields', () => {
         numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
       },
       groupItem: {
-        titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+        titleExtractor: { source: 'title', pattern: '(.+)', template: '${1}' },
       },
     });
 
@@ -190,7 +190,7 @@ describe('stripConditionalFields', () => {
         numberingExtractor: { source: 'title', pattern: '(\\d+)', seasonGroup: 0, episodeGroup: 1 },
       },
       groupItem: {
-        titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+        titleExtractor: { source: 'title', pattern: '(.+)', template: '${1}' },
       },
     });
 
@@ -209,7 +209,7 @@ describe('stripConditionalFields', () => {
         staticClassifiers: [{ id: 'g1', displayName: 'Group 1', pattern: { source: 'title', pattern: '.*' } }],
       },
       groupItem: {
-        titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+        titleExtractor: { source: 'title', pattern: '(.+)', template: '${1}' },
       },
     });
 

@@ -74,7 +74,7 @@ mod tests {
         let urls = vec!["".to_string(), "https://example.com/feed.xml".to_string()];
         let id = derive_pattern_id(None, &urls).unwrap();
         let expected =
-            derive_pattern_id(None, &["https://example.com/feed.xml".to_string().into()]).unwrap();
+            derive_pattern_id(None, &["https://example.com/feed.xml".to_string()]).unwrap();
         assert_eq!(id, expected);
     }
 

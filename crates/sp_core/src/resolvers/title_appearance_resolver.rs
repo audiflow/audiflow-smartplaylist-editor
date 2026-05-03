@@ -40,21 +40,18 @@ impl Resolver for TitleAppearanceResolver {
             .group_item
             .as_ref()
             .and_then(|gi| gi.title_extractor.as_ref());
-        // v5 introduces `grouping.discoveryHint` as the canonical fallback
-        // pattern for titleDiscovery. Preserve the legacy read from the
-        // first static classifier for configs that haven't migrated yet.
-        // titleDiscovery always matches against the episode title, so the
-        // Matcher's `source` field is intentionally ignored when falling back
-        // to the first static classifier's pattern — only the regex string is read.
-        let pattern_str = definition.grouping.discovery_hint.as_deref().or_else(|| {
-            definition
-                .grouping
-                .static_classifiers
-                .as_ref()
-                .and_then(|g| g.first())
-                .and_then(|g| g.pattern.as_ref())
-                .map(|m| m.pattern.as_str())
-        });
+        // Legacy on-disk fallback: older configs pointed titleDiscovery at the
+        // first static classifier's pattern. The current editor never writes
+        // this shape, but we keep the path so older files still resolve.
+        // titleDiscovery always matches the episode title, so the Matcher's
+        // `source` field is intentionally ignored — only the regex string is read.
+        let pattern_str = definition
+            .grouping
+            .static_classifiers
+            .as_ref()
+            .and_then(|g| g.first())
+            .and_then(|g| g.pattern.as_ref())
+            .map(|m| m.pattern.as_str());
 
         // Need either a titleExtractor or a group pattern
         if title_extractor.is_none() && pattern_str.is_none() {

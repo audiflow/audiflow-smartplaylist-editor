@@ -300,7 +300,7 @@ function SortedEpisodeList({
 
 function EpisodeList({ episodes }: { episodes: PreviewEpisode[] }) {
   return (
-    <ul data-preview-field="episode-order" className="ml-4 space-y-0.5 text-sm text-muted-foreground">
+    <ul data-preview-field="episode-order" className="ml-4 text-sm text-muted-foreground">
       {episodes.map((ep) => {
         // Prefer the server-computed `extractedDisplayName` so configuring
         // `episodeItem.titleExtractor` (or a classifier-level override) is
@@ -308,8 +308,15 @@ function EpisodeList({ episodes }: { episodes: PreviewEpisode[] }) {
         // feed title when no extractor applies.
         const displayTitle = ep.extractedDisplayName ?? ep.title;
         return (
-          <li key={ep.id} className="flex items-center gap-2">
-            <span data-preview-field="episode-title" className="truncate" title={ep.title}>
+          <li
+            key={ep.id}
+            className="flex items-start gap-2 px-2 py-1 odd:bg-foreground/5"
+          >
+            <span
+              data-preview-field="episode-title"
+              className="flex-1 min-w-0 break-words"
+              title={ep.title}
+            >
               {displayTitle}
             </span>
             {ep.publishedAt && (

@@ -1,8 +1,8 @@
-# Schema Reference (v5)
+# Schema Reference (v6)
 
 Schema reference for audiflow smart playlist configuration files. Covers all three schema levels: pattern index, pattern meta, and playlist definition.
 
-Schema version: **5** (backwards-compatible with v4 fields accepted as aliases).
+JSON Schema definitions are versioned at **v6**; the pattern-index file format is versioned independently via its own `schemaVersion` field (see [Pattern Index](#pattern-index)).
 
 ## Table of Contents
 
@@ -53,7 +53,7 @@ patterns/
 
 **File:** `patterns/meta.json`
 
-**Schema:** `https://audiflow.app/schema/v5/pattern-index.json`
+**Schema:** `https://audiflow.app/schema/v6/pattern-index.json`
 
 Root index of all patterns. The app fetches this file first and compares `dataVersion` to detect changes.
 
@@ -101,7 +101,7 @@ Each element in the `patterns` array:
 
 **File:** `{patternId}/meta.json`
 
-**Schema:** `https://audiflow.app/schema/v5/pattern-meta.json`
+**Schema:** `https://audiflow.app/schema/v6/pattern-meta.json`
 
 Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (preferred) or `feedUrls` to find the right config.
 
@@ -114,6 +114,7 @@ Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (pref
 | `podcastGuid` | string | no | -- | Podcast's RSS GUID. Takes priority over feed URL matching. |
 | `feedUrls` | string[] | yes | -- | One or more RSS feed URLs. Supports host-migration scenarios. |
 | `yearGroupedEpisodes` | boolean | no | `false` | Show year headers in the main episode list (independent of playlist grouping). |
+| `showEpisodeThumbnail` | boolean | no | `true` | Show thumbnails on each row of the main podcast episode list. The page header artwork is unaffected. |
 | `playlists` | string[] | yes | -- | Ordered list of playlist definition IDs. Determines display order. |
 
 ### Example
@@ -127,6 +128,7 @@ Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (pref
     "https://anchor.fm/s/8c2088c/podcast/rss"
   ],
   "yearGroupedEpisodes": true,
+  "showEpisodeThumbnail": false,
   "playlists": ["regular", "extras", "shorts"]
 }
 ```
@@ -137,7 +139,7 @@ Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (pref
 
 **File:** `{patternId}/playlists/{playlistId}.json`
 
-**Schema:** `https://audiflow.app/schema/v5/playlist-definition.json`
+**Schema:** `https://audiflow.app/schema/v6/playlist-definition.json`
 
 Defines how a playlist filters, groups, and displays episodes. The field layout follows the data processing pipeline:
 
@@ -179,8 +181,8 @@ Optional. Pre-processing step that includes/excludes episodes before grouping.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `require` | EpisodeFilterEntry[] | Include rules (AND). All rules must match for an episode to be included. |
-| `exclude` | EpisodeFilterEntry[] | Exclude rules (OR). Any matching rule rejects the episode. |
+| `require` | EpisodeFilterEntry[] | Include rules (OR). An episode is included when it matches ANY rule. Within each rule, all fields must match (AND). |
+| `exclude` | EpisodeFilterEntry[] | Exclude rules (OR). An episode is excluded if it matches ANY rule. Within each rule, all fields must match (AND). |
 
 **EpisodeFilterEntry**: At least one field required. When multiple fields are specified, all must match (AND).
 
@@ -210,7 +212,6 @@ Required. Defines how episodes are organized into groups.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `by` | enum | yes | Grouping method. See [Grouping Methods](#grouping-methods). |
-| `discoveryHint` | string | no | Regex for `titleDiscovery` fallback extraction. |
 | `numberingExtractor` | object | no | Parses season/episode numbers from titles. See [NumberingExtractor](#numberingextractor). |
 | `staticClassifiers` | array | conditional | Group definitions. Required when `by` is `titleClassifier`. See [StaticClassifier](#staticclassifier). |
 
@@ -255,7 +256,7 @@ Optional. Controls how groups map to dropdown entries in the app UI. When absent
     "partitionBy": "seasonNumber",
     "titleExtractor": {
       "source": "seasonNumber",
-      "template": "Season {value}"
+      "template": "Season ${0}"
     }
   }
 }
@@ -307,6 +308,7 @@ Optional. Default display settings for individual group cards. Overridable per-c
 | `showDateRange` | boolean | `false` | Show the date range (earliest to latest) on group cards. |
 | `pinToYear` | boolean | `false` | Pin group to its earliest year's section. |
 | `prependSeasonNumber` | boolean | `false` | Prefix group title with `S{n}` (e.g., "S13 Lincoln Arc"). |
+| `showThumbnail` | boolean | `true` | Show a thumbnail on each group card in this playlist. |
 | `titleExtractor` | object | -- | Generates display names for group titles. See [TitleExtractor](#titleextractor). |
 
 ```json
@@ -315,10 +317,11 @@ Optional. Default display settings for individual group cards. Overridable per-c
     "showDateRange": true,
     "pinToYear": true,
     "prependSeasonNumber": false,
+    "showThumbnail": false,
     "titleExtractor": {
       "source": "title",
       "pattern": "COTEN RADIO\\s*([^]+?)\\s*\\d+",
-      "group": 1,
+      "template": "${1}",
       "fallbackValue": "Other"
     }
   }
@@ -358,6 +361,7 @@ Optional. Default display settings for individual episode rows. Overridable per-
 | Field | Type | Description |
 |-------|------|-------------|
 | `titleExtractor` | object | Transforms episode display names. Strips redundant information conveyed by group context. See [TitleExtractor](#titleextractor). |
+| `showThumbnail` | boolean | Show a thumbnail on each episode row inside a group. Default `true`. |
 
 ```json
 {
@@ -365,8 +369,9 @@ Optional. Default display settings for individual episode rows. Overridable per-
     "titleExtractor": {
       "source": "title",
       "pattern": "#\\d+(?:-\\d+)?\\s+(.+?)\\s*\\[",
-      "group": 1
-    }
+      "template": "${1}"
+    },
+    "showThumbnail": false
   }
 }
 ```
@@ -443,21 +448,19 @@ Groups episodes by publication year.
 
 Finds recurring patterns in episode titles and groups by them, in the order they first appear in the feed.
 
-- Uses `groupItem.titleExtractor` to derive group names.
-- `grouping.discoveryHint` provides a regex fallback for group extraction.
+- Uses `groupItem.titleExtractor` to derive group names; the template references capture groups via `${N}` (e.g., `${1}` for the first capture).
 - Best for podcasts with titled story arcs or recurring guest series.
 
 ```json
 {
   "grouping": {
-    "by": "titleDiscovery",
-    "discoveryHint": "[(.+?)\\s*]"
+    "by": "titleDiscovery"
   },
   "groupItem": {
     "titleExtractor": {
       "source": "title",
       "pattern": "[(.+?)\\s*]",
-      "group": 1
+      "template": "${1}"
     }
   }
 }
@@ -506,16 +509,15 @@ Groups episodes by matching titles against patterns defined in `grouping.staticC
 
 Shared type used by `groupItem.titleExtractor`, `episodeItem.titleExtractor`, and `selector.titleExtractor`.
 
-Generates a display name from episode data using a pipeline: read source -> match pattern -> format with template -> fallback on failure.
+Generates a display name from episode data using a pipeline: read source -> match pattern -> render template -> fallback on failure.
 
 ### Fields
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `source` | enum | yes | -- | `"title"`, `"description"`, `"seasonNumber"`, or `"episodeNumber"`. |
-| `pattern` | string | no | -- | Regex to match against the source value. Use capture groups `()` to extract parts. |
-| `group` | integer | no | `0` | Which capture group to use. `0` = entire match, `1` = first group, etc. |
-| `template` | string | no | -- | Format string with `{value}` placeholder. |
+| `pattern` | string | no | -- | Regex to match against the source value. Use capture groups `()` to extract parts; reference them in `template` as `${1}`, `${2}`, ... |
+| `template` | string | no | -- | Format string. Use `${0}` for the entire match, `${1}`, `${2}`, ... for capture groups. Out-of-range references render as empty. When omitted, behaves as `${0}`. |
 | `fallback` | TitleExtractor | no | -- | Tried when the current step fails to match. Supports chaining. |
 | `fallbackValue` | string | no | -- | Default name when source is `seasonNumber` or `episodeNumber` and the value is missing or zero. Checked before pattern matching. No effect for `title` or `description` sources. |
 
@@ -523,8 +525,8 @@ Generates a display name from episode data using a pipeline: read source -> matc
 
 1. Read the value from `source`.
 2. If `fallbackValue` is set and source is `seasonNumber`/`episodeNumber` with a missing or zero value, return `fallbackValue`.
-3. If `pattern` is set, match against the value and extract the specified `group`.
-4. If `template` is set, substitute `{value}` with the extracted text.
+3. If `pattern` is set, match against the value. No match -> try `fallback`.
+4. Render `template`: substitute each `${N}` with capture group N (or empty if out of range). When `template` is omitted, use `${0}` (the full match, or the source value when no `pattern`).
 5. If any step fails, try the `fallback` extractor (recursive).
 
 ### Examples
@@ -534,7 +536,7 @@ Generates a display name from episode data using a pipeline: read source -> matc
 ```json
 {
   "source": "seasonNumber",
-  "template": "Season {value}",
+  "template": "Season ${0}",
   "fallbackValue": "Specials"
 }
 ```
@@ -545,9 +547,21 @@ Generates a display name from episode data using a pipeline: read source -> matc
 {
   "source": "title",
   "pattern": "#\\d+\\s+(.+?)\\s*$",
-  "group": 1
+  "template": "${1}"
 }
 ```
+
+**Multi-capture composition (combine number and title):**
+
+```json
+{
+  "source": "title",
+  "pattern": "【[^】]+(\\d+)】\\s*(.+?)#\\d+$",
+  "template": "${1}. ${2}"
+}
+```
+
+For an input title like `【アダム・スミス9】社会の秩序をつくるのは「優しさ」か「正義感」か。スミスが出した答えとは？#150`, this renders as `9. 社会の秩序をつくるのは「優しさ」か「正義感」か。スミスが出した答えとは？`.
 
 **Chained fallback:**
 
@@ -555,11 +569,11 @@ Generates a display name from episode data using a pipeline: read source -> matc
 {
   "source": "title",
   "pattern": "COTEN RADIO\\s*([^]+?)\\s*\\d+",
-  "group": 1,
+  "template": "${1}",
   "fallback": {
     "source": "title",
     "pattern": "COTEN RADIO\\s*(.+?)\\s*\\d+",
-    "group": 1
+    "template": "${1}"
   },
   "fallbackValue": "Other"
 }
@@ -640,9 +654,9 @@ Each classifier can override playlist-level defaults for display and behavior. O
 
 | Section | Overridable Fields |
 |---------|--------------------|
-| `groupItem` | `showDateRange`, `pinToYear` |
+| `groupItem` | `showDateRange`, `showThumbnail`, `pinToYear` |
 | `episodeListing` | `sort` |
-| `episodeItem` | `titleExtractor` |
+| `episodeItem` | `titleExtractor`, `showThumbnail` |
 | `numberingExtractor` | All fields (replaces the playlist-level extractor entirely) |
 
 ### Example
@@ -664,7 +678,7 @@ Each classifier can override playlist-level defaults for display and behavior. O
           "titleExtractor": {
             "source": "title",
             "pattern": "\\]\\s*(.+)",
-            "group": 1
+            "template": "${1}"
           }
         }
       },

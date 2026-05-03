@@ -30,7 +30,7 @@ fn playlist_definition_full_round_trip() {
         "groupItem": {
             "titleExtractor": {
                 "source": "seasonNumber",
-                "template": "Season {value}"
+                "template": "Season ${0}"
             },
             "prependSeasonNumber": true,
             "showDateRange": true
@@ -158,7 +158,7 @@ fn title_extractor_pattern_matching() {
     let extractor: TitleExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(.+?)\\s+\\d+\\]",
-        "group": 1
+        "template": "${1}"
     }))
     .unwrap();
 
@@ -171,7 +171,7 @@ fn title_extractor_pattern_matching() {
 fn title_extractor_template() {
     let extractor: TitleExtractor = serde_json::from_value(json!({
         "source": "seasonNumber",
-        "template": "Season {value}"
+        "template": "Season ${0}"
     }))
     .unwrap();
 
@@ -185,10 +185,10 @@ fn title_extractor_fallback_chain() {
     let extractor: TitleExtractor = serde_json::from_value(json!({
         "source": "title",
         "pattern": "\\[(.+?)\\]",
-        "group": 1,
+        "template": "${1}",
         "fallback": {
             "source": "seasonNumber",
-            "template": "Season {value}"
+            "template": "Season ${0}"
         }
     }))
     .unwrap();
@@ -206,7 +206,7 @@ fn title_extractor_fallback_chain() {
 fn title_extractor_fallback_value_for_null_season() {
     let extractor: TitleExtractor = serde_json::from_value(json!({
         "source": "seasonNumber",
-        "template": "Season {value}",
+        "template": "Season ${0}",
         "fallbackValue": "Uncategorized"
     }))
     .unwrap();
@@ -407,7 +407,6 @@ mod filter_semantics {
             display_name: "Test".to_string(),
             grouping: GroupingConfig {
                 by: "year".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -755,35 +754,34 @@ fn title_extractor_json_round_trip() {
     let json_val = json!({
         "source": "title",
         "pattern": "\\[(.+?)\\]",
-        "group": 1,
+        "template": "${1}",
         "fallback": {
             "source": "seasonNumber",
-            "template": "Season {value}"
+            "template": "Season ${0}"
         }
     });
 
     let extractor: TitleExtractor = serde_json::from_value(json_val).unwrap();
     assert_eq!(extractor.source, "title");
-    assert_eq!(extractor.group, 1);
+    assert_eq!(extractor.template.as_deref(), Some("${1}"));
     assert!(extractor.fallback.is_some());
 
     let serialized = serde_json::to_value(&extractor).unwrap();
     assert_eq!(serialized["source"], "title");
-    assert_eq!(serialized["group"], 1);
+    assert_eq!(serialized["template"], "${1}");
     assert_eq!(serialized["fallback"]["source"], "seasonNumber");
+    assert_eq!(serialized["fallback"]["template"], "Season ${0}");
 }
 
 #[test]
 fn title_extractor_omits_defaults() {
-    let json_val = json!({
-        "source": "title"
-    });
+    let json_val = json!({ "source": "title" });
 
     let extractor: TitleExtractor = serde_json::from_value(json_val).unwrap();
-    assert_eq!(extractor.group, 0);
+    assert!(extractor.template.is_none());
+    assert!(extractor.pattern.is_none());
 
     let serialized = serde_json::to_value(&extractor).unwrap();
-    assert!(serialized.get("group").is_none());
     assert!(serialized.get("pattern").is_none());
     assert!(serialized.get("template").is_none());
     assert!(serialized.get("fallback").is_none());

@@ -89,7 +89,7 @@ export function TitleExtractorForm({
   );
 
   const handleAdd = useCallback(() => {
-    const newStep: TitleExtractor = { source: 'title', group: 0 };
+    const newStep: TitleExtractor = { source: 'title' };
     applySteps([...steps, newStep], fallbackValue);
   }, [steps, applySteps, fallbackValue]);
 
@@ -148,7 +148,6 @@ export function TitleExtractorForm({
           onClick={() =>
             setValue(fieldPath as any, {
               source: 'title',
-              group: 0,
             }, { shouldDirty: true })
           }
         >
@@ -240,47 +239,28 @@ function TitleExtractorStep({
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <HintLabel
-              htmlFor={`${idPrefix}-${stepIndex}-source`}
-              hint="titleExtractorSource"
-            >
-              {t('titleExtractorSource')}
-            </HintLabel>
-            <Select
-              value={step.source}
-              onValueChange={(val) => onUpdate({ source: val })}
-            >
-              <SelectTrigger id={`${idPrefix}-${stepIndex}-source`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {SOURCE_OPTIONS.map((src) => (
-                  <SelectItem key={src} value={src}>
-                    {t(`source_${src}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <HintLabel
-              htmlFor={`${idPrefix}-${stepIndex}-group`}
-              hint="titleExtractorGroup"
-            >
-              {t('titleExtractorGroup')}
-            </HintLabel>
-            <Input
-              id={`${idPrefix}-${stepIndex}-group`}
-              type="number" className="w-24"
-              value={step.group ?? 0}
-              onChange={(e) =>
-                onUpdate({ group: parseInt(e.target.value, 10) || 0 })
-              }
-            />
-          </div>
+        <div className="space-y-1.5">
+          <HintLabel
+            htmlFor={`${idPrefix}-${stepIndex}-source`}
+            hint="titleExtractorSource"
+          >
+            {t('titleExtractorSource')}
+          </HintLabel>
+          <Select
+            value={step.source}
+            onValueChange={(val) => onUpdate({ source: val })}
+          >
+            <SelectTrigger id={`${idPrefix}-${stepIndex}-source`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SOURCE_OPTIONS.map((src) => (
+                <SelectItem key={src} value={src}>
+                  {t(`source_${src}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-1.5">
@@ -313,7 +293,7 @@ function TitleExtractorStep({
             onChange={(e) =>
               onUpdate({ template: e.target.value || null })
             }
-            placeholder="{value}"
+            placeholder="${1}. ${2}"
           />
         </div>
       </CardContent>

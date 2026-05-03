@@ -4,9 +4,9 @@ import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
-import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { NumberingExtractorForm } from '@/components/editor/numbering-extractor-form.tsx';
+import { TitleExtractorForm } from '@/components/editor/title-extractor-form.tsx';
 import { GroupDefCard } from '@/components/editor/group-def-card.tsx';
 import { SectionNote, InteractionNote } from '@/components/editor/note-blocks.tsx';
 import { ScopeZone } from '@/components/editor/shared/scope-zone.tsx';
@@ -31,7 +31,6 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
   const playlistId = useWatch({ control, name: `${prefix}.id` as const });
   const grouping = watch(`${prefix}.grouping`);
   const resolverType = grouping?.by;
-  const discoveryHint = watch(`${prefix}.grouping.discoveryHint`);
   const partitionBy = watch(`${prefix}.selector.partitionBy`);
   const staticClassifiers = (grouping?.staticClassifiers ?? []) as Array<{ id: string; displayName: string }>;
 
@@ -89,23 +88,10 @@ export function OrganizeTab({ index }: OrganizeTabProps) {
         </div>
 
         {resolverType === 'titleDiscovery' ? (
-          <div className="space-y-2">
-            <HintLabel htmlFor={`playlist-${index}-discoveryHint`} hint="discoveryHint">
-              {t('discoveryHint')}
-            </HintLabel>
-            <Input
-              id={`playlist-${index}-discoveryHint`}
-              value={discoveryHint ?? ''}
-              onChange={(e) =>
-                setValue(
-                  `${prefix}.grouping.discoveryHint`,
-                  e.target.value === '' ? undefined : e.target.value,
-                  { shouldDirty: true },
-                )
-              }
-              placeholder={t('discoveryHintPlaceholder')}
-            />
-          </div>
+          <TitleExtractorForm
+            fieldPath={`${prefix}.groupItem.titleExtractor`}
+            idPrefix={`group-title-${index}`}
+          />
         ) : null}
 
         <div className="space-y-2">

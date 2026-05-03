@@ -72,7 +72,7 @@ export function filterEpisodes(
   // Require entries use OR semantics across rules: episode is included
   // when it matches ANY rule. Each rule's own fields are still AND
   // (enforced inside matchesCompiled). Mirrors the server contract
-  // advertised by the v5 playlist-definition schema.
+  // advertised by the playlist-definition schema.
   if (0 < requireCompiled.length) {
     result = result.filter((ep) => requireCompiled.some((c) => matchesCompiled(ep, c)));
   }
