@@ -3,10 +3,6 @@ use serde::{Deserialize, Serialize};
 
 use super::episode_data::EpisodeData;
 
-fn is_zero(v: &u32) -> bool {
-    *v == 0
-}
-
 /// Configuration for extracting smart playlist display names from episode data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -14,15 +10,12 @@ pub struct TitleExtractor {
     /// Episode field to extract from: "title", "description", "seasonNumber", "episodeNumber".
     pub source: String,
 
-    /// Regex pattern to extract value (optional).
+    /// Regex pattern to match against the source value (optional).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pattern: Option<String>,
 
-    /// Capture group to use from regex match (default: 0 = full match).
-    #[serde(default, skip_serializing_if = "is_zero")]
-    pub group: u32,
-
-    /// Template for formatting the extracted value. Use `{value}` as placeholder.
+    /// Template using `${N}` references (0 = full match, 1+ = capture groups).
+    /// When `None`, behaves as `${0}`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub template: Option<String>,
 
@@ -36,9 +29,6 @@ pub struct TitleExtractor {
 }
 
 /// A `TitleExtractor` with its regex pattern precompiled.
-///
-/// Use `TitleExtractor::compile()` to build one before iterating
-/// over episodes, avoiding per-episode regex compilation.
 pub struct CompiledTitleExtractor<'a> {
     extractor: &'a TitleExtractor,
     regex: Option<Regex>,
@@ -46,8 +36,7 @@ pub struct CompiledTitleExtractor<'a> {
 }
 
 impl TitleExtractor {
-    /// Precompiles the regex pattern (and any fallback chain) for reuse
-    /// across many episodes.
+    /// Precompiles the regex pattern (and any fallback chain) for reuse.
     pub fn compile(&self) -> CompiledTitleExtractor<'_> {
         let regex = self.pattern.as_ref().and_then(|p| Regex::new(p).ok());
         let fallback = self.fallback.as_ref().map(|f| Box::new(f.compile()));
@@ -59,10 +48,7 @@ impl TitleExtractor {
     }
 
     /// Extracts the smart playlist title from an episode.
-    /// Returns None if extraction fails and no fallback is available.
-    ///
-    /// Compiles the regex on every call. For batch use, prefer
-    /// `compile()` + `CompiledTitleExtractor::extract()`.
+    /// Compiles the regex on every call. For batch use prefer `compile()`.
     pub fn extract(&self, episode: &dyn EpisodeData) -> Option<String> {
         self.compile().extract(episode)
     }
@@ -83,7 +69,7 @@ impl<'a> CompiledTitleExtractor<'a> {
     pub fn extract(&self, episode: &dyn EpisodeData) -> Option<String> {
         let ext = self.extractor;
 
-        // For null/zero seasonNumber, use fallback_value if available
+        // Early return for null/zero seasonNumber when fallback_value is set.
         let season_num = episode.season_number();
         if ext.fallback_value.is_some()
             && (season_num.is_none() || season_num.is_some_and(|n| n < 1))
@@ -91,36 +77,227 @@ impl<'a> CompiledTitleExtractor<'a> {
             return ext.fallback_value.clone();
         }
 
-        let source_value = ext.get_source_value(episode);
-
-        let source_value = match source_value {
-            Some(v) => v,
-            None => return self.fallback.as_ref().and_then(|f| f.extract(episode)),
+        let Some(source_value) = ext.get_source_value(episode) else {
+            return self.fallback.as_ref().and_then(|f| f.extract(episode));
         };
 
-        let result = if self.regex.is_some() {
-            self.extract_with_regex(&source_value)
-        } else {
-            Some(source_value)
+        let groups: Vec<Option<String>> = match self.regex.as_ref() {
+            Some(regex) => match regex.captures(&source_value).ok().flatten() {
+                Some(captures) => (0..captures.len())
+                    .map(|i| captures.get(i).map(|m| m.as_str().to_string()))
+                    .collect(),
+                None => return self.fallback.as_ref().and_then(|f| f.extract(episode)),
+            },
+            // No pattern: source value substitutes ${0}; higher indices are empty.
+            None => vec![Some(source_value)],
         };
 
-        let result = match result {
-            Some(v) => v,
-            None => return self.fallback.as_ref().and_then(|f| f.extract(episode)),
-        };
+        Some(render(ext.template.as_deref(), &groups))
+    }
+}
 
-        if let Some(ref tmpl) = ext.template {
-            Some(tmpl.replace("{value}", &result))
-        } else {
-            Some(result)
+/// Renders a template with `${N}` substitution. When `template` is `None`,
+/// returns capture group 0 or empty if unavailable.
+fn render(template: Option<&str>, groups: &[Option<String>]) -> String {
+    let Some(t) = template else {
+        return group_value(groups, 0).to_string();
+    };
+    expand_template(t, groups)
+}
+
+/// Returns the value of capture group `n`, or `""` for both
+/// out-of-bounds indices and in-bounds-but-non-participating groups.
+fn group_value(groups: &[Option<String>], n: usize) -> &str {
+    groups.get(n).and_then(|g| g.as_deref()).unwrap_or("")
+}
+
+/// Expands `${N}` tokens in `template`. Out-of-range groups become empty.
+/// Malformed tokens (`${abc}`, unclosed `${`) are emitted literally.
+fn expand_template(template: &str, groups: &[Option<String>]) -> String {
+    let mut out = String::with_capacity(template.len());
+    let bytes = template.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'$'
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'{'
+            && let Some(end_off) = template[i + 2..].find('}')
+            && let Ok(n) = template[i + 2..i + 2 + end_off].parse::<usize>()
+        {
+            out.push_str(group_value(groups, n));
+            i = i + 2 + end_off + 1;
+            continue;
+        }
+        // Emit one full UTF-8 character starting at `i`.
+        let ch = template[i..].chars().next().unwrap();
+        out.push(ch);
+        i += ch.len_utf8();
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::SimpleEpisodeData;
+
+    fn ep(title: &str) -> SimpleEpisodeData {
+        SimpleEpisodeData {
+            id: 1,
+            title: title.into(),
+            description: None,
+            season_number: None,
+            episode_number: None,
+            published_at: None,
+            image_url: None,
         }
     }
 
-    fn extract_with_regex(&self, value: &str) -> Option<String> {
-        let regex = self.regex.as_ref()?;
-        let captures = regex.captures(value).ok().flatten()?;
+    #[test]
+    fn template_combines_multiple_capture_groups() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"【[^】]+(\d+)】\s*(.+?)#\d+$".into()),
+            template: Some("${1}. ${2}".into()),
+            fallback: None,
+            fallback_value: None,
+        };
+        let episode = ep(
+            "【アダム・スミス9】社会の秩序をつくるのは「優しさ」か「正義感」か。スミスが出した答えとは？#150",
+        );
+        assert_eq!(
+            ext.extract(&episode).as_deref(),
+            Some("9. 社会の秩序をつくるのは「優しさ」か「正義感」か。スミスが出した答えとは？"),
+        );
+    }
 
-        let group = self.extractor.group as usize;
-        captures.get(group).map(|m| m.as_str().to_string())
+    #[test]
+    fn out_of_range_capture_renders_empty() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"^(\w+) (\w+)$".into()),
+            template: Some("${1}/${5}/${2}".into()),
+            fallback: None,
+            fallback_value: None,
+        };
+        let episode = ep("foo bar");
+        assert_eq!(ext.extract(&episode).as_deref(), Some("foo//bar"));
+    }
+
+    #[test]
+    fn template_zero_returns_full_match() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"(\d+)".into()),
+            template: Some("[${0}]".into()),
+            fallback: None,
+            fallback_value: None,
+        };
+        let episode = ep("Episode 42");
+        assert_eq!(ext.extract(&episode).as_deref(), Some("[42]"));
+    }
+
+    #[test]
+    fn omitted_pattern_uses_source_for_zero() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: None,
+            template: Some("Title: ${0} / ${1}".into()),
+            fallback: None,
+            fallback_value: None,
+        };
+        let episode = ep("Hello");
+        assert_eq!(ext.extract(&episode).as_deref(), Some("Title: Hello / "));
+    }
+
+    #[test]
+    fn omitted_template_with_pattern_returns_full_match() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"\d+".into()),
+            template: None,
+            fallback: None,
+            fallback_value: None,
+        };
+        let episode = ep("Episode 99");
+        assert_eq!(ext.extract(&episode).as_deref(), Some("99"));
+    }
+
+    #[test]
+    fn literal_dollar_outside_braces_is_preserved() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"^(\w+)$".into()),
+            template: Some("${1} - $5 cost".into()),
+            fallback: None,
+            fallback_value: None,
+        };
+        let episode = ep("Promo");
+        assert_eq!(
+            ext.extract(&episode).as_deref(),
+            Some("Promo - $5 cost"),
+        );
+    }
+
+    #[test]
+    fn malformed_dollar_brace_emitted_literally() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"^(\w+)$".into()),
+            template: Some("${1} ${abc} ${".into()),
+            fallback: None,
+            fallback_value: None,
+        };
+        let episode = ep("ok");
+        assert_eq!(
+            ext.extract(&episode).as_deref(),
+            Some("ok ${abc} ${"),
+        );
+    }
+
+    #[test]
+    fn fallback_chain_uses_new_template_semantics_per_link() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"^primary-(\w+)-(\w+)$".into()),
+            template: Some("P:${1}+${2}".into()),
+            fallback: Some(Box::new(TitleExtractor {
+                source: "title".into(),
+                pattern: Some(r"^backup-(\w+)$".into()),
+                template: Some("F:${1}".into()),
+                fallback: None,
+                fallback_value: None,
+            })),
+            fallback_value: None,
+        };
+        let primary = ep("primary-aa-bb");
+        let backup = ep("backup-cc");
+        assert_eq!(ext.extract(&primary).as_deref(), Some("P:aa+bb"));
+        assert_eq!(ext.extract(&backup).as_deref(), Some("F:cc"));
+    }
+
+    #[test]
+    fn non_participating_optional_group_renders_empty() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"^(?:aaa-(\w+))|(?:bbb-(\w+))$".into()),
+            template: Some("a=${1} b=${2}".into()),
+            fallback: None,
+            fallback_value: None,
+        };
+        assert_eq!(ext.extract(&ep("aaa-foo")).as_deref(), Some("a=foo b="));
+        assert_eq!(ext.extract(&ep("bbb-bar")).as_deref(), Some("a= b=bar"));
+    }
+
+    #[test]
+    fn no_pattern_no_template_returns_source_value() {
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: None,
+            template: None,
+            fallback: None,
+            fallback_value: None,
+        };
+        assert_eq!(ext.extract(&ep("Just the title")).as_deref(), Some("Just the title"));
     }
 }
