@@ -23,7 +23,9 @@ pub struct TitleExtractor {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fallback: Option<Box<TitleExtractor>>,
 
-    /// Fallback string value for null/zero seasonNumber episodes.
+    /// Fallback string value used when `source` is `seasonNumber` or `episodeNumber`
+    /// and the episode lacks that number (or the number is `< 1`). Has no effect
+    /// for `title` / `description` sources, matching the JSON Schema description.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fallback_value: Option<String>,
 }
@@ -69,12 +71,20 @@ impl<'a> CompiledTitleExtractor<'a> {
     pub fn extract(&self, episode: &dyn EpisodeData) -> Option<String> {
         let ext = self.extractor;
 
-        // Early return for null/zero seasonNumber when fallback_value is set.
-        let season_num = episode.season_number();
-        if ext.fallback_value.is_some()
-            && (season_num.is_none() || season_num.is_some_and(|n| n < 1))
-        {
-            return ext.fallback_value.clone();
+        // Early return when source is a numeric field that's missing or < 1.
+        // fallback_value is documented as having no effect for title/description,
+        // so it must only short-circuit when source is seasonNumber or episodeNumber.
+        if ext.fallback_value.is_some() {
+            let numeric = match ext.source.as_str() {
+                "seasonNumber" => Some(episode.season_number()),
+                "episodeNumber" => Some(episode.episode_number()),
+                _ => None,
+            };
+            if let Some(n) = numeric
+                && (n.is_none() || n.is_some_and(|v| v < 1))
+            {
+                return ext.fallback_value.clone();
+            }
         }
 
         let Some(source_value) = ext.get_source_value(episode) else {
@@ -299,5 +309,53 @@ mod tests {
             fallback_value: None,
         };
         assert_eq!(ext.extract(&ep("Just the title")).as_deref(), Some("Just the title"));
+    }
+
+    #[test]
+    fn fallback_value_triggers_for_missing_season_number() {
+        let ext = TitleExtractor {
+            source: "seasonNumber".into(),
+            pattern: None,
+            template: Some("Season ${0}".into()),
+            fallback: None,
+            fallback_value: Some("Extras".into()),
+        };
+        assert_eq!(ext.extract(&ep("any")).as_deref(), Some("Extras"));
+
+        let mut s1 = ep("any");
+        s1.season_number = Some(1);
+        assert_eq!(ext.extract(&s1).as_deref(), Some("Season 1"));
+    }
+
+    #[test]
+    fn fallback_value_triggers_for_missing_episode_number() {
+        let ext = TitleExtractor {
+            source: "episodeNumber".into(),
+            pattern: None,
+            template: Some("Episode ${0}".into()),
+            fallback: None,
+            fallback_value: Some("Bonus".into()),
+        };
+        assert_eq!(ext.extract(&ep("any")).as_deref(), Some("Bonus"));
+
+        let mut e1 = ep("any");
+        e1.episode_number = Some(7);
+        assert_eq!(ext.extract(&e1).as_deref(), Some("Episode 7"));
+    }
+
+    #[test]
+    fn fallback_value_does_not_short_circuit_title_source() {
+        // Episodes lacking a season number should still extract a title.
+        // Regression: previously, fallback_value short-circuited regardless of source.
+        let ext = TitleExtractor {
+            source: "title".into(),
+            pattern: Some(r"^(.+)$".into()),
+            template: Some("${1}".into()),
+            fallback: None,
+            fallback_value: Some("Should never appear".into()),
+        };
+        let episode = ep("Real title");
+        assert_eq!(episode.season_number, None);
+        assert_eq!(ext.extract(&episode).as_deref(), Some("Real title"));
     }
 }
