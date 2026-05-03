@@ -148,3 +148,34 @@ fn pattern_meta_accepts_show_episode_thumbnail() {
     let errs = validator.validate(SchemaType::PatternMeta, &with_string);
     assert!(!errs.is_empty(), "string should be rejected");
 }
+
+#[test]
+fn playlist_definition_accepts_show_thumbnail_everywhere() {
+    let validator = Validator::from_embedded().unwrap();
+    let doc = serde_json::json!({
+        "id": "test",
+        "displayName": "Test",
+        "priority": 0,
+        "grouping": {
+            "by": "titleClassifier",
+            "staticClassifiers": [
+                {
+                    "id": "g1",
+                    "displayName": "G1",
+                    "pattern": { "source": "title", "pattern": ".*" },
+                    "groupItem": { "showThumbnail": false },
+                    "episodeItem": { "showThumbnail": true }
+                }
+            ]
+        },
+        "groupItem": { "showThumbnail": false },
+        "episodeItem": { "showThumbnail": false }
+    });
+    let errs = validator.validate(SchemaType::PlaylistDefinition, &doc);
+    assert!(errs.is_empty(), "expected accept, got: {:?}", errs);
+
+    let mut bad = doc.clone();
+    bad["groupItem"]["showThumbnail"] = serde_json::json!("nope");
+    let errs = validator.validate(SchemaType::PlaylistDefinition, &bad);
+    assert!(!errs.is_empty(), "non-boolean must be rejected");
+}

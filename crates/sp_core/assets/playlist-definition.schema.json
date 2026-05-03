@@ -195,6 +195,10 @@
             "showDateRange": {
               "type": "boolean",
               "description": "Show or hide date range on this group's card. When not set, uses the playlist default."
+            },
+            "showThumbnail": {
+              "type": "boolean",
+              "description": "Per-group override for the group card thumbnail. When not set, uses the playlist default."
             }
           }
         },
@@ -221,6 +225,10 @@
             "titleExtractor": {
               "$ref": "#/$defs/TitleExtractor",
               "description": "Custom episode title transformation for this group. When not set, uses the playlist default."
+            },
+            "showThumbnail": {
+              "type": "boolean",
+              "description": "Per-group override for the in-group episode row thumbnail. When not set, uses the playlist default."
             }
           }
         },
@@ -491,6 +499,11 @@
         "titleExtractor": {
           "$ref": "#/$defs/TitleExtractor",
           "description": "Generates display names for group titles from episode data."
+        },
+        "showThumbnail": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true (default), each group card shows a thumbnail image. When false, no thumbnail is rendered on group cards in this playlist."
         }
       }
     },
@@ -518,6 +531,11 @@
         "titleExtractor": {
           "$ref": "#/$defs/TitleExtractor",
           "description": "Transforms episode display names. Strips redundant information conveyed by the group context."
+        },
+        "showThumbnail": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true (default), each episode row inside a group shows a thumbnail image. When false, no thumbnail is rendered on episode rows inside groups."
         }
       }
     }
