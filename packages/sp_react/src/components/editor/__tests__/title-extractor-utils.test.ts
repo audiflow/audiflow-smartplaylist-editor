@@ -4,8 +4,8 @@ import { flattenChain, nestChain } from '../title-extractor-form.tsx';
 describe('flattenChain / nestChain', () => {
   it('flattens a recursive chain into steps', () => {
     const chain = {
-      source: 'title', pattern: '^(.+)', group: 1,
-      fallback: { source: 'seasonNumber', group: 0, template: 'Season {value}' },
+      source: 'title', pattern: '^(.+)', template: '${1}',
+      fallback: { source: 'seasonNumber', template: 'Season ${0}' },
       fallbackValue: 'Unknown',
     };
     const steps = flattenChain(chain);
@@ -17,8 +17,8 @@ describe('flattenChain / nestChain', () => {
 
   it('nests steps back into recursive structure', () => {
     const steps = [
-      { source: 'title', pattern: '^(.+)', group: 1 },
-      { source: 'seasonNumber', group: 0, template: 'Season {value}' },
+      { source: 'title', pattern: '^(.+)', template: '${1}' },
+      { source: 'seasonNumber', template: 'Season ${0}' },
     ];
     const nested = nestChain(steps, 'Unknown');
     expect(nested?.source).toBe('title');
