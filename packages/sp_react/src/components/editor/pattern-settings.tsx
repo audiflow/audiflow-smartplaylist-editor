@@ -135,6 +135,21 @@ export function PatternSettingsCard({
             {t('yearGroupedEpisodes')}
           </HintLabel>
         </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="config-showEpisodeThumbnail"
+            checked={watch('showEpisodeThumbnail') ?? true}
+            onCheckedChange={(checked) =>
+              setValue('showEpisodeThumbnail', !!checked, { shouldDirty: true })
+            }
+          />
+          <HintLabel
+            htmlFor="config-showEpisodeThumbnail"
+            hint="showEpisodeThumbnail"
+          >
+            {t('showEpisodeThumbnail')}
+          </HintLabel>
+        </div>
       </CardContent>
     </Card>
   );
