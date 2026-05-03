@@ -114,6 +114,7 @@ Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (pref
 | `podcastGuid` | string | no | -- | Podcast's RSS GUID. Takes priority over feed URL matching. |
 | `feedUrls` | string[] | yes | -- | One or more RSS feed URLs. Supports host-migration scenarios. |
 | `yearGroupedEpisodes` | boolean | no | `false` | Show year headers in the main episode list (independent of playlist grouping). |
+| `showEpisodeThumbnail` | boolean | no | `true` | Show thumbnails on each row of the main podcast episode list. The page header artwork is unaffected. |
 | `playlists` | string[] | yes | -- | Ordered list of playlist definition IDs. Determines display order. |
 
 ### Example
@@ -127,6 +128,7 @@ Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (pref
     "https://anchor.fm/s/8c2088c/podcast/rss"
   ],
   "yearGroupedEpisodes": true,
+  "showEpisodeThumbnail": false,
   "playlists": ["regular", "extras", "shorts"]
 }
 ```
@@ -306,6 +308,7 @@ Optional. Default display settings for individual group cards. Overridable per-c
 | `showDateRange` | boolean | `false` | Show the date range (earliest to latest) on group cards. |
 | `pinToYear` | boolean | `false` | Pin group to its earliest year's section. |
 | `prependSeasonNumber` | boolean | `false` | Prefix group title with `S{n}` (e.g., "S13 Lincoln Arc"). |
+| `showThumbnail` | boolean | `true` | Show a thumbnail on each group card in this playlist. |
 | `titleExtractor` | object | -- | Generates display names for group titles. See [TitleExtractor](#titleextractor). |
 
 ```json
@@ -314,6 +317,7 @@ Optional. Default display settings for individual group cards. Overridable per-c
     "showDateRange": true,
     "pinToYear": true,
     "prependSeasonNumber": false,
+    "showThumbnail": false,
     "titleExtractor": {
       "source": "title",
       "pattern": "COTEN RADIO\\s*([^]+?)\\s*\\d+",
@@ -357,6 +361,7 @@ Optional. Default display settings for individual episode rows. Overridable per-
 | Field | Type | Description |
 |-------|------|-------------|
 | `titleExtractor` | object | Transforms episode display names. Strips redundant information conveyed by group context. See [TitleExtractor](#titleextractor). |
+| `showThumbnail` | boolean | Show a thumbnail on each episode row inside a group. Default `true`. |
 
 ```json
 {
@@ -365,7 +370,8 @@ Optional. Default display settings for individual episode rows. Overridable per-
       "source": "title",
       "pattern": "#\\d+(?:-\\d+)?\\s+(.+?)\\s*\\[",
       "template": "${1}"
-    }
+    },
+    "showThumbnail": false
   }
 }
 ```
@@ -648,9 +654,9 @@ Each classifier can override playlist-level defaults for display and behavior. O
 
 | Section | Overridable Fields |
 |---------|--------------------|
-| `groupItem` | `showDateRange`, `pinToYear` |
+| `groupItem` | `showDateRange`, `showThumbnail`, `pinToYear` |
 | `episodeListing` | `sort` |
-| `episodeItem` | `titleExtractor` |
+| `episodeItem` | `titleExtractor`, `showThumbnail` |
 | `numberingExtractor` | All fields (replaces the playlist-level extractor entirely) |
 
 ### Example

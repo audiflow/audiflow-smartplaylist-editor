@@ -195,6 +195,10 @@
             "showDateRange": {
               "type": "boolean",
               "description": "Show or hide date range on this group's card. When not set, uses the playlist default."
+            },
+            "showThumbnail": {
+              "type": "boolean",
+              "description": "Per-group override for the group card thumbnail. When not set, uses the playlist default."
             }
           }
         },
@@ -221,6 +225,10 @@
             "titleExtractor": {
               "$ref": "#/$defs/TitleExtractor",
               "description": "Custom episode title transformation for this group. When not set, uses the playlist default."
+            },
+            "showThumbnail": {
+              "type": "boolean",
+              "description": "Per-group override for the in-group episode row thumbnail. When not set, uses the playlist default."
             }
           }
         },
@@ -302,7 +310,7 @@
     },
     "TitleExtractor": {
       "type": "object",
-      "description": "Generates a display name from episode data. Reads a value, optionally matches a pattern, and formats the result. Steps: (1) read the source field; (2) if pattern is set, find a match and extract the specified part; (3) if template is set, format with {value} placeholder; (4) if any step fails, try the fallback. Supports chaining multiple fallback steps for complex podcast formats.",
+      "description": "Generates a display name from episode data. Reads a value, optionally matches a pattern, and formats the result. Steps: (1) read the source field; (2) if pattern is set, find a match; (3) render template with ${0} (full match), ${1}, ${2}, ... for capture groups, or use the full match when template is omitted; (4) if any step fails, try the fallback. Supports chaining multiple fallback steps for complex podcast formats.",
       "required": [
         "source"
       ],
@@ -320,17 +328,11 @@
         },
         "pattern": {
           "type": "string",
-          "description": "A text pattern to find in the source value. Use parentheses () to mark the part you want to extract. When omitted, the raw source value is used directly (useful with a template like 'Season {value}')."
-        },
-        "group": {
-          "type": "integer",
-          "default": 0,
-          "minimum": 0,
-          "description": "Which matched part to use (0 = entire match, 1 = first part in parentheses, etc.). Only meaningful when pattern is set."
+          "description": "A text pattern to find in the source value. Use parentheses () to mark parts you want to extract; refer to them in 'template' as ${1}, ${2}, ... When omitted, the raw source value is used directly (referenced as ${0} from template)."
         },
         "template": {
           "type": "string",
-          "description": "How to format the extracted text. Use {value} as a placeholder. For example, 'Season {value}' turns '3' into 'Season 3'."
+          "description": "How to format the matched text. Use ${0} for the entire match, ${1}, ${2}, ... for capture groups in parentheses. Example: '${1}. ${2}' joins the first and second capture groups with a period. Out-of-range references render as empty. When omitted, behaves as if '${0}'."
         },
         "fallback": {
           "$ref": "#/$defs/TitleExtractor",
@@ -497,6 +499,11 @@
         "titleExtractor": {
           "$ref": "#/$defs/TitleExtractor",
           "description": "Generates display names for group titles from episode data."
+        },
+        "showThumbnail": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true (default), each group card shows a thumbnail image. When false, no thumbnail is rendered on group cards in this playlist."
         }
       }
     },
@@ -524,6 +531,11 @@
         "titleExtractor": {
           "$ref": "#/$defs/TitleExtractor",
           "description": "Transforms episode display names. Strips redundant information conveyed by the group context."
+        },
+        "showThumbnail": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true (default), each episode row inside a group shows a thumbnail image. When false, no thumbnail is rendered on episode rows inside groups."
         }
       }
     }
