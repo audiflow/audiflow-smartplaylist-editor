@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input.tsx';
 import { Textarea } from '@/components/ui/textarea.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
+import { TriStateCheckbox } from '@/components/ui/tri-state-checkbox.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { useDuplicateCheck } from '@/hooks/use-duplicate-check.ts';
 import type { DuplicateConflict } from '@/hooks/use-duplicate-check.ts';
@@ -136,12 +137,13 @@ export function PatternSettingsCard({
           </HintLabel>
         </div>
         <div className="flex items-center gap-2">
-          <Checkbox
+          <TriStateCheckbox
             id="config-showEpisodeThumbnail"
-            checked={watch('showEpisodeThumbnail') ?? true}
-            onCheckedChange={(checked) =>
-              setValue('showEpisodeThumbnail', !!checked, { shouldDirty: true })
+            value={watch('showEpisodeThumbnail')}
+            onChange={(next) =>
+              setValue('showEpisodeThumbnail', next, { shouldDirty: true })
             }
+            title={t('triStateHint')}
           />
           <HintLabel
             htmlFor="config-showEpisodeThumbnail"
