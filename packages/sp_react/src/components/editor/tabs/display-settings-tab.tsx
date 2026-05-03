@@ -223,6 +223,10 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
     ? `${prefix}.grouping.staticClassifiers.${selectedIdx}.groupItem.showDateRange`
     : `${prefix}.groupItem.showDateRange`;
 
+  const showThumbnailField = isSpecific
+    ? `${prefix}.grouping.staticClassifiers.${selectedIdx}.groupItem.showThumbnail`
+    : `${prefix}.groupItem.showThumbnail`;
+
   return (
     <section className="space-y-3">
       <h5 className="text-sm font-semibold">{t('subsection.groups')}</h5>
@@ -240,6 +244,21 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
           hint="showDateRange"
         >
           {t('showDateRange')}
+        </HintLabel>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`playlist-${index}-group-${activeContext}-showThumbnail`}
+          checked={watchPath<boolean>(watch, showThumbnailField) ?? true}
+          onCheckedChange={(c) =>
+            setPath(setValue, showThumbnailField, !!c, { shouldDirty: true })
+          }
+        />
+        <HintLabel
+          htmlFor={`playlist-${index}-group-${activeContext}-showThumbnail`}
+          hint="showThumbnail"
+        >
+          {t('showThumbnail')}
         </HintLabel>
       </div>
     </section>
@@ -271,6 +290,10 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
     ? `${groupPrefix}.episodeItem.titleExtractor`
     : `${prefix}.episodeItem.titleExtractor`;
 
+  const episodeShowThumbnailPath = groupPrefix != null
+    ? `${groupPrefix}.episodeItem.showThumbnail`
+    : `${prefix}.episodeItem.showThumbnail`;
+
   return (
     <section className="space-y-3">
       <h5 className="text-sm font-semibold">{t('subsection.episodes')}</h5>
@@ -294,6 +317,21 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
           hint="showYearHeaders"
         >
           {t('showYearHeaders')}
+        </HintLabel>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`playlist-${index}-${activeContext}-episode-showThumbnail`}
+          checked={watchPath<boolean>(watch, episodeShowThumbnailPath) ?? true}
+          onCheckedChange={(c) =>
+            setPath(setValue, episodeShowThumbnailPath, !!c, { shouldDirty: true })
+          }
+        />
+        <HintLabel
+          htmlFor={`playlist-${index}-${activeContext}-episode-showThumbnail`}
+          hint="showThumbnail"
+        >
+          {t('showThumbnail')}
         </HintLabel>
       </div>
       <div {...episodeItemTitleHl}>
