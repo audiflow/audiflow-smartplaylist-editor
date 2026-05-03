@@ -16,8 +16,10 @@ pub struct PatternMeta {
 
     pub feed_urls: Vec<String>,
 
-    /// Binary feature flag (no editor-visible "default" state); see `show_episode_thumbnail`
-    /// for the contrasting tri-state treatment of fields where "use schema default" matters.
+    /// When `true`, the main podcast episode list groups episodes by publication
+    /// year with year headers in the app. Persisted as a plain `bool` (defaults to
+    /// `false`); unlike `show_episode_thumbnail`, there is no "use schema default"
+    /// tri-state — the editor surfaces this as a regular checkbox.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub year_grouped_episodes: bool,
 

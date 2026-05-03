@@ -40,10 +40,11 @@ impl Resolver for TitleAppearanceResolver {
             .group_item
             .as_ref()
             .and_then(|gi| gi.title_extractor.as_ref());
-        // Legacy fallback for pre-v5 configs that pointed titleDiscovery at the
-        // first static classifier's pattern. titleDiscovery always matches against
-        // the episode title, so the Matcher's `source` field is intentionally
-        // ignored — only the regex string is read.
+        // Legacy on-disk fallback: older configs pointed titleDiscovery at the
+        // first static classifier's pattern. The current editor never writes
+        // this shape, but we keep the path so older files still resolve.
+        // titleDiscovery always matches the episode title, so the Matcher's
+        // `source` field is intentionally ignored — only the regex string is read.
         let pattern_str = definition
             .grouping
             .static_classifiers

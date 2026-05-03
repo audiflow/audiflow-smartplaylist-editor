@@ -2,7 +2,7 @@
 
 Schema reference for audiflow smart playlist configuration files. Covers all three schema levels: pattern index, pattern meta, and playlist definition.
 
-Schema version: **5** (backwards-compatible with v4 fields accepted as aliases).
+JSON Schema definitions are versioned at **v6**; the pattern-index file format is versioned independently via its own `schemaVersion` field (see [Pattern Index](#pattern-index)).
 
 ## Table of Contents
 
@@ -181,8 +181,8 @@ Optional. Pre-processing step that includes/excludes episodes before grouping.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `require` | EpisodeFilterEntry[] | Include rules (AND). All rules must match for an episode to be included. |
-| `exclude` | EpisodeFilterEntry[] | Exclude rules (OR). Any matching rule rejects the episode. |
+| `require` | EpisodeFilterEntry[] | Include rules (OR). An episode is included when it matches ANY rule. Within each rule, all fields must match (AND). |
+| `exclude` | EpisodeFilterEntry[] | Exclude rules (OR). An episode is excluded if it matches ANY rule. Within each rule, all fields must match (AND). |
 
 **EpisodeFilterEntry**: At least one field required. When multiple fields are specified, all must match (AND).
 

@@ -109,7 +109,7 @@ pub struct EpisodeListingConfig {
     pub sort: Option<EpisodeSortRule>,
 }
 
-/// Unified per-playlist definition with all fields strongly typed (v5 only).
+/// Unified per-playlist definition with all fields strongly typed (v6 schema).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlaylistDefinition {
