@@ -220,8 +220,7 @@ fn rss_uses_title_extractor_for_display_names() {
         title_extractor: Some(TitleExtractor {
             source: "title".to_string(),
             pattern: Some(r"(.+?) \d+$".to_string()),
-            group: 1,
-            template: None,
+            template: Some("${1}".to_string()),
             fallback: None,
             fallback_value: None,
         }),
@@ -726,8 +725,7 @@ fn year_uses_title_extractor_for_display_names() {
         title_extractor: Some(TitleExtractor {
             source: "title".to_string(),
             pattern: Some(r"^(\w+)".to_string()),
-            group: 1,
-            template: None,
+            template: Some("${1}".to_string()),
             fallback: None,
             fallback_value: None,
         }),
@@ -922,8 +920,7 @@ fn title_appearance_uses_title_extractor() {
         title_extractor: Some(TitleExtractor {
             source: "title".to_string(),
             pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),
-            group: 1,
-            template: None,
+            template: Some("${1}".to_string()),
             fallback: None,
             fallback_value: None,
         }),

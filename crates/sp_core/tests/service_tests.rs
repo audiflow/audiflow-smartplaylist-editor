@@ -107,7 +107,7 @@ fn episode_sorter_null_dates_sort_after_dated_episodes() {
 
 #[test]
 fn episode_sorter_unknown_ids_sort_last() {
-    let eps = vec![SimpleEpisodeData {
+    let eps = [SimpleEpisodeData {
         id: 1,
         title: "A".into(),
         description: None,
@@ -953,7 +953,7 @@ fn preview_returns_none_for_empty_episodes() {
 fn preview_returns_none_when_no_config_matches() {
     let service = make_resolver_service(vec![]);
 
-    let eps = vec![make_rss_episode(1, 1, "S1E1", 1, 1)];
+    let eps = [make_rss_episode(1, 1, "S1E1", 1, 1)];
     let refs: Vec<&dyn sp_core::models::EpisodeData> = eps
         .iter()
         .map(|e| e as &dyn sp_core::models::EpisodeData)
@@ -1254,8 +1254,7 @@ fn partition_by_season_creates_sub_groups() {
             title_extractor: Some(TitleExtractor {
                 source: "seasonNumber".to_string(),
                 pattern: None,
-                group: 0,
-                template: Some("Season {value}".to_string()),
+                template: Some("Season ${0}".to_string()),
                 fallback: None,
                 fallback_value: None,
             }),
@@ -1270,8 +1269,7 @@ fn partition_by_season_creates_sub_groups() {
             title_extractor: Some(TitleExtractor {
                 source: "title".to_string(),
                 pattern: Some(r"\[(\w+)".to_string()),
-                group: 1,
-                template: None,
+                template: Some("${1}".to_string()),
                 fallback: None,
                 fallback_value: None,
             }),

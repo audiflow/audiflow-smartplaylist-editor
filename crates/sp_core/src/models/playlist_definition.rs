@@ -237,14 +237,14 @@ mod tests {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             },
             "episodeItem": {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             }
         });
@@ -311,14 +311,14 @@ mod tests {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             },
             "episodeItem": {
                 "titleExtractor": {
                     "source": "title",
                     "pattern": "(.+)",
-                    "group": 1
+                    "template": "${1}"
                 }
             }
         });
