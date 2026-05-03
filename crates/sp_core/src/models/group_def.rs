@@ -52,6 +52,10 @@ pub struct GroupDefGroupListing {
 pub struct GroupDefGroupItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub show_date_range: Option<bool>,
+
+    /// Per-group override for the group card thumbnail. None = inherit playlist default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_thumbnail: Option<bool>,
 }
 
 /// Per-group overrides for the episode list.
@@ -71,4 +75,43 @@ pub struct GroupDefEpisodeListing {
 pub struct GroupDefEpisodeItem {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title_extractor: Option<TitleExtractor>,
+
+    /// Per-group override for in-group episode row thumbnails. None = inherit playlist default.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub show_thumbnail: Option<bool>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn show_thumbnail_round_trips_on_per_group_overrides() {
+        let json = serde_json::json!({
+            "id": "g1",
+            "displayName": "G1",
+            "groupItem": { "showThumbnail": false },
+            "episodeItem": { "showThumbnail": true }
+        });
+        let g: GroupDef = serde_json::from_value(json).unwrap();
+        assert_eq!(g.group_item.as_ref().unwrap().show_thumbnail, Some(false));
+        assert_eq!(g.episode_item.as_ref().unwrap().show_thumbnail, Some(true));
+
+        let out = serde_json::to_value(&g).unwrap();
+        assert_eq!(out["groupItem"]["showThumbnail"], serde_json::json!(false));
+        assert_eq!(out["episodeItem"]["showThumbnail"], serde_json::json!(true));
+    }
+
+    #[test]
+    fn show_thumbnail_absent_omitted() {
+        let json = serde_json::json!({
+            "id": "g1",
+            "displayName": "G1",
+            "groupItem": { "showDateRange": true }
+        });
+        let g: GroupDef = serde_json::from_value(json).unwrap();
+        assert!(g.group_item.as_ref().unwrap().show_thumbnail.is_none());
+        let out = serde_json::to_value(&g).unwrap();
+        assert!(out["groupItem"].get("showThumbnail").is_none());
+    }
 }
