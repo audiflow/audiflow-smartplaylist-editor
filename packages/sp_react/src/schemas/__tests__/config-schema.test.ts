@@ -420,8 +420,23 @@ describe('showThumbnail flags', () => {
     expect(g?.episodeItem?.showThumbnail).toBe(true);
   });
 
-  it('parses showEpisodeThumbnail on pattern config', () => {
-    const result = patternConfigSchema.parse({
+  it('parses explicit showEpisodeThumbnail values', () => {
+    const onResult = patternConfigSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      podcastGuid: 'g',
+      feedUrls: ['https://x'],
+      showEpisodeThumbnail: true,
+      playlists: [{
+        id: 'one',
+        displayName: 'One',
+        priority: 0,
+        grouping: { by: 'seasonNumber' },
+      }],
+    });
+    expect(onResult.showEpisodeThumbnail).toBe(true);
+
+    const offResult = patternConfigSchema.parse({
       id: 'p1',
       displayName: 'P1',
       podcastGuid: 'g',
@@ -434,10 +449,10 @@ describe('showThumbnail flags', () => {
         grouping: { by: 'seasonNumber' },
       }],
     });
-    expect(result.showEpisodeThumbnail).toBe(false);
+    expect(offResult.showEpisodeThumbnail).toBe(false);
   });
 
-  it('defaults showEpisodeThumbnail to true when absent', () => {
+  it('leaves showEpisodeThumbnail undefined when absent', () => {
     const result = patternConfigSchema.parse({
       id: 'p1',
       displayName: 'P1',
@@ -450,6 +465,6 @@ describe('showThumbnail flags', () => {
         grouping: { by: 'seasonNumber' },
       }],
     });
-    expect(result.showEpisodeThumbnail).toBe(true);
+    expect(result.showEpisodeThumbnail).toBeUndefined();
   });
 });

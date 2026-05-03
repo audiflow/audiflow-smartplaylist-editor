@@ -193,7 +193,7 @@ export const patternConfigSchema = z.object({
   podcastGuid: z.string().nullish(),
   feedUrls: z.array(z.string()).nullish(),
   yearGroupedEpisodes: z.boolean().nullish().transform((v) => v ?? false),
-  showEpisodeThumbnail: z.boolean().nullish().transform((v) => v ?? true),
+  showEpisodeThumbnail: z.boolean().optional(),
   playlists: z.array(playlistDefinitionSchema),
 });
 
