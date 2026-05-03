@@ -322,6 +322,7 @@ fn config_assembler_orders_by_meta_playlists() {
         podcast_guid: None,
         feed_urls: vec!["https://example.com".to_string()],
         year_grouped_episodes: false,
+        show_episode_thumbnail: true,
         playlists: vec!["b".to_string(), "a".to_string()],
     };
 
@@ -340,6 +341,7 @@ fn config_assembler_appends_unlisted_playlists() {
         podcast_guid: None,
         feed_urls: vec!["https://example.com".to_string()],
         year_grouped_episodes: false,
+        show_episode_thumbnail: true,
         playlists: vec!["a".to_string()],
     };
 
