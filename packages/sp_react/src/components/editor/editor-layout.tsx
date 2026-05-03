@@ -70,11 +70,13 @@ export type MetaPayloadSnapshot = Pick<
  * Builds the meta object sent to `PUT /api/configs/patterns/{id}/meta`.
  *
  * `showEpisodeThumbnail` is a tri-state field: `true`/`false` are explicit
- * choices, `undefined` means "use schema default". The server treats JSON
- * `null` as "remove this key from disk", so we translate `undefined` → `null`
- * to make the round-trip lossless.
+ * choices, `undefined` means "use schema default". The server's update flow
+ * strips unknown keys before validation and treats JSON `null` as "remove
+ * this key from disk", so we translate `undefined` → `null` to make the
+ * round-trip lossless. `displayName` is intentionally included here because
+ * the update endpoint tolerates (and strips) it.
  */
-export function buildMetaPayload(
+export function buildUpdateMetaPayload(
   snapshot: MetaPayloadSnapshot,
   effectiveId: string,
 ) {
@@ -89,9 +91,34 @@ export function buildMetaPayload(
 }
 
 /**
+ * Builds the meta object nested inside the create-pattern payload.
+ *
+ * Differs from the update flavor in two ways enforced by `pattern-meta.schema.json`
+ * (`additionalProperties: false`, `showEpisodeThumbnail: { type: "boolean" }`):
+ *   - omits `displayName` (not a valid pattern-meta property; it lives on the
+ *     outer create payload instead);
+ *   - omits `showEpisodeThumbnail` entirely when undefined, since on create
+ *     there is no on-disk key to clear and `null` is not a valid boolean.
+ */
+export function buildCreateMetaPayload(
+  snapshot: MetaPayloadSnapshot,
+  effectiveId: string,
+) {
+  const base = {
+    id: effectiveId,
+    feedUrls: snapshot.feedUrls ?? [],
+    yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
+    playlists: snapshot.playlists.map((p) => p.id),
+  };
+  return snapshot.showEpisodeThumbnail !== undefined
+    ? { ...base, showEpisodeThumbnail: snapshot.showEpisodeThumbnail }
+    : base;
+}
+
+/**
  * Builds the wrapper payload sent to `POST /api/configs/patterns` for new
- * patterns. The nested `meta` shares the same null-as-clear semantics as the
- * update endpoint -- see `buildMetaPayload`.
+ * patterns. The outer `displayName` is what the server uses; the nested
+ * `meta` follows pattern-meta schema constraints -- see `buildCreateMetaPayload`.
  */
 export function buildCreatePatternPayload(
   snapshot: MetaPayloadSnapshot,
@@ -100,7 +127,7 @@ export function buildCreatePatternPayload(
   return {
     id: effectiveId,
     displayName: snapshot.displayName ?? undefined,
-    meta: buildMetaPayload(snapshot, effectiveId),
+    meta: buildCreateMetaPayload(snapshot, effectiveId),
   };
 }
 
@@ -341,7 +368,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       if (!isNewConfig) {
         await savePatternMetaMutation.mutateAsync({
           patternId: effectiveId,
-          data: buildMetaPayload(snapshot, effectiveId),
+          data: buildUpdateMetaPayload(snapshot, effectiveId),
         });
       }
 
