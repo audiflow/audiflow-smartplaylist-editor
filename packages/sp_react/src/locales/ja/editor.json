@@ -36,6 +36,7 @@
   "filters": "フィルター",
   "showDateRange": "グループカードに日付範囲を表示",
   "showThumbnail": "各エントリにサムネイルを表示",
+  "triStateHint": "クリックで切替: デフォルト -> オン -> オフ",
   "advancedNote": "高度な設定（グループ、抽出ルール、ソート）は JSON モードで編集できます。",
   "dangerZone": "危険な操作",
   "removePlaylist": "プレイリストを削除",

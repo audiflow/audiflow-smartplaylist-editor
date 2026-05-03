@@ -36,6 +36,7 @@
   "filters": "Filters",
   "showDateRange": "Show date range on group cards",
   "showThumbnail": "Show thumbnails on entries",
+  "triStateHint": "Click to cycle: default -> on -> off",
   "advancedNote": "Advanced fields (groups, extractors, sort) can be edited in JSON mode.",
   "dangerZone": "Danger Zone",
   "removePlaylist": "Remove Playlist",
