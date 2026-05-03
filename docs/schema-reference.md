@@ -254,7 +254,7 @@ Optional. Controls how groups map to dropdown entries in the app UI. When absent
     "partitionBy": "seasonNumber",
     "titleExtractor": {
       "source": "seasonNumber",
-      "template": "Season {value}"
+      "template": "Season ${0}"
     }
   }
 }
@@ -317,7 +317,7 @@ Optional. Default display settings for individual group cards. Overridable per-c
     "titleExtractor": {
       "source": "title",
       "pattern": "COTEN RADIO\\s*([^]+?)\\s*\\d+",
-      "group": 1,
+      "template": "${1}",
       "fallbackValue": "Other"
     }
   }
@@ -364,7 +364,7 @@ Optional. Default display settings for individual episode rows. Overridable per-
     "titleExtractor": {
       "source": "title",
       "pattern": "#\\d+(?:-\\d+)?\\s+(.+?)\\s*\\[",
-      "group": 1
+      "template": "${1}"
     }
   }
 }
@@ -442,7 +442,7 @@ Groups episodes by publication year.
 
 Finds recurring patterns in episode titles and groups by them, in the order they first appear in the feed.
 
-- Uses `groupItem.titleExtractor` to derive group names; capture group 1 becomes the group name.
+- Uses `groupItem.titleExtractor` to derive group names; the template references capture groups via `${N}` (e.g., `${1}` for the first capture).
 - Best for podcasts with titled story arcs or recurring guest series.
 
 ```json
@@ -454,7 +454,7 @@ Finds recurring patterns in episode titles and groups by them, in the order they
     "titleExtractor": {
       "source": "title",
       "pattern": "[(.+?)\\s*]",
-      "group": 1
+      "template": "${1}"
     }
   }
 }
@@ -503,16 +503,15 @@ Groups episodes by matching titles against patterns defined in `grouping.staticC
 
 Shared type used by `groupItem.titleExtractor`, `episodeItem.titleExtractor`, and `selector.titleExtractor`.
 
-Generates a display name from episode data using a pipeline: read source -> match pattern -> format with template -> fallback on failure.
+Generates a display name from episode data using a pipeline: read source -> match pattern -> render template -> fallback on failure.
 
 ### Fields
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `source` | enum | yes | -- | `"title"`, `"description"`, `"seasonNumber"`, or `"episodeNumber"`. |
-| `pattern` | string | no | -- | Regex to match against the source value. Use capture groups `()` to extract parts. |
-| `group` | integer | no | `0` | Which capture group to use. `0` = entire match, `1` = first group, etc. |
-| `template` | string | no | -- | Format string with `{value}` placeholder. |
+| `pattern` | string | no | -- | Regex to match against the source value. Use capture groups `()` to extract parts; reference them in `template` as `${1}`, `${2}`, ... |
+| `template` | string | no | -- | Format string. Use `${0}` for the entire match, `${1}`, `${2}`, ... for capture groups. Out-of-range references render as empty. When omitted, behaves as `${0}`. |
 | `fallback` | TitleExtractor | no | -- | Tried when the current step fails to match. Supports chaining. |
 | `fallbackValue` | string | no | -- | Default name when source is `seasonNumber` or `episodeNumber` and the value is missing or zero. Checked before pattern matching. No effect for `title` or `description` sources. |
 
@@ -520,8 +519,8 @@ Generates a display name from episode data using a pipeline: read source -> matc
 
 1. Read the value from `source`.
 2. If `fallbackValue` is set and source is `seasonNumber`/`episodeNumber` with a missing or zero value, return `fallbackValue`.
-3. If `pattern` is set, match against the value and extract the specified `group`.
-4. If `template` is set, substitute `{value}` with the extracted text.
+3. If `pattern` is set, match against the value. No match -> try `fallback`.
+4. Render `template`: substitute each `${N}` with capture group N (or empty if out of range). When `template` is omitted, use `${0}` (the full match, or the source value when no `pattern`).
 5. If any step fails, try the `fallback` extractor (recursive).
 
 ### Examples
@@ -531,7 +530,7 @@ Generates a display name from episode data using a pipeline: read source -> matc
 ```json
 {
   "source": "seasonNumber",
-  "template": "Season {value}",
+  "template": "Season ${0}",
   "fallbackValue": "Specials"
 }
 ```
@@ -542,9 +541,21 @@ Generates a display name from episode data using a pipeline: read source -> matc
 {
   "source": "title",
   "pattern": "#\\d+\\s+(.+?)\\s*$",
-  "group": 1
+  "template": "${1}"
 }
 ```
+
+**Multi-capture composition (combine number and title):**
+
+```json
+{
+  "source": "title",
+  "pattern": "【[^】]+(\\d+)】\\s*(.+?)#\\d+$",
+  "template": "${1}. ${2}"
+}
+```
+
+For an input title like `【アダム・スミス9】社会の秩序をつくるのは「優しさ」か「正義感」か。スミスが出した答えとは？#150`, this renders as `9. 社会の秩序をつくるのは「優しさ」か「正義感」か。スミスが出した答えとは？`.
 
 **Chained fallback:**
 
@@ -552,11 +563,11 @@ Generates a display name from episode data using a pipeline: read source -> matc
 {
   "source": "title",
   "pattern": "COTEN RADIO\\s*([^]+?)\\s*\\d+",
-  "group": 1,
+  "template": "${1}",
   "fallback": {
     "source": "title",
     "pattern": "COTEN RADIO\\s*(.+?)\\s*\\d+",
-    "group": 1
+    "template": "${1}"
   },
   "fallbackValue": "Other"
 }
@@ -661,7 +672,7 @@ Each classifier can override playlist-level defaults for display and behavior. O
           "titleExtractor": {
             "source": "title",
             "pattern": "\\]\\s*(.+)",
-            "group": 1
+            "template": "${1}"
           }
         }
       },
