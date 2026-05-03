@@ -5,6 +5,7 @@ import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel, HintIcon } from '@/components/editor/hint-label.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
+import { TriStateCheckbox } from '@/components/ui/tri-state-checkbox.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
 import {
@@ -226,12 +227,13 @@ export function GroupDefCard({
           </div>
 
           <div className="flex items-center gap-2">
-            <Checkbox
+            <TriStateCheckbox
               id={`group-${playlistIndex}-${groupIndex}-showThumbnail`}
-              checked={watch(`${prefix}.groupItem.showThumbnail`) ?? true}
-              onCheckedChange={(checked) =>
-                setValue(`${prefix}.groupItem.showThumbnail`, !!checked, { shouldDirty: true })
+              value={watch(`${prefix}.groupItem.showThumbnail`)}
+              onChange={(next) =>
+                setValue(`${prefix}.groupItem.showThumbnail`, next, { shouldDirty: true })
               }
+              title={t('triStateHint')}
             />
             <HintLabel
               htmlFor={`group-${playlistIndex}-${groupIndex}-showThumbnail`}
