@@ -55,6 +55,55 @@ const DEFAULT_CONFIG: PatternConfig = {
   yearGroupedEpisodes: false,
 };
 
+/**
+ * Snapshot subset used by the meta payload builders. Kept narrow so tests
+ * can construct fixtures without recreating the entire `PatternConfig` shape.
+ */
+export type MetaPayloadSnapshot = Pick<
+  PatternConfig,
+  'displayName' | 'feedUrls' | 'yearGroupedEpisodes' | 'showEpisodeThumbnail'
+> & {
+  playlists: Array<Pick<PatternConfig['playlists'][number], 'id'>>;
+};
+
+/**
+ * Builds the meta object sent to `PUT /api/configs/patterns/{id}/meta`.
+ *
+ * `showEpisodeThumbnail` is a tri-state field: `true`/`false` are explicit
+ * choices, `undefined` means "use schema default". The server treats JSON
+ * `null` as "remove this key from disk", so we translate `undefined` → `null`
+ * to make the round-trip lossless.
+ */
+export function buildMetaPayload(
+  snapshot: MetaPayloadSnapshot,
+  effectiveId: string,
+) {
+  return {
+    id: effectiveId,
+    displayName: snapshot.displayName ?? undefined,
+    feedUrls: snapshot.feedUrls ?? [],
+    yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
+    showEpisodeThumbnail: snapshot.showEpisodeThumbnail ?? null,
+    playlists: snapshot.playlists.map((p) => p.id),
+  };
+}
+
+/**
+ * Builds the wrapper payload sent to `POST /api/configs/patterns` for new
+ * patterns. The nested `meta` shares the same null-as-clear semantics as the
+ * update endpoint -- see `buildMetaPayload`.
+ */
+export function buildCreatePatternPayload(
+  snapshot: MetaPayloadSnapshot,
+  effectiveId: string,
+) {
+  return {
+    id: effectiveId,
+    displayName: snapshot.displayName ?? undefined,
+    meta: buildMetaPayload(snapshot, effectiveId),
+  };
+}
+
 interface EditorLayoutProps {
   configId: string | null;
   initialConfig?: PatternConfig;
@@ -259,16 +308,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       if (isNewConfig) {
         // Create the pattern directory first
         await createPatternMutation.mutateAsync({
-          data: {
-            id: effectiveId,
-            displayName: snapshot.displayName ?? undefined,
-            meta: {
-              id: effectiveId,
-              feedUrls: snapshot.feedUrls ?? [],
-              yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
-              playlists: snapshot.playlists.map((p) => p.id),
-            },
-          },
+          data: buildCreatePatternPayload(snapshot, effectiveId),
         });
       }
 
@@ -301,13 +341,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
       if (!isNewConfig) {
         await savePatternMetaMutation.mutateAsync({
           patternId: effectiveId,
-          data: {
-            id: effectiveId,
-            displayName: snapshot.displayName ?? undefined,
-            feedUrls: snapshot.feedUrls ?? [],
-            yearGroupedEpisodes: snapshot.yearGroupedEpisodes ?? false,
-            playlists: snapshot.playlists.map((p) => p.id),
-          },
+          data: buildMetaPayload(snapshot, effectiveId),
         });
       }
 

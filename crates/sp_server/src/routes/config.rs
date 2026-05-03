@@ -252,10 +252,9 @@ pub async fn update_pattern_meta(
 
     let preserved_data_version = existing_obj.get("dataVersion").cloned();
 
-    // Merge body into existing
-    for (key, value) in obj.iter() {
-        existing_obj.insert(key.clone(), value.clone());
-    }
+    // Merge body into existing: Value::Null means "remove key from existing"
+    // so the client can revert tri-state fields back to schema-default.
+    merge_meta_body(existing_obj, std::mem::take(obj));
     // Force canonical ID from route parameter
     existing_obj.insert("id".to_string(), Value::String(id.clone()));
     // Restore preserved dataVersion
@@ -565,4 +564,69 @@ fn feed_url_hint(meta: &Value) -> String {
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string()
+}
+
+/// Merges `body` into `existing` for `update_pattern_meta`.
+///
+/// Treats `Value::Null` in `body` as "remove this key from `existing`" so a
+/// client can express "revert to schema default" for tri-state fields like
+/// `showEpisodeThumbnail`. Non-null values overwrite existing entries.
+fn merge_meta_body(
+    existing: &mut serde_json::Map<String, Value>,
+    body: serde_json::Map<String, Value>,
+) {
+    for (key, value) in body {
+        if value.is_null() {
+            existing.remove(&key);
+        } else {
+            existing.insert(key, value);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{Map, json};
+
+    #[test]
+    fn null_value_deletes_existing_key() {
+        let mut existing: Map<String, Value> = serde_json::from_value(json!({
+            "showEpisodeThumbnail": false,
+            "yearGroupedEpisodes": true,
+        }))
+        .unwrap();
+        let body: Map<String, Value> = serde_json::from_value(json!({
+            "showEpisodeThumbnail": null,
+        }))
+        .unwrap();
+        merge_meta_body(&mut existing, body);
+        assert!(!existing.contains_key("showEpisodeThumbnail"));
+        assert_eq!(existing.get("yearGroupedEpisodes"), Some(&json!(true)));
+    }
+
+    #[test]
+    fn non_null_value_replaces_existing_key() {
+        let mut existing: Map<String, Value> = serde_json::from_value(json!({
+            "showEpisodeThumbnail": true,
+        }))
+        .unwrap();
+        let body: Map<String, Value> = serde_json::from_value(json!({
+            "showEpisodeThumbnail": false,
+        }))
+        .unwrap();
+        merge_meta_body(&mut existing, body);
+        assert_eq!(existing.get("showEpisodeThumbnail"), Some(&json!(false)));
+    }
+
+    #[test]
+    fn null_value_on_absent_key_is_a_noop() {
+        let mut existing: Map<String, Value> = serde_json::from_value(json!({})).unwrap();
+        let body: Map<String, Value> = serde_json::from_value(json!({
+            "showEpisodeThumbnail": null,
+        }))
+        .unwrap();
+        merge_meta_body(&mut existing, body);
+        assert!(!existing.contains_key("showEpisodeThumbnail"));
+    }
 }

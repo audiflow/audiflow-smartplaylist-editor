@@ -16,6 +16,8 @@ pub struct PatternMeta {
 
     pub feed_urls: Vec<String>,
 
+    /// Binary feature flag (no editor-visible "default" state); see `show_episode_thumbnail`
+    /// for the contrasting tri-state treatment of fields where "use schema default" matters.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub year_grouped_episodes: bool,
 
