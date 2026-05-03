@@ -31,6 +31,7 @@ function EditorIndex() {
       feedUrls: feedUrl ? [feedUrl] : [],
       playlists: [],
       yearGroupedEpisodes: false,
+      showEpisodeThumbnail: true,
     };
   }, [feedUrl, displayName]);
 

@@ -75,6 +75,7 @@ export const VALID_PATTERN_CONFIG: PatternConfig = {
   podcastGuid: 'guid-alpha-111',
   feedUrls: ['https://example.com/alpha/feed.xml'],
   yearGroupedEpisodes: false,
+  showEpisodeThumbnail: true,
   playlists: [PLAYLIST_SEASON, PLAYLIST_CATEGORY],
 };
 
@@ -83,6 +84,7 @@ export const MINIMAL_PATTERN_CONFIG: PatternConfig = {
   displayName: '',
   feedUrls: [],
   yearGroupedEpisodes: false,
+  showEpisodeThumbnail: true,
   playlists: [],
 };
 

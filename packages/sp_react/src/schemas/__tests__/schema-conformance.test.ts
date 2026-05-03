@@ -201,3 +201,17 @@ describe('v5-style playlist definition with Zod schemas', () => {
     expect(parsed.groupItem?.showDateRange).toBe(true);
   });
 });
+
+describe('showThumbnail JSON Schema fields', () => {
+  it('GroupItemConfig.showThumbnail is boolean with default true', () => {
+    const props = (defs.GroupItemConfig as Record<string, Record<string, unknown>>).properties as Record<string, Record<string, unknown>>;
+    expect(props.showThumbnail.type).toBe('boolean');
+    expect(props.showThumbnail.default).toBe(true);
+  });
+
+  it('EpisodeItemConfig.showThumbnail is boolean with default true', () => {
+    const props = (defs.EpisodeItemConfig as Record<string, Record<string, unknown>>).properties as Record<string, Record<string, unknown>>;
+    expect(props.showThumbnail.type).toBe('boolean');
+    expect(props.showThumbnail.default).toBe(true);
+  });
+});

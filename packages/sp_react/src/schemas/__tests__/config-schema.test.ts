@@ -382,3 +382,74 @@ describe('resolverTypeSchema', () => {
     expect(() => resolverTypeSchema.parse('titleAppearanceOrder')).toThrow();
   });
 });
+
+describe('showThumbnail flags', () => {
+  it('parses showThumbnail on groupItem and episodeItem', () => {
+    const result = playlistDefinitionSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      priority: 0,
+      grouping: { by: 'seasonNumber' },
+      groupItem: { showThumbnail: false },
+      episodeItem: { showThumbnail: false },
+    });
+    expect(result.groupItem?.showThumbnail).toBe(false);
+    expect(result.episodeItem?.showThumbnail).toBe(false);
+  });
+
+  it('parses showThumbnail on per-group overrides', () => {
+    const result = playlistDefinitionSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      priority: 0,
+      grouping: {
+        by: 'titleClassifier',
+        staticClassifiers: [
+          {
+            id: 'g1',
+            displayName: 'G1',
+            pattern: { source: 'title', pattern: '.*' },
+            groupItem: { showThumbnail: false },
+            episodeItem: { showThumbnail: true },
+          },
+        ],
+      },
+    });
+    const g = result.grouping.staticClassifiers?.[0];
+    expect(g?.groupItem?.showThumbnail).toBe(false);
+    expect(g?.episodeItem?.showThumbnail).toBe(true);
+  });
+
+  it('parses showEpisodeThumbnail on pattern config', () => {
+    const result = patternConfigSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      podcastGuid: 'g',
+      feedUrls: ['https://x'],
+      showEpisodeThumbnail: false,
+      playlists: [{
+        id: 'one',
+        displayName: 'One',
+        priority: 0,
+        grouping: { by: 'seasonNumber' },
+      }],
+    });
+    expect(result.showEpisodeThumbnail).toBe(false);
+  });
+
+  it('defaults showEpisodeThumbnail to true when absent', () => {
+    const result = patternConfigSchema.parse({
+      id: 'p1',
+      displayName: 'P1',
+      podcastGuid: 'g',
+      feedUrls: ['https://x'],
+      playlists: [{
+        id: 'one',
+        displayName: 'One',
+        priority: 0,
+        grouping: { by: 'seasonNumber' },
+      }],
+    });
+    expect(result.showEpisodeThumbnail).toBe(true);
+  });
+});

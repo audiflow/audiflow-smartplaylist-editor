@@ -100,6 +100,7 @@ export const groupDefSchema = z.object({
   groupItem: z
     .object({
       showDateRange: z.boolean().optional(),
+      showThumbnail: z.boolean().optional(),
     })
     .optional(),
   episodeListing: z
@@ -111,6 +112,7 @@ export const groupDefSchema = z.object({
   episodeItem: z
     .object({
       titleExtractor: titleExtractorSchema.optional(),
+      showThumbnail: z.boolean().optional(),
     })
     .optional(),
   numberingExtractor: numberingExtractorSchema.optional(),
@@ -141,6 +143,7 @@ export const groupItemConfigSchema = z.object({
   showDateRange: z.boolean().optional(),
   pinToYear: z.boolean().optional(),
   prependSeasonNumber: z.boolean().optional(),
+  showThumbnail: z.boolean().optional(),
   titleExtractor: titleExtractorSchema.nullish(),
 });
 
@@ -148,6 +151,7 @@ export const groupItemConfigSchema = z.object({
 
 export const episodeItemConfigSchema = z.object({
   titleExtractor: titleExtractorSchema.nullish(),
+  showThumbnail: z.boolean().optional(),
 });
 
 // -- v5 groupListing config --
@@ -189,6 +193,7 @@ export const patternConfigSchema = z.object({
   podcastGuid: z.string().nullish(),
   feedUrls: z.array(z.string()).nullish(),
   yearGroupedEpisodes: z.boolean().nullish().transform((v) => v ?? false),
+  showEpisodeThumbnail: z.boolean().nullish().transform((v) => v ?? true),
   playlists: z.array(playlistDefinitionSchema),
 });
 

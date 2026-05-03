@@ -53,6 +53,7 @@ const DEFAULT_CONFIG: PatternConfig = {
   displayName: '',
   playlists: [],
   yearGroupedEpisodes: false,
+  showEpisodeThumbnail: true,
 };
 
 interface EditorLayoutProps {
