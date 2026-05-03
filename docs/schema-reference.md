@@ -1,4 +1,4 @@
-# Schema Reference (v5)
+# Schema Reference (v6)
 
 Schema reference for audiflow smart playlist configuration files. Covers all three schema levels: pattern index, pattern meta, and playlist definition.
 
@@ -53,7 +53,7 @@ patterns/
 
 **File:** `patterns/meta.json`
 
-**Schema:** `https://audiflow.app/schema/v5/pattern-index.json`
+**Schema:** `https://audiflow.app/schema/v6/pattern-index.json`
 
 Root index of all patterns. The app fetches this file first and compares `dataVersion` to detect changes.
 
@@ -101,7 +101,7 @@ Each element in the `patterns` array:
 
 **File:** `{patternId}/meta.json`
 
-**Schema:** `https://audiflow.app/schema/v5/pattern-meta.json`
+**Schema:** `https://audiflow.app/schema/v6/pattern-meta.json`
 
 Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (preferred) or `feedUrls` to find the right config.
 
@@ -137,7 +137,7 @@ Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (pref
 
 **File:** `{patternId}/playlists/{playlistId}.json`
 
-**Schema:** `https://audiflow.app/schema/v5/playlist-definition.json`
+**Schema:** `https://audiflow.app/schema/v6/playlist-definition.json`
 
 Defines how a playlist filters, groups, and displays episodes. The field layout follows the data processing pipeline:
 

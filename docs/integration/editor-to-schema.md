@@ -57,7 +57,7 @@ This document covers:
 - docs/integration/smartplaylist-contract.md -- file structure the schemas validate
 - docs/architecture/module-boundaries.md -- sp_core owns schemas, sp_react mirrors as Zod
 - docs/development/change-workflow.md -- steps for schema changes
-- docs/schema-reference.md -- complete field-level schema reference (v5)
+- docs/schema-reference.md -- complete field-level schema reference (v6)
 
 ## When to update
 
