@@ -407,7 +407,6 @@ mod filter_semantics {
             display_name: "Test".to_string(),
             grouping: GroupingConfig {
                 by: "year".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },

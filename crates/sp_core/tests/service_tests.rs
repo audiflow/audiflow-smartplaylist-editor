@@ -301,7 +301,6 @@ fn make_definition(id: &str) -> PlaylistDefinition {
         display_name: id.to_string(),
         grouping: GroupingConfig {
             by: "seasonNumber".to_string(),
-            discovery_hint: None,
             numbering_extractor: None,
             static_classifiers: None,
         },
@@ -477,7 +476,6 @@ fn resolver_matches_config_by_feed_url() {
             display_name: "Main".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -517,7 +515,6 @@ fn resolver_matches_config_by_guid() {
             display_name: "Main".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -559,7 +556,6 @@ fn resolver_filters_by_require_regex() {
                 display_name: "Bonus".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -582,7 +578,6 @@ fn resolver_filters_by_require_regex() {
                 display_name: "Main".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -644,7 +639,6 @@ fn resolver_filter_regex_is_case_insensitive() {
             display_name: "Bonus".to_string(),
             grouping: GroupingConfig {
                 by: "year".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -701,7 +695,6 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 display_name: "All".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -718,7 +711,6 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
                 display_name: "Bonus".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -779,7 +771,6 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
             display_name: "Regular Series".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -844,7 +835,6 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
             display_name: "All".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -889,7 +879,6 @@ fn resolver_sorts_ungrouped_episode_ids() {
             display_name: "Series".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -986,7 +975,6 @@ fn preview_returns_preview_grouping_with_single_playlist() {
             display_name: "Seasons".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -1033,7 +1021,6 @@ fn preview_tracks_claimed_by_others() {
                 display_name: "Priority A".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1056,7 +1043,6 @@ fn preview_tracks_claimed_by_others() {
                 display_name: "Priority B".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1127,7 +1113,6 @@ fn preview_sorts_episode_ids_by_published_at() {
             display_name: "Seasons".to_string(),
             grouping: GroupingConfig {
                 by: "seasonNumber".to_string(),
-                discovery_hint: None,
                 numbering_extractor: None,
                 static_classifiers: None,
             },
@@ -1176,7 +1161,6 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 display_name: "Bonus".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1199,7 +1183,6 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
                 display_name: "All".to_string(),
                 grouping: GroupingConfig {
                     by: "year".to_string(),
-                    discovery_hint: None,
                     numbering_extractor: None,
                     static_classifiers: None,
                 },
@@ -1263,7 +1246,6 @@ fn partition_by_season_creates_sub_groups() {
         display_name: "By Professor".to_string(),
         grouping: GroupingConfig {
             by: "titleDiscovery".to_string(),
-            discovery_hint: None,
             numbering_extractor: None,
             static_classifiers: None,
         },

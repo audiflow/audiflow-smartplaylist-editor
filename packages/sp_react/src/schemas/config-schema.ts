@@ -133,7 +133,6 @@ export const selectorConfigSchema = z.object({
 
 export const groupingConfigSchema = z.object({
   by: resolverTypeSchema,
-  discoveryHint: z.string().nullish(),
   numberingExtractor: numberingExtractorSchema.nullish(),
   staticClassifiers: z.array(groupDefSchema).nullish(),
 });

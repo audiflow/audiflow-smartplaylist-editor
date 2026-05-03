@@ -31,8 +31,6 @@
   "resolverDesc_titleClassifier": "定義したパターンにタイトルを照合してグループ化します",
   "resolverDesc_year": "エピソードの公開年でグループ化します",
   "resolverDesc_titleDiscovery": "タイトルに繰り返し現れるパターンを見つけ、出現順にグループ化します",
-  "discoveryHint": "タイトルパターンのヒント",
-  "discoveryHintPlaceholder": "例: ^(.+?) -",
   "priority": "取得優先度",
   "filters": "フィルター",
   "showDateRange": "グループカードに日付範囲を表示",

@@ -102,7 +102,6 @@ describe('v5-style playlist definition with Zod schemas', () => {
       priority: 0,
       grouping: {
         by: 'titleDiscovery',
-        discoveryHint: '【(?:出演：)?(.+?)(?:\\s*編.?)?】',
       },
       groupListing: {
         sort: { field: 'playlistNumber', order: 'ascending' },
@@ -134,7 +133,6 @@ describe('v5-style playlist definition with Zod schemas', () => {
     const parsed = playlistDefinitionSchema.parse(input);
     expect(parsed.id).toBe('professors');
     expect(parsed.grouping.by).toBe('titleDiscovery');
-    expect(parsed.grouping.discoveryHint).toBe('【(?:出演：)?(.+?)(?:\\s*編.?)?】');
     expect(parsed.groupItem?.showDateRange).toBe(true);
     expect(parsed.groupItem?.pinToYear).toBe(false);
     expect(parsed.episodeItem?.titleExtractor?.pattern).toBe('#\\d+(?:-\\d+)?\\s+(.+?)\\s*【');

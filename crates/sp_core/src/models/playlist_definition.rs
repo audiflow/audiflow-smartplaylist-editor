@@ -33,10 +33,6 @@ pub struct GroupingConfig {
     #[serde(rename = "by")]
     pub by: String,
 
-    /// Regex hint for titleDiscovery fallback.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub discovery_hint: Option<String>,
-
     /// Configuration for extracting season and episode numbers.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub numbering_extractor: Option<NumberingExtractor>,

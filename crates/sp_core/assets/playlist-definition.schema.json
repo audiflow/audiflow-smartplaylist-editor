@@ -441,10 +441,6 @@
             }
           ]
         },
-        "discoveryHint": {
-          "type": "string",
-          "description": "Regex pattern used as a fallback hint for titleDiscovery when it cannot detect a recurring title segment on its own."
-        },
         "numberingExtractor": {
           "$ref": "#/$defs/NumberingExtractor",
           "description": "Finds season and episode numbers in episode text, overriding feed data when needed."

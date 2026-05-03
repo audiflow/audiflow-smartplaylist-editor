@@ -154,7 +154,7 @@ export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
             </HintLabel>
           </div>
 
-          {!isTitleClassifier && (
+          {!isTitleClassifier && resolverType !== 'titleDiscovery' && (
             <TitleExtractorForm
               fieldPath={`${prefix}.groupItem.titleExtractor`}
               idPrefix={`group-title-${index}`}

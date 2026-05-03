@@ -31,8 +31,6 @@
   "resolverDesc_titleClassifier": "Groups episodes by matching titles against patterns you define in Groups",
   "resolverDesc_year": "Groups episodes by the year they were published",
   "resolverDesc_titleDiscovery": "Finds recurring patterns in titles and groups by them, in the order they first appear",
-  "discoveryHint": "Title pattern hint",
-  "discoveryHintPlaceholder": "e.g. ^(.+?) -",
   "priority": "Claim priority",
   "filters": "Filters",
   "showDateRange": "Show date range on group cards",

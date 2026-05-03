@@ -78,7 +78,6 @@ fn minimal_definition(by: &str) -> PlaylistDefinition {
         display_name: "Test".to_string(),
         grouping: GroupingConfig {
             by: by.to_string(),
-            discovery_hint: None,
             numbering_extractor: None,
             static_classifiers: None,
         },

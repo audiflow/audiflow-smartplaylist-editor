@@ -11,7 +11,6 @@
   "resolverType_titleClassifier": "Groups episodes by matching their titles against patterns you define in the Groups tab. Use when episodes follow naming conventions like 'Arc 1: ...' or 'Mystery Series: ...'.",
   "resolverType_year": "Groups episodes by their publication year. Good for long-running podcasts where yearly grouping is a natural fit.",
   "resolverType_titleDiscovery": "Finds recurring patterns in episode titles and groups by them, in the order they first appear. Useful for podcasts with titled story arcs or series.",
-  "discoveryHint": "Regex hint for the titleDiscovery resolver. Episodes whose titles match this pattern are grouped by the first captured part; non-matching episodes become ungrouped.",
   "priority": "Controls the order playlists claim episodes. Lower numbers go first. If two playlists could match the same episode, the one with lower priority claims it. Playlists with filters always run before filter-less ones.",
   "presentation": "Choose how groups appear in the app. 'Collect into one playlist' shows all groups inside a single entry. 'Make each group its own playlist' creates a separate entry for each group.",
   "episodeFilters": "Rules applied before organizing episodes. Within each rule, all fields must match (AND). Across rules: include passes only when ALL rules match (AND); exclude rejects if ANY rule matches (OR).",
