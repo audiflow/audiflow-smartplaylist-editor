@@ -3,6 +3,7 @@ import type { FieldPath, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
+import { TriStateCheckbox } from '@/components/ui/tri-state-checkbox.tsx';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
@@ -247,12 +248,13 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
         </HintLabel>
       </div>
       <div className="flex items-center gap-2">
-        <Checkbox
+        <TriStateCheckbox
           id={`playlist-${index}-group-${activeContext}-showThumbnail`}
-          checked={watchPath<boolean>(watch, showThumbnailField) ?? true}
-          onCheckedChange={(c) =>
-            setPath(setValue, showThumbnailField, !!c, { shouldDirty: true })
+          value={watchPath<boolean>(watch, showThumbnailField)}
+          onChange={(next) =>
+            setPath(setValue, showThumbnailField, next, { shouldDirty: true })
           }
+          title={t('triStateHint')}
         />
         <HintLabel
           htmlFor={`playlist-${index}-group-${activeContext}-showThumbnail`}
@@ -320,12 +322,13 @@ function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionPro
         </HintLabel>
       </div>
       <div className="flex items-center gap-2">
-        <Checkbox
+        <TriStateCheckbox
           id={`playlist-${index}-${activeContext}-episode-showThumbnail`}
-          checked={watchPath<boolean>(watch, episodeShowThumbnailPath) ?? true}
-          onCheckedChange={(c) =>
-            setPath(setValue, episodeShowThumbnailPath, !!c, { shouldDirty: true })
+          value={watchPath<boolean>(watch, episodeShowThumbnailPath)}
+          onChange={(next) =>
+            setPath(setValue, episodeShowThumbnailPath, next, { shouldDirty: true })
           }
+          title={t('triStateHint')}
         />
         <HintLabel
           htmlFor={`playlist-${index}-${activeContext}-episode-showThumbnail`}
