@@ -217,6 +217,7 @@ fn rss_uses_title_extractor_for_display_names() {
         show_date_range: None,
         pin_to_year: None,
         prepend_season_number: None,
+        show_thumbnail: None,
         title_extractor: Some(TitleExtractor {
             source: "title".to_string(),
             pattern: Some(r"(.+?) \d+$".to_string()),
@@ -722,6 +723,7 @@ fn year_uses_title_extractor_for_display_names() {
         show_date_range: None,
         pin_to_year: None,
         prepend_season_number: None,
+        show_thumbnail: None,
         title_extractor: Some(TitleExtractor {
             source: "title".to_string(),
             pattern: Some(r"^(\w+)".to_string()),
@@ -917,6 +919,7 @@ fn title_appearance_uses_title_extractor() {
         show_date_range: None,
         pin_to_year: None,
         prepend_season_number: None,
+        show_thumbnail: None,
         title_extractor: Some(TitleExtractor {
             source: "title".to_string(),
             pattern: Some(r"\[(\w+)\s+\d+\]".to_string()),

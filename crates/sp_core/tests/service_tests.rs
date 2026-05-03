@@ -1268,6 +1268,7 @@ fn partition_by_season_creates_sub_groups() {
             show_date_range: None,
             pin_to_year: None,
             prepend_season_number: None,
+            show_thumbnail: None,
             title_extractor: Some(TitleExtractor {
                 source: "title".to_string(),
                 pattern: Some(r"\[(\w+)".to_string()),
