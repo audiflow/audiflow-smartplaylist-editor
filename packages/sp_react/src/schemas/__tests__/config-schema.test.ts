@@ -58,14 +58,14 @@ describe('playlistDefinitionSchema', () => {
         titleExtractor: {
           source: 'title',
           pattern: '\\[(.+?)\\]',
-          group: 1,
+          template: '${1}',
         },
       },
       episodeItem: {
         titleExtractor: {
           source: 'title',
           pattern: '#\\d+ (.+)',
-          group: 1,
+          template: '${1}',
         },
       },
     };
@@ -296,17 +296,17 @@ describe('groupDefSchema', () => {
 });
 
 describe('titleExtractorSchema', () => {
-  it('parses minimal title extractor with defaults', () => {
+  it('parses minimal title extractor', () => {
     const result = titleExtractorSchema.parse({ source: 'title' });
     expect(result.source).toBe('title');
-    expect(result.group).toBe(0);
+    expect(result.template).toBeUndefined();
   });
 
   it('parses title extractor with fallback (recursive)', () => {
     const input = {
       source: 'title',
       pattern: '\\[(.+?)\\]',
-      group: 1,
+      template: '${1}',
       fallback: {
         source: 'seasonNumber',
         template: 'Season {value}',

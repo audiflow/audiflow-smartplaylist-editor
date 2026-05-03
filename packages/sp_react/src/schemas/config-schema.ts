@@ -52,7 +52,6 @@ export const episodeFiltersSchema = z.object({
 export type TitleExtractorInput = {
   source: string;
   pattern?: string | null;
-  group?: number;
   template?: string | null;
   fallback?: TitleExtractorInput | null;
   fallbackValue?: string | null;
@@ -63,7 +62,6 @@ export const titleExtractorSchema: z.ZodType<TitleExtractorInput> = z.lazy(
     z.object({
       source: z.string(),
       pattern: z.string().nullish(),
-      group: z.number().nullish().transform((v) => v ?? 0),
       template: z.string().nullish(),
       fallback: titleExtractorSchema.nullish(),
       fallbackValue: z.string().nullish(),

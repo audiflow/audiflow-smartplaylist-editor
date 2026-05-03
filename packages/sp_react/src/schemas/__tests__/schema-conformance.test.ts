@@ -114,7 +114,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
         titleExtractor: {
           source: 'title',
           pattern: '【(?:出演：)?(.+?)\\s*編',
-          group: 1,
+          template: '${1}',
         },
       },
       episodeListing: {
@@ -125,7 +125,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
         titleExtractor: {
           source: 'title',
           pattern: '#\\d+(?:-\\d+)?\\s+(.+?)\\s*【',
-          group: 1,
+          template: '${1}',
         },
       },
     };
@@ -155,7 +155,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
       showDateRange: true,
       pinToYear: true,
       prependSeasonNumber: false,
-      titleExtractor: { source: 'title', pattern: '(.+)', group: 1 },
+      titleExtractor: { source: 'title', pattern: '(.+)', template: '${1}' },
     };
     const parsed = groupItemConfigSchema.parse(input);
     expect(parsed.showDateRange).toBe(true);
@@ -165,7 +165,7 @@ describe('v5-style playlist definition with Zod schemas', () => {
 
   it('parses episodeItemConfigSchema independently', () => {
     const input = {
-      titleExtractor: { source: 'title', pattern: '#\\d+ (.+)', group: 1 },
+      titleExtractor: { source: 'title', pattern: '#\\d+ (.+)', template: '${1}' },
     };
     const parsed = episodeItemConfigSchema.parse(input);
     expect(parsed.titleExtractor?.pattern).toBe('#\\d+ (.+)');
