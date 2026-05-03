@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import Ajv from 'ajv';
 import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
@@ -22,10 +21,6 @@ const schemaPath = resolve(
 );
 const schemaJson = JSON.parse(readFileSync(schemaPath, 'utf-8'));
 const defs = schemaJson.$defs as Record<string, Record<string, unknown>>;
-const topProps = schemaJson.properties as Record<
-  string,
-  Record<string, unknown>
->;
 
 function extractEnum(property: Record<string, unknown>): string[] {
   if ('enum' in property) {
@@ -37,11 +32,6 @@ function extractEnum(property: Record<string, unknown>): string[] {
     );
   }
   return [];
-}
-
-function createValidator() {
-  const ajv = new Ajv({ allErrors: true });
-  return ajv.compile(schemaJson);
 }
 
 describe('Zod enums match vendored playlist-definition schema', () => {
