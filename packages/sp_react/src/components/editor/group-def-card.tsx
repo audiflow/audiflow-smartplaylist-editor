@@ -224,6 +224,22 @@ export function GroupDefCard({
               {t('showDateRange')}
             </HintLabel>
           </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`group-${playlistIndex}-${groupIndex}-showThumbnail`}
+              checked={watch(`${prefix}.groupItem.showThumbnail`) ?? true}
+              onCheckedChange={(checked) =>
+                setValue(`${prefix}.groupItem.showThumbnail`, !!checked, { shouldDirty: true })
+              }
+            />
+            <HintLabel
+              htmlFor={`group-${playlistIndex}-${groupIndex}-showThumbnail`}
+              hint="showThumbnail"
+            >
+              {t('showThumbnail')}
+            </HintLabel>
+          </div>
         </div>
 
         <Accordion type="multiple" defaultValue={expandedOverrides} key={expandedOverrides.join(',')} className="w-full">
