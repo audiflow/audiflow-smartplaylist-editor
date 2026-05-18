@@ -36,6 +36,7 @@ impl ConfigAssembler {
                 Some(meta.feed_urls.clone())
             },
             year_grouped_episodes: meta.year_grouped_episodes,
+            show_episode_thumbnail: meta.show_episode_thumbnail,
             playlists: ordered,
         }
     }
