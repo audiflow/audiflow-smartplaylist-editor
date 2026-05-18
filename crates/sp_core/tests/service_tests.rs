@@ -473,6 +473,7 @@ fn resolver_matches_config_by_feed_url() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed.rss".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "main".to_string(),
             display_name: "Main".to_string(),
@@ -512,6 +513,7 @@ fn resolver_matches_config_by_guid() {
         podcast_guid: Some("test-guid".to_string()),
         feed_urls: None,
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "main".to_string(),
             display_name: "Main".to_string(),
@@ -552,6 +554,7 @@ fn resolver_filters_by_require_regex() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![
             PlaylistDefinition {
                 id: "bonus".to_string(),
@@ -636,6 +639,7 @@ fn resolver_filter_regex_is_case_insensitive() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "bonus".to_string(),
             display_name: "Bonus".to_string(),
@@ -690,6 +694,7 @@ fn resolver_filtered_definitions_process_before_fallbacks() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![
             // Fallback (no filters) listed first, but should process last
             PlaylistDefinition {
@@ -768,6 +773,7 @@ fn resolver_grouped_structure_produces_single_playlist_with_groups() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "regular".to_string(),
             display_name: "Regular Series".to_string(),
@@ -832,6 +838,7 @@ fn resolver_episode_ids_sorted_by_published_at_in_output() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "all".to_string(),
             display_name: "All".to_string(),
@@ -876,6 +883,7 @@ fn resolver_sorts_ungrouped_episode_ids() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "series".to_string(),
             display_name: "Series".to_string(),
@@ -972,6 +980,7 @@ fn preview_returns_preview_grouping_with_single_playlist() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
@@ -1017,6 +1026,7 @@ fn preview_tracks_claimed_by_others() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![
             PlaylistDefinition {
                 id: "priority-a".to_string(),
@@ -1110,6 +1120,7 @@ fn preview_sorts_episode_ids_by_published_at() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![PlaylistDefinition {
             id: "seasons".to_string(),
             display_name: "Seasons".to_string(),
@@ -1157,6 +1168,7 @@ fn preview_fallback_definition_has_empty_claimed_by_others() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![
             PlaylistDefinition {
                 id: "bonus".to_string(),
@@ -1334,6 +1346,7 @@ fn partition_by_season_creates_sub_groups() {
         podcast_guid: None,
         feed_urls: Some(vec!["https://example.com/feed".to_string()]),
         year_grouped_episodes: false,
+        show_episode_thumbnail: None,
         playlists: vec![def],
     };
 

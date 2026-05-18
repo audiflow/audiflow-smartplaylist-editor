@@ -31,6 +31,12 @@ pub struct PatternConfig {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub year_grouped_episodes: bool,
 
+    /// Tri-state: `None` = use schema default; `Some(true)` = explicit on; `Some(false)` = explicit off.
+    /// Mirrors `PatternMeta::show_episode_thumbnail` so the assembled config round-trips
+    /// the field to the editor; without this, `GET /assembled` would drop the value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub show_episode_thumbnail: Option<bool>,
+
     pub playlists: Vec<PlaylistDefinition>,
 }
 

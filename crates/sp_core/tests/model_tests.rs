@@ -424,6 +424,7 @@ mod filter_semantics {
             podcast_guid: None,
             feed_urls: Some(vec!["https://example.com/feed".to_string()]),
             year_grouped_episodes: false,
+            show_episode_thumbnail: None,
             playlists: vec![definition],
         };
 
