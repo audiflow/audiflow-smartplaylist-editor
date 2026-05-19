@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { EditorLayout } from '@/components/editor/editor-layout.tsx';
 import { useEditorStore } from '@/stores/editor-store.ts';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 
 const editorSearchSchema = z.object({
   feedUrl: z.string().optional(),
@@ -23,7 +23,7 @@ function EditorIndex() {
     setFeedUrl(feedUrl ?? '');
   }, [feedUrl, setFeedUrl]);
 
-  const initialConfig = useMemo<PatternConfig | undefined>(() => {
+  const initialConfig = useMemo<PresetConfig | undefined>(() => {
     if (!feedUrl && !displayName) return undefined;
     return {
       id: '',

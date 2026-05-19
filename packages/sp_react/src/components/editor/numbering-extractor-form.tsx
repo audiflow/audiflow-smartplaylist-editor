@@ -1,7 +1,7 @@
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2 } from 'lucide-react';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
@@ -23,7 +23,7 @@ interface NumberingExtractorFormProps {
 }
 
 export function NumberingExtractorForm({ fieldPath, idPrefix }: NumberingExtractorFormProps) {
-  const { register, watch, setValue } = useFormContext<PatternConfig>();
+  const { register, watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
 
   const extractor = watch(fieldPath as any);

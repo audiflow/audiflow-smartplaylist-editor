@@ -5,7 +5,7 @@
 ### Module: preset_core
 
 #### Responsibilities
-- Define all domain models (PatternConfig, PlaylistDefinition, SelectorConfig, GroupingConfig, GroupListingConfig, GroupItemConfig, EpisodeListingConfig, EpisodeItemConfig, Playlist, GroupDef, etc.)
+- Define all domain models (PresetConfig, PlaylistDefinition, SelectorConfig, GroupingConfig, GroupListingConfig, GroupItemConfig, EpisodeListingConfig, EpisodeItemConfig, Playlist, GroupDef, etc.)
 - Implement resolver trait and concrete resolvers (seasonNumber, titleClassifier, year, titleDiscovery)
 - Provide schema validation via embedded JSON Schema files
 - Implement services: ResolverService, ConfigAssembler, sorting utilities

@@ -1,6 +1,6 @@
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, SortOrder } from '@/schemas/config-schema.ts';
+import type { PresetConfig, SortOrder } from '@/schemas/config-schema.ts';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -47,7 +47,7 @@ const LABELS = {
 } as const;
 
 export function SortForm(props: SortFormProps) {
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
 
   const scope: SortScope = props.scope ?? 'group';

@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useForm, FormProvider } from 'react-hook-form';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { renderWithProviders } from '@/test-utils.tsx';
 import { GroupsForm } from '../groups-form.tsx';
 
-const CONFIG_WITH_GROUPS: PatternConfig = {
+const CONFIG_WITH_GROUPS: PresetConfig = {
   id: 'test',
   displayName: '',
   yearGroupedEpisodes: false,
@@ -27,7 +27,7 @@ const CONFIG_WITH_GROUPS: PatternConfig = {
   ],
 };
 
-function buildSingleGroupConfig(): PatternConfig {
+function buildSingleGroupConfig(): PresetConfig {
   return {
     ...CONFIG_WITH_GROUPS,
     playlists: [
@@ -49,13 +49,13 @@ function FormWrapper({
   defaultValues,
 }: {
   children: React.ReactNode;
-  defaultValues: PatternConfig;
+  defaultValues: PresetConfig;
 }) {
-  const form = useForm<PatternConfig>({ defaultValues });
+  const form = useForm<PresetConfig>({ defaultValues });
   return <FormProvider {...form}>{children}</FormProvider>;
 }
 
-function renderGroupsForm(config: PatternConfig) {
+function renderGroupsForm(config: PresetConfig) {
   return renderWithProviders(
     <FormWrapper defaultValues={config}>
       <GroupsForm index={0} />

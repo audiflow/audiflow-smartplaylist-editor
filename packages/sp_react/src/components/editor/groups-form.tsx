@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { GroupDefCard } from '@/components/editor/group-def-card.tsx';
 import { GroupReorderDialog } from '@/components/editor/group-reorder-dialog.tsx';
 import { SortForm } from '@/components/editor/sort-form.tsx';
@@ -18,7 +18,7 @@ interface GroupsFormProps {
 const EMPTY_GROUP = { id: '', displayName: '' };
 
 export function GroupsForm({ index }: GroupsFormProps) {
-  const { watch, control, getValues } = useFormContext<PatternConfig>();
+  const { watch, control, getValues } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
   const prefix = `playlists.${index}` as const;
 

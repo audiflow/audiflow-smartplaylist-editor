@@ -68,8 +68,8 @@ Core types use Rust structs with `serde::Serialize`/`Deserialize`. Custom serial
 | `YearBinding` | Enum: `None` (default), `PinToYear`, `SplitByYear` |
 | `Grouping` | Resolver output: playlists + ungrouped_episode_ids + resolver_type |
 | `PlaylistDefinition` | Per-playlist config: resolver_type, filters, extractors, groups, display settings |
-| `PatternConfig` | Per-podcast config: id, podcast_guid, feed_urls, year_grouped_episodes, playlists |
-| `PatternMeta` / `PatternSummary` / `RootMeta` | Split config metadata hierarchy |
+| `PresetConfig` | Per-podcast config: id, podcast_guid, feed_urls, year_grouped_episodes, playlists |
+| `PresetMeta` / `PresetSummary` / `RootMeta` | Split config metadata hierarchy |
 | `EpisodeFilters` / `EpisodeFilterEntry` | Require/exclude regex filters on title/description |
 | `GroupDef` | Static group definition with id, display_name, pattern, display, episode_list, numbering_extractor |
 | `GroupListSettings` | year_binding, user_sortable, show_date_range, sort rule |
@@ -102,7 +102,7 @@ trait Resolver {
 
 `ResolverService` orchestrates the chain:
 
-1. Match podcast by GUID or feed URL against `PatternConfig` list
+1. Match podcast by GUID or feed URL against `PresetConfig` list
 2. If matched: route episodes through definitions in priority order, filtering by require/exclude regexes
 3. Higher-priority definitions claim episodes, preventing lower-priority ones from receiving them
 4. If no match: try resolvers in order with no definition (auto-detect mode)
@@ -118,7 +118,7 @@ Playlist structure determines output shape:
 | Service | Purpose |
 |---------|---------|
 | `ResolverService` | Resolver chain orchestrator with `resolve_smart_playlists()` and `resolve_for_preview()` |
-| `ConfigAssembler` | Combines `PatternMeta` + playlist definitions into unified `PatternConfig` |
+| `ConfigAssembler` | Combines `PresetMeta` + playlist definitions into unified `PresetConfig` |
 | `sort_episode_ids_by_published_at` | Three-tier sorting: has date > no date but found > not found |
 | `sort_groups` | Sorts groups by `SortRule`, populates earliest_date/latest_date |
 
@@ -126,8 +126,8 @@ Playlist structure determines output shape:
 
 Three JSON Schema files embedded via `include_str!` from `crates/preset_core/assets/`:
 
-- `pattern-index.schema.json` -- root `meta.json`
-- `pattern-meta.schema.json` -- per-pattern `meta.json`
+- `preset-index.schema.json` -- root `meta.json`
+- `preset-meta.schema.json` -- per-pattern `meta.json`
 - `playlist-definition.schema.json` -- playlist definitions
 
 `Validator` struct wraps `jsonschema` crate for runtime validation. Supports `from_embedded()` and `from_dir()` construction. `SchemaType` enum selects which schema to validate against.
@@ -158,15 +158,15 @@ pub struct AppState {
 |----------|---------|
 | `GET /api/health` | Health check |
 | `GET /api/schema` | Playlist-definition JSON Schema |
-| `GET /api/configs/patterns` | List pattern summaries |
-| `POST /api/configs/patterns` | Create new pattern (requires id, meta) |
-| `GET /api/configs/patterns/{id}` | Get pattern metadata |
-| `DELETE /api/configs/patterns/{id}` | Delete pattern and all playlists |
-| `PUT /api/configs/patterns/{id}/meta` | Update pattern metadata (merges, preserves dataVersion) |
-| `GET /api/configs/patterns/{id}/assembled` | Assemble full config |
-| `GET /api/configs/patterns/{id}/playlists/{pid}` | Get playlist definition |
-| `PUT /api/configs/patterns/{id}/playlists/{pid}` | Save playlist definition |
-| `DELETE /api/configs/patterns/{id}/playlists/{pid}` | Delete playlist |
+| `GET /api/configs/presets` | List pattern summaries |
+| `POST /api/configs/presets` | Create new pattern (requires id, meta) |
+| `GET /api/configs/presets/{id}` | Get pattern metadata |
+| `DELETE /api/configs/presets/{id}` | Delete pattern and all playlists |
+| `PUT /api/configs/presets/{id}/meta` | Update pattern metadata (merges, preserves dataVersion) |
+| `GET /api/configs/presets/{id}/assembled` | Assemble full config |
+| `GET /api/configs/presets/{id}/playlists/{pid}` | Get playlist definition |
+| `PUT /api/configs/presets/{id}/playlists/{pid}` | Save playlist definition |
+| `DELETE /api/configs/presets/{id}/playlists/{pid}` | Delete playlist |
 | `POST /api/configs/validate` | Validate config against schema |
 | `POST /api/configs/preview` | Preview smart playlists from config + feed |
 | `GET /api/feeds?url=...` | Fetch and parse RSS feed (http/https only) |
@@ -199,7 +199,7 @@ CLI binary (`audiflow-editor`) built with `clap`. Provides subcommands:
 
 | Command | Purpose |
 |---------|---------|
-| `serve` | Start the API server (`--data-dir .`, `--port 8080`, `--static-dir`); validates `patterns/meta.json` exists |
+| `serve` | Start the API server (`--data-dir .`, `--port 8080`, `--static-dir`); validates `presets/meta.json` exists |
 | `validate` | Validate configs against JSON schema; exits 0 (valid), 1 (errors), 2 (file not found); auto-detects schema type from path |
 | `format` | Format/normalize JSON files with `--check` mode for CI |
 
@@ -236,7 +236,7 @@ React 19 SPA built with Vite + TypeScript.
 - `ApiClient`: Simple HTTP wrapper for API calls (no auth)
 - Stores (Zustand): `editor-store` (UI state)
 - `useFileEvents`: SSE hook for real-time TanStack Query cache invalidation
-- Query hooks: `usePatterns`, `useAssembledConfig`, `useFeed`, `usePreviewMutation`, `useSavePlaylist`, `useSavePatternMeta`, `useDeletePlaylist`, `useDeletePattern`, `useCreatePattern`, etc.
+- Query hooks: `usePresets`, `useAssembledConfig`, `useFeed`, `usePreviewMutation`, `useSavePlaylist`, `useSavePresetMeta`, `useDeletePlaylist`, `useDeletePattern`, `useCreatePattern`, etc.
 
 ## Split Config Structure
 
@@ -245,14 +245,14 @@ Configs are stored as a three-level file hierarchy:
 ```
 patterns/
   meta.json                             # Root: version + pattern summaries
-  {patternId}/
+  {presetId}/
     meta.json                           # Pattern: feedUrls, playlistIds, flags
     playlists/
       {playlistId}.json                 # PlaylistDefinition
 ```
 
 `LocalConfigRepository` reads/writes each level with atomic writes.
-`ConfigAssembler` combines pattern meta + playlist files into a unified `PatternConfig`.
+`ConfigAssembler` combines pattern meta + playlist files into a unified `PresetConfig`.
 
 ## Key Design Decisions
 

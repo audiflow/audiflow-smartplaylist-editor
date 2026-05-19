@@ -1,6 +1,6 @@
 {
-  "patternId": "A unique identifier for this podcast config (e.g., 'my-podcast'). Used as the folder name when saving.",
-  "patternDisplayName": "A friendly name shown in the browse list. If left empty, the config ID is used.",
+  "presetId": "A unique identifier for this podcast config (e.g., 'my-podcast'). Used as the folder name when saving.",
+  "presetDisplayName": "A friendly name shown in the browse list. If left empty, the config ID is used.",
   "podcastGuid": "The podcast's unique ID from its RSS feed. When set, this takes priority over feed URL matching for more reliable identification.",
   "feedUrls": "One or more RSS feed URLs that identify this podcast. The app matches incoming feeds against these URLs to find the right config.",
   "yearGroupedEpisodes": "When enabled, the main episode list in the app groups episodes by their publication year with year headers.",

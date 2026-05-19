@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useForm, FormProvider } from 'react-hook-form';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import type { PreviewPlaylist, PreviewResult } from '@/schemas/api-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import {
@@ -140,7 +140,7 @@ function makeGroup(
 }
 
 interface WrapperConfig {
-  config: PatternConfig;
+  config: PresetConfig;
   activePlaylistId: string;
   activeEntryIndex?: number;
   onSelectPlaylist?: (playlistId: string, entryIndex: number) => void;
@@ -154,7 +154,7 @@ function Wrapper({
   onSelectPlaylist = vi.fn(),
   onSelectEntry = vi.fn(),
 }: WrapperConfig) {
-  const form = useForm<PatternConfig>({ defaultValues: config });
+  const form = useForm<PresetConfig>({ defaultValues: config });
   return (
     <FormProvider {...form}>
       <PreviewPlaylistSelector
@@ -296,7 +296,7 @@ describe('PreviewPlaylistSelector', () => {
 
   describe('trigger label', () => {
     it('shows the displayName of the active playlist when no preview data', () => {
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,
@@ -314,7 +314,7 @@ describe('PreviewPlaylistSelector', () => {
 
   describe('entry rendering — partitionBy: undefined', () => {
     it('renders one option per playlist', () => {
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,
@@ -333,7 +333,7 @@ describe('PreviewPlaylistSelector', () => {
 
   describe('entry rendering — partitionBy: year', () => {
     it('renders one option per distinct year plus other playlists as single entries', () => {
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,
@@ -378,7 +378,7 @@ describe('PreviewPlaylistSelector', () => {
 
   describe('entry rendering — partitionBy: seasonNumber uses group displayName', () => {
     it('renders season entries using group displayName when custom selector titleExtractor is configured', () => {
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,
@@ -423,7 +423,7 @@ describe('PreviewPlaylistSelector', () => {
     it('calls onSelectPlaylist when clicking an option from a different playlist', async () => {
       const user = userEvent.setup();
       const onSelectPlaylist = vi.fn();
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,
@@ -451,7 +451,7 @@ describe('PreviewPlaylistSelector', () => {
     it('calls onSelectPlaylist when active is pl-1 and user clicks entry from pl-2', async () => {
       const user = userEvent.setup();
       const onSelectPlaylist = vi.fn();
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,
@@ -479,7 +479,7 @@ describe('PreviewPlaylistSelector', () => {
     it('calls onSelectEntry with new index when clicking a different entry within the same playlist', async () => {
       const user = userEvent.setup();
       const onSelectEntry = vi.fn();
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,
@@ -525,7 +525,7 @@ describe('PreviewPlaylistSelector', () => {
     it('does not call onSelectPlaylist when clicking a same-playlist year entry', async () => {
       const user = userEvent.setup();
       const onSelectPlaylist = vi.fn();
-      const config: PatternConfig = {
+      const config: PresetConfig = {
         id: 'test',
         displayName: 'Test',
         yearGroupedEpisodes: false,

@@ -37,12 +37,12 @@ function invalidateForChange(
 ): void {
   const { path } = change;
 
-  if (path === 'patterns/meta.json') {
-    void queryClient.invalidateQueries({ queryKey: ['patterns'] });
+  if (path === 'presets/meta.json') {
+    void queryClient.invalidateQueries({ queryKey: ['presets'] });
     return;
   }
 
-  const metaMatch = path.match(/^patterns\/([^/]+)\/meta\.json$/);
+  const metaMatch = path.match(/^presets\/([^/]+)\/meta\.json$/);
   if (metaMatch) {
     void queryClient.invalidateQueries({
       queryKey: ['assembledConfig', metaMatch[1]],
@@ -51,7 +51,7 @@ function invalidateForChange(
   }
 
   const playlistMatch = path.match(
-    /^patterns\/([^/]+)\/playlists\/[^/]+\.json$/,
+    /^presets\/([^/]+)\/playlists\/[^/]+\.json$/,
   );
   if (playlistMatch) {
     void queryClient.invalidateQueries({

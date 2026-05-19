@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { usePatternIdentifiers } from '@/api/queries.ts';
+import { usePresetIdentifiers } from '@/api/queries.ts';
 
 export interface DuplicateConflict {
   field: 'podcastGuid' | 'feedUrls';
@@ -17,7 +17,7 @@ export function useDuplicateCheck(
   podcastGuid: string | null | undefined,
   feedUrls: string[] | null | undefined,
 ): DuplicateConflict[] {
-  const { data: identifiers } = usePatternIdentifiers();
+  const { data: identifiers } = usePresetIdentifiers();
 
   return useMemo(() => {
     if (!identifiers) return [];

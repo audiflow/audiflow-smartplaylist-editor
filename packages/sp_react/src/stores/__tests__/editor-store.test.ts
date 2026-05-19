@@ -56,10 +56,10 @@ describe('editorStore', () => {
   });
 
   it('sets and clears conflict', () => {
-    useEditorStore.getState().setConflict('patterns/abc/meta.json');
+    useEditorStore.getState().setConflict('presets/abc/meta.json');
     let state = useEditorStore.getState();
     expect(state.conflictDetected).toBe(true);
-    expect(state.conflictPath).toBe('patterns/abc/meta.json');
+    expect(state.conflictPath).toBe('presets/abc/meta.json');
 
     useEditorStore.getState().clearConflict();
     state = useEditorStore.getState();

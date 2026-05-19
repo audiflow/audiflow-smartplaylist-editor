@@ -1,6 +1,6 @@
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { SectionNote } from '@/components/editor/note-blocks.tsx';
@@ -13,7 +13,7 @@ interface BasicSettingsTabProps {
 
 export function BasicSettingsTab({ index }: BasicSettingsTabProps) {
   const prefix = `playlists.${index}` as const;
-  const { register } = useFormContext<PatternConfig>();
+  const { register } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
   const displayNameHl = usePreviewHighlight(PREVIEW_FIELDS.playlistDisplayName);
 

@@ -69,11 +69,11 @@ describe('useFileEvents', () => {
 
     latestSource().simulateMessage({
       type: 'modified',
-      path: 'patterns/meta.json',
+      path: 'presets/meta.json',
     });
 
     expect(spy).toHaveBeenCalledOnce();
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['patterns'] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['presets'] });
   });
 
   it('invalidates assembledConfig query when a pattern meta.json changes', () => {
@@ -82,7 +82,7 @@ describe('useFileEvents', () => {
 
     latestSource().simulateMessage({
       type: 'modified',
-      path: 'patterns/my-podcast/meta.json',
+      path: 'presets/my-podcast/meta.json',
     });
 
     expect(spy).toHaveBeenCalledOnce();
@@ -97,7 +97,7 @@ describe('useFileEvents', () => {
 
     latestSource().simulateMessage({
       type: 'created',
-      path: 'patterns/my-podcast/playlists/seasons.json',
+      path: 'presets/my-podcast/playlists/seasons.json',
     });
 
     expect(spy).toHaveBeenCalledOnce();
@@ -126,15 +126,15 @@ describe('useFileEvents', () => {
 
     source.simulateMessage({
       type: 'modified',
-      path: 'patterns/meta.json',
+      path: 'presets/meta.json',
     });
     source.simulateMessage({
       type: 'modified',
-      path: 'patterns/pod-a/playlists/list.json',
+      path: 'presets/pod-a/playlists/list.json',
     });
 
     expect(spy).toHaveBeenCalledTimes(2);
-    expect(spy).toHaveBeenCalledWith({ queryKey: ['patterns'] });
+    expect(spy).toHaveBeenCalledWith({ queryKey: ['presets'] });
     expect(spy).toHaveBeenCalledWith({
       queryKey: ['assembledConfig', 'pod-a'],
     });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   playlistDefinitionSchema,
-  patternConfigSchema,
+  presetConfigSchema,
   groupDefSchema,
   titleExtractorSchema,
   numberingExtractorSchema,
@@ -136,13 +136,13 @@ describe('playlistDefinitionSchema', () => {
   });
 });
 
-describe('patternConfigSchema', () => {
+describe('presetConfigSchema', () => {
   it('parses minimal config with defaults', () => {
     const input = {
       id: 'podcast-abc',
       playlists: [],
     };
-    const result = patternConfigSchema.parse(input);
+    const result = presetConfigSchema.parse(input);
     expect(result.id).toBe('podcast-abc');
     expect(result.yearGroupedEpisodes).toBe(false);
     expect(result.playlists).toEqual([]);
@@ -163,7 +163,7 @@ describe('patternConfigSchema', () => {
         },
       ],
     };
-    const result = patternConfigSchema.parse(input);
+    const result = presetConfigSchema.parse(input);
     expect(result.podcastGuid).toBe('guid-123');
     expect(result.feedUrls).toEqual(['https://example.com/feed.xml']);
     expect(result.yearGroupedEpisodes).toBe(true);
@@ -421,7 +421,7 @@ describe('showThumbnail flags', () => {
   });
 
   it('parses explicit showEpisodeThumbnail values', () => {
-    const onResult = patternConfigSchema.parse({
+    const onResult = presetConfigSchema.parse({
       id: 'p1',
       displayName: 'P1',
       podcastGuid: 'g',
@@ -436,7 +436,7 @@ describe('showThumbnail flags', () => {
     });
     expect(onResult.showEpisodeThumbnail).toBe(true);
 
-    const offResult = patternConfigSchema.parse({
+    const offResult = presetConfigSchema.parse({
       id: 'p1',
       displayName: 'P1',
       podcastGuid: 'g',
@@ -453,7 +453,7 @@ describe('showThumbnail flags', () => {
   });
 
   it('leaves showEpisodeThumbnail undefined when absent', () => {
-    const result = patternConfigSchema.parse({
+    const result = presetConfigSchema.parse({
       id: 'p1',
       displayName: 'P1',
       podcastGuid: 'g',

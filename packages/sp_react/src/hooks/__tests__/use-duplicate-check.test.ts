@@ -27,7 +27,7 @@ describe('useDuplicateCheck', () => {
   it('returns empty array before identifiers have loaded', () => {
     // Override to never respond
     server.use(
-      http.get(`${TEST_BASE_URL}/api/configs/patterns/identifiers`, async () => {
+      http.get(`${TEST_BASE_URL}/api/configs/presets/identifiers`, async () => {
         await delay('infinite');
         return HttpResponse.json([]);
       }),
@@ -50,7 +50,7 @@ describe('useDuplicateCheck', () => {
       // Query should have settled -- we verify by checking that the hook
       // re-rendered after data arrived. Since there are no duplicates,
       // result stays empty. We rely on waitFor's polling.
-      expect(queryClient.getQueryState(['patternIdentifiers'])?.status).toBe(
+      expect(queryClient.getQueryState(['presetIdentifiers'])?.status).toBe(
         'success',
       );
     });
@@ -131,7 +131,7 @@ describe('useDuplicateCheck', () => {
     );
 
     await waitFor(() => {
-      expect(queryClient.getQueryState(['patternIdentifiers'])?.status).toBe(
+      expect(queryClient.getQueryState(['presetIdentifiers'])?.status).toBe(
         'success',
       );
     });
@@ -147,7 +147,7 @@ describe('useDuplicateCheck', () => {
     );
 
     await waitFor(() => {
-      expect(queryClient.getQueryState(['patternIdentifiers'])?.status).toBe(
+      expect(queryClient.getQueryState(['presetIdentifiers'])?.status).toBe(
         'success',
       );
     });
@@ -163,7 +163,7 @@ describe('useDuplicateCheck', () => {
     );
 
     await waitFor(() => {
-      expect(queryClient.getQueryState(['patternIdentifiers'])?.status).toBe(
+      expect(queryClient.getQueryState(['presetIdentifiers'])?.status).toBe(
         'success',
       );
     });
@@ -179,7 +179,7 @@ describe('useDuplicateCheck', () => {
     );
 
     await waitFor(() => {
-      expect(queryClient.getQueryState(['patternIdentifiers'])?.status).toBe(
+      expect(queryClient.getQueryState(['presetIdentifiers'])?.status).toBe(
         'success',
       );
     });
@@ -195,7 +195,7 @@ describe('useDuplicateCheck', () => {
     );
 
     await waitFor(() => {
-      expect(queryClient.getQueryState(['patternIdentifiers'])?.status).toBe(
+      expect(queryClient.getQueryState(['presetIdentifiers'])?.status).toBe(
         'success',
       );
     });
