@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(unset CDPATH && cd "$(dirname "$0")/.." && pwd)"
-DOCS_DIR="$REPO_ROOT/packages/sp_react/public/docs"
+DOCS_DIR="$REPO_ROOT/packages/preset_react/public/docs"
 
 mkdir -p "$DOCS_DIR"
 

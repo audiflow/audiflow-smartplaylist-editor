@@ -54,7 +54,7 @@ pub async fn run(
     if static_path.is_none() && !preset_server::has_embedded_index() {
         eprintln!(
             "Warning: no embedded SPA assets found and --static-dir not set.\n\
-             Build the React app first (cd packages/sp_react && pnpm build) \
+             Build the React app first (cd packages/preset_react && pnpm build) \
              or pass --static-dir to serve from disk."
         );
     }

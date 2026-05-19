@@ -1,8 +1,8 @@
-# audiflow-smartplaylist-editor - Tech Stack
+# audiflow-preset-editor - Tech Stack
 
 ## Core Stack
 - **Rust** edition 2024
-- **React 19** / **TypeScript** (sp_react package)
+- **React 19** / **TypeScript** (preset_react package)
 
 ## Common Commands
 

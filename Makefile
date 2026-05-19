@@ -7,7 +7,7 @@ SERVER_PORT ?= 8080
 
 # Paths
 ROOT        := $(shell pwd)
-SP_REACT    := $(ROOT)/packages/sp_react
+PRESET_REACT    := $(ROOT)/packages/preset_react
 
 # Data directory (path to a cloned audiflow-smartplaylist data repo)
 DATA_DIR    ?= $(ROOT)/../audiflow-smartplaylist
@@ -22,7 +22,7 @@ help: ## Show this help
 # -- Setup -------------------------------------------------------------------
 
 deps: ## Install dependencies for all packages
-	cd $(SP_REACT) && pnpm install
+	cd $(PRESET_REACT) && pnpm install
 
 # -- Run services ------------------------------------------------------------
 
@@ -30,32 +30,32 @@ dev-server: ## Start the backend API server (PORT=$(SERVER_PORT))
 	cargo run -- serve --data-dir $(DATA_DIR) --port $(SERVER_PORT)
 
 dev-ui: ## Start React web app dev server
-	cd $(SP_REACT) && pnpm dev
+	cd $(PRESET_REACT) && pnpm dev
 
 dev: ## Start server and React web app together (Ctrl+C stops both)
 	@trap 'kill 0 2>/dev/null' EXIT; \
 	cargo run -- serve --data-dir $(DATA_DIR) --port $(SERVER_PORT) & \
 	echo "preset_server started on port $(SERVER_PORT)"; \
-	cd $(SP_REACT) && pnpm dev
+	cd $(PRESET_REACT) && pnpm dev
 
 # -- Testing -----------------------------------------------------------------
 
 test: ## Run all tests (Rust + React)
 	cargo test
-	cd $(SP_REACT) && pnpm test -- --run
+	cd $(PRESET_REACT) && pnpm test -- --run
 
 test-rust: ## Run Rust tests
 	cargo test
 
 test-react: ## Run React tests
-	cd $(SP_REACT) && pnpm test -- --run
+	cd $(PRESET_REACT) && pnpm test -- --run
 
 # -- Quality -----------------------------------------------------------------
 
 lint: ## Run all linters (clippy + oxlint + tsc)
 	cargo clippy -- -W warnings
-	cd $(SP_REACT) && npx oxlint
-	cd $(SP_REACT) && npx tsc -b --noEmit
+	cd $(PRESET_REACT) && npx oxlint
+	cd $(PRESET_REACT) && npx tsc -b --noEmit
 
 clippy: ## Run cargo clippy
 	cargo clippy -- -W warnings
@@ -72,7 +72,7 @@ build: build-web ## Build React SPA + Rust release binary
 	cargo build --release
 
 build-web: ## Build React SPA for production
-	cd $(SP_REACT) && pnpm build
+	cd $(PRESET_REACT) && pnpm build
 
 # -- Validation --------------------------------------------------------------
 
@@ -87,5 +87,5 @@ schema-doc: ## Regenerate schema HTML docs from local schema files
 # -- Cleanup -----------------------------------------------------------------
 
 clean: ## Remove build artifacts and caches
-	rm -rf $(SP_REACT)/dist $(SP_REACT)/node_modules
+	rm -rf $(PRESET_REACT)/dist $(PRESET_REACT)/node_modules
 	cargo clean

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-audiflow-smartplaylist-editor is a local-first web editor for creating and managing
+audiflow-preset-editor is a local-first web editor for creating and managing
 smart playlist configurations used by the audiflow podcast app. It consists of a Rust
 backend (API server + domain logic + CLI) and a React frontend. The editor reads and
 writes JSON config files in a locally cloned data repository; users handle git
@@ -43,7 +43,7 @@ operations (commit, push, PR) themselves.
 - `crates/preset_cli/src/main.rs`: CLI binary entry point (`serve`, `validate`, `format`, `bump-versions` subcommands)
 - `crates/preset_server/src/app.rs`: Axum router and app state construction
 - `crates/preset_core/src/lib.rs`: Domain library root (models, resolvers, schema, services)
-- `packages/sp_react/src/`: React SPA root (Vite + TanStack Router)
+- `packages/preset_react/src/`: React SPA root (Vite + TanStack Router)
 
 ## Key dependencies
 

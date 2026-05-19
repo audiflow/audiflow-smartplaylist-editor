@@ -11,7 +11,7 @@
 
 - Does the change respect module boundaries (see docs/architecture/module-boundaries.md)?
 - Is preset_core still free of I/O and framework dependencies?
-- If domain models changed in preset_core, was the sp_react Zod schema also updated?
+- If domain models changed in preset_core, was the preset_react Zod schema also updated?
 - Has any responsibility shifted between crates/packages or between repos?
 
 ## Schema and contracts
@@ -42,9 +42,9 @@
 
 - `cargo test` passes
 - `cargo clippy -- -W warnings` has zero warnings
-- `pnpm test -- --run` passes (sp_react)
-- `npx oxlint` passes (sp_react)
-- `npx tsc -b --noEmit` passes (sp_react)
+- `pnpm test -- --run` passes (preset_react)
+- `npx oxlint` passes (preset_react)
+- `npx tsc -b --noEmit` passes (preset_react)
 
 ## When to update
 

@@ -1,7 +1,7 @@
-# audiflow-smartplaylist-editor
+# audiflow-preset-editor
 
 Local-first web editor for smart playlist configuration. Provides a Rust API server
-(`preset_server`) and React SPA (`sp_react`) that read/write JSON config files in a
+(`preset_server`) and React SPA (`preset_react`) that read/write JSON config files in a
 locally cloned data repo. Users manage git operations themselves.
 
 ## Ecosystem context
@@ -34,7 +34,7 @@ deployed via GitHub Pages). The `audiflow` Flutter app consumes configs from hos
 crates/preset_core/    -- Domain models, resolvers, schema, services (pure Rust)
 crates/preset_server/  -- Local API server (axum, tokio)
 crates/preset_cli/     -- CLI binary (serve, validate, format, bump-versions)
-packages/sp_react/ -- React 19 SPA (Vite + TypeScript)
+packages/preset_react/ -- React 19 SPA (Vite + TypeScript)
 ```
 
 ## Validation
@@ -42,9 +42,9 @@ packages/sp_react/ -- React 19 SPA (Vite + TypeScript)
 ```bash
 cargo test                         # All Rust tests
 cargo clippy -- -W warnings        # Lint (zero warnings required)
-cd packages/sp_react && pnpm test -- --run  # React tests
-cd packages/sp_react && npx oxlint          # JS lint
-cd packages/sp_react && npx tsc -b --noEmit # Type check
+cd packages/preset_react && pnpm test -- --run  # React tests
+cd packages/preset_react && npx oxlint          # JS lint
+cd packages/preset_react && npx tsc -b --noEmit # Type check
 make lint                          # All linters
 make test                          # All tests
 ```
@@ -64,6 +64,6 @@ make test                          # All tests
 
 Check whether these also need updates:
 - docs/ files listed above (if architecture, schema, or contracts change)
-- `sp_react` Zod schema (`src/schemas/config-schema.ts`) if JSON Schema changes
+- `preset_react` Zod schema (`src/schemas/config-schema.ts`) if JSON Schema changes
 - Sibling repos if schema or file structure changes (see docs/integration/)
 - `.claude/rules/project/architecture.md` if crate structure changes
