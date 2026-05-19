@@ -88,7 +88,7 @@ Branch flow per version: `dev/v{N}` -> PR -> `stg/v{N}` -> PR -> `prod/v{N}`
 ## Related documents
 
 - docs/integration/editor-to-schema.md -- schema definitions that validate this file structure
-- docs/architecture/module-boundaries.md -- LocalConfigRepository in sp_server owns file I/O
+- docs/architecture/module-boundaries.md -- LocalConfigRepository in preset_server owns file I/O
 - docs/overview.md -- overall purpose and concepts
 
 ## When to update

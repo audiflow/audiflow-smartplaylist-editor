@@ -11,18 +11,18 @@ Rust workspace with three crates plus a React SPA.
 ```
 audiflow-smartplaylist-editor/
 ├── crates/
-│   ├── sp_core/       # Domain models, resolvers, schema, services (pure Rust)
-│   ├── sp_server/     # Local API server (axum)
-│   └── sp_cli/        # CLI binary (serve, validate, format commands)
+│   ├── preset_core/       # Domain models, resolvers, schema, services (pure Rust)
+│   ├── preset_server/     # Local API server (axum)
+│   └── preset_cli/        # CLI binary (serve, validate, format commands)
 └── packages/
     └── sp_react/      # React SPA web editor (TanStack + Zustand + shadcn/ui)
 ```
 
 | Crate/Package | Role | Dependencies |
 |---------------|------|-------------|
-| `sp_core` | Shared domain layer: models, resolvers, schema, services | serde, jsonschema, regex, chrono |
-| `sp_server` | Local API server: config CRUD, preview, feed caching, file watching | sp_core, axum 0.8, tokio, notify 7, reqwest, feed-rs, rust-embed |
-| `sp_cli` | CLI binary: serve, validate, format subcommands | sp_core, sp_server, clap |
+| `preset_core` | Shared domain layer: models, resolvers, schema, services | serde, jsonschema, regex, chrono |
+| `preset_server` | Local API server: config CRUD, preview, feed caching, file watching | preset_core, axum 0.8, tokio, notify 7, reqwest, feed-rs, rust-embed |
+| `preset_cli` | CLI binary: serve, validate, format subcommands | preset_core, preset_server, clap |
 | `sp_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod 4, CodeMirror 6, i18next, dnd-kit |
 
 ## Ecosystem Context
@@ -35,7 +35,7 @@ User clones data repo locally
                 v
 [audiflow-smartplaylist-editor]              Local data repo clone         GitHub (remote)
  (this repo)                  read/write  (on user's machine)  push    (source of truth)
- sp_server + sp_react  <────────────────>  JSON files on disk  ──────>  origin/main
+ preset_server + sp_react  <────────────────>  JSON files on disk  ──────>  origin/main
                                                                 CI sync
                                                                 ──────>  GitHub Pages / GCS
                                                                             ^
@@ -50,7 +50,7 @@ User clones data repo locally
 
 Model serialization (JSON keys, field structure) must stay aligned across all three.
 
-## sp_core
+## preset_core
 
 Pure Rust library crate with no framework dependencies. All domain logic lives here.
 
@@ -124,7 +124,7 @@ Playlist structure determines output shape:
 
 ### Schema
 
-Three JSON Schema files embedded via `include_str!` from `crates/sp_core/assets/`:
+Three JSON Schema files embedded via `include_str!` from `crates/preset_core/assets/`:
 
 - `pattern-index.schema.json` -- root `meta.json`
 - `pattern-meta.schema.json` -- per-pattern `meta.json`
@@ -132,7 +132,7 @@ Three JSON Schema files embedded via `include_str!` from `crates/sp_core/assets/
 
 `Validator` struct wraps `jsonschema` crate for runtime validation. Supports `from_embedded()` and `from_dir()` construction. `SchemaType` enum selects which schema to validate against.
 
-## sp_server
+## preset_server
 
 Axum-based local API server with tokio async runtime. Runs on localhost only, no authentication required.
 
@@ -193,7 +193,7 @@ pub struct AppState {
 - Static files served via `--static-dir` flag or `rust-embed` fallback
 - Path segments validated to prevent directory traversal
 
-## sp_cli
+## preset_cli
 
 CLI binary (`audiflow-editor`) built with `clap`. Provides subcommands:
 

@@ -11,19 +11,19 @@
 ## During implementation
 
 - Keep changes within documented module boundaries (see docs/architecture/module-boundaries.md)
-- sp_core must remain a pure library with no I/O or framework dependencies
-- Domain model changes in sp_core require corresponding Zod schema updates in sp_react
+- preset_core must remain a pure library with no I/O or framework dependencies
+- Domain model changes in preset_core require corresponding Zod schema updates in sp_react
 - Add or update tests for all changed behavior
 - Follow the branching policy in `.claude/rules/project/branching.md`
-- If adding podcast identifier fields, update cross-pattern uniqueness validation in sp_core and sp_server
+- If adding podcast identifier fields, update cross-pattern uniqueness validation in preset_core and preset_server
 
 ## Schema change checklist
 
 When modifying JSON Schema or related models:
 
-1. Update schema files in `crates/sp_core/assets/`
-2. Update sp_core Rust models and serde attributes
-3. Update sp_core tests (`crates/sp_core/tests/schema_tests.rs`, `model_tests.rs`)
+1. Update schema files in `crates/preset_core/assets/`
+2. Update preset_core Rust models and serde attributes
+3. Update preset_core tests (`crates/preset_core/tests/schema_tests.rs`, `model_tests.rs`)
 4. Update sp_react Zod schema (`packages/sp_react/src/schemas/config-schema.ts`)
 5. Update sp_react form components if field names or types changed
 6. Regenerate schema HTML docs (`make schema-doc`)

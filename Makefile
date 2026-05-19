@@ -35,7 +35,7 @@ dev-ui: ## Start React web app dev server
 dev: ## Start server and React web app together (Ctrl+C stops both)
 	@trap 'kill 0 2>/dev/null' EXIT; \
 	cargo run -- serve --data-dir $(DATA_DIR) --port $(SERVER_PORT) & \
-	echo "sp_server started on port $(SERVER_PORT)"; \
+	echo "preset_server started on port $(SERVER_PORT)"; \
 	cd $(SP_REACT) && pnpm dev
 
 # -- Testing -----------------------------------------------------------------
