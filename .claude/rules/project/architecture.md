@@ -9,13 +9,13 @@ Rust workspace with three crates plus a React SPA.
 ## Package Overview
 
 ```
-audiflow-smartplaylist-editor/
+audiflow-preset-editor/
 ├── crates/
 │   ├── preset_core/       # Domain models, resolvers, schema, services (pure Rust)
 │   ├── preset_server/     # Local API server (axum)
 │   └── preset_cli/        # CLI binary (serve, validate, format commands)
 └── packages/
-    └── sp_react/      # React SPA web editor (TanStack + Zustand + shadcn/ui)
+    └── preset_react/      # React SPA web editor (TanStack + Zustand + shadcn/ui)
 ```
 
 | Crate/Package | Role | Dependencies |
@@ -23,7 +23,7 @@ audiflow-smartplaylist-editor/
 | `preset_core` | Shared domain layer: models, resolvers, schema, services | serde, jsonschema, regex, chrono |
 | `preset_server` | Local API server: config CRUD, preview, feed caching, file watching | preset_core, axum 0.8, tokio, notify 7, reqwest, feed-rs, rust-embed |
 | `preset_cli` | CLI binary: serve, validate, format subcommands | preset_core, preset_server, clap |
-| `sp_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod 4, CodeMirror 6, i18next, dnd-kit |
+| `preset_react` | Web editor UI: pattern browsing, config editing, preview | React 19, TanStack Query/Router, Zustand, RHF, Zod 4, CodeMirror 6, i18next, dnd-kit |
 
 ## Ecosystem Context
 
@@ -33,9 +33,9 @@ This repo is one part of a three-component ecosystem:
 User clones data repo locally
                 |
                 v
-[audiflow-smartplaylist-editor]              Local data repo clone         GitHub (remote)
+[audiflow-preset-editor]              Local data repo clone         GitHub (remote)
  (this repo)                  read/write  (on user's machine)  push    (source of truth)
- preset_server + sp_react  <────────────────>  JSON files on disk  ──────>  origin/main
+ preset_server + preset_react  <────────────────>  JSON files on disk  ──────>  origin/main
                                                                 CI sync
                                                                 ──────>  GitHub Pages / GCS
                                                                             ^
@@ -205,7 +205,7 @@ CLI binary (`audiflow-editor`) built with `clap`. Provides subcommands:
 
 `config_walker` walks the pattern directory tree calling a callback per file with detected `SchemaType`.
 
-## sp_react
+## preset_react
 
 React 19 SPA built with Vite + TypeScript.
 

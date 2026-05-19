@@ -12,7 +12,7 @@
 
 - Keep changes within documented module boundaries (see docs/architecture/module-boundaries.md)
 - preset_core must remain a pure library with no I/O or framework dependencies
-- Domain model changes in preset_core require corresponding Zod schema updates in sp_react
+- Domain model changes in preset_core require corresponding Zod schema updates in preset_react
 - Add or update tests for all changed behavior
 - Follow the branching policy in `.claude/rules/project/branching.md`
 - If adding podcast identifier fields, update cross-pattern uniqueness validation in preset_core and preset_server
@@ -24,8 +24,8 @@ When modifying JSON Schema or related models:
 1. Update schema files in `crates/preset_core/assets/`
 2. Update preset_core Rust models and serde attributes
 3. Update preset_core tests (`crates/preset_core/tests/schema_tests.rs`, `model_tests.rs`)
-4. Update sp_react Zod schema (`packages/sp_react/src/schemas/config-schema.ts`)
-5. Update sp_react form components if field names or types changed
+4. Update preset_react Zod schema (`packages/preset_react/src/schemas/config-schema.ts`)
+5. Update preset_react form components if field names or types changed
 6. Regenerate schema HTML docs (`make schema-doc`)
 7. Notify consumer repos to update their vendored schema copies
 8. Update docs/integration/editor-to-schema.md if schema structure changed
@@ -45,9 +45,9 @@ Update documentation when:
 ```bash
 cargo test                                      # Rust tests pass
 cargo clippy -- -W warnings                     # Zero clippy warnings
-cd packages/sp_react && pnpm test -- --run      # React tests pass
-cd packages/sp_react && npx oxlint              # JS lint passes
-cd packages/sp_react && npx tsc -b --noEmit     # TypeScript compiles
+cd packages/preset_react && pnpm test -- --run      # React tests pass
+cd packages/preset_react && npx oxlint              # JS lint passes
+cd packages/preset_react && npx tsc -b --noEmit     # TypeScript compiles
 ```
 
 All checks must pass before submitting a PR. Use `make lint` and `make test` as shortcuts.

@@ -30,7 +30,7 @@ jobs:
 
       # rust-embed requires the folder to exist at compile time
       - name: Create SPA dist placeholder
-        run: mkdir -p packages/sp_react/dist
+        run: mkdir -p packages/preset_react/dist
 
       - name: Clippy
         run: cargo clippy -- -W warnings

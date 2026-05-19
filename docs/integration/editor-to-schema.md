@@ -21,7 +21,7 @@ This document covers:
 - Embed schemas at compile time via `include_str!` in preset_core
 - Validate configs at runtime via `preset_core::schema::Validator`
 - Expose playlist-definition schema via `GET /api/schema` endpoint
-- Mirror schemas as Zod 4 schemas in `sp_react` (`src/schemas/config-schema.ts`)
+- Mirror schemas as Zod 4 schemas in `preset_react` (`src/schemas/config-schema.ts`)
 - Regenerate schema HTML docs via `make schema-doc`
 
 ## Non-responsibilities
@@ -37,8 +37,8 @@ This document covers:
   1. Schema JSON files in `crates/preset_core/assets/`
   2. preset_core Rust models and serde attributes (if field names/types change)
   3. preset_core conformance tests (`crates/preset_core/tests/schema_tests.rs`)
-  4. sp_react Zod schema (`packages/sp_react/src/schemas/config-schema.ts`)
-  5. sp_react conformance tests
+  4. preset_react Zod schema (`packages/preset_react/src/schemas/config-schema.ts`)
+  5. preset_react conformance tests
   6. Schema HTML docs (`make schema-doc`)
 - Consumer repos (audiflow, data repos) must update their vendored copies after schema changes
 - Valid resolver types (via `grouping.by`): `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`
@@ -55,7 +55,7 @@ This document covers:
 ## Related documents
 
 - docs/integration/smartplaylist-contract.md -- file structure the schemas validate
-- docs/architecture/module-boundaries.md -- preset_core owns schemas, sp_react mirrors as Zod
+- docs/architecture/module-boundaries.md -- preset_core owns schemas, preset_react mirrors as Zod
 - docs/development/change-workflow.md -- steps for schema changes
 - docs/schema-reference.md -- complete field-level schema reference (v6)
 

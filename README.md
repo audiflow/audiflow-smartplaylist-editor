@@ -1,4 +1,4 @@
-# audiflow-smartplaylist-editor
+# audiflow-preset-editor
 
 Local web editor for managing [audiflow](https://github.com/audiflow/audiflow) smart playlist configurations. Edit podcast playlist configs through a browser UI, preview resolver results against live RSS feeds, and save changes directly to your local data repo clone.
 
@@ -15,14 +15,14 @@ Local web editor for managing [audiflow](https://github.com/audiflow/audiflow) s
 1. Clone this repo and a data repo side by side:
 
 ```bash
-git clone https://github.com/audiflow/audiflow-smartplaylist-editor.git
+git clone https://github.com/audiflow/audiflow-preset-editor.git
 git clone https://github.com/audiflow/audiflow-smartplaylist.git
 ```
 
 2. Install dependencies:
 
 ```bash
-cd audiflow-smartplaylist-editor
+cd audiflow-preset-editor
 make deps
 ```
 
@@ -52,7 +52,7 @@ docker run -p 8080:8080 -v /path/to/data-repo:/data audiflow-editor
 The editor reads and writes JSON config files in your locally cloned data repo. You manage git operations (commit, push, PR) yourself.
 
 ```
-Browser (sp_react)          API server (Rust/axum)
+Browser (preset_react)          API server (Rust/axum)
    |                           |
    |<--- HTTP REST API ------->|
    |<--- SSE (file changes) ---|
@@ -94,13 +94,13 @@ The binary `audiflow-editor` provides three subcommands:
 ## Project Structure
 
 ```
-audiflow-smartplaylist-editor/
+audiflow-preset-editor/
 ├── crates/
 │   ├── preset_core/       # Domain models, resolvers, schema validation (pure Rust)
 │   ├── preset_server/     # API server (axum, tokio, SSE, feed caching)
 │   └── preset_cli/        # CLI binary (serve, validate, format)
 └── packages/
-    └── sp_react/      # React SPA (TanStack, Zustand, shadcn/ui, CodeMirror)
+    └── preset_react/      # React SPA (TanStack, Zustand, shadcn/ui, CodeMirror)
 ```
 
 ## Config File Structure

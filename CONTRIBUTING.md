@@ -34,7 +34,7 @@ in a way that keeps the project sustainable long-term.
 |------------|---------|---------|
 | `audiflow` | Flutter mobile app | AGPL-3.0-or-later |
 | `audiflow-smartplaylist` | Playlist config data | CC BY-SA 4.0 |
-| `audiflow-smartplaylist-editor` | Web editor (Rust + React) | AGPL-3.0-or-later |
+| `audiflow-preset-editor` | Web editor (Rust + React) | AGPL-3.0-or-later |
 
 ## How to Contribute
 
@@ -58,7 +58,7 @@ The `audiflow-smartplaylist` repository contains curated podcast playlists.
 Contributions of new playlists or improvements to existing ones are welcome.
 
 1. Fork `audiflow-smartplaylist`
-2. Use the [audiflow-smartplaylist-editor](https://github.com/audiflow/audiflow-smartplaylist-editor)
+2. Use the [audiflow-preset-editor](https://github.com/audiflow/audiflow-preset-editor)
    to create or modify playlists
 3. Export the config data
 4. Submit a pull request

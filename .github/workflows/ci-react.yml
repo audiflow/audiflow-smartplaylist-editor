@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "packages/sp_react/**"
+      - "packages/preset_react/**"
       - ".github/workflows/ci-react.yml"
   pull_request:
     paths:
-      - "packages/sp_react/**"
+      - "packages/preset_react/**"
       - ".github/workflows/ci-react.yml"
 
 jobs:
@@ -17,19 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/sp_react
+        working-directory: packages/preset_react
     steps:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         with:
-          package_json_file: packages/sp_react/package.json
+          package_json_file: packages/preset_react/package.json
 
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: pnpm
-          cache-dependency-path: packages/sp_react/pnpm-lock.yaml
+          cache-dependency-path: packages/preset_react/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
 

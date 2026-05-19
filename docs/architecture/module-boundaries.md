@@ -77,7 +77,7 @@
 #### Used by
 - End users (as the `audiflow-editor` binary)
 
-### Module: sp_react
+### Module: preset_react
 
 #### Responsibilities
 - Web editor UI: pattern browsing, config editing forms (tabbed layout with 6 categories), live preview
@@ -109,9 +109,9 @@
 - preset_core must remain a pure library crate with no I/O or framework dependencies
 - preset_server depends on preset_core but never the reverse
 - preset_cli depends on both preset_core and preset_server; neither depends on preset_cli
-- sp_react communicates with preset_server only via REST API; no shared code at build time
-- Domain model changes in preset_core require corresponding Zod schema updates in sp_react
-- JSON Schema files live in preset_core (`crates/preset_core/assets/`); sp_react mirrors them as Zod schemas
+- preset_react communicates with preset_server only via REST API; no shared code at build time
+- Domain model changes in preset_core require corresponding Zod schema updates in preset_react
+- JSON Schema files live in preset_core (`crates/preset_core/assets/`); preset_react mirrors them as Zod schemas
 
 ## When to update
 

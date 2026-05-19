@@ -5,8 +5,8 @@ fn main() {
     // Create it if missing so local builds work without pre-building
     // the React SPA (the directory will simply be empty, meaning no
     // embedded assets -- the --static-dir flag serves files instead).
-    let dist = Path::new("../../packages/sp_react/dist");
+    let dist = Path::new("../../packages/preset_react/dist");
     if !dist.exists() {
-        std::fs::create_dir_all(dist).expect("failed to create sp_react dist placeholder");
+        std::fs::create_dir_all(dist).expect("failed to create preset_react dist placeholder");
     }
 }

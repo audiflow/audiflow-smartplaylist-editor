@@ -8,12 +8,12 @@ use rust_embed::RustEmbed;
 
 use crate::app::SharedState;
 
-/// Embedded SPA assets built from sp_react.
+/// Embedded SPA assets built from preset_react.
 /// `build.rs` creates the folder if missing so local Rust builds
 /// succeed without pre-building the SPA (empty = no embedded assets).
 /// CI and Docker copy the real build output before `cargo build`.
 #[derive(RustEmbed)]
-#[folder = "../../packages/sp_react/dist/"]
+#[folder = "../../packages/preset_react/dist/"]
 struct EmbeddedAssets;
 
 /// Returns true when compile-time embedded assets include `index.html`.
