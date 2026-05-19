@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Plus } from 'lucide-react';
-import type { PatternConfig, TitleExtractor } from '@/schemas/config-schema.ts';
+import type { PresetConfig, TitleExtractor } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { Card, CardContent } from '@/components/ui/card.tsx';
@@ -69,7 +69,7 @@ export function TitleExtractorForm({
   resolverType,
   labelKey = 'titleExtractor',
 }: TitleExtractorFormProps) {
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
 
   // Dynamic paths require casting to any since TypeScript can't infer nested types

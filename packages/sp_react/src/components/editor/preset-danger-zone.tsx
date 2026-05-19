@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useDeletePattern } from '@/api/queries.ts';
+import { useDeletePreset } from '@/api/queries.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { Button } from '@/components/ui/button.tsx';
 import {
@@ -23,36 +23,36 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog.tsx';
 
-interface PatternDangerZoneProps {
-  patternId: string;
+interface PresetDangerZoneProps {
+  presetId: string;
   displayName: string | null;
 }
 
-export function PatternDangerZone({
-  patternId,
+export function PresetDangerZone({
+  presetId,
   displayName,
-}: PatternDangerZoneProps) {
+}: PresetDangerZoneProps) {
   const { t } = useTranslation('editor');
   const navigate = useNavigate();
-  const deletePatternMutation = useDeletePattern();
+  const deletePresetMutation = useDeletePreset();
   const resetEditorStore = useEditorStore((s) => s.reset);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleConfirmDelete = async () => {
     try {
-      await deletePatternMutation.mutateAsync(patternId);
+      await deletePresetMutation.mutateAsync(presetId);
       setConfirmOpen(false);
       resetEditorStore();
       toast.success(
-        t('toastPatternDeleted', {
-          name: displayName ?? patternId,
+        t('toastPresetDeleted', {
+          name: displayName ?? presetId,
           defaultValue: 'Deleted {{name}}',
         }),
       );
       void navigate({ to: '/browse' });
     } catch (error) {
       toast.error(
-        t('toastPatternDeleteError', {
+        t('toastPresetDeleteError', {
           error: error instanceof Error ? error.message : 'Delete failed',
           defaultValue: 'Delete failed: {{error}}',
         }),
@@ -60,20 +60,20 @@ export function PatternDangerZone({
     }
   };
 
-  const isDeleting = deletePatternMutation.isPending;
+  const isDeleting = deletePresetMutation.isPending;
 
   return (
     <>
       <Card className="mt-6 border-destructive/40">
         <CardHeader>
           <CardTitle className="text-base text-destructive">
-            {t('patternDangerZone', 'Delete entire pattern')}
+            {t('presetDangerZone', 'Delete entire preset')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             {t(
-              'patternDangerZoneHint',
+              'presetDangerZoneHint',
               'Removes this pattern and all its playlists. This cannot be undone.',
             )}
           </p>
@@ -90,7 +90,7 @@ export function PatternDangerZone({
             ) : (
               <Trash2 className="mr-2 h-4 w-4" />
             )}
-            {t('deletePattern', 'Delete pattern')}
+            {t('deletePreset', 'Delete preset')}
           </Button>
         </CardContent>
       </Card>
@@ -99,11 +99,11 @@ export function PatternDangerZone({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t('deletePatternTitle', 'Delete this pattern?')}
+              {t('deletePresetTitle', 'Delete this preset?')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('deletePatternDescription', {
-                name: displayName ?? patternId,
+              {t('deletePresetDescription', {
+                name: displayName ?? presetId,
                 defaultValue:
                   'This permanently removes {{name}} and all of its playlists. This cannot be undone.',
               })}
@@ -124,7 +124,7 @@ export function PatternDangerZone({
               {isDeleting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {t('deletePattern', 'Delete pattern')}
+              {t('deletePreset', 'Delete preset')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

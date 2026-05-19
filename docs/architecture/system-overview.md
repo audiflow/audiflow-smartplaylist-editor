@@ -13,22 +13,22 @@ This repository is part of the audiflow podcast ecosystem:
 
 ## High-level structure
 
-- **sp_core**: Pure Rust domain library. Models, resolvers, schema validation, services, cross-pattern uniqueness, deterministic pattern ID derivation. No framework dependencies.
-- **sp_server**: Axum-based local API server. Config CRUD, feed caching, file watching, SSE, static file serving, pattern identifiers endpoint, pattern ID derivation endpoint.
-- **sp_cli**: CLI binary wrapping sp_server. Subcommands: `serve`, `validate`, `format`, `bump-versions`.
+- **preset_core**: Pure Rust domain library. Models, resolvers, schema validation, services, cross-pattern uniqueness, deterministic pattern ID derivation. No framework dependencies.
+- **preset_server**: Axum-based local API server. Config CRUD, feed caching, file watching, SSE, static file serving, pattern identifiers endpoint, pattern ID derivation endpoint.
+- **preset_cli**: CLI binary wrapping preset_server. Subcommands: `serve`, `validate`, `format`, `bump-versions`.
 - **sp_react**: React 19 SPA. Pattern browsing, config editing with forms, live preview, SSE-driven cache invalidation, inline duplicate detection, auto-derived pattern IDs.
 
 ## Main data flow
 
 1. User clones the data repo (`audiflow-smartplaylist`) locally
 2. User starts the editor: `cargo run -- serve --data-dir /path/to/data-repo`
-3. `sp_server` reads split config files from the data directory via `LocalConfigRepository`
+3. `preset_server` reads split config files from the data directory via `LocalConfigRepository`
 4. `sp_react` SPA loads in the browser, fetches config data via REST API
-5. User edits configs through forms; `sp_server` writes changes atomically to disk
+5. User edits configs through forms; `preset_server` writes changes atomically to disk
 6. For new patterns, the editor auto-derives a deterministic ID from podcastGuid or first non-empty trimmed feedUrl via `POST /api/configs/derive-pattern-id`
 7. `FileWatcherService` detects file changes (including external edits) and broadcasts SSE events
 8. `sp_react` receives SSE events and invalidates TanStack Query cache for real-time updates
-9. For preview: `sp_server` fetches/caches RSS feeds, runs resolver chain, returns grouped episodes
+9. For preview: `preset_server` fetches/caches RSS feeds, runs resolver chain, returns grouped episodes
 10. User commits and pushes changes to the data repo themselves
 
 ## Primary interfaces

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  patternSummarySchema,
-  patternMetaSchema,
+  presetSummarySchema,
+  presetMetaSchema,
   feedEpisodeSchema,
   previewEpisodeSchema,
   previewGroupSchema,
@@ -10,9 +10,9 @@ import {
   previewResultSchema,
 } from '../api-schema';
 
-describe('patternSummarySchema', () => {
+describe('presetSummarySchema', () => {
   it('parses valid summary', () => {
-    const result = patternSummarySchema.parse({
+    const result = presetSummarySchema.parse({
       id: 'podcast-abc',
       dataVersion: 1,
       displayName: 'My Podcast',
@@ -26,14 +26,14 @@ describe('patternSummarySchema', () => {
 
   it('rejects missing fields', () => {
     expect(() =>
-      patternSummarySchema.parse({ id: 'x' }),
+      presetSummarySchema.parse({ id: 'x' }),
     ).toThrow();
   });
 });
 
-describe('patternMetaSchema', () => {
+describe('presetMetaSchema', () => {
   it('parses minimal meta with defaults', () => {
-    const result = patternMetaSchema.parse({
+    const result = presetMetaSchema.parse({
       dataVersion: 1,
       id: 'podcast-abc',
       feedUrls: ['https://example.com/feed.xml'],
@@ -44,7 +44,7 @@ describe('patternMetaSchema', () => {
   });
 
   it('parses full meta', () => {
-    const result = patternMetaSchema.parse({
+    const result = presetMetaSchema.parse({
       dataVersion: 2,
       id: 'podcast-xyz',
       podcastGuid: 'guid-123',

@@ -1,7 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
 import { Button } from '@/components/ui/button.tsx';
@@ -41,7 +41,7 @@ function ErrorDot({ visible, label }: { visible: boolean; label: string }) {
 
 export function PlaylistForm({ index, playlistCount, onRemove, isNewConfig }: PlaylistFormProps) {
   const { t } = useTranslation('editor');
-  const { formState } = useFormContext<PatternConfig>();
+  const { formState } = useFormContext<PresetConfig>();
 
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const setActivePreviewRegion = useEditorStore((s) => s.setActivePreviewRegion);

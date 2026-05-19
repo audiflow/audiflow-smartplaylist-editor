@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { sanitizeConfig, stripConditionalFields } from '../sanitize-config.ts';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 
 describe('sanitizeConfig', () => {
   it('removes keys with empty string values', () => {
@@ -146,8 +146,8 @@ describe('sanitizeConfig', () => {
 });
 
 function makeConfig(
-  overrides: Partial<PatternConfig['playlists'][number]>,
-): PatternConfig {
+  overrides: Partial<PresetConfig['playlists'][number]>,
+): PresetConfig {
   return {
     id: 'test-pattern',
     displayName: 'Test',

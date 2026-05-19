@@ -3,24 +3,24 @@ import { render, screen } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { DisplaySettingsTab } from '@/components/editor/tabs/display-settings-tab.tsx';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 
-function Wrapper({ children, defaultValues }: { children: ReactNode; defaultValues: Partial<PatternConfig> }) {
-  const methods = useForm<PatternConfig>({ defaultValues: defaultValues as PatternConfig });
+function Wrapper({ children, defaultValues }: { children: ReactNode; defaultValues: Partial<PresetConfig> }) {
+  const methods = useForm<PresetConfig>({ defaultValues: defaultValues as PresetConfig });
   return <FormProvider {...methods}>{children}</FormProvider>;
 }
 
-function cfg(overrides: Record<string, unknown> = {}): Partial<PatternConfig> {
+function cfg(overrides: Record<string, unknown> = {}): Partial<PresetConfig> {
   return {
     playlists: [
       {
         id: 'pl-1', displayName: 'PL', priority: 0,
         grouping: { by: 'seasonNumber' },
         ...overrides,
-      } as PatternConfig['playlists'][number],
+      } as PresetConfig['playlists'][number],
     ],
-  } as Partial<PatternConfig>;
+  } as Partial<PresetConfig>;
 }
 
 describe('DisplaySettingsTab', () => {

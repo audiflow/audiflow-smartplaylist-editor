@@ -14,12 +14,12 @@ This document covers:
 
 ## Responsibilities
 
-- Own and maintain three canonical JSON Schema files in `crates/sp_core/assets/`:
-  - `pattern-index.schema.json` -- validates root `patterns/meta.json`
-  - `pattern-meta.schema.json` -- validates per-pattern `{id}/meta.json`
+- Own and maintain three canonical JSON Schema files in `crates/preset_core/assets/`:
+  - `preset-index.schema.json` -- validates root `presets/meta.json`
+  - `preset-meta.schema.json` -- validates per-pattern `{id}/meta.json`
   - `playlist-definition.schema.json` -- validates playlist definition files
-- Embed schemas at compile time via `include_str!` in sp_core
-- Validate configs at runtime via `sp_core::schema::Validator`
+- Embed schemas at compile time via `include_str!` in preset_core
+- Validate configs at runtime via `preset_core::schema::Validator`
 - Expose playlist-definition schema via `GET /api/schema` endpoint
 - Mirror schemas as Zod 4 schemas in `sp_react` (`src/schemas/config-schema.ts`)
 - Regenerate schema HTML docs via `make schema-doc`
@@ -32,11 +32,11 @@ This document covers:
 
 ## Integration rules
 
-- Schema files in `crates/sp_core/assets/` are the single source of truth
+- Schema files in `crates/preset_core/assets/` are the single source of truth
 - Any schema change requires updating:
-  1. Schema JSON files in `crates/sp_core/assets/`
-  2. sp_core Rust models and serde attributes (if field names/types change)
-  3. sp_core conformance tests (`crates/sp_core/tests/schema_tests.rs`)
+  1. Schema JSON files in `crates/preset_core/assets/`
+  2. preset_core Rust models and serde attributes (if field names/types change)
+  3. preset_core conformance tests (`crates/preset_core/tests/schema_tests.rs`)
   4. sp_react Zod schema (`packages/sp_react/src/schemas/config-schema.ts`)
   5. sp_react conformance tests
   6. Schema HTML docs (`make schema-doc`)
@@ -46,7 +46,7 @@ This document covers:
 
 ## Consumer adoption process
 
-1. Copy schema files from `crates/sp_core/assets/*.schema.json` to consumer's `test/fixtures/`
+1. Copy schema files from `crates/preset_core/assets/*.schema.json` to consumer's `test/fixtures/`
 2. Add schema validation dev dependency (e.g., `json_schema: ^5.2.2` for Dart)
 3. Write conformance tests: construct models with `toJson()`, validate against appropriate schema
 4. Extract enum values from vendored schema and compare against production code constants
@@ -55,7 +55,7 @@ This document covers:
 ## Related documents
 
 - docs/integration/smartplaylist-contract.md -- file structure the schemas validate
-- docs/architecture/module-boundaries.md -- sp_core owns schemas, sp_react mirrors as Zod
+- docs/architecture/module-boundaries.md -- preset_core owns schemas, sp_react mirrors as Zod
 - docs/development/change-workflow.md -- steps for schema changes
 - docs/schema-reference.md -- complete field-level schema reference (v6)
 

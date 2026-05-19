@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
-import { usePatterns } from '@/api/queries.ts';
+import { usePresets } from '@/api/queries.ts';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Card,
@@ -19,7 +19,7 @@ export const Route = createFileRoute('/browse')({
 
 function BrowseScreen() {
   const navigate = useNavigate();
-  const { data: patterns, isLoading, error } = usePatterns();
+  const { data: presets, isLoading, error } = usePresets();
   const [searchOpen, setSearchOpen] = useState(false);
 
   const handleSearchSelect = (selection: PodcastSelection) => {
@@ -47,9 +47,9 @@ function BrowseScreen() {
 
       {isLoading && <LoadingState />}
       {error && <ErrorState message={error.message} />}
-      {patterns && patterns.length === 0 && <EmptyState />}
-      {patterns && 0 < patterns.length && (
-        <PatternList patterns={patterns} navigate={navigate} />
+      {presets && presets.length === 0 && <EmptyState />}
+      {presets && 0 < presets.length && (
+        <PresetList presets={presets} navigate={navigate} />
       )}
     </div>
   );
@@ -94,7 +94,7 @@ function ErrorState({ message }: { message: string }) {
 
   return (
     <div className="text-center py-12 text-destructive">
-      {t('loadPatternsFailed', { error: message })}
+      {t('loadPresetsFailed', { error: message })}
     </div>
   );
 }
@@ -104,16 +104,16 @@ function EmptyState() {
 
   return (
     <div className="text-center py-12 text-muted-foreground">
-      {t('noPatternsFound')}
+      {t('noPresetsFound')}
     </div>
   );
 }
 
-function PatternList({
-  patterns,
+function PresetList({
+  presets,
   navigate,
 }: {
-  patterns: Array<{
+  presets: Array<{
     id: string;
     displayName: string;
     feedUrlHint: string;
@@ -123,10 +123,10 @@ function PatternList({
 }) {
   return (
     <div className="grid gap-4">
-      {patterns.map((pattern) => (
-        <PatternCard
-          key={pattern.id}
-          pattern={pattern}
+      {presets.map((preset) => (
+        <PresetCard
+          key={preset.id}
+          preset={preset}
           navigate={navigate}
         />
       ))}
@@ -134,11 +134,11 @@ function PatternList({
   );
 }
 
-function PatternCard({
-  pattern,
+function PresetCard({
+  preset,
   navigate,
 }: {
-  pattern: {
+  preset: {
     id: string;
     displayName: string;
     feedUrlHint: string;
@@ -152,18 +152,18 @@ function PatternCard({
     <Card
       className="cursor-pointer hover:bg-accent/50 transition-colors"
       onClick={() =>
-        void navigate({ to: '/editor/$id', params: { id: pattern.id } })
+        void navigate({ to: '/editor/$id', params: { id: preset.id } })
       }
     >
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{pattern.displayName}</CardTitle>
+          <CardTitle className="text-lg">{preset.displayName}</CardTitle>
           <Badge variant="secondary">
-            {t('playlists', { count: pattern.playlistCount })}
+            {t('playlists', { count: preset.playlistCount })}
           </Badge>
         </div>
-        {pattern.feedUrlHint && (
-          <CardDescription>{pattern.feedUrlHint}</CardDescription>
+        {preset.feedUrlHint && (
+          <CardDescription>{preset.feedUrlHint}</CardDescription>
         )}
       </CardHeader>
     </Card>

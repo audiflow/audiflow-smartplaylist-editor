@@ -5,13 +5,13 @@ import { describe, it, expect } from 'vitest';
 import {
   buildUpdateMetaPayload,
   buildCreateMetaPayload,
-  buildCreatePatternPayload,
+  buildCreatePresetPayload,
   type MetaPayloadSnapshot,
 } from '../editor-layout.tsx';
 
 /**
  * Regression coverage for the tri-state `showEpisodeThumbnail` round-trip
- * on the **update** endpoint (`PUT /api/configs/patterns/{id}/meta`).
+ * on the **update** endpoint (`PUT /api/configs/presets/{id}/meta`).
  *
  * The server's update flow strips unknown keys before validation and treats
  * JSON `null` as "remove key from disk", so the client must translate an
@@ -67,7 +67,7 @@ describe('buildUpdateMetaPayload', () => {
 
 /**
  * The **create** endpoint validates the nested `meta` against
- * `pattern-meta.schema.json` directly, which has `additionalProperties: false`
+ * `preset-meta.schema.json` directly, which has `additionalProperties: false`
  * and requires `showEpisodeThumbnail` (when present) to be a real boolean.
  * So the create payload must omit `displayName` and only include
  * `showEpisodeThumbnail` when explicitly chosen.
@@ -121,7 +121,7 @@ describe('buildCreateMetaPayload', () => {
   });
 });
 
-describe('buildCreatePatternPayload', () => {
+describe('buildCreatePresetPayload', () => {
   const baseSnapshot: MetaPayloadSnapshot = {
     displayName: 'P1',
     feedUrls: ['https://example.com/rss'],
@@ -130,14 +130,14 @@ describe('buildCreatePatternPayload', () => {
   };
 
   it('keeps outer displayName but omits it from nested meta', () => {
-    const out = buildCreatePatternPayload(baseSnapshot, 'new-id');
+    const out = buildCreatePresetPayload(baseSnapshot, 'new-id');
     expect(out.id).toBe('new-id');
     expect(out.displayName).toBe('P1');
     expect('displayName' in out.meta).toBe(false);
   });
 
   it('omits showEpisodeThumbnail from meta when snapshot is undefined', () => {
-    const out = buildCreatePatternPayload(
+    const out = buildCreatePresetPayload(
       { ...baseSnapshot, showEpisodeThumbnail: undefined },
       'new-id',
     );
@@ -145,7 +145,7 @@ describe('buildCreatePatternPayload', () => {
   });
 
   it('propagates an explicit false through the meta payload', () => {
-    const out = buildCreatePatternPayload(
+    const out = buildCreatePresetPayload(
       { ...baseSnapshot, showEpisodeThumbnail: false },
       'new-id',
     );
@@ -157,7 +157,7 @@ describe('buildCreatePatternPayload', () => {
 
 /**
  * Schema round-trip: validate that what `buildCreateMetaPayload` actually
- * sends conforms to the canonical `pattern-meta.schema.json`. This is the
+ * sends conforms to the canonical `preset-meta.schema.json`. This is the
  * real safety net against the regression -- the unit tests above can pass
  * while the schema still rejects the payload (e.g. additional properties or
  * `null` instead of boolean).
@@ -165,7 +165,7 @@ describe('buildCreatePatternPayload', () => {
  * The server adds `dataVersion` itself on create, so the client never sends
  * it; we drop it from `required` to mirror that division of responsibility.
  */
-describe('buildCreateMetaPayload validates against pattern-meta.schema.json', () => {
+describe('buildCreateMetaPayload validates against preset-meta.schema.json', () => {
   const schemaPath = resolve(
     __dirname,
     '../../../../../../crates/preset_core/assets/preset-meta.schema.json',

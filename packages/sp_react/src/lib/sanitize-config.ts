@@ -1,4 +1,4 @@
-import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
+import type { PresetConfig, ResolverType } from '@/schemas/config-schema.ts';
 
 /**
  * Removes fields from each playlist that are irrelevant to the current
@@ -11,7 +11,7 @@ import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
  * - titleClassifier:   grouping.staticClassifiers
  * - year:              groupItem.titleExtractor
  */
-export function stripConditionalFields(config: PatternConfig): PatternConfig {
+export function stripConditionalFields(config: PresetConfig): PresetConfig {
   return {
     ...config,
     playlists: config.playlists.map((playlist) => {

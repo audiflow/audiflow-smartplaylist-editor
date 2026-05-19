@@ -13,8 +13,8 @@ Strip the leading `v` if present.
 2. **Read** the root `Cargo.toml` to confirm the current version.
 3. **Update** all three version occurrences in the root `Cargo.toml`:
    - `[workspace.package] version`
-   - `[workspace.dependencies] sp_core` version field
-   - `[workspace.dependencies] sp_server` version field
+   - `[workspace.dependencies] preset_core` version field
+   - `[workspace.dependencies] preset_server` version field
 4. **Verify** by running `cargo clippy -- -W warnings` (zero warnings required).
 5. **Verify** by running `cargo test` (all tests must pass).
 6. Report the old and new version to the user.

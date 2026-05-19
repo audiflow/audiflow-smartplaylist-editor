@@ -1,7 +1,7 @@
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { FieldPath, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
+import type { PresetConfig, YearBinding } from '@/schemas/config-schema.ts';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
 import { TriStateCheckbox } from '@/components/ui/tri-state-checkbox.tsx';
 import {
@@ -21,19 +21,19 @@ import { PREVIEW_FIELDS } from '@/components/editor/preview/preview-field-ids.ts
 // react-hook-form's generic resolution breaks on dynamically-composed paths; concentrate
 // the necessary casts in these two helpers so call sites stay readable.
 function watchPath<T>(
-  watch: UseFormReturn<PatternConfig>['watch'],
+  watch: UseFormReturn<PresetConfig>['watch'],
   path: string,
 ): T | undefined {
-  return watch(path as FieldPath<PatternConfig>) as T | undefined;
+  return watch(path as FieldPath<PresetConfig>) as T | undefined;
 }
 
 function setPath<T>(
-  setValue: UseFormReturn<PatternConfig>['setValue'],
+  setValue: UseFormReturn<PresetConfig>['setValue'],
   path: string,
   value: T,
   options?: { shouldDirty?: boolean },
 ): void {
-  setValue(path as FieldPath<PatternConfig>, value as never, options);
+  setValue(path as FieldPath<PresetConfig>, value as never, options);
 }
 
 const YEAR_BINDING_OPTIONS = ['none', 'pinToYear', 'splitByYear'] as const;
@@ -44,7 +44,7 @@ interface DisplaySettingsTabProps {
 
 export function DisplaySettingsTab({ index }: DisplaySettingsTabProps) {
   const prefix = `playlists.${index}` as const;
-  const { watch, setValue, control } = useFormContext<PatternConfig>();
+  const { watch, setValue, control } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
 
   const playlistId = useWatch({ control, name: `${prefix}.id` as const });
@@ -212,7 +212,7 @@ interface SubsectionProps {
 }
 
 function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps) {
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
   const prefix = `playlists.${index}` as const;
   const isSpecific = activeContext !== 'all';
@@ -268,7 +268,7 @@ function GroupsSubsection({ index, activeContext, selectedIdx }: SubsectionProps
 }
 
 function EpisodesSubsection({ index, activeContext, selectedIdx }: SubsectionProps) {
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
   const prefix = `playlists.${index}` as const;
   const isSpecific = activeContext !== 'all';

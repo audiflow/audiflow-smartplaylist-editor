@@ -2,10 +2,10 @@
 
 ## Modules
 
-### Module: sp_core
+### Module: preset_core
 
 #### Responsibilities
-- Define all domain models (PatternConfig, PlaylistDefinition, SelectorConfig, GroupingConfig, GroupListingConfig, GroupItemConfig, EpisodeListingConfig, EpisodeItemConfig, Playlist, GroupDef, etc.)
+- Define all domain models (PresetConfig, PlaylistDefinition, SelectorConfig, GroupingConfig, GroupListingConfig, GroupItemConfig, EpisodeListingConfig, EpisodeItemConfig, Playlist, GroupDef, etc.)
 - Implement resolver trait and concrete resolvers (seasonNumber, titleClassifier, year, titleDiscovery)
 - Provide schema validation via embedded JSON Schema files
 - Implement services: ResolverService, ConfigAssembler, sorting utilities
@@ -24,10 +24,10 @@
 - External crates: serde, serde_json, jsonschema, fancy-regex, sha2, chrono, md5
 
 #### Used by
-- sp_server (models, resolvers, schema validation, services, uniqueness, pattern ID derivation)
-- sp_cli (schema validation via sp_core::schema, uniqueness validation, deterministic ID validation)
+- preset_server (models, resolvers, schema validation, services, uniqueness, pattern ID derivation)
+- preset_cli (schema validation via preset_core::schema, uniqueness validation, deterministic ID validation)
 
-### Module: sp_server
+### Module: preset_server
 
 #### Responsibilities
 - Axum REST API: config CRUD, preview, feed proxy, schema endpoint, health check, pattern identifiers, pattern ID derivation
@@ -44,22 +44,22 @@
 - Strip resolver-irrelevant fields from preview and save responses
 
 #### Non-responsibilities
-- Domain logic (resolvers, sorting, schema definitions) -- delegated to sp_core
-- CLI argument parsing -- handled by sp_cli
+- Domain logic (resolvers, sorting, schema definitions) -- delegated to preset_core
+- CLI argument parsing -- handled by preset_cli
 - Frontend rendering
 
 #### Depends on
-- sp_core (models, resolvers, schema, services, uniqueness, pattern_id)
+- preset_core (models, resolvers, schema, services, uniqueness, pattern_id)
 - External crates: axum 0.8, tokio, reqwest, feed-rs, notify 7, rust-embed, tower-http
 
 #### Used by
-- sp_cli (starts server via sp_server::app)
+- preset_cli (starts server via preset_server::app)
 
-### Module: sp_cli
+### Module: preset_cli
 
 #### Responsibilities
 - CLI argument parsing via clap (serve, validate, format, bump-versions subcommands)
-- `serve`: start sp_server with --data-dir, --host, --port, --static-dir flags
+- `serve`: start preset_server with --data-dir, --host, --port, --static-dir flags
 - `validate`: walk config files and validate against JSON Schema; check cross-pattern uniqueness; verify deterministic pattern ID integrity (exit codes: 0/1/2)
 - `format`: normalize JSON files with --check mode for CI; supports directory arguments
 - `bump-versions`: detect changed patterns via git diff and increment their dataVersion fields (CI use)
@@ -70,8 +70,8 @@
 - Frontend concerns
 
 #### Depends on
-- sp_core (schema validation, models, uniqueness, pattern_id)
-- sp_server (app construction for serve command)
+- preset_core (schema validation, models, uniqueness, pattern_id)
+- preset_server (app construction for serve command)
 - External crates: clap, anyhow
 
 #### Used by
@@ -82,7 +82,7 @@
 #### Responsibilities
 - Web editor UI: pattern browsing, config editing forms (tabbed layout with 6 categories), live preview
 - Filtered episodes panel with debounced auto-preview
-- API client: HTTP wrapper for sp_server REST endpoints
+- API client: HTTP wrapper for preset_server REST endpoints
 - Auto-derive read-only pattern ID for new configs via `useDerivedPatternId` hook (debounced, calls derive endpoint)
 - State management: Zustand for editor UI state, TanStack Query for server state
 - Form validation: React Hook Form + Zod 4 schemas mirroring JSON Schema
@@ -95,10 +95,10 @@
 #### Non-responsibilities
 - Backend logic, file I/O, schema definitions
 - Git operations
-- Domain model definitions (mirrors sp_core models via Zod schemas)
+- Domain model definitions (mirrors preset_core models via Zod schemas)
 
 #### Depends on
-- sp_server REST API (runtime dependency, not build dependency)
+- preset_server REST API (runtime dependency, not build dependency)
 - External packages: React 19, TanStack Query/Router, Zustand, RHF, Zod 4, CodeMirror 6, Tailwind v4, shadcn/ui, dnd-kit, i18next
 
 #### Used by
@@ -106,12 +106,12 @@
 
 ## Boundary rules
 
-- sp_core must remain a pure library crate with no I/O or framework dependencies
-- sp_server depends on sp_core but never the reverse
-- sp_cli depends on both sp_core and sp_server; neither depends on sp_cli
-- sp_react communicates with sp_server only via REST API; no shared code at build time
-- Domain model changes in sp_core require corresponding Zod schema updates in sp_react
-- JSON Schema files live in sp_core (`crates/sp_core/assets/`); sp_react mirrors them as Zod schemas
+- preset_core must remain a pure library crate with no I/O or framework dependencies
+- preset_server depends on preset_core but never the reverse
+- preset_cli depends on both preset_core and preset_server; neither depends on preset_cli
+- sp_react communicates with preset_server only via REST API; no shared code at build time
+- Domain model changes in preset_core require corresponding Zod schema updates in sp_react
+- JSON Schema files live in preset_core (`crates/preset_core/assets/`); sp_react mirrors them as Zod schemas
 
 ## When to update
 

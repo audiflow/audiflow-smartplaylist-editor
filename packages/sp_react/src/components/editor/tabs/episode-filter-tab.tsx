@@ -1,6 +1,6 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { Button } from '@/components/ui/button.tsx';
@@ -16,7 +16,7 @@ interface EpisodeFilterTabProps {
 }
 
 export function EpisodeFilterTab({ index, episodeTitles }: EpisodeFilterTabProps) {
-  const { register, watch, control } = useFormContext<PatternConfig>();
+  const { register, watch, control } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
   const requireHl = usePreviewHighlight(PREVIEW_FIELDS.filtersRequire);
   const excludeHl = usePreviewHighlight(PREVIEW_FIELDS.filtersExclude);

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import { Loader2, TriangleAlert } from 'lucide-react';
 import { useDerivedPatternId } from '@/hooks/use-derive-pattern-id.ts';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import {
   Card,
   CardContent,
@@ -19,13 +19,13 @@ import { HintLabel } from '@/components/editor/hint-label.tsx';
 import { useDuplicateCheck } from '@/hooks/use-duplicate-check.ts';
 import type { DuplicateConflict } from '@/hooks/use-duplicate-check.ts';
 
-export function PatternSettingsCard({
+export function PresetSettingsCard({
   configId,
 }: {
   configId: string | null;
 }) {
   const { register, watch, setValue, control } =
-    useFormContext<PatternConfig>();
+    useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
 
   const podcastGuid = useWatch({ control, name: 'podcastGuid' });
@@ -61,12 +61,12 @@ export function PatternSettingsCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('patternSettings')}</CardTitle>
+        <CardTitle>{t('presetSettings')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <HintLabel htmlFor="config-id" hint="patternId">
+            <HintLabel htmlFor="config-id" hint="presetId">
               {t('configId')}
             </HintLabel>
             {isNewConfig ? (
@@ -97,13 +97,13 @@ export function PatternSettingsCard({
             )}
           </div>
           <div className="space-y-1.5">
-            <HintLabel htmlFor="config-displayName" hint="patternDisplayName">
-              {t('patternDisplayName')}
+            <HintLabel htmlFor="config-displayName" hint="presetDisplayName">
+              {t('presetDisplayName')}
             </HintLabel>
             <Input
               id="config-displayName"
               {...register('displayName')}
-              placeholder={t('placeholderPatternDisplayName')}
+              placeholder={t('placeholderPresetDisplayName')}
             />
           </div>
         </div>
@@ -162,7 +162,7 @@ function FeedUrlsField({
 }: {
   conflicts: DuplicateConflict[];
 }) {
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
   const feedUrls = watch('feedUrls') ?? [];
 
@@ -195,10 +195,10 @@ function DuplicateWarning({ conflict }: { conflict: DuplicateConflict }) {
 
   const message =
     conflict.field === 'podcastGuid'
-      ? t('duplicateGuid', { patternId: conflict.claimedBy })
+      ? t('duplicateGuid', { presetId: conflict.claimedBy })
       : t('duplicateFeedUrl', {
           url: conflict.value,
-          patternId: conflict.claimedBy,
+          presetId: conflict.claimedBy,
         });
 
   return (
@@ -211,7 +211,7 @@ function DuplicateWarning({ conflict }: { conflict: DuplicateConflict }) {
           params={{ id: conflict.claimedBy }}
           className="underline underline-offset-2 hover:text-amber-800 dark:hover:text-amber-200"
         >
-          {t('duplicateGoToPattern')}
+          {t('duplicateGoToPreset')}
         </Link>
       </span>
     </p>

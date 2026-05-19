@@ -3,15 +3,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { OrganizeTab } from '@/components/editor/tabs/organize-tab.tsx';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 
-function Wrapper({ children, defaultValues }: { children: ReactNode; defaultValues: Partial<PatternConfig> }) {
-  const methods = useForm<PatternConfig>({ defaultValues: defaultValues as PatternConfig });
+function Wrapper({ children, defaultValues }: { children: ReactNode; defaultValues: Partial<PresetConfig> }) {
+  const methods = useForm<PresetConfig>({ defaultValues: defaultValues as PresetConfig });
   return <FormProvider {...methods}>{children}</FormProvider>;
 }
 
-function baseConfig(overrides: Record<string, unknown> = {}): Partial<PatternConfig> {
+function baseConfig(overrides: Record<string, unknown> = {}): Partial<PresetConfig> {
   return {
     playlists: [
       {
@@ -20,9 +20,9 @@ function baseConfig(overrides: Record<string, unknown> = {}): Partial<PatternCon
         priority: 0,
         grouping: { by: 'seasonNumber' },
         ...overrides,
-      } as PatternConfig['playlists'][number],
+      } as PresetConfig['playlists'][number],
     ],
-  } as Partial<PatternConfig>;
+  } as Partial<PresetConfig>;
 }
 
 describe('OrganizeTab', () => {

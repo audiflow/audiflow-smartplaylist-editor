@@ -2,12 +2,12 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useForm, FormProvider } from 'react-hook-form';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { renderWithProviders } from '@/test-utils.tsx';
 import { PlaylistForm } from '../playlist-form.tsx';
 
-const DEFAULT_CONFIG: PatternConfig = {
+const DEFAULT_CONFIG: PresetConfig = {
   id: 'test-pattern',
   displayName: 'Test',
   yearGroupedEpisodes: false,
@@ -26,14 +26,14 @@ function FormWrapper({
   defaultValues,
 }: {
   children: React.ReactNode;
-  defaultValues: PatternConfig;
+  defaultValues: PresetConfig;
 }) {
-  const form = useForm<PatternConfig>({ defaultValues });
+  const form = useForm<PresetConfig>({ defaultValues });
   return <FormProvider {...form}>{children}</FormProvider>;
 }
 
 function renderPlaylistForm(
-  overrides?: Partial<{ index: number; onRemove: () => void; config: PatternConfig; isNewConfig: boolean }>,
+  overrides?: Partial<{ index: number; onRemove: () => void; config: PresetConfig; isNewConfig: boolean }>,
 ) {
   const index = overrides?.index ?? 0;
   const onRemove = overrides?.onRemove ?? vi.fn();

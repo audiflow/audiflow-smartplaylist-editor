@@ -35,23 +35,23 @@ Configuration data is organized in a three-level file hierarchy:
 ```
 patterns/
   meta.json                          # Level 1: Pattern Index
-  {patternId}/
+  {presetId}/
     meta.json                        # Level 2: Pattern Meta
     playlists/
       {playlistId}.json              # Level 3: Playlist Definition
 ```
 
-**Level 1 -- Pattern Index** (`patterns/meta.json`): Root index listing all available patterns. The app fetches this first and uses `feedUrlHint` for fast pre-filtering.
+**Level 1 -- Pattern Index** (`presets/meta.json`): Root index listing all available patterns. The app fetches this first and uses `feedUrlHint` for fast pre-filtering.
 
-**Level 2 -- Pattern Meta** (`{patternId}/meta.json`): Per-podcast metadata containing feed URLs for matching and an ordered list of playlist IDs.
+**Level 2 -- Pattern Meta** (`{presetId}/meta.json`): Per-podcast metadata containing feed URLs for matching and an ordered list of playlist IDs.
 
-**Level 3 -- Playlist Definition** (`{patternId}/playlists/{playlistId}.json`): Individual playlist configuration defining how episodes are filtered, grouped, and displayed.
+**Level 3 -- Playlist Definition** (`{presetId}/playlists/{playlistId}.json`): Individual playlist configuration defining how episodes are filtered, grouped, and displayed.
 
 ---
 
 ## Pattern Index
 
-**File:** `patterns/meta.json`
+**File:** `presets/meta.json`
 
 **Schema:** `https://audiflow.app/schema/v6/pattern-index.json`
 
@@ -65,7 +65,7 @@ Root index of all patterns. The app fetches this file first and compares `dataVe
 | `schemaVersion` | integer | yes | Schema structure version. Bumped when JSON structure changes. |
 | `patterns` | array | yes | Summary entries for all patterns. |
 
-### PatternIndexEntry
+### PresetIndexEntry
 
 Each element in the `patterns` array:
 
@@ -99,7 +99,7 @@ Each element in the `patterns` array:
 
 ## Pattern Meta
 
-**File:** `{patternId}/meta.json`
+**File:** `{presetId}/meta.json`
 
 **Schema:** `https://audiflow.app/schema/v6/pattern-meta.json`
 
@@ -137,7 +137,7 @@ Per-podcast metadata. The app matches incoming feeds against `podcastGuid` (pref
 
 ## Playlist Definition
 
-**File:** `{patternId}/playlists/{playlistId}.json`
+**File:** `{presetId}/playlists/{playlistId}.json`
 
 **Schema:** `https://audiflow.app/schema/v6/playlist-definition.json`
 
@@ -777,6 +777,6 @@ The ID is a 12-character hex string derived from the MD5 hash. Once created, the
 - `{id}/playlists/{playlistId}.json` -- playlist definitions
 
 The ID must match across:
-- `patterns/meta.json` entry `id`
+- `presets/meta.json` entry `id`
 - `{id}/meta.json` field `id`
 - The directory name containing the pattern files

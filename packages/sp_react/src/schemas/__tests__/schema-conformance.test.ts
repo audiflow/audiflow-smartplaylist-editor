@@ -14,7 +14,7 @@ import {
   episodeItemConfigSchema,
 } from '../config-schema';
 
-// Load canonical playlist-definition.schema.json from sp_core
+// Load canonical playlist-definition.schema.json from preset_core
 const schemaPath = resolve(
   __dirname,
   '../../../../../crates/preset_core/assets/playlist-definition.schema.json',

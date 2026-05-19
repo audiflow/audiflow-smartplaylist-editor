@@ -58,9 +58,9 @@ Browser (sp_react)          API server (Rust/axum)
    |<--- SSE (file changes) ---|
    |                           |
                          local data repo directory
-                         +-- patterns/meta.json
-                         +-- patterns/{id}/meta.json
-                         +-- patterns/{id}/playlists/{pid}.json
+                         +-- presets/meta.json
+                         +-- presets/{id}/meta.json
+                         +-- presets/{id}/playlists/{pid}.json
                          +-- .cache/feeds/          (gitignored)
 ```
 
@@ -96,9 +96,9 @@ The binary `audiflow-editor` provides three subcommands:
 ```
 audiflow-smartplaylist-editor/
 ├── crates/
-│   ├── sp_core/       # Domain models, resolvers, schema validation (pure Rust)
-│   ├── sp_server/     # API server (axum, tokio, SSE, feed caching)
-│   └── sp_cli/        # CLI binary (serve, validate, format)
+│   ├── preset_core/       # Domain models, resolvers, schema validation (pure Rust)
+│   ├── preset_server/     # API server (axum, tokio, SSE, feed caching)
+│   └── preset_cli/        # CLI binary (serve, validate, format)
 └── packages/
     └── sp_react/      # React SPA (TanStack, Zustand, shadcn/ui, CodeMirror)
 ```
@@ -110,13 +110,13 @@ Configs are stored as a three-level file hierarchy in data repos:
 ```
 patterns/
   meta.json                        # Root: version + pattern summaries
-  {patternId}/
+  {presetId}/
     meta.json                      # Pattern: feedUrls, playlistIds, flags
     playlists/
       {playlistId}.json            # Playlist definition
 ```
 
-The canonical JSON Schema files live in `crates/sp_core/assets/`.
+The canonical JSON Schema files live in `crates/preset_core/assets/`.
 
 ## Development
 

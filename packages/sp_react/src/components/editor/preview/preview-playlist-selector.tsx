@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext, useWatch } from 'react-hook-form';
-import type { PatternConfig, PartitionBy } from '@/schemas/config-schema.ts';
+import type { PresetConfig, PartitionBy } from '@/schemas/config-schema.ts';
 import type { PreviewPlaylist } from '@/schemas/api-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import {
@@ -179,7 +179,7 @@ export function PreviewPlaylistSelector({
   onSelectPlaylist,
 }: PreviewPlaylistSelectorProps) {
   const { t } = useTranslation('preview');
-  const { control } = useFormContext<PatternConfig>();
+  const { control } = useFormContext<PresetConfig>();
   const playlists = useWatch({ control, name: 'playlists' });
   const previewData = useEditorStore((s) => s.previewData);
 
