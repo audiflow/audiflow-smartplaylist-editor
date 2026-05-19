@@ -17,7 +17,7 @@ import {
 // Load canonical playlist-definition.schema.json from sp_core
 const schemaPath = resolve(
   __dirname,
-  '../../../../../crates/sp_core/assets/playlist-definition.schema.json',
+  '../../../../../crates/preset_core/assets/playlist-definition.schema.json',
 );
 const schemaJson = JSON.parse(readFileSync(schemaPath, 'utf-8'));
 const defs = schemaJson.$defs as Record<string, Record<string, unknown>>;

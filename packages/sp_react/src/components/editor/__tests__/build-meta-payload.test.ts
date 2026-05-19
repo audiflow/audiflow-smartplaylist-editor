@@ -168,7 +168,7 @@ describe('buildCreatePatternPayload', () => {
 describe('buildCreateMetaPayload validates against pattern-meta.schema.json', () => {
   const schemaPath = resolve(
     __dirname,
-    '../../../../../../crates/sp_core/assets/pattern-meta.schema.json',
+    '../../../../../../crates/preset_core/assets/preset-meta.schema.json',
   );
   const schema = JSON.parse(readFileSync(schemaPath, 'utf-8')) as {
     required: string[];
