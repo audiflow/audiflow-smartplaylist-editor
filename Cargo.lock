@@ -103,8 +103,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 
 [[package]]
-name = "audiflow-smartplaylist-core"
-version = "6.0.1"
+name = "audiflow-preset-core"
+version = "7.0.0"
 dependencies = [
  "chrono",
  "fancy-regex",
@@ -116,12 +116,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "audiflow-smartplaylist-editor"
-version = "6.0.1"
+name = "audiflow-preset-editor"
+version = "7.0.0"
 dependencies = [
  "anyhow",
- "audiflow-smartplaylist-core",
- "audiflow-smartplaylist-server",
+ "audiflow-preset-core",
+ "audiflow-preset-server",
  "axum",
  "clap",
  "reqwest 0.12.28",
@@ -132,10 +132,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "audiflow-smartplaylist-server"
-version = "6.0.1"
+name = "audiflow-preset-server"
+version = "7.0.0"
 dependencies = [
- "audiflow-smartplaylist-core",
+ "audiflow-preset-core",
  "axum",
  "chrono",
  "feed-rs",

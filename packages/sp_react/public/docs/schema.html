@@ -13,15 +13,15 @@
     <meta charset="utf-8"/>
         
     
-    <title>SmartPlaylist Definition</title>
+    <title>Playlist Definition</title>
 </head>
 <body onload="anchorOnLoad();" id="root"><div class="text-right">
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
             <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
         </div>
 
-    <div class="breadcrumbs"></div> <h1>SmartPlaylist Definition</h1><span class="badge badge-dark value-type">Type: object</span><br/>
-<span class="description"><p>Defines how a playlist organizes, filters, sorts, and displays episodes for a podcast. Each definition file lives at {patternId}/playlists/{id}.json. Multiple definitions under the same config share the podcast's episode pool and claim episodes based on priority.</p>
+    <div class="breadcrumbs"></div> <h1>Playlist Definition</h1><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Defines how a playlist organizes, filters, sorts, and displays episodes for a podcast. Each definition file lives at {presetId}/playlists/{id}.json. Multiple definitions under the same preset share the podcast's episode pool and claim episodes based on priority.</p>
 </span> <span class="badge badge-info no-additional">No Additional Properties</span><h2 class="handle">
     <label>Conditional Subschema</label>
 </h2>
@@ -248,7 +248,7 @@
             />
         </svg>
     <a href="#id" onclick="anchorLink('id')">id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>A unique identifier for this playlist within the config (e.g., 'season-1'). Must match the filename (without .json extension). Referenced by the pattern meta's playlists array to control display order.</p>
+<span class="description"><p>A unique identifier for this playlist within the config (e.g., 'season-1'). Must match the filename (without .json extension). Referenced by the preset meta's playlists array to control display order.</p>
 </span>
         
 
@@ -4324,6 +4324,6 @@
 </div>
 
     <footer>
-        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-05-03 at 16:41:17 +0900</p>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a> on 2026-05-19 at 17:16:19 +0900</p>
     </footer></body>
 </html>
