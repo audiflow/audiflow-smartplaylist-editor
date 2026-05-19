@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { yearBindingSchema } from './config-schema.ts';
 
-// -- Pattern browsing --
+// -- Preset browsing --
 
-export const patternSummarySchema = z.object({
+export const presetSummarySchema = z.object({
   id: z.string(),
   dataVersion: z.number(),
   displayName: z.string(),
@@ -11,7 +11,7 @@ export const patternSummarySchema = z.object({
   playlistCount: z.number(),
 });
 
-export const patternMetaSchema = z.object({
+export const presetMetaSchema = z.object({
   dataVersion: z.number(),
   id: z.string(),
   podcastGuid: z.string().optional(),
@@ -20,13 +20,13 @@ export const patternMetaSchema = z.object({
   playlists: z.array(z.string()),
 });
 
-export const patternIdentifiersSchema = z.object({
+export const presetIdentifiersSchema = z.object({
   id: z.string(),
   podcastGuid: z.string().nullish(),
   feedUrls: z.array(z.string()),
 });
 
-export type PatternIdentifiers = z.infer<typeof patternIdentifiersSchema>;
+export type PresetIdentifiers = z.infer<typeof presetIdentifiersSchema>;
 
 // -- Feed episodes --
 
@@ -131,8 +131,8 @@ export const podcastSearchResponseSchema = z.object({
 
 // -- Inferred types --
 
-export type PatternSummary = z.infer<typeof patternSummarySchema>;
-export type PatternMeta = z.infer<typeof patternMetaSchema>;
+export type PresetSummary = z.infer<typeof presetSummarySchema>;
+export type PresetMeta = z.infer<typeof presetMetaSchema>;
 export type FeedEpisode = z.infer<typeof feedEpisodeSchema>;
 export type PreviewEpisode = z.infer<typeof previewEpisodeSchema>;
 // PreviewGroup is defined above (recursive type)

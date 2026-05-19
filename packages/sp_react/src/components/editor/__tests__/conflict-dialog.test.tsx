@@ -5,7 +5,7 @@ import { ConflictDialog } from '../conflict-dialog.tsx';
 describe('ConflictDialog', () => {
   const defaultProps = {
     open: true,
-    filePath: 'patterns/test-pattern',
+    filePath: 'presets/test-pattern',
     onReload: vi.fn(),
     onKeepChanges: vi.fn(),
   };
@@ -17,7 +17,7 @@ describe('ConflictDialog', () => {
   it('renders title and description when open', () => {
     render(<ConflictDialog {...defaultProps} />);
     expect(screen.getByText(/file changed externally/i)).toBeInTheDocument();
-    expect(screen.getByText(/patterns\/test-pattern/)).toBeInTheDocument();
+    expect(screen.getByText(/presets\/test-pattern/)).toBeInTheDocument();
   });
 
   it('does not render content when closed', () => {

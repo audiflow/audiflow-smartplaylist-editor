@@ -15,8 +15,8 @@ This document covers:
 ## Responsibilities
 
 - Own and maintain three canonical JSON Schema files in `crates/preset_core/assets/`:
-  - `pattern-index.schema.json` -- validates root `patterns/meta.json`
-  - `pattern-meta.schema.json` -- validates per-pattern `{id}/meta.json`
+  - `preset-index.schema.json` -- validates root `presets/meta.json`
+  - `preset-meta.schema.json` -- validates per-pattern `{id}/meta.json`
   - `playlist-definition.schema.json` -- validates playlist definition files
 - Embed schemas at compile time via `include_str!` in preset_core
 - Validate configs at runtime via `preset_core::schema::Validator`

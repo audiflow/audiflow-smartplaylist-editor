@@ -1,9 +1,9 @@
 import { http, HttpResponse } from 'msw';
 import { TEST_BASE_URL } from '@/test-utils.tsx';
 import {
-  PATTERN_SUMMARIES,
-  PATTERN_IDENTIFIERS,
-  VALID_PATTERN_CONFIG,
+  PRESET_SUMMARIES,
+  PRESET_IDENTIFIERS,
+  VALID_PRESET_CONFIG,
   FEED_EPISODES,
   PREVIEW_RESULT,
   PLAYLIST_SEASON,
@@ -13,52 +13,52 @@ const BASE = TEST_BASE_URL;
 
 export const handlers = [
   // -- Pattern browsing --
-  http.get(`${BASE}/api/configs/patterns`, () =>
-    HttpResponse.json(PATTERN_SUMMARIES),
+  http.get(`${BASE}/api/configs/presets`, () =>
+    HttpResponse.json(PRESET_SUMMARIES),
   ),
 
-  http.get(`${BASE}/api/configs/patterns/identifiers`, () =>
-    HttpResponse.json(PATTERN_IDENTIFIERS),
+  http.get(`${BASE}/api/configs/presets/identifiers`, () =>
+    HttpResponse.json(PRESET_IDENTIFIERS),
   ),
 
   // -- Pattern CRUD --
-  http.get(`${BASE}/api/configs/patterns/:id`, ({ params }) =>
+  http.get(`${BASE}/api/configs/presets/:id`, ({ params }) =>
     HttpResponse.json({
       dataVersion: 1,
       id: params.id,
-      podcastGuid: VALID_PATTERN_CONFIG.podcastGuid,
-      feedUrls: VALID_PATTERN_CONFIG.feedUrls,
+      podcastGuid: VALID_PRESET_CONFIG.podcastGuid,
+      feedUrls: VALID_PRESET_CONFIG.feedUrls,
       yearGroupedEpisodes: false,
       playlists: ['seasons', 'topics'],
     }),
   ),
 
-  http.get(`${BASE}/api/configs/patterns/:id/assembled`, () =>
-    HttpResponse.json(VALID_PATTERN_CONFIG),
+  http.get(`${BASE}/api/configs/presets/:id/assembled`, () =>
+    HttpResponse.json(VALID_PRESET_CONFIG),
   ),
 
-  http.post(`${BASE}/api/configs/patterns`, () =>
+  http.post(`${BASE}/api/configs/presets`, () =>
     HttpResponse.json(null, { status: 201 }),
   ),
 
-  http.delete(`${BASE}/api/configs/patterns/:id`, () =>
+  http.delete(`${BASE}/api/configs/presets/:id`, () =>
     HttpResponse.json(null),
   ),
 
-  http.put(`${BASE}/api/configs/patterns/:id/meta`, () =>
+  http.put(`${BASE}/api/configs/presets/:id/meta`, () =>
     HttpResponse.json(null),
   ),
 
   // -- Playlist CRUD --
-  http.get(`${BASE}/api/configs/patterns/:id/playlists/:pid`, () =>
+  http.get(`${BASE}/api/configs/presets/:id/playlists/:pid`, () =>
     HttpResponse.json(PLAYLIST_SEASON),
   ),
 
-  http.put(`${BASE}/api/configs/patterns/:id/playlists/:pid`, () =>
+  http.put(`${BASE}/api/configs/presets/:id/playlists/:pid`, () =>
     HttpResponse.json(null),
   ),
 
-  http.delete(`${BASE}/api/configs/patterns/:id/playlists/:pid`, () =>
+  http.delete(`${BASE}/api/configs/presets/:id/playlists/:pid`, () =>
     HttpResponse.json(null),
   ),
 

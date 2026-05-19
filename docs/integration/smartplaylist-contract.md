@@ -36,7 +36,7 @@ The editor expects and produces this directory layout in the data directory:
 ```
 patterns/
   meta.json                         # Root index: dataVersion, schemaVersion, pattern summaries
-  {patternId}/
+  {presetId}/
     meta.json                       # Pattern metadata: id, feedUrls, podcastGuid, yearGroupedEpisodes, playlists[]
     playlists/
       {playlistId}.json             # Playlist definition: resolverType, filters, groups, sort, display
@@ -46,19 +46,19 @@ patterns/
 
 | File | Schema | SchemaType enum value |
 |------|--------|-----------------------|
-| `patterns/meta.json` | `pattern-index.schema.json` | `PatternIndex` |
-| `patterns/{id}/meta.json` | `pattern-meta.schema.json` | `PatternMeta` |
-| `patterns/{id}/playlists/{pid}.json` | `playlist-definition.schema.json` | `PlaylistDefinition` |
+| `presets/meta.json` | `preset-index.schema.json` | `PresetIndex` |
+| `presets/{id}/meta.json` | `preset-meta.schema.json` | `PresetMeta` |
+| `presets/{id}/playlists/{pid}.json` | `playlist-definition.schema.json` | `PlaylistDefinition` |
 
 ### Naming rules
 
-- `patternId`: string identifier, used as directory name (alphanumeric, hyphens, underscores only -- enforced by `validate_path_segment`). New patterns use a deterministic 12-hex-char ID derived from podcast identity; legacy human-readable IDs are grandfathered.
+- `presetId`: string identifier, used as directory name (alphanumeric, hyphens, underscores only -- enforced by `validate_path_segment`). New presets use a deterministic 12-hex-char ID derived from podcast identity; legacy human-readable IDs are grandfathered.
 - `playlistId`: string identifier, used as filename without extension (alphanumeric, hyphens, underscores only)
 - All JSON files use 2-space indentation with trailing newline
 
 ### Version fields
 
-- `dataVersion` in root `meta.json`: incremented by the editor or `bump-versions` CLI when patterns change
+- `dataVersion` in root `meta.json`: incremented by the editor or `bump-versions` CLI when presets change
 - `schemaVersion` in root `meta.json`: tracks which schema version the data conforms to
 
 ## Data flow
@@ -79,7 +79,7 @@ Branch flow per version: `dev/v{N}` -> PR -> `stg/v{N}` -> PR -> `prod/v{N}`
 
 ## Integration assumptions
 
-- The data directory contains a valid `patterns/meta.json` before the server starts (`serve` command validates this)
+- The data directory contains a valid `presets/meta.json` before the server starts (`serve` command validates this)
 - External tools or manual edits may modify files while the server is running (FileWatcherService handles this)
 - Feed cache is stored in `$dataDir/.cache/feeds/` and is not part of the data contract
 - `.tmp` files are transient and should be gitignored

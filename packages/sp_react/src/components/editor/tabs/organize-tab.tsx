@@ -1,6 +1,6 @@
 import { useFormContext, useWatch, useFieldArray } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, ResolverType } from '@/schemas/config-schema.ts';
+import type { PresetConfig, ResolverType } from '@/schemas/config-schema.ts';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select.tsx';
@@ -25,7 +25,7 @@ interface OrganizeTabProps {
 
 export function OrganizeTab({ index }: OrganizeTabProps) {
   const prefix = `playlists.${index}` as const;
-  const { watch, setValue, control } = useFormContext<PatternConfig>();
+  const { watch, setValue, control } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
 
   const playlistId = useWatch({ control, name: `${prefix}.id` as const });

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { PatternConfig, EpisodeSortField, SortOrder, YearBinding } from '@/schemas/config-schema.ts';
+import type { PresetConfig, EpisodeSortField, SortOrder, YearBinding } from '@/schemas/config-schema.ts';
 import { Input } from '@/components/ui/input.tsx';
 import { HintLabel, HintIcon } from '@/components/editor/hint-label.tsx';
 import { Checkbox } from '@/components/ui/checkbox.tsx';
@@ -51,7 +51,7 @@ export function GroupDefCard({
   onRemove,
   onIdCommit,
 }: GroupDefCardProps) {
-  const { register, watch, setValue } = useFormContext<PatternConfig>();
+  const { register, watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
   const prefix = `playlists.${playlistIndex}.grouping.staticClassifiers.${groupIndex}` as const;
 
@@ -316,7 +316,7 @@ export function GroupDefCard({
 }
 
 function GroupEpisodeSortOverride({ prefix }: { prefix: string }) {
-  const { watch, setValue } = useFormContext<PatternConfig>();
+  const { watch, setValue } = useFormContext<PresetConfig>();
   const { t } = useTranslation('editor');
 
   const sort = watch(`${prefix}.episodeListing.sort` as any);

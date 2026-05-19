@@ -1,9 +1,9 @@
-import type { PatternSummary, PatternIdentifiers, FeedEpisode, PreviewResult } from '@/schemas/api-schema.ts';
-import type { PatternConfig, PlaylistDefinition } from '@/schemas/config-schema.ts';
+import type { PresetSummary, PresetIdentifiers, FeedEpisode, PreviewResult } from '@/schemas/api-schema.ts';
+import type { PresetConfig, PlaylistDefinition } from '@/schemas/config-schema.ts';
 
-// -- Pattern summaries (browse page) --
+// -- Preset summaries (browse page) --
 
-export const PATTERN_SUMMARIES: PatternSummary[] = [
+export const PRESET_SUMMARIES: PresetSummary[] = [
   {
     id: 'pattern-1',
     dataVersion: 1,
@@ -20,9 +20,9 @@ export const PATTERN_SUMMARIES: PatternSummary[] = [
   },
 ];
 
-// -- Pattern identifiers (duplicate check) --
+// -- Preset identifiers (duplicate check) --
 
-export const PATTERN_IDENTIFIERS: PatternIdentifiers[] = [
+export const PRESET_IDENTIFIERS: PresetIdentifiers[] = [
   {
     id: 'pattern-1',
     podcastGuid: 'guid-alpha-111',
@@ -67,9 +67,9 @@ export const PLAYLIST_CATEGORY: PlaylistDefinition = {
   priority: 1,
 };
 
-// -- Full pattern config --
+// -- Full preset config --
 
-export const VALID_PATTERN_CONFIG: PatternConfig = {
+export const VALID_PRESET_CONFIG: PresetConfig = {
   id: 'pattern-1',
   displayName: 'Test Podcast Alpha',
   podcastGuid: 'guid-alpha-111',
@@ -78,7 +78,7 @@ export const VALID_PATTERN_CONFIG: PatternConfig = {
   playlists: [PLAYLIST_SEASON, PLAYLIST_CATEGORY],
 };
 
-export const MINIMAL_PATTERN_CONFIG: PatternConfig = {
+export const MINIMAL_PRESET_CONFIG: PresetConfig = {
   id: 'pattern-minimal',
   displayName: '',
   feedUrls: [],

@@ -8,7 +8,7 @@ import type {
   PreviewGroup,
   FeedEpisode,
 } from '@/schemas/api-schema.ts';
-import type { PatternConfig, YearBinding } from '@/schemas/config-schema.ts';
+import type { PresetConfig, YearBinding } from '@/schemas/config-schema.ts';
 import type { EpisodeSortRule } from '@/components/preview/episode-sort-utils.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import { useFeed } from '@/api/queries.ts';
@@ -49,7 +49,7 @@ export function PlaylistTabContent({
   // Read preview data from Zustand store (isolated re-renders)
   const previewData = useEditorStore((s) => s.previewData);
   const resetActiveGroupContext = useEditorStore((s) => s.resetActiveGroupContext);
-  const playlistId = useWatch({ control: useFormContext<PatternConfig>().control, name: `playlists.${index}.id` as const });
+  const playlistId = useWatch({ control: useFormContext<PresetConfig>().control, name: `playlists.${index}.id` as const });
   const previewPlaylist = previewData?.playlists.find((p) => p.id === playlistId) ?? null;
 
   // Active entry index is lifted here so filtering is co-located with PlaylistTree rendering.
@@ -69,7 +69,7 @@ export function PlaylistTabContent({
   const globalDebug = previewData?.debug;
   const { t } = useTranslation('editor');
   const { t: tp } = useTranslation('preview');
-  const { control } = useFormContext<PatternConfig>();
+  const { control } = useFormContext<PresetConfig>();
   const feedUrl = useEditorStore((s) => s.feedUrl);
   const feedQuery = useFeed(feedUrl || null);
 
@@ -340,7 +340,7 @@ function LiveFilteredEpisodes({
   feedEpisodes: readonly FeedEpisode[];
   feedState: FeedState;
 }) {
-  const { control } = useFormContext<PatternConfig>();
+  const { control } = useFormContext<PresetConfig>();
   const episodeFilters = useWatch({ control, name: `playlists.${index}.episodeFilters` as const });
 
   const filtered = useMemo(

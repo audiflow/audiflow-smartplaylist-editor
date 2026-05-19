@@ -3,23 +3,23 @@ import { useNavigate } from '@tanstack/react-router';
 import { useForm, useFieldArray, useFormContext, useWatch, FormProvider, type Resolver, type Control } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  patternConfigSchema,
-  type PatternConfig,
+  presetConfigSchema,
+  type PresetConfig,
 } from '@/schemas/config-schema.ts';
 import { useEditorStore } from '@/stores/editor-store.ts';
 import {
   useFeed,
   useAssembledConfig,
   useSavePlaylist,
-  useSavePatternMeta,
-  useCreatePattern,
+  useSavePresetMeta,
+  useCreatePreset,
   useDeletePlaylist,
 } from '@/api/queries.ts';
 import { useStorePreview } from '@/hooks/use-store-preview.ts';
 import { sanitizeConfig, stripConditionalFields } from '@/lib/sanitize-config.ts';
 import { DEFAULT_PLAYLIST } from '@/components/editor/config-form.tsx';
-import { PatternSettingsCard } from '@/components/editor/pattern-settings.tsx';
-import { PatternDangerZone } from '@/components/editor/pattern-danger-zone.tsx';
+import { PresetSettingsCard } from '@/components/editor/preset-settings.tsx';
+import { PresetDangerZone } from '@/components/editor/preset-danger-zone.tsx';
 import { PlaylistTabContent } from '@/components/editor/playlist-tab-content.tsx';
 import { JsonEditor } from '@/components/editor/json-editor.tsx';
 import { ConflictDialog } from '@/components/editor/conflict-dialog.tsx';
@@ -48,7 +48,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 
-const DEFAULT_CONFIG: PatternConfig = {
+const DEFAULT_CONFIG: PresetConfig = {
   id: '',
   displayName: '',
   playlists: [],
@@ -57,17 +57,17 @@ const DEFAULT_CONFIG: PatternConfig = {
 
 /**
  * Snapshot subset used by the meta payload builders. Kept narrow so tests
- * can construct fixtures without recreating the entire `PatternConfig` shape.
+ * can construct fixtures without recreating the entire `PresetConfig` shape.
  */
 export type MetaPayloadSnapshot = Pick<
-  PatternConfig,
+  PresetConfig,
   'displayName' | 'feedUrls' | 'yearGroupedEpisodes' | 'showEpisodeThumbnail'
 > & {
-  playlists: Array<Pick<PatternConfig['playlists'][number], 'id'>>;
+  playlists: Array<Pick<PresetConfig['playlists'][number], 'id'>>;
 };
 
 /**
- * Builds the meta object sent to `PUT /api/configs/patterns/{id}/meta`.
+ * Builds the meta object sent to `PUT /api/configs/presets/{id}/meta`.
  *
  * `showEpisodeThumbnail` is a tri-state field: `true`/`false` are explicit
  * choices, `undefined` means "use schema default". The server's update flow
@@ -93,9 +93,9 @@ export function buildUpdateMetaPayload(
 /**
  * Builds the meta object nested inside the create-pattern payload.
  *
- * Differs from the update flavor in two ways enforced by `pattern-meta.schema.json`
+ * Differs from the update flavor in two ways enforced by `preset-meta.schema.json`
  * (`additionalProperties: false`, `showEpisodeThumbnail: { type: "boolean" }`):
- *   - omits `displayName` (not a valid pattern-meta property; it lives on the
+ *   - omits `displayName` (not a valid preset-meta property; it lives on the
  *     outer create payload instead);
  *   - omits `showEpisodeThumbnail` entirely when undefined, since on create
  *     there is no on-disk key to clear and `null` is not a valid boolean.
@@ -116,11 +116,11 @@ export function buildCreateMetaPayload(
 }
 
 /**
- * Builds the wrapper payload sent to `POST /api/configs/patterns` for new
+ * Builds the wrapper payload sent to `POST /api/configs/presets` for new
  * patterns. The outer `displayName` is what the server uses; the nested
- * `meta` follows pattern-meta schema constraints -- see `buildCreateMetaPayload`.
+ * `meta` follows preset-meta schema constraints -- see `buildCreateMetaPayload`.
  */
-export function buildCreatePatternPayload(
+export function buildCreatePresetPayload(
   snapshot: MetaPayloadSnapshot,
   effectiveId: string,
 ) {
@@ -133,7 +133,7 @@ export function buildCreatePatternPayload(
 
 interface EditorLayoutProps {
   configId: string | null;
-  initialConfig?: PatternConfig;
+  initialConfig?: PresetConfig;
 }
 
 export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
@@ -164,14 +164,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
    // transforms and coercions) before seeding the form.
   const normalizedInitialConfig = useMemo(() => {
     if (!initialConfig) return undefined;
-    const parsed = patternConfigSchema.safeParse(initialConfig);
+    const parsed = presetConfigSchema.safeParse(initialConfig);
     return parsed.success ? parsed.data : initialConfig;
   }, [initialConfig]);
 
-  const form = useForm<PatternConfig>({
+  const form = useForm<PresetConfig>({
     // Cast needed: zodResolver infers the Zod input type (with optional defaults),
     // but the form operates on the output type where defaults are applied.
-    resolver: zodResolver(patternConfigSchema) as Resolver<PatternConfig>,
+    resolver: zodResolver(presetConfigSchema) as Resolver<PresetConfig>,
     defaultValues: normalizedInitialConfig ?? DEFAULT_CONFIG,
   });
 
@@ -183,8 +183,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   const feedQuery = useFeed(feedUrl || null);
   const savePlaylistMutation = useSavePlaylist();
-  const savePatternMetaMutation = useSavePatternMeta();
-  const createPatternMutation = useCreatePattern();
+  const savePresetMetaMutation = useSavePresetMeta();
+  const createPresetMutation = useCreatePreset();
   const deletePlaylistMutation = useDeletePlaylist();
 
   // Watch form fields for header display and save button
@@ -212,7 +212,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   }, [formFeedUrls, jsonText, isJsonMode, feedUrl, setFeedUrl]);
 
   // Track the config snapshot that was last loaded/saved for conflict detection
-  const [lastLoadedConfig, setLastLoadedConfig] = useState<PatternConfig | undefined>(normalizedInitialConfig);
+  const [lastLoadedConfig, setLastLoadedConfig] = useState<PresetConfig | undefined>(normalizedInitialConfig);
 
   // Watch the assembled config query for external changes
   const assembledConfigQuery = useAssembledConfig(configId);
@@ -230,7 +230,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // so default transforms don't surface as spurious conflict warnings.
   useEffect(() => {
     if (!assembledConfigQuery.data || !isDirty || isSaving) return;
-    const parsed = patternConfigSchema.safeParse(assembledConfigQuery.data);
+    const parsed = presetConfigSchema.safeParse(assembledConfigQuery.data);
     const normalizedServer = parsed.success ? parsed.data : assembledConfigQuery.data;
     if (JSON.stringify(normalizedServer) !== JSON.stringify(lastLoadedConfig)) {
       setConflict(`patterns/${configId}`);
@@ -242,7 +242,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   // so both sides have the same shape regardless of which tabs have been mounted.
   const normalizedLastLoaded = useMemo(() => {
     if (!lastLoadedConfig) return undefined;
-    const parsed = patternConfigSchema.safeParse(lastLoadedConfig);
+    const parsed = presetConfigSchema.safeParse(lastLoadedConfig);
     if (!parsed.success) return undefined;
     return JSON.stringify(sanitizeConfig(parsed.data));
   }, [lastLoadedConfig]);
@@ -260,7 +260,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         setDirty(true);
         return;
       }
-      const parsed = patternConfigSchema.safeParse(form.getValues());
+      const parsed = presetConfigSchema.safeParse(form.getValues());
       if (!parsed.success) {
         setDirty(true);
         return;
@@ -287,8 +287,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         );
         return;
       }
-      const result = patternConfigSchema.safeParse(raw);
-      form.reset(result.success ? result.data : (raw as PatternConfig), { keepDefaultValues: false });
+      const result = presetConfigSchema.safeParse(raw);
+      form.reset(result.success ? result.data : (raw as PresetConfig), { keepDefaultValues: false });
       if (!result.success) {
         // Trigger validation so field errors show immediately
         void form.trigger();
@@ -320,7 +320,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } else {
       raw = form.getValues();
     }
-    const parsed = patternConfigSchema.safeParse(raw);
+    const parsed = presetConfigSchema.safeParse(raw);
     if (!parsed.success) {
       // Surface the first issue so JSON-mode users see why the save was rejected;
       // in form mode also trigger the inline field error markers.
@@ -347,14 +347,14 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     try {
       if (isNewConfig) {
         // Create the pattern directory first
-        await createPatternMutation.mutateAsync({
-          data: buildCreatePatternPayload(snapshot, effectiveId),
+        await createPresetMutation.mutateAsync({
+          data: buildCreatePresetPayload(snapshot, effectiveId),
         });
       }
 
       // Delete playlist files for playlists the user removed from the form.
       // Without this, removed playlists disappear from meta.json but their
-      // {patternId}/playlists/{id}.json files stay on disk as orphans and the
+      // {presetId}/playlists/{id}.json files stay on disk as orphans and the
       // server endpoint that updates meta later re-lists no-longer-existing files.
       if (!isNewConfig) {
         const previousIds = new Set(
@@ -364,7 +364,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         const removedIds = [...previousIds].filter((id) => !currentIds.has(id));
         for (const removedId of removedIds) {
           await deletePlaylistMutation.mutateAsync({
-            patternId: effectiveId,
+            presetId: effectiveId,
             playlistId: removedId,
           });
         }
@@ -372,15 +372,15 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
       for (const playlist of snapshot.playlists) {
         await savePlaylistMutation.mutateAsync({
-          patternId: effectiveId,
+          presetId: effectiveId,
           playlistId: playlist.id,
           data: sanitizeConfig(playlist),
         });
       }
 
       if (!isNewConfig) {
-        await savePatternMetaMutation.mutateAsync({
-          patternId: effectiveId,
+        await savePresetMetaMutation.mutateAsync({
+          presetId: effectiveId,
           data: buildUpdateMetaPayload(snapshot, effectiveId),
         });
       }
@@ -403,7 +403,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
     } finally {
       setSaving(false);
     }
-  }, [effectiveId, isSaving, isJsonMode, isNewConfig, jsonText, form, createPatternMutation, savePlaylistMutation, savePatternMetaMutation, deletePlaylistMutation, lastLoadedConfig, navigate, setSaving, setDirty, setLastSavedAt, t]);
+  }, [effectiveId, isSaving, isJsonMode, isNewConfig, jsonText, form, createPresetMutation, savePlaylistMutation, savePresetMetaMutation, deletePlaylistMutation, lastLoadedConfig, navigate, setSaving, setDirty, setLastSavedAt, t]);
 
   // Ctrl+S / Cmd+S keyboard shortcut
   useEffect(() => {
@@ -462,7 +462,7 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
   const triggerPreview = useCallback(
     (rawConfig: unknown) => {
       if (!feedUrl) return;
-      const parsed = patternConfigSchema.safeParse(rawConfig);
+      const parsed = presetConfigSchema.safeParse(rawConfig);
       if (!parsed.success) return;
       const config = stripConditionalFields(parsed.data);
       const key = `${feedUrl}\0${JSON.stringify(config)}`;
@@ -536,8 +536,8 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
 
   // Normalize server payload through Zod so default transforms (e.g.
   // yearGroupedEpisodes ?? false) are applied before reset/comparison.
-  const normalizeServerConfig = useCallback((raw: PatternConfig): PatternConfig => {
-    const parsed = patternConfigSchema.safeParse(raw);
+  const normalizeServerConfig = useCallback((raw: PresetConfig): PresetConfig => {
+    const parsed = presetConfigSchema.safeParse(raw);
     return parsed.success ? parsed.data : raw;
   }, []);
 
@@ -615,11 +615,11 @@ export function EditorLayout({ configId, initialConfig }: EditorLayoutProps) {
         </FormProvider>
       ) : (
         <FormProvider {...form}>
-          <PatternSettingsCard configId={configId} />
+          <PresetSettingsCard configId={configId} />
           <PlaylistSection isNewConfig={isNewConfig} />
           {!isNewConfig && configId && (
-            <PatternDangerZone
-              patternId={configId}
+            <PresetDangerZone
+              presetId={configId}
               displayName={formDisplayName || null}
             />
           )}
@@ -706,7 +706,7 @@ function EditorHeader({
 
 interface PlaylistTabTriggerProps {
   index: number;
-  control: Control<PatternConfig>;
+  control: Control<PresetConfig>;
 }
 
 // -- Playlist section (owns useFieldArray — isolated so nested field changes
@@ -714,7 +714,7 @@ interface PlaylistTabTriggerProps {
 
 function PlaylistSection({ isNewConfig }: { isNewConfig: boolean }) {
   const { t } = useTranslation('editor');
-  const form = useFormContext<PatternConfig>();
+  const form = useFormContext<PresetConfig>();
   const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: 'playlists',

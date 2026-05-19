@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useForm, FormProvider } from 'react-hook-form';
 import type { ReactNode } from 'react';
-import type { PatternConfig } from '@/schemas/config-schema.ts';
+import type { PresetConfig } from '@/schemas/config-schema.ts';
 import { GroupDefCard } from '../group-def-card.tsx';
 import { GroupReorderDialog } from '../group-reorder-dialog.tsx';
 
@@ -19,7 +19,7 @@ function FormWrapper({
     pattern: { source: 'title' | 'description'; pattern: string };
   }>;
 }) {
-  const form = useForm<PatternConfig>({
+  const form = useForm<PresetConfig>({
     defaultValues: {
       id: 'test',
       feedUrls: ['https://example.com/feed.xml'],

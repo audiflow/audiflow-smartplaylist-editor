@@ -187,7 +187,7 @@ export const playlistDefinitionSchema = z.object({
 
 // -- Pattern config --
 
-export const patternConfigSchema = z.object({
+export const presetConfigSchema = z.object({
   id: z.string(),
   displayName: z.string().nullish().transform((v) => v ?? ''),
   podcastGuid: z.string().nullish(),
@@ -220,4 +220,4 @@ export type EpisodeItemConfig = z.infer<typeof episodeItemConfigSchema>;
 export type GroupListingConfig = z.infer<typeof groupListingConfigSchema>;
 export type EpisodeListingConfig = z.infer<typeof episodeListingConfigSchema>;
 export type PlaylistDefinition = z.infer<typeof playlistDefinitionSchema>;
-export type PatternConfig = z.infer<typeof patternConfigSchema>;
+export type PresetConfig = z.infer<typeof presetConfigSchema>;
