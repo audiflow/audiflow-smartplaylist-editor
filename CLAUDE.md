@@ -1,20 +1,20 @@
 # audiflow-smartplaylist-editor
 
 Local-first web editor for smart playlist configuration. Provides a Rust API server
-(`sp_server`) and React SPA (`sp_react`) that read/write JSON config files in a
+(`preset_server`) and React SPA (`sp_react`) that read/write JSON config files in a
 locally cloned data repo. Users manage git operations themselves.
 
 ## Ecosystem context
 
 Part of the audiflow podcast ecosystem. This repo owns the editor UX, JSON Schema
-definitions (`crates/sp_core/assets/`), and local-first editing workflow. The sibling
+definitions (`crates/preset_core/assets/`), and local-first editing workflow. The sibling
 repo `audiflow-smartplaylist` holds config JSON files for all environments (prod/staging/dev,
 deployed via GitHub Pages). The `audiflow` Flutter app consumes configs from hosted mirrors.
 
 ## Responsibilities
 
 - Web-based editing of smart playlist configurations
-- JSON Schema validation (three schemas in `crates/sp_core/assets/`)
+- JSON Schema validation (three schemas in `crates/preset_core/assets/`)
 - Episode resolver logic (seasonNumber, titleClassifier, year, titleDiscovery)
 - Local API server for config CRUD, feed fetching, and live preview
 - CLI tools for validation, formatting, serving, and version bumping
@@ -31,9 +31,9 @@ deployed via GitHub Pages). The `audiflow` Flutter app consumes configs from hos
 ## Workspace structure
 
 ```
-crates/sp_core/    -- Domain models, resolvers, schema, services (pure Rust)
-crates/sp_server/  -- Local API server (axum, tokio)
-crates/sp_cli/     -- CLI binary (serve, validate, format, bump-versions)
+crates/preset_core/    -- Domain models, resolvers, schema, services (pure Rust)
+crates/preset_server/  -- Local API server (axum, tokio)
+crates/preset_cli/     -- CLI binary (serve, validate, format, bump-versions)
 packages/sp_react/ -- React 19 SPA (Vite + TypeScript)
 ```
 

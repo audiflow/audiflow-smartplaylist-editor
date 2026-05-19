@@ -33,16 +33,16 @@ operations (commit, push, PR) themselves.
 - **Playlist definition**: A JSON config describing how episodes are grouped, filtered, sorted, and displayed.
 - **Resolver**: A strategy that groups episodes into playlists. Types: `seasonNumber`, `titleClassifier`, `year`, `titleDiscovery`.
 - **Split config**: The three-level file hierarchy (`patterns/meta.json` -> `{id}/meta.json` -> `{id}/playlists/{pid}.json`).
-- **Schema**: Three JSON Schema files in `crates/sp_core/assets/` that validate each level of the split config.
+- **Schema**: Three JSON Schema files in `crates/preset_core/assets/` that validate each level of the split config.
 - **Claiming**: Higher-priority playlist definitions claim episodes during preview, preventing duplicates in lower-priority definitions.
 - **Data repo**: A git repository containing JSON config files (`audiflow-smartplaylist` for all environments).
 - **Cross-pattern uniqueness**: Validation ensuring no two patterns share the same podcastGuid or feedUrl values.
 
 ## Primary entry points
 
-- `crates/sp_cli/src/main.rs`: CLI binary entry point (`serve`, `validate`, `format`, `bump-versions` subcommands)
-- `crates/sp_server/src/app.rs`: Axum router and app state construction
-- `crates/sp_core/src/lib.rs`: Domain library root (models, resolvers, schema, services)
+- `crates/preset_cli/src/main.rs`: CLI binary entry point (`serve`, `validate`, `format`, `bump-versions` subcommands)
+- `crates/preset_server/src/app.rs`: Axum router and app state construction
+- `crates/preset_core/src/lib.rs`: Domain library root (models, resolvers, schema, services)
 - `packages/sp_react/src/`: React SPA root (Vite + TanStack Router)
 
 ## Key dependencies
