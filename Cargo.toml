@@ -1,19 +1,19 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/sp_core",
-    "crates/sp_server",
-    "crates/sp_cli",
+    "crates/preset_core",
+    "crates/preset_server",
+    "crates/preset_cli",
 ]
 
 [workspace.package]
-version = "6.0.1"
+version = "7.0.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/audiflow/audiflow-smartplaylist-editor"
 
 [workspace.dependencies]
-sp_core = { package = "audiflow-smartplaylist-core", path = "crates/sp_core", version = "6.0.1" }
-sp_server = { package = "audiflow-smartplaylist-server", path = "crates/sp_server", version = "6.0.1" }
+preset_core = { package = "audiflow-preset-core", path = "crates/preset_core", version = "7.0.0" }
+preset_server = { package = "audiflow-preset-server", path = "crates/preset_server", version = "7.0.0" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

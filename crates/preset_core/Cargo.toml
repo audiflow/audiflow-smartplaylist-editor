@@ -1,0 +1,19 @@
+[package]
+name = "audiflow-preset-core"
+description = "Domain models, resolvers, and schema validation for audiflow presets"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "preset_core"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+fancy-regex = "0.17"
+jsonschema = "0.46"
+sha2 = "0.10"
+chrono = { version = "0.4", features = ["serde"] }
+md5 = "0.7"

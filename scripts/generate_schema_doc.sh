@@ -8,7 +8,7 @@ mkdir -p "$DOCS_DIR"
 
 # 1. Copy playlist-definition schema (the only one relevant to editor users)
 echo "Copying schema file..."
-cp "$REPO_ROOT/crates/sp_core/assets/playlist-definition.schema.json" "$DOCS_DIR/schema.json"
+cp "$REPO_ROOT/crates/preset_core/assets/playlist-definition.schema.json" "$DOCS_DIR/schema.json"
 
 # 2. Generate human-readable HTML
 echo "Generating HTML documentation..."
