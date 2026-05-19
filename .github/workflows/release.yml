@@ -25,7 +25,7 @@ jobs:
 
           branch=$(python3 -c "
           import json, re, sys
-          with open('crates/sp_core/assets/playlist-definition.schema.json') as f:
+          with open('crates/preset_core/assets/playlist-definition.schema.json') as f:
               id_url = json.load(f)['\$id']
           m = re.search(r'/v(\d+)/', id_url)
           if not m:
